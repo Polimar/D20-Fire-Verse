@@ -1,0 +1,35 @@
+---
+description: Own branch per task, full validation before any merge to main
+alwaysApply: true
+---
+
+# Git workflow (two people, two Cursors)
+
+Work lands on a personal branch. `main` stays green and is updated only by an explicit merge after the full check passes.
+
+## Before the first edit
+
+1. `git fetch origin`
+2. `git checkout main && git pull`
+3. Create a new branch: `<name>/<short-slice>` (examples: `matteo/grid-move`, `d20/companion-voice`).
+4. Never commit on `main`. Never reuse or push to the other person's branch.
+
+One branch, one slice. If the task changes, open another branch.
+
+## Stay in your tree
+
+Say which directories you will touch, then stay there. `packages/protocol`, `packages/rules`, `package.json`, and `package-lock.json` are shared: edit them only when the task requires it, and say so before changing them.
+
+## Before merging into main
+
+Do this on the feature branch, after it contains the latest `origin/main`:
+
+```bash
+git fetch origin
+git rebase origin/main
+npm run typecheck && NARRATION=off npm test && npm run build
+```
+
+If `firetv/` changed, also run `./gradlew --no-daemon lintRelease assembleRelease` from `firetv/`.
+
+Merge only when every command exits 0 and the user explicitly asks to merge. A failing check is fixed on the branch. Do not merge to "fix it on main".
