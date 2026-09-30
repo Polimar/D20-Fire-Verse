@@ -88,6 +88,8 @@ export type Pregen = {
   guidedDefaultAction?: string;
   race?: string;
   portrait?: string;
+  /** Custom heroes are private to the account that built them. */
+  ownerUserId?: string;
 };
 
 export type MapDef = {
@@ -161,12 +163,18 @@ export function getNode(id: string): StoryNode | undefined {
   return pack().nodes[id];
 }
 
-export function listPregens(): Pregen[] {
-  return [...Object.values(pack().pregens), ...listCustomCharacters()];
+export function listPregens(viewerUserId?: string | null): Pregen[] {
+  return [...Object.values(pack().pregens), ...listCustomCharacters(viewerUserId)];
 }
 
 export function getPregen(id: string): Pregen | undefined {
   return pack().pregens[id] ?? getCustomCharacter(id);
+}
+
+/** Built-in heroes are shared; a custom one is only for its owner. */
+export function assertCanPlayCharacter(pregen: Pregen, userId?: string): void {
+  if (!pregen.ownerUserId) return;
+  if (!userId || pregen.ownerUserId !== userId) throw new Error("BAD_CHARACTER");
 }
 
 export function getMap(id: string): MapDef | undefined {

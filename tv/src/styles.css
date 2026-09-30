@@ -314,7 +314,31 @@ body[data-tone="victory"] .vignette {
   font-size: 0.82rem;
   min-width: 0;
 }
-.menu-hint { font-size: 0.78rem; color: var(--ink-mute); white-space: nowrap; }
+.menu-hint {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  padding: 0.35rem 0.55rem;
+  margin: 0;
+  font: inherit;
+  font-size: 0.78rem;
+  color: var(--ink-mute);
+  white-space: nowrap;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.menu-hint:hover,
+.menu-hint:focus-visible {
+  color: var(--ink);
+  background: rgba(255, 255, 255, 0.06);
+  outline: none;
+}
+.menu-hint kbd {
+  font: inherit;
+  padding: 0;
+  border: 0;
+  background: none;
+}
 @keyframes pulse { 50% { opacity: 0.3; } }
 
 /* ------------------------------------------------------------------ pages */

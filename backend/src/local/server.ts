@@ -115,8 +115,8 @@ if (fs.existsSync(path.join(tvDist, "index.html"))) {
   app.use(express.static(tvLocal));
 }
 
-function pregenList() {
-  return listPregens().map((p) => ({
+function pregenList(viewerUserId?: string | null) {
+  return listPregens(viewerUserId).map((p) => ({
     id: p.id,
     name: p.name,
     summary: p.summary,
@@ -168,8 +168,8 @@ app.get("/api/table-info", (req, res) => {
   });
 });
 
-app.get("/api/pregens", (_req, res) => {
-  res.json(pregenList());
+app.get("/api/pregens", (req, res) => {
+  res.json(pregenList(requestUser(req)?.id));
 });
 
 app.get("/api/portraits", (_req, res) => {
@@ -182,7 +182,12 @@ app.get("/api/chargen", (_req, res) => {
 
 app.post("/api/chargen", (req, res) => {
   try {
-    const built = createCustomCharacter(req.body as ChargenDraft);
+    const user = requestUser(req);
+    if (!user) {
+      res.status(401).json({ error: "AUTH_REQUIRED" });
+      return;
+    }
+    const built = createCustomCharacter(req.body as ChargenDraft, undefined, user.id);
     res.json(built);
   } catch (err) {
     res.status(400).json({
@@ -337,7 +342,7 @@ wss.on("connection", (ws, req) => {
       campaign: getManifest().title,
       campaigns: listPublished(),
       user: sock.user ? { username: sock.user.username, role: sock.user.role } : null,
-      pregens: pregenList(),
+      pregens: pregenList(sock.user?.id),
       portraits: PORTRAITS.map((id) => ({ id, url: portraitUrl(id) })),
       chargen: getChargenCatalog(),
       narration: narrationStatus(),
@@ -389,7 +394,7 @@ function handle(sock: Sock, msg: ClientMsg): void {
     case "CREATE_CHARACTER": {
       if (!msg.draft) throw new Error("MISSING_DRAFT");
       const rolledPool = msg.draft.method === "roll" ? sock.abilityRolls : undefined;
-      const built = createCustomCharacter(msg.draft, rolledPool);
+      const built = createCustomCharacter(msg.draft, rolledPool, sock.user!.id);
       send(sock, {
         eventType: "CHARACTER_CREATED",
         payload: {
@@ -405,7 +410,7 @@ function handle(sock: Sock, msg: ClientMsg): void {
             portrait: portraitForCharacter(built.id),
             custom: true,
           },
-          pregens: pregenList(),
+          pregens: pregenList(sock.user!.id),
         },
       });
       return;

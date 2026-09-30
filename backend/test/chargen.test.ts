@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
 import { before, test } from "node:test";
-import { buildCharacter, rollAbilityScores, type ChargenDraft } from "../src/local/chargen.js";
+import { buildCharacter, createCustomCharacter, rollAbilityScores, type ChargenDraft } from "../src/local/chargen.js";
+import { listPregens } from "../src/local/campaign.js";
+import { createRoom, joinRoom } from "../src/local/room.js";
 import { isPortraitId } from "../src/local/portraits.js";
 import { boot } from "./helpers.js";
 
@@ -86,4 +88,17 @@ test("class skill count, fighting style and background overlap are enforced", ()
   assert.throws(() => buildCharacter(fighter({ fightingStyle: undefined })), /NEED_FIGHTING_STYLE/);
   assert.throws(() => buildCharacter(fighter({ classSkills: ["athletics", "perception"] })), /SKILL_OVERLAP_BG/);
   assert.throws(() => buildCharacter(fighter({ name: "  " })), /NEED_NAME/);
+});
+
+test("a custom hero is listed and playable only for the account that built it", () => {
+  const mine = createCustomCharacter(fighter({ name: "Private Aldric" }), undefined, "user_owner");
+  assert.equal(mine.ownerUserId, "user_owner");
+  assert.ok(listPregens("user_owner").some((p) => p.id === mine.id));
+  assert.ok(!listPregens("user_other").some((p) => p.id === mine.id));
+  assert.ok(!listPregens(null).some((p) => p.id === mine.id));
+
+  const room = createRoom({ ownerUserId: "user_owner" });
+  assert.throws(() => joinRoom(room.roomCode, "Thief", mine.id, "user_other"), /BAD_CHARACTER/);
+  const seated = joinRoom(room.roomCode, "Owner", mine.id, "user_owner");
+  assert.equal(seated.playerId, "P1");
 });

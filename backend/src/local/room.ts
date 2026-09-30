@@ -5,6 +5,7 @@ import {
   getManifest,
   getNode,
   getPregen,
+  assertCanPlayCharacter,
   loadCampaign,
   portraitForCharacter,
   publicCast,
@@ -255,6 +256,7 @@ export function joinRoom(
   if (room.players.length >= 3) throw new Error("ROOM_FULL");
   const pregen = getPregen(characterId);
   if (!pregen) throw new Error("BAD_CHARACTER");
+  assertCanPlayCharacter(pregen, userId);
   if (room.players.some((p) => p.characterId === characterId)) {
     throw new Error("CHARACTER_TAKEN");
   }

@@ -42,7 +42,7 @@ appRoot.innerHTML = `
       <button type="button" class="ghost" id="btnSaveGame">Save</button>
       <button type="button" class="ghost" id="btnLeaveTable">Title menu</button>
     </div>
-    <div class="menu-hint" aria-hidden="true"><kbd>☰</kbd> Settings</div>
+    <button type="button" class="menu-hint" id="btnMenuSettings" title="Settings (Menu on the remote, S on the keyboard)"><kbd aria-hidden="true">☰</kbd> Settings</button>
   </header>
 
   <div class="login-gate" id="loginGate">
@@ -542,6 +542,7 @@ function renderHome() {
     if (!$("homeLoad").hidden) $("saveId").focus();
   });
   $("btnSettings").addEventListener("click", () => openTableSettings());
+  $("btnMenuSettings").addEventListener("click", () => openTableSettings());
   $("btnAdmin")?.addEventListener("click", () => openAdmin());
   void companionUrl().then((url) => {
     const label = url.replace(/^https?:\/\//, "").replace(/\/$/, "");

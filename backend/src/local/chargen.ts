@@ -562,14 +562,18 @@ export function registerCustomCharacter(pregen: Pregen): Pregen {
 
 export function createCustomCharacter(
   draft: ChargenDraft,
-  rolledPool?: number[],
+  rolledPool: number[] | undefined,
+  ownerUserId: string,
 ): Pregen {
+  if (!ownerUserId) throw new Error("AUTH_REQUIRED");
   const built = buildCharacter(draft, rolledPool);
-  return registerCustomCharacter(built);
+  return registerCustomCharacter({ ...built, ownerUserId });
 }
 
-export function listCustomCharacters(): Pregen[] {
-  return [...customChars.values()];
+/** Only the owner's custom heroes — never the whole table's creations. */
+export function listCustomCharacters(viewerUserId?: string | null): Pregen[] {
+  if (!viewerUserId) return [];
+  return [...customChars.values()].filter((p) => p.ownerUserId === viewerUserId);
 }
 
 export function getCustomCharacter(id: string): Pregen | undefined {
