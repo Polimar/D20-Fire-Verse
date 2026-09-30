@@ -5,6 +5,7 @@ import { fileURLToPath } from "node:url";
 import { before, test } from "node:test";
 import { describeError } from "@d20-fireverse/protocol";
 import {
+  beginCombat,
   choose,
   combatEndTurn,
   createRoom,
@@ -27,7 +28,7 @@ function pick(room: Room, label: string): Room {
   return choose(room.roomCode, choice.id);
 }
 
-function toCellarFight(): { room: Room; playerId: string } {
+function toCellarApproach(): { room: Room; playerId: string } {
   const created = createRoom();
   const { room, playerId } = joinRoom(created.roomCode, "Tester", "brenna_ironveal");
   const labels = ["gold", "vague", "Descend", "Look down", "Cellar", "steel"];
@@ -46,13 +47,24 @@ function toCellarFight(): { room: Room; playerId: string } {
   return { room, playerId };
 }
 
+function toCellarFight(): { room: Room; playerId: string } {
+  const arrived = toCellarApproach();
+  beginCombat(arrived.room.roomCode);
+  return arrived;
+}
+
 test("the tavern leads down to the cellar fight, voiced and seated", () => {
-  const { room, playerId } = toCellarFight();
+  const { room, playerId } = toCellarApproach();
   assert.equal(room.nodeId, "fight_cellar_rats");
+  assert.equal(room.combat, undefined, "initiative waits for the approach beat");
+  const approached = publicState(room, playerId);
+  assert.ok(approached.voice?.text, "the encounter intro is voiced on the story screen");
+  assert.match(approached.voice?.text ?? "", /rodents|rats|claws/i);
+  assert.equal(approached.voice?.key, null, "tests never load the neural voice");
+  assert.equal(approached.combat, null);
+  beginCombat(room.roomCode);
   assert.equal(room.combat?.status, "active");
   const state = publicState(room, playerId);
-  assert.ok(state.voice?.text, "the encounter intro is voiced");
-  assert.equal(state.voice?.key, null, "tests never load the neural voice");
   assert.ok(state.combat?.events.some((e) => e.kind === "start"));
   const me = state.combat?.tokens.find((t) => t.playerId === playerId);
   assert.ok(me?.portrait?.startsWith("/art/portraits/"));

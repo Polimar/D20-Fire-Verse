@@ -36,6 +36,7 @@ import {
   mapMove,
   combatMove,
   withdraw,
+  beginCombat,
   createRoom,
   getRoom,
   joinRoom,
@@ -477,6 +478,11 @@ function handle(sock: Sock, msg: ClientMsg): void {
     case "WITHDRAW": {
       if (!msg.roomCode) throw new Error("MISSING_FIELDS");
       broadcast(withdraw(msg.roomCode).roomCode);
+      return;
+    }
+    case "BEGIN_COMBAT": {
+      if (!msg.roomCode) throw new Error("MISSING_FIELDS");
+      broadcast(beginCombat(msg.roomCode).roomCode);
       return;
     }
     case "RETRY_COMBAT": {

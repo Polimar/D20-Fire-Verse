@@ -16,6 +16,7 @@ export type ClientAction =
   | "PUZZLE_DRAFT"
   | "SOLVE_PUZZLE"
   | "WITHDRAW"
+  | "BEGIN_COMBAT"
   | "RETRY_COMBAT"
   | "MAP_MOVE"
   | "PROPOSE_MOVE"

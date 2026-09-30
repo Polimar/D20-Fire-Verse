@@ -509,11 +509,12 @@ function goTo(room: Room, nextId: string): void {
   room.nodeId = nextId;
   if (node.type === "encounter" && node.encounterId) {
     if (room.players.length < 1) throw new Error("NEED_PLAYER");
+    // Hold initiative until the table hears the approach beat on the story screen.
     room.combatSnapshot = {
       wounds: room.wounds ? { ...room.wounds } : undefined,
       vitals: room.vitals ? structuredClone(room.vitals) : undefined,
     };
-    room.combat = startCombat(node.encounterId, room.players, room.wounds, room.vitals);
+    room.combat = undefined;
     room.restOffer = false;
     const encounter = getEncounter(node.encounterId);
     narrate(room, encounter?.intro ?? `${encounter?.name ?? "Foes"} block the way. Steel out.`);
@@ -1189,6 +1190,19 @@ export function withdraw(roomCode: string): Room {
   return room;
 }
 
+/** First choice after the approach narration — open the battle board and roll initiative. */
+export function beginCombat(roomCode: string): Room {
+  const room = requireRoom(roomCode);
+  const node = getNode(room.nodeId);
+  if (node?.type !== "encounter" || !node.encounterId) throw new Error("NO_COMBAT");
+  if (room.combat?.status === "active") throw new Error("COMBAT_ACTIVE");
+  if (room.players.length < 1) throw new Error("NEED_PLAYER");
+  room.combat = startCombat(node.encounterId, room.players, room.wounds, room.vitals);
+  touch(room);
+  autosave(room);
+  return room;
+}
+
 /** After a defeat, the same fight again from the top — nobody is stuck on a dead board. */
 export function retryCombat(roomCode: string): Room {
   const room = requireRoom(roomCode);
@@ -1199,10 +1213,13 @@ export function retryCombat(roomCode: string): Room {
     room.wounds = room.combatSnapshot.wounds ? { ...room.combatSnapshot.wounds } : {};
     room.vitals = room.combatSnapshot.vitals ? structuredClone(room.combatSnapshot.vitals) : {};
   }
-  goTo(room, room.nodeId);
-  const line = "Breath returns. Steel is lifted again. The fight begins anew.";
-  narrate(room, `${line}\n\n${room.lastNarration ?? ""}`.trim(), `${line} ${room.voiceText ?? ""}`.trim());
+  // Skip the approach beat on a retry — the table already knows what waits here.
+  room.combat = undefined;
+  if (!node.encounterId) throw new Error("NO_COMBAT");
+  room.combat = startCombat(node.encounterId, room.players, room.wounds, room.vitals);
+  narrate(room, "Breath returns. Steel is lifted again. The fight begins anew.");
   touch(room);
+  autosave(room);
   return room;
 }
 

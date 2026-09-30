@@ -830,9 +830,9 @@ function renderChoices(s: RoomState) {
     return;
   }
   if (s.nodeType === "encounter" && !s.combat) {
-    box.innerHTML = `<button type="button" class="choice primary" id="btnRetryFight" data-autofocus><span class="choice-n">⚔</span><span>Face them again</span></button>
+    box.innerHTML = `<button type="button" class="choice primary" id="btnBeginFight" data-autofocus><span class="choice-n">⚔</span><span>Roll initiative</span></button>
       <button type="button" class="choice" id="btnStepBack"><span class="choice-n">↩</span><span>Step back to safer ground</span></button>`;
-    $("btnRetryFight").addEventListener("click", () => send({ action: "RETRY_COMBAT", roomCode: s.roomCode }));
+    $("btnBeginFight").addEventListener("click", () => send({ action: "BEGIN_COMBAT", roomCode: s.roomCode }));
     $("btnStepBack").addEventListener("click", () => send({ action: "WITHDRAW", roomCode: s.roomCode }));
     return;
   }
@@ -979,10 +979,6 @@ async function routeNow() {
     setMusic(musicFor(s));
     $("combatChapter").textContent = scene.chapter;
     $("combatTitle").textContent = scene.title;
-    if (s.combat.events.some((e) => e.kind === "start") && !resumedFirstState && s.voice) {
-      const intro = s.voice;
-      void speak(intro, { interrupt: true });
-    }
     await combat.render(s, { resumed: resumedFirstState });
     resumedFirstState = false;
     return;
