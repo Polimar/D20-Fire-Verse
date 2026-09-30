@@ -81,6 +81,12 @@ type TableState = {
     pendingReaction?: { playerId: string; prompt: string; acceptLabel: string; declineLabel: string } | null;
   } | null;
   localPlayerId: string | null;
+  rest?: {
+    offer: boolean;
+    budget: number;
+    canShort: boolean;
+    canLong: boolean;
+  };
 };
 
 const STORE = "fireverse.companion.v1";
@@ -313,8 +319,15 @@ function renderSeat() {
     } else {
       const voting = !!(s.vote && s.players.length > 1);
       const sec = voting ? Math.ceil(s.vote!.remainingMs / 1000) : 0;
+      const rest = s.rest;
+      const restBtns =
+        rest?.offer && (rest.canShort || rest.canLong)
+          ? `${rest.canShort ? `<button type="button" data-rest="short">Short rest · costs 1</button>` : ""}${
+              rest.canLong ? `<button type="button" data-rest="long">Long rest · costs 2</button>` : ""
+            }<p class="meta">One long rest or two short rests this tale · ${rest.budget} left</p>`
+          : "";
       controls.innerHTML =
-        `<button type="button" data-rest="short">Short rest</button><button type="button" data-rest="long">Long rest</button>` +
+        restBtns +
         (voting ? `<p class="meta">Party vote · ${sec}s left</p>` : "") +
         s.choices
           .map((c, i) => {

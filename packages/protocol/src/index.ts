@@ -97,6 +97,8 @@ const ERROR_TEXT: Record<string, string> = {
   USE_COMBAT_ACTIONS: "You're in a fight — act from the battle board.",
   COMBAT_OVER: "That fight is already over.",
   COMBAT_ACTIVE: "You can't step back in the middle of a fight.",
+  REST_NOT_OFFERED: "Rest when the fight is over — at the next choice on the table.",
+  REST_BUDGET: "This tale allows one long rest or two short rests, and that budget is spent.",
   INVALID_CHOICE: "That path is no longer open.",
   NO_CHOICE: "There's no choice with that number.",
   NOT_PUZZLE: "There's no puzzle here right now.",

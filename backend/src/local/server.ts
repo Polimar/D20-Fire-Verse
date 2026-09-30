@@ -154,9 +154,13 @@ app.get("/api/health", (_req, res) => {
 /** Where a phone on the same Wi-Fi can reach the companion (for the join QR code). */
 app.get("/api/table-info", (req, res) => {
   const hosts = lanAddresses();
-  const requestHost = String(req.headers.host ?? "").split(":")[0];
-  const host = hosts[0] ?? requestHost ?? "127.0.0.1";
-  const port = companionBuilt ? PORT : COMPANION_DEV_PORT;
+  const hostHeader = String(req.headers.host ?? "");
+  const requestHost = hostHeader.split(":")[0] || "";
+  const requestPort = hostHeader.includes(":") ? hostHeader.slice(hostHeader.indexOf(":") + 1) : "";
+  const loopback = !requestHost || requestHost === "localhost" || requestHost === "127.0.0.1" || requestHost === "::1";
+  // Prefer the address the television is already using; fall back to a LAN IP when the TV is on loopback.
+  const host = loopback ? (hosts[0] ?? (requestHost || "127.0.0.1")) : requestHost;
+  const port = companionBuilt ? Number(loopback ? PORT : requestPort || PORT) : COMPANION_DEV_PORT;
   res.json({
     hosts,
     companionUrl: `http://${host}:${port}/companion/`,

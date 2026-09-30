@@ -11,6 +11,11 @@ type Row =
   | { id: string; label: string; kind: "toggle"; key: "narration" | "subtitles" | "highContrast"; on: string; off: string }
   | { id: string; label: string; kind: "choice"; key: "subtitleSize" | "motion"; options: Array<{ value: string; label: string }> };
 
+export type SettingsGameActions = {
+  onSave?: () => void;
+  onLeave?: () => void;
+};
+
 const ROWS: Row[] = [
   { id: "music", label: "Music", kind: "volume", key: "music" },
   { id: "voice", label: "Narrator volume", kind: "volume", key: "voice" },
@@ -44,6 +49,7 @@ const ROWS: Row[] = [
 let overlay: HTMLElement | null = null;
 let onCloseCb: (() => void) | null = null;
 let opener: HTMLElement | null = null;
+let gameActions: SettingsGameActions = {};
 
 function valueLabel(row: Row, s: Settings): string {
   switch (row.kind) {
@@ -97,14 +103,17 @@ function paint() {
     const el = overlay.querySelector<HTMLElement>(`[data-setting="${row.id}"] .setting-value`);
     if (el) el.innerHTML = valueLabel(row, s);
   }
+  const play = overlay.querySelector<HTMLElement>("#setPlayOps");
+  if (play) play.hidden = !(gameActions.onSave || gameActions.onLeave);
 }
 
 export function settingsOpen(): HTMLElement | null {
   return overlay && !overlay.hidden ? overlay : null;
 }
 
-export function openSettings(onClose?: () => void) {
+export function openSettings(onClose?: (() => void) | null, actions?: SettingsGameActions) {
   onCloseCb = onClose ?? null;
+  gameActions = actions ?? {};
   const active = document.activeElement;
   opener = active instanceof HTMLElement && active !== document.body && !overlay?.contains(active) ? active : null;
   if (!overlay) {
@@ -125,6 +134,10 @@ export function openSettings(onClose?: () => void) {
           ).join("")}
         </div>
         <details class="settings-legend"><summary>Remote guide</summary>${REMOTE_LEGEND}</details>
+        <div class="row modal-actions" id="setPlayOps" hidden>
+          <button type="button" class="ghost" id="setSave">Save progress</button>
+          <button type="button" class="ghost" id="setLeave">Back to the title</button>
+        </div>
         <div class="row modal-actions">
           <button type="button" class="ghost" id="setReplay">Hear the last line again</button>
           <button type="button" class="ghost" id="setCoach">Show first-fight tips again</button>
@@ -157,6 +170,14 @@ export function openSettings(onClose?: () => void) {
       resetCoach();
       const b = overlay!.querySelector<HTMLElement>("#setCoach")!;
       b.textContent = "Tips will show in the next fight";
+    });
+    overlay.querySelector("#setSave")!.addEventListener("click", () => {
+      closeSettings();
+      gameActions.onSave?.();
+    });
+    overlay.querySelector("#setLeave")!.addEventListener("click", () => {
+      closeSettings();
+      gameActions.onLeave?.();
     });
   }
   paint();

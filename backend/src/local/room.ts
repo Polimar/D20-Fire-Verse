@@ -86,6 +86,10 @@ export type Room = {
   /** State at the moment a fight began, restored if the party retries. */
   combatSnapshot?: { wounds?: Record<string, number>; vitals?: Record<string, Vitals> };
   combat?: CombatState;
+  /** Adventuring-day rest budget: 2 points. A short rest costs 1, a long rest costs 2. */
+  restBudget?: number;
+  /** True only on the first choice screen after a fight ends. */
+  restOffer?: boolean;
   /** The fight that just ended, kept so the table can play its last blow. */
   outro?: { combat: CombatState; text: string };
   puzzleProgress?: string[];
@@ -219,6 +223,8 @@ export function createRoom(opts?: { campaignId?: string; ownerUserId?: string })
     players: [],
     visitedRooms: [],
     mapTokens: [],
+    restBudget: 2,
+    restOffer: false,
     updatedAt: new Date().toISOString(),
   };
   applyNodeNarration(room);
@@ -508,6 +514,7 @@ function goTo(room: Room, nextId: string): void {
       vitals: room.vitals ? structuredClone(room.vitals) : undefined,
     };
     room.combat = startCombat(node.encounterId, room.players, room.wounds, room.vitals);
+    room.restOffer = false;
     const encounter = getEncounter(node.encounterId);
     narrate(room, encounter?.intro ?? `${encounter?.name ?? "Foes"} block the way. Steel out.`);
   } else {
@@ -652,6 +659,16 @@ function publicStateBody(room: Room, viewerPlayerId?: string) {
     savePrompt: node?.savePrompt === true,
     autosaveId: room.autosaveId ?? null,
     localPlayerId: viewerPlayerId ?? null,
+    rest: (() => {
+      const budget = room.restBudget ?? 2;
+      const offer = room.restOffer === true && budget > 0;
+      return {
+        offer,
+        budget,
+        canShort: offer && budget >= 1,
+        canLong: offer && budget >= 2,
+      };
+    })(),
   };
 }
 
@@ -693,6 +710,7 @@ function applyChoice(room: Room, choiceId: string): Room {
   clearVoteTimer(room.roomCode);
   setFlags(room, choice.flagsSet);
   room.lastDice = undefined;
+  room.restOffer = false;
   goTo(room, choice.next);
   return room;
 }
@@ -1249,6 +1267,11 @@ function eachHero(room: Room, apply: (tokenId: string, pregen: NonNullable<Retur
 export function shortRest(roomCode: string): Room {
   const room = requireRoom(roomCode);
   if (room.combat?.status === "active") throw new Error("COMBAT_ACTIVE");
+  if (room.restOffer !== true) throw new Error("REST_NOT_OFFERED");
+  const budget = room.restBudget ?? 2;
+  if (budget < 1) throw new Error("REST_BUDGET");
+  room.restBudget = budget - 1;
+  if (room.restBudget <= 0) room.restOffer = false;
   if (!room.vitals) room.vitals = {};
   if (!room.wounds) room.wounds = {};
   const notes: string[] = [];
@@ -1288,7 +1311,10 @@ export function shortRest(roomCode: string): Room {
     room.wounds![playerId] = Math.max(0, token.maxHp - token.hp);
     room.vitals![playerId] = exportVitals(token);
   });
-  const line = notes.length ? `${notes.join(". ")}.` : "The party catches a short rest.";
+  const left = room.restBudget ?? 0;
+  const line = notes.length
+    ? `${notes.join(". ")}. ${left ? `${left} rest${left === 1 ? "" : "s"} left this tale.` : "No rests left this tale."}`
+    : `The party catches a short rest. ${left ? `${left} rest${left === 1 ? "" : "s"} left this tale.` : "No rests left this tale."}`;
   narrate(room, line);
   touch(room);
   return room;
@@ -1297,6 +1323,11 @@ export function shortRest(roomCode: string): Room {
 export function longRest(roomCode: string): Room {
   const room = requireRoom(roomCode);
   if (room.combat?.status === "active") throw new Error("COMBAT_ACTIVE");
+  if (room.restOffer !== true) throw new Error("REST_NOT_OFFERED");
+  const budget = room.restBudget ?? 2;
+  if (budget < 2) throw new Error("REST_BUDGET");
+  room.restBudget = 0;
+  room.restOffer = false;
   if (!room.vitals) room.vitals = {};
   if (!room.wounds) room.wounds = {};
   eachHero(room, (playerId, pregen) => {
@@ -1328,7 +1359,7 @@ export function longRest(roomCode: string): Room {
     room.wounds![playerId] = 0;
     room.vitals![playerId] = exportVitals(token);
   });
-  narrate(room, "A long rest. Wounds close, spells return, and the party stands ready.");
+  narrate(room, "A long rest. Wounds close, spells return, and the party stands ready. No rests left this tale.");
   touch(room);
   return room;
 }
@@ -1356,6 +1387,7 @@ function finishCombat(room: Room): void {
   if (node?.encounterId === "corridor_magma_rat") setFlags(room, ["magma_done"]);
   const encounter = node?.encounterId ? getEncounter(node.encounterId) : undefined;
   const next = node?.onVictory || "END_WIN";
+  room.restOffer = (room.restBudget ?? 2) > 0;
   goTo(room, next);
   room.outro = { combat, text: encounter?.outro ?? "The last foe falls. Silence settles over the stones." };
 }

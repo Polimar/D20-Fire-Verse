@@ -6,18 +6,28 @@ export function qrSvg(text: string, cell = 5): string {
   const qr = qrcode(0, "M");
   qr.addData(text);
   qr.make();
-  return qr.createSvgTag({ cellSize: cell, margin: 2, scalable: true });
+  // Keep width/height so older Fire TV WebViews still size the code without aspect-ratio.
+  return qr.createSvgTag({ cellSize: cell, margin: 2, scalable: false });
 }
 
-let tableInfo: Promise<{ companionUrl: string; hosts: string[] } | null> | null = null;
+type TableInfo = { companionUrl: string; hosts: string[] };
+
+let tableInfo: Promise<TableInfo | null> | null = null;
+
+function sameOriginCompanion(): string {
+  return new URL("/companion/", location.href).href;
+}
 
 export function companionBase(): Promise<string> {
   if (!tableInfo) {
     tableInfo = fetch("/api/table-info")
-      .then((r) => (r.ok ? r.json() : null))
-      .catch(() => null);
+      .then((r) => (r.ok ? (r.json() as Promise<TableInfo>) : null))
+      .catch(() => {
+        tableInfo = null;
+        return null;
+      });
   }
-  return tableInfo.then((info) => info?.companionUrl ?? `${location.protocol}//${location.hostname}:4319/companion/`);
+  return tableInfo.then((info) => info?.companionUrl ?? sameOriginCompanion());
 }
 
 export async function companionUrl(roomCode?: string, seat?: string): Promise<string> {
@@ -26,6 +36,14 @@ export async function companionUrl(roomCode?: string, seat?: string): Promise<st
   if (roomCode) u.searchParams.set("room", roomCode);
   if (seat) u.searchParams.set("seat", seat);
   return u.toString();
+}
+
+/** Paint a scannable QR that is also a real link, with the URL shown for typing. */
+export function paintCompanionQr(host: HTMLElement, url: string, hint?: HTMLElement | null, hintText?: string): void {
+  const escAttr = (s: string) => s.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
+  const label = url.replace(/^https?:\/\//, "").replace(/\/$/, "");
+  host.innerHTML = `<a class="qr-link" href="${escAttr(url)}" target="_blank" rel="noopener">${qrSvg(url)}</a>`;
+  if (hint) hint.textContent = hintText ?? `Scan or open ${label}`;
 }
 
 export const REMOTE_LEGEND = `

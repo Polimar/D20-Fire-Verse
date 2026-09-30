@@ -2140,6 +2140,7 @@ function buildPcSheet(
     inventory: token.inventory ?? [],
     weapons: (pregen as { weapons?: string[] } | undefined)?.weapons ?? [],
     spellSlots: token.slots ?? null,
+    spellSlotMax: (pregen as { spellSlots?: Record<string, number> } | undefined)?.spellSlots ?? token.slots ?? null,
     conditions: token.conditions ?? [],
     concentrating: token.concentrating?.spellId ?? null,
     resources: {
@@ -2335,6 +2336,11 @@ export function requestAim(combat: CombatState, playerId: string, abilityId: str
   combat.aimRequest = { playerId, abilityId };
 }
 
+/** Re-read after a callee such as holdForShield, which may have stored a new reaction. */
+function pendingAfter(combat: CombatState): PendingReaction | undefined {
+  return combat.pending;
+}
+
 export function resolveReaction(combat: CombatState, playerId: string, accept: boolean): void {
   const pending = combat.pending;
   if (!pending || pending.playerId !== playerId) throw new Error("NO_REACTION");
@@ -2374,9 +2380,10 @@ export function resolveReaction(combat: CombatState, playerId: string, accept: b
     const effect = ability?.effects[0];
     const pregen = reactor.characterId ? getPregen(reactor.characterId) : undefined;
     if (effect) resolveSpellAttack(combat, reactor, pregen, ability?.name ?? "Opportunity Attack", effect, mover.id, true, true);
-    if (combat.pending && pending.path && mover) {
-      combat.pending.resumePath = pending.path;
-      combat.pending.resumeMoverId = mover.id;
+    const follow = pendingAfter(combat);
+    if (follow && pending.path) {
+      follow.resumePath = pending.path;
+      follow.resumeMoverId = mover.id;
     }
   }
   if (!combat.pending && mover && pending.path) continueAfterThreat(combat, mover, pending.path);

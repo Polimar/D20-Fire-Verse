@@ -179,6 +179,12 @@ export type RoomState = {
   savePrompt: boolean;
   autosaveId: string | null;
   localPlayerId: string | null;
+  rest?: {
+    offer: boolean;
+    budget: number;
+    canShort: boolean;
+    canLong: boolean;
+  };
 };
 
 export type Pregen = {

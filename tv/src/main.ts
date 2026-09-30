@@ -12,11 +12,12 @@ import { DUNGEON_ROOMS, roomForNode, type DungeonRoomId } from "./dungeon-map";
 import { onMusicChange, setMusic, toggleMusic, type MusicTrack } from "./music";
 import { registerNativeBack } from "./native";
 import { moveFocus, ownsArrows, remoteKey, restoreFocus, setScopeProvider, type RemoteKey } from "./nav";
-import { companionUrl, qrSvg, REMOTE_LEGEND } from "./onboarding";
+import { companionUrl, paintCompanionQr, REMOTE_LEGEND } from "./onboarding";
 import { puzzleBack, puzzleKindForNode, renderInteractivePuzzle } from "./puzzles";
 import { chapterCard, mountScenes, setScene } from "./scenefx";
 import { ART, sceneForNode } from "./scenes";
 import { clearSession, loadSession, saveSession, type Session } from "./session";
+import { adminOpen, closeAdmin, openAdmin } from "./admin-ui";
 import { closeSettings, openSettings, settingsOpen } from "./settings-ui";
 import { onSettings, settings } from "./settings";
 import { sfx } from "./sfx";
@@ -37,6 +38,10 @@ appRoot.innerHTML = `
     <ol class="party-rail" id="partyRail" aria-label="The party"></ol>
     <div class="now-playing" id="nowPlaying" aria-live="off"><span class="music-bars" aria-hidden="true"><i></i><i></i><i></i></span><span><em id="musicKicker">Music</em><strong id="musicTitle">A Very Potent Brew</strong></span></div>
     <div class="conn" id="conn" role="status">Connecting…</div>
+    <div class="play-controls" id="playControls" hidden>
+      <button type="button" class="ghost" id="btnSaveGame">Save</button>
+      <button type="button" class="ghost" id="btnLeaveTable">Title menu</button>
+    </div>
     <div class="menu-hint" aria-hidden="true"><kbd>☰</kbd> Settings</div>
   </header>
 
@@ -57,6 +62,7 @@ appRoot.innerHTML = `
         <p class="home-kicker">A one-shot for the living room · 5E rules</p>
         <h1 class="home-title">A Very<br />Potent Brew</h1>
         <p class="home-lead">The television is the table. Nobody has to run the game: the rules roll every die in the open, the narrator reads every scene aloud, and the party decides the rest.</p>
+        <p class="home-welcome" id="homeWelcome" hidden></p>
         <div class="home-cta" id="homeCta"></div>
         <div class="home-load" id="homeLoad" hidden>
           <input id="saveId" placeholder="Save code, e.g. save-ABC123-…" autocomplete="off" spellcheck="false" />
@@ -167,12 +173,27 @@ appRoot.innerHTML = `
       </div>
     </div>
   </div>
+  <div class="modal" id="leaveModal" hidden role="dialog" aria-label="Leave the table">
+    <div class="modal-card">
+      <p class="modal-kicker">Leave the table</p>
+      <h2>Back to the title?</h2>
+      <p>Continue will bring you back to this seat. Save first if you want a code to load later.</p>
+      <div class="row modal-actions">
+        <button type="button" class="ghost" id="btnLeaveSave">Save progress</button>
+        <button type="button" class="primary" id="btnLeaveConfirm" data-autofocus>Leave</button>
+        <button type="button" class="ghost" id="btnLeaveStay">Stay</button>
+      </div>
+    </div>
+  </div>
   <div class="toast" id="toast" role="status" hidden></div>
 `;
 
 const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
 
 mountScenes($("stage"));
+
+type Account = { username: string; role: "admin" | "player" };
+let account: Account | null = null;
 
 let ws: WebSocket | null = null;
 let state: RoomState | null = null;
@@ -252,6 +273,8 @@ function showPage(next: PageId) {
     setMusic("tavern");
   }
   if (next !== "combat") combat.reset();
+  const inPlay = next === "story" || next === "combat";
+  $("playControls").hidden = !inPlay;
   requestAnimationFrame(() => restoreFocus(null));
 }
 
@@ -421,10 +444,68 @@ $("btnWithdraw").addEventListener("click", () => {
   send({ action: "WITHDRAW", roomCode: state?.roomCode });
 });
 
+function inPlay(): boolean {
+  return page === "story" || page === "combat";
+}
+
+function saveGame() {
+  if (!state?.roomCode) {
+    toast("No table to save yet.", "info");
+    return;
+  }
+  sfx("uiConfirm");
+  send({ action: "REQUEST_SAVE", roomCode: state.roomCode });
+}
+
+function openLeaveModal() {
+  if (!inPlay()) return;
+  $("leaveModal").hidden = false;
+  requestAnimationFrame(() => $("btnLeaveConfirm").focus());
+  sfx("uiConfirm");
+}
+
+function closeLeaveModal(playSound = true) {
+  if ($("leaveModal").hidden) return;
+  $("leaveModal").hidden = true;
+  if (playSound) sfx("uiBack");
+}
+
+function leaveToTitle() {
+  closeLeaveModal(false);
+  if (settingsOpen()) closeSettings();
+  if (adminOpen()) closeAdmin();
+  stopNarration();
+  $("defeatModal").hidden = true;
+  spectating = false;
+  lobbyEntry = null;
+  sfx("uiBack");
+  showPage("home");
+}
+
+$("btnSaveGame").addEventListener("click", () => saveGame());
+$("btnLeaveTable").addEventListener("click", () => openLeaveModal());
+$("btnLeaveSave").addEventListener("click", () => {
+  saveGame();
+});
+$("btnLeaveConfirm").addEventListener("click", () => leaveToTitle());
+$("btnLeaveStay").addEventListener("click", () => closeLeaveModal());
+
+function openTableSettings() {
+  openSettings(undefined, inPlay() ? { onSave: saveGame, onLeave: openLeaveModal } : undefined);
+}
+
 // ------------------------------------------------------------------ home
 
 function renderHome() {
   const session = loadSession();
+  const welcome = $("homeWelcome");
+  if (account?.username) {
+    welcome.hidden = false;
+    welcome.textContent = `Welcome, ${account.username}.`;
+  } else {
+    welcome.hidden = true;
+    welcome.textContent = "";
+  }
   const cta = $("homeCta");
   const cont = session
     ? `<button type="button" class="primary continue" id="btnContinue" data-autofocus>
@@ -441,7 +522,8 @@ function renderHome() {
     ${camp}
     <button type="button" class="${session ? "" : "primary"}" id="btnNew" ${session ? "" : "data-autofocus"}>Begin a new tale</button>
     <button type="button" class="ghost" id="btnLoad">Load a save code</button>
-    <button type="button" class="ghost" id="btnSettings">Settings</button>`;
+    <button type="button" class="ghost" id="btnSettings">Settings</button>
+    ${account?.role === "admin" ? `<button type="button" class="ghost" id="btnAdmin">Manage the table</button>` : ""}`;
   $("btnContinue")?.addEventListener("click", () => continueSession());
   $("btnNew").addEventListener("click", () => {
     sfx("uiConfirm");
@@ -459,8 +541,12 @@ function renderHome() {
     $("homeLoad").hidden = !$("homeLoad").hidden;
     if (!$("homeLoad").hidden) $("saveId").focus();
   });
-  $("btnSettings").addEventListener("click", () => openSettings());
-  void companionUrl().then((url) => ($("homeQr").innerHTML = qrSvg(url)));
+  $("btnSettings").addEventListener("click", () => openTableSettings());
+  $("btnAdmin")?.addEventListener("click", () => openAdmin());
+  void companionUrl().then((url) => {
+    const label = url.replace(/^https?:\/\//, "").replace(/\/$/, "");
+    paintCompanionQr($("homeQr"), url, $("homeQr").parentElement?.querySelector<HTMLElement>(".meta"), `Scan or open ${label}`);
+  });
 }
 
 function continueSession() {
@@ -556,9 +642,9 @@ function renderLobby() {
   watch.hidden = phones === 0;
   watch.textContent = phones === 1 ? "Begin with the phone player" : `Begin with the ${phones} phone players`;
   if (state?.roomCode) {
-    void companionUrl(state.roomCode).then((url) => {
-      $("lobbyQr").innerHTML = qrSvg(url);
-      $("lobbyQrHint").textContent = `Scan to join table ${state?.roomCode ?? ""} from a phone.`;
+    const code = state.roomCode;
+    void companionUrl(code).then((url) => {
+      paintCompanionQr($("lobbyQr"), url, $("lobbyQrHint"), `Scan to join table ${code} from a phone.`);
     });
   }
 }
@@ -778,14 +864,18 @@ function renderChoices(s: RoomState) {
   box.querySelectorAll<HTMLElement>("[data-choice]").forEach((b) =>
     b.addEventListener("click", () => cast(b.dataset.choice!)),
   );
-  if (!s.combat && s.nodeType !== "encounter") {
-    box.insertAdjacentHTML(
-      "beforeend",
-      `<button type="button" class="choice" id="btnShortRest"><span class="choice-n">☾</span><span>Short rest</span></button>
-       <button type="button" class="choice" id="btnLongRest"><span class="choice-n">☼</span><span>Long rest</span></button>`,
-    );
-    $("btnShortRest").addEventListener("click", () => send({ action: "SHORT_REST", roomCode: s.roomCode }));
-    $("btnLongRest").addEventListener("click", () => send({ action: "LONG_REST", roomCode: s.roomCode }));
+  const rest = s.rest;
+  if (!s.combat && s.nodeType !== "encounter" && rest?.offer && (rest.canShort || rest.canLong)) {
+    const note = `<p class="rest-note">This tale allows one long rest or two short rests · ${rest.budget} left</p>`;
+    const shortBtn = rest.canShort
+      ? `<button type="button" class="choice" id="btnShortRest"><span class="choice-n">☾</span><span>Short rest · costs 1</span></button>`
+      : "";
+    const longBtn = rest.canLong
+      ? `<button type="button" class="choice" id="btnLongRest"><span class="choice-n">☼</span><span>Long rest · costs 2</span></button>`
+      : "";
+    box.insertAdjacentHTML("beforeend", `${note}${shortBtn}${longBtn}`);
+    $("btnShortRest")?.addEventListener("click", () => send({ action: "SHORT_REST", roomCode: s.roomCode }));
+    $("btnLongRest")?.addEventListener("click", () => send({ action: "LONG_REST", roomCode: s.roomCode }));
   }
 }
 
@@ -1035,6 +1125,14 @@ function connect() {
 // ------------------------------------------------------------------ remote
 
 function handleBack(): boolean {
+  if (adminOpen()) {
+    closeAdmin();
+    return true;
+  }
+  if (!$("leaveModal").hidden) {
+    closeLeaveModal();
+    return true;
+  }
   if (settingsOpen()) {
     closeSettings();
     return true;
@@ -1055,8 +1153,8 @@ function handleBack(): boolean {
     renderChoices(state);
     return true;
   }
-  if (page === "story") {
-    stopNarration();
+  if (page === "story" || page === "combat") {
+    openLeaveModal();
     return true;
   }
   if (page === "home" && isNarrating()) {
@@ -1079,17 +1177,19 @@ window.addEventListener("keydown", (e) => {
       const b = $("choices").querySelectorAll<HTMLElement>("[data-choice]")[Number(e.key) - 1];
       b?.click();
     }
-    if (!typing && (e.key === "s" || e.key === "S")) openSettings();
+    if (!typing && (e.key === "s" || e.key === "S")) openTableSettings();
     return;
   }
   if (typing && key === "back" && e.key === "Backspace") return;
   if (key === "menu") {
     e.preventDefault();
-    if (settingsOpen()) closeSettings();
-    else openSettings();
+    if (adminOpen()) closeAdmin();
+    else if (!$("leaveModal").hidden) closeLeaveModal();
+    else if (settingsOpen()) closeSettings();
+    else openTableSettings();
     return;
   }
-  if (!settingsOpen() && page === "combat" && !document.querySelector(".modal:not([hidden])") && combat.handleKey(key)) {
+  if (!settingsOpen() && $("leaveModal").hidden && page === "combat" && !document.querySelector(".modal:not([hidden])") && combat.handleKey(key)) {
     e.preventDefault();
     return;
   }
@@ -1137,10 +1237,23 @@ void ({} as RemoteKey);
 setScene(ART.home, "warm");
 renderHome();
 
+async function readAccount(res: Response): Promise<Account | null> {
+  try {
+    const data = (await res.json()) as { user?: { username?: string; role?: string } };
+    const role = data.user?.role;
+    if (role !== "admin" && role !== "player") return null;
+    return { username: String(data.user?.username ?? ""), role };
+  } catch {
+    return null;
+  }
+}
+
 async function ensureLogin(): Promise<void> {
   const me = await fetch("/api/me", { credentials: "same-origin" });
   if (me.ok) {
+    account = await readAccount(me);
     $("loginGate").hidden = true;
+    renderHome();
     return;
   }
   $("loginGate").hidden = false;
@@ -1161,7 +1274,9 @@ async function ensureLogin(): Promise<void> {
         $("loginError").textContent = "That username or password is wrong.";
         return;
       }
+      account = await readAccount(res);
       $("loginGate").hidden = true;
+      renderHome();
       resolve();
     });
   });

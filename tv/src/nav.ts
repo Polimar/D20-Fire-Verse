@@ -229,7 +229,12 @@ export function ownsArrows(el: Element | null, key: RemoteKey): boolean {
   if (!el) return false;
   const h = el as HTMLElement;
   if (h.dataset.arrows === "all") return true;
-  if (el instanceof HTMLInputElement && (el.type === "text" || el.type === "search")) {
+  if (el instanceof HTMLTextAreaElement) return key === "up" || key === "down" || key === "left" || key === "right";
+  if (el instanceof HTMLSelectElement) return key === "up" || key === "down";
+  if (
+    el instanceof HTMLInputElement &&
+    (el.type === "text" || el.type === "search" || el.type === "password" || el.type === "number" || el.type === "")
+  ) {
     return key === "left" || key === "right";
   }
   return false;
