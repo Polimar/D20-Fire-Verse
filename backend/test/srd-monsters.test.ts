@@ -3,6 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { test } from "node:test";
+import { portraitForMonster } from "../src/local/campaign.js";
 import { parseSrdMarkdown, srdMonsterId } from "../src/local/srd-monsters.js";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -36,4 +37,9 @@ test("SRD parser reads Multiattack, Recharge, and mapped Spellcasting", () => {
   const breath = Object.values(abilities).find((a) => a.name === "Fire Breath");
   assert.equal(breath?.effects[0]?.type, "save");
   assert.ok(breath?.effects[0]?.recharge);
+});
+
+test("SRD monster portraits are painted webp tokens", () => {
+  assert.equal(portraitForMonster("srd_goblin"), "/art/portraits/srd_goblin.webp");
+  assert.equal(portraitForMonster("giant_rat"), "/art/portraits/giant_rat.webp");
 });

@@ -94,7 +94,11 @@ export class Board {
   private layout() {
     const w = this.app.screen.width;
     const h = this.app.screen.height;
-    this.cell = Math.max(24, Math.min(Math.floor((w - 24) / this.cols), Math.floor((h - 24) / this.rows), CELL_MAX));
+    const pad = 12;
+    this.cell = Math.max(
+      1,
+      Math.min(Math.floor((w - pad) / this.cols), Math.floor((h - pad) / this.rows), CELL_MAX),
+    );
     this.ox = Math.floor((w - this.cols * this.cell) / 2);
     this.oy = Math.floor((h - this.rows * this.cell) / 2);
     this.drawFloor();
@@ -491,18 +495,12 @@ export class Board {
     this.world.position.set(x, y);
   }
 
-  /** Lean the camera toward some cells (an actor and its target), or back out to the whole board. */
-  focus(cells: Cell[] | null, zoom = 1.3, ms = 520): Promise<void> {
+  /** Keep the whole board in view (zoom stays 1 so maps are never cropped). Shake still applies. */
+  focus(cells: Cell[] | null, _zoom = 1, ms = 520): Promise<void> {
+    void cells;
+    void _zoom;
     const from = { ...this.cam };
-    let to: { x: number; y: number; zoom: number };
-    if (!cells?.length || reducedMotion()) {
-      to = { x: this.app.screen.width / 2, y: this.app.screen.height / 2, zoom: 1 };
-    } else {
-      const pts = cells.map((c) => this.center(c));
-      const cx = pts.reduce((s, p) => s + p.x, 0) / pts.length;
-      const cy = pts.reduce((s, p) => s + p.y, 0) / pts.length;
-      to = { x: cx, y: cy, zoom };
-    }
+    const to = { x: this.app.screen.width / 2, y: this.app.screen.height / 2, zoom: 1 };
     if (from.zoom <= 1.001) {
       from.x = to.x;
       from.y = to.y;

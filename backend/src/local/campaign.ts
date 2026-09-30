@@ -223,7 +223,7 @@ export function portraitForCharacter(characterId: string | undefined): string | 
 export function portraitForMonster(monsterId: string | undefined): string | null {
   if (!monsterId) return null;
   if (MONSTER_PORTRAITS.has(monsterId)) return portraitUrl(monsterId);
-  if (monsterId.startsWith("srd_")) return `/art/portraits/${monsterId}.png`;
+  if (monsterId.startsWith("srd_")) return `/art/portraits/${monsterId}.webp`;
   return null;
 }
 

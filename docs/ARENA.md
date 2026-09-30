@@ -15,7 +15,7 @@ A simultaneous wipe of every remaining fighter is a **draw**.
 
 The create form filters the roster by **name** and **CR**. Default foe is the first catalog id whose CR fits the room level (L1 ≤ 1/4, L2 ≤ 1, L3 ≤ 2). Unique traits outside Pack Tactics / Legendary Resistance / Magic Resistance are not simulated. Large creatures still occupy one cell.
 
-Monster portraits live at `/art/portraits/{monsterId}.png`.
+Monster portraits live at `/art/portraits/{monsterId}.webp`.
 
 
 ## Flow

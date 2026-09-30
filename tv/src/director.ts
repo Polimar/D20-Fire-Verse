@@ -135,7 +135,7 @@ export class Director {
         this.hooks.onLine(e.line, e.kind);
         if (t.kind !== "pc") {
           const cell = this.board.pawnCell(t.id);
-          void this.board.focus(cell ? [cell] : null, 1.28, 480);
+          void this.board.focus(cell ? [cell] : null, 1, 480);
         } else {
           void this.board.focus(null, 1, 360);
         }
@@ -147,7 +147,7 @@ export class Director {
         const mine = this.mine(e.tokenId);
         this.hooks.onLine(e.line, e.kind);
         if (!mine && e.path.length > 1) {
-          void this.board.focus([e.path[0]!, e.path[e.path.length - 1]!], 1.22, 380);
+          void this.board.focus([e.path[0]!, e.path[e.path.length - 1]!], 1, 380);
         }
         const skitter = isSkittering(t);
         await this.board.walk(e.tokenId, e.path, mine ? 150 : skitter ? 150 : 210, (cell) => {
@@ -208,7 +208,7 @@ export class Director {
     this.hooks.onLine(e.line, e.kind);
     const targets = e.hits.map((h) => this.board.pawnCell(h.targetId)).filter((c): c is NonNullable<typeof c> => !!c);
     const self = this.board.pawnCell(e.tokenId);
-    if (self) void this.board.focus([self, ...targets], mine ? 1.12 : 1.3, 380);
+    if (self) void this.board.focus([self, ...targets], 1, 380);
 
     const attackRoll = e.rolls.find((r) => isD20(r) && (r.purpose === "attack" || r.vs?.kind === "AC"));
     const saves = e.rolls.filter((r) => isD20(r) && r !== attackRoll);
