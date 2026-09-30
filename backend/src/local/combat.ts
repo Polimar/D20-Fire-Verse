@@ -109,6 +109,19 @@ export type CombatToken = {
   hitDice?: number;
   arcaneRecovery?: boolean;
   attackedThisTurn?: boolean;
+  saves?: Record<string, number>;
+  damageResistances?: string[];
+  damageImmunities?: string[];
+  damageVulnerabilities?: string[];
+  traits?: string[];
+  legendaryUses?: number;
+  legendaryLeft?: number;
+  legendaryActions?: string[];
+  legendaryResistLeft?: number;
+  abilityUses?: Record<string, number>;
+  rechargeReady?: Record<string, boolean>;
+  multiattack?: string[];
+  actionPool?: string[];
 };
 
 export type StrikeHit = {
@@ -218,6 +231,7 @@ export type CombatState = {
   aimRequest?: { playerId: string; abilityId: string };
   pvp?: "ffa" | "teams";
   pvpWinner?: string;
+  pve?: boolean;
 };
 
 function rectGrid(
@@ -527,6 +541,7 @@ export function startCombat(
         secondWindUsed: false,
         reactionReady: true,
       });
+      stampMonster(tokens[tokens.length - 1]!, mon);
     }
   }
 
@@ -594,11 +609,67 @@ export function startCombat(
   return combat;
 }
 
+function stampMonster(token: CombatToken, mon: ReturnType<typeof getMonster>): void {
+  if (!mon) return;
+  token.saves = mon.saves;
+  token.damageResistances = mon.damageResistances;
+  token.damageImmunities = mon.damageImmunities;
+  token.damageVulnerabilities = mon.damageVulnerabilities;
+  token.traits = mon.traits;
+  token.legendaryUses = mon.legendaryUses;
+  token.legendaryLeft = mon.legendaryUses ?? 0;
+  token.legendaryActions = mon.legendaryActions;
+  token.legendaryResistLeft = mon.traits?.includes("legendary_resistance") ? 3 : 0;
+  token.bonusActionIds = mon.bonusActions ?? token.bonusActionIds;
+  token.hasBonusAction = Boolean(token.bonusActionIds.length);
+  token.multiattack = mon.multiattack;
+  token.actionPool = mon.actionPool ?? mon.actions;
+  token.actionIds = token.actionPool ?? mon.actions;
+}
+
+function makeEnemyToken(
+  mon: NonNullable<ReturnType<typeof getMonster>>,
+  spot: { x: number; y: number },
+  seq: number,
+  nameExtra = "",
+): CombatToken {
+  const initRoll = rollD20() + abilityMod(mon.abilities.dex ?? 10);
+  const token: CombatToken = {
+    id: `en-${seq}`,
+    kind: "enemy",
+    name: `${mon.name}${nameExtra}`,
+    x: spot.x,
+    y: spot.y,
+    hp: mon.hp,
+    maxHp: mon.hp,
+    ac: mon.ac,
+    speedCells: mon.speedCells,
+    movementLeft: mon.speedCells,
+    hasAction: true,
+    hasBonusAction: false,
+    initiative: initRoll,
+    monsterId: mon.id,
+    actionIds: mon.actions,
+    bonusActionIds: mon.bonusActions ?? [],
+    inventory: [],
+    dead: false,
+    dodging: false,
+    disengaging: false,
+    hidden: false,
+    secondWindUsed: false,
+    reactionReady: true,
+  };
+  stampMonster(token, mon);
+  return token;
+}
+
 export function startArenaCombat(opts: {
   map: ArenaMapDef;
   players: Array<{ playerId: string; characterId: string; characterName?: string; teamId?: string }>;
   level: number;
   teams: boolean;
+  pve?: boolean;
+  monsterId?: string;
 }): CombatState {
   const map = opts.map;
   const walls = wallGrid(map as unknown as MapDef);
@@ -644,7 +715,21 @@ export function startArenaCombat(opts: {
     initSheet(hero, pregen);
     refreshMenus(hero, pregen, getAbility);
   });
-  const dexOf = (t: CombatToken) => getPregen(t.characterId!)?.abilities.dex ?? 10;
+  if (opts.pve) {
+    const mon = getMonster(opts.monsterId ?? "");
+    if (!mon) throw new Error("BAD_MONSTER");
+    const heroSpot = tokens[0];
+    const spot =
+      map.spawn.teamB[0] ??
+      map.spawn.ffa[1] ??
+      map.spawn.ffa[0] ??
+      { x: Math.min(map.width - 1, (heroSpot?.x ?? 0) + 4), y: heroSpot?.y ?? 0 };
+    tokens.push(makeEnemyToken(mon, spot, 1));
+  }
+  const dexOf = (t: CombatToken) =>
+    t.kind === "pc"
+      ? (getPregen(t.characterId!)?.abilities.dex ?? 10)
+      : (getMonster(t.monsterId!)?.abilities.dex ?? 10);
   const turnOrder = [...tokens].sort((a, b) => b.initiative - a.initiative || dexOf(b) - dexOf(a)).map((t) => t.id);
   const combat: CombatState = {
     encounterId: map.id,
@@ -662,7 +747,8 @@ export function startArenaCombat(opts: {
     status: "active",
     events: [],
     seq: 0,
-    pvp: opts.teams ? "teams" : "ffa",
+    pvp: opts.pve ? undefined : opts.teams ? "teams" : "ffa",
+    pve: opts.pve || undefined,
   };
   emit(combat, {
     kind: "start",
@@ -670,6 +756,7 @@ export function startArenaCombat(opts: {
     line: `Arena initiative: ${turnOrder.map((id) => tokens.find((t) => t.id === id)!.name).join(", ")}.`,
   });
   beginTurn(combat);
+  settleEnemies(combat);
   return combat;
 }
 
@@ -751,7 +838,7 @@ function beginTurn(combat: CombatState): void {
     return;
   }
   t.movementLeft = t.speedCells;
-  if (hasCondition(t, "restrained") || hasCondition(t, "paralyzed") || hasCondition(t, "unconscious")) t.movementLeft = 0;
+  if (hasCondition(t, "restrained") || hasCondition(t, "paralyzed") || hasCondition(t, "unconscious") || hasCondition(t, "grappled")) t.movementLeft = 0;
   if (hasCondition(t, "slowed")) t.movementLeft = Math.max(0, t.movementLeft - 2);
   t.hasAction = true;
   t.hasBonusAction = t.kind === "pc";
@@ -768,6 +855,39 @@ function beginTurn(combat: CombatState): void {
   t.attackedThisTurn = false;
   if (t.spiritualRounds) t.spiritualRounds -= 1;
   if (t.webCooldown) t.webCooldown -= 1;
+  if (t.kind === "enemy") {
+    t.legendaryLeft = t.legendaryUses ?? 0;
+    t.hasBonusAction = Boolean(t.bonusActionIds.length);
+    const recIds = [...t.actionIds, ...t.bonusActionIds, ...(t.legendaryActions ?? [])];
+    if (!t.rechargeReady) t.rechargeReady = {};
+    for (const id of recIds) {
+      const rec = resolvedEffect(id)?.recharge as { min: number; max: number } | undefined;
+      if (!rec || t.rechargeReady[id] !== false) continue;
+      const roll = rollNotation("1d6");
+      const ready = roll.total >= rec.min && roll.total <= rec.max;
+      if (ready) t.rechargeReady[id] = true;
+      emit(combat, {
+        kind: "status",
+        tokenId: t.id,
+        ability: "recharge",
+        rolls: [
+          makeDiceRoll({
+            roller: t.name,
+            notation: "1d6",
+            values: roll.values,
+            sides: roll.sides,
+            modifier: roll.modifier,
+            total: roll.total,
+            purpose: "check",
+            label: "Recharge",
+          }),
+        ],
+        line: ready
+          ? `${t.name} recharges a special action (${roll.total}).`
+          : `${t.name} fails to recharge (${roll.total}).`,
+      });
+    }
+  }
   if (t.sheetDriven && t.characterId) refreshMenus(t, getPregen(t.characterId), getAbility);
   emit(combat, { kind: "turn", tokenId: t.id, round: combat.round, line: `Round ${combat.round} — ${t.name}.` });
   refreshReachable(combat);
@@ -812,12 +932,78 @@ type AttackSpec = {
   fireOnHit?: string;
 };
 
+function resolvedEffect(id: string): Record<string, unknown> | undefined {
+  const ability = getAbility(id);
+  const effect = ability?.effects[0];
+  if (!effect) return undefined;
+  if (effect.ref) return resolvedEffect(String(effect.ref));
+  return effect;
+}
+
+function abilityReady(token: CombatToken, id: string): boolean {
+  const effect = resolvedEffect(id);
+  if (!effect) return false;
+  const rec = effect.recharge as { min: number; max: number } | undefined;
+  if (rec && token.rechargeReady?.[id] === false) return false;
+  const uses = effect.usesPerDay as number | undefined;
+  if (uses != null && (token.abilityUses?.[id] ?? uses) <= 0) return false;
+  return true;
+}
+
+function spendMonsterAbility(token: CombatToken, id: string): void {
+  const effect = resolvedEffect(id);
+  if (!effect) return;
+  if (effect.recharge) {
+    if (!token.rechargeReady) token.rechargeReady = {};
+    token.rechargeReady[id] = false;
+  }
+  const uses = effect.usesPerDay as number | undefined;
+  if (uses != null) {
+    if (!token.abilityUses) token.abilityUses = {};
+    token.abilityUses[id] = (token.abilityUses[id] ?? uses) - 1;
+  }
+}
+
+function harmAmount(target: CombatToken, amount: number, damageType: string): number {
+  const t = damageType.toLowerCase();
+  if (target.damageImmunities?.includes(t)) return 0;
+  let n = amount;
+  if (target.damageVulnerabilities?.includes(t)) n *= 2;
+  if (target.damageResistances?.includes(t)) n = Math.floor(n / 2);
+  return n;
+}
+
+function creatureSave(
+  token: CombatToken,
+  ability: string,
+  dc: number,
+  isMagic: boolean,
+): { roll: DiceRoll; ok: boolean } {
+  let mode: D20Mode = "normal";
+  if (isMagic && token.traits?.includes("magic_resistance")) mode = "advantage";
+  const roll = rollCheck({
+    roller: token.name,
+    label: `${ability.toUpperCase()} save`,
+    bonus: monsterSaveBonus(token, ability),
+    dc,
+    purpose: "save",
+    mode,
+  });
+  let ok = roll.outcome === "success";
+  if (!ok && token.traits?.includes("legendary_resistance") && (token.legendaryResistLeft ?? 0) > 0) {
+    token.legendaryResistLeft = (token.legendaryResistLeft ?? 0) - 1;
+    ok = true;
+  }
+  return { roll, ok };
+}
+
 function enemyAttacks(enemy: CombatToken): AttackSpec[] {
   const out: AttackSpec[] = [];
   for (const id of enemy.actionIds) {
+    if (!abilityReady(enemy, id)) continue;
     const ability = getAbility(id);
-    const effect = ability?.effects.find((e) => e.type === "attack");
-    if (!ability || !effect) continue;
+    const effect = resolvedEffect(id);
+    if (!ability || !effect || effect.type !== "attack") continue;
     const perTurn = (effect.onHit as Array<{ type: string; dice?: string }> | undefined)?.find(
       (h) => h.type === "damage_per_turn_start",
     );
@@ -864,7 +1050,10 @@ function runEnemyTurn(combat: CombatState, enemy: CombatToken): void {
   const melee = attacks.some((a) => a.range <= 1);
   const startDist = chebyshev(enemy.x, enemy.y, target.x, target.y);
 
-  const shouldMove = startDist > 1 && (melee || !pickEnemyAttack(combat, enemy, attacks, target));
+  const shouldMove =
+    startDist > 1 &&
+    !hasCondition(enemy, "frightened") &&
+    (melee || !pickEnemyAttack(combat, enemy, attacks, target));
   let moved = false;
   if (shouldMove) {
     const visits = explore(combat, enemy, enemy.movementLeft);
@@ -892,11 +1081,38 @@ function runEnemyTurn(combat: CombatState, enemy: CombatToken): void {
     }
   }
 
+  const saveId = pickEnemySave(combat, enemy, target);
   const attack = pickEnemyAttack(combat, enemy, attacks, target);
-  if (attack && enemy.hasAction) {
+  if (enemy.hasAction) {
     enemy.hasAction = false;
-    enemyStrike(combat, enemy, target, attack);
-  } else if (!attack && !moved) {
+    if (saveId && resolvedEffect(saveId)?.recharge) {
+      enemySaveCast(combat, enemy, target, saveId);
+    } else if (enemy.multiattack?.length) {
+      for (const id of enemy.multiattack) {
+        if (!abilityReady(enemy, id) || combat.status !== "active") continue;
+        const spec = enemyAttacks({ ...enemy, actionIds: [id] })[0];
+        if (spec) {
+          spendMonsterAbility(enemy, id);
+          enemyStrike(combat, enemy, target, spec);
+        } else if (resolvedEffect(id)?.type === "save") {
+          enemySaveCast(combat, enemy, target, id);
+        }
+      }
+    } else if (saveId) {
+      enemySaveCast(combat, enemy, target, saveId);
+    } else if (attack) {
+      spendMonsterAbility(enemy, attack.id);
+      enemyStrike(combat, enemy, target, attack);
+    } else if (!moved) {
+      emit(combat, {
+        kind: "status",
+        tokenId: enemy.id,
+        ability: "wait",
+        rolls: [],
+        line: `${enemy.name} hisses and waits for an opening.`,
+      });
+    }
+  } else if (!moved) {
     emit(combat, {
       kind: "status",
       tokenId: enemy.id,
@@ -905,15 +1121,116 @@ function runEnemyTurn(combat: CombatState, enemy: CombatToken): void {
       line: `${enemy.name} hisses and waits for an opening.`,
     });
   }
+  if (enemy.hasBonusAction) {
+    const bonus = enemy.bonusActionIds.find((id) => resolvedEffect(id)?.type === "disengage");
+    if (bonus) {
+      enemy.hasBonusAction = false;
+      enemy.disengaging = true;
+      emit(combat, {
+        kind: "status",
+        tokenId: enemy.id,
+        ability: getAbility(bonus)?.name ?? "Disengage",
+        rolls: [],
+        line: `${enemy.name} slips away (Disengage).`,
+      });
+    }
+  }
   enemy.hasAction = false;
   enemy.movementLeft = 0;
   checkEnd(combat);
 }
 
+function pickEnemySave(combat: CombatState, enemy: CombatToken, target: CombatToken): string | undefined {
+  if (!clearShot(combat, enemy.x, enemy.y, target.x, target.y)) return undefined;
+  const dist = chebyshev(enemy.x, enemy.y, target.x, target.y);
+  const ids = enemy.actionIds.filter((id) => {
+    const effect = resolvedEffect(id);
+    return effect?.type === "save" && abilityReady(enemy, id) && Number(effect.rangeCells ?? 1) >= dist;
+  });
+  ids.sort((a, b) => (resolvedEffect(a)?.recharge ? 0 : 1) - (resolvedEffect(b)?.recharge ? 0 : 1));
+  return ids[0];
+}
+
+function enemySaveCast(combat: CombatState, enemy: CombatToken, target: CombatToken, id: string): void {
+  const ability = getAbility(id);
+  const effect = resolvedEffect(id);
+  if (!ability || !effect) return;
+  spendMonsterAbility(enemy, id);
+  const dc = Number(effect.dc ?? 12);
+  const saveKey = String(effect.ability ?? "dex");
+  const { roll, ok } = creatureSave(target, saveKey, dc, false);
+  const rolls: DiceRoll[] = [roll];
+  const parts = (effect.damage as AttackSpec["damage"] | undefined) ?? [];
+  let damage = 0;
+  for (const part of parts) {
+    const r = rollNotation(part.dice);
+    damage += r.total;
+    rolls.push(
+      makeDiceRoll({
+        roller: enemy.name,
+        notation: part.dice,
+        values: r.values,
+        sides: r.sides,
+        modifier: r.modifier,
+        total: r.total,
+        purpose: "damage",
+        label: `${part.damageType} damage`,
+      }),
+    );
+  }
+  if (ok && effect.halfOnSuccess) damage = Math.floor(damage / 2);
+  else if (ok) damage = 0;
+  if (!ok && effect.condition) addCondition(target, String(effect.condition));
+  const dtype = parts[0]?.damageType ?? "untyped";
+  emit(combat, {
+    kind: "strike",
+    tokenId: enemy.id,
+    ability: ability.name,
+    style: "spell",
+    rolls,
+    hits: [{ targetId: target.id, outcome: ok ? "success" : "fail", damage, hp: Math.max(0, target.hp - damage) }],
+    line: `${enemy.name} uses ${ability.name}. ${target.name} ${ok ? "saves" : "fails"} (DC ${dc}). ${damage} damage.`,
+  });
+  if (damage > 0) applyDamage(combat, target, damage, false, dtype);
+}
+
+function runLegendaryWindow(combat: CombatState, justActed: CombatToken): void {
+  if (combat.status !== "active") return;
+  for (const t of combat.tokens) {
+    if (t.kind !== "enemy" || t.dead || t.id === justActed.id) continue;
+    if (!(t.legendaryLeft && t.legendaryLeft > 0)) continue;
+    const target = combat.tokens.filter((p) => p.kind === "pc" && !p.dead)[0];
+    if (!target) continue;
+    const ids = (t.legendaryActions ?? []).filter((id) => abilityReady(t, id));
+    if (!ids.length) continue;
+    t.legendaryLeft -= 1;
+    const spec = enemyAttacks({ ...t, actionIds: ids })[0];
+    emit(combat, {
+      kind: "status",
+      tokenId: t.id,
+      ability: "legendary",
+      rolls: [],
+      line: `${t.name} takes a legendary action.`,
+    });
+    if (spec) {
+      spendMonsterAbility(t, spec.id);
+      enemyStrike(combat, t, target, spec);
+    } else if (resolvedEffect(ids[0]!)?.type === "save") {
+      enemySaveCast(combat, t, target, ids[0]!);
+    }
+    if (combat.status !== "active") return;
+  }
+}
+
 function enemyStrike(combat: CombatState, enemy: CombatToken, target: CombatToken, attack: AttackSpec): void {
   if (!clearShot(combat, enemy.x, enemy.y, target.x, target.y)) return;
+  const pack =
+    enemy.traits?.includes("pack_tactics") &&
+    combat.tokens.some((a) => a.kind === "enemy" && !a.dead && a.id !== enemy.id && chebyshev(a.x, a.y, target.x, target.y) <= 1);
   const unseen = Boolean(target.invisible) || Boolean(target.blur);
-  const mode: D20Mode = target.dodging || unseen ? "disadvantage" : "normal";
+  let mode: D20Mode = "normal";
+  if (pack) mode = "advantage";
+  else if (target.dodging || unseen || hasCondition(enemy, "poisoned") || hasCondition(enemy, "blinded")) mode = "disadvantage";
   const roll = rollAttack({
     roller: enemy.name,
     label: `${attack.name} vs ${target.name}`,
@@ -1075,10 +1392,14 @@ function checkEnd(combat: CombatState): void {
   if (!enemiesAlive) {
     combat.status = "victory";
     combat.reachable = [];
+    const hero = combat.tokens.find((t) => t.kind === "pc");
+    if (combat.pve && hero) combat.pvpWinner = hero.name;
     emit(combat, { kind: "end", outcome: "victory", line: "The last foe falls. Victory!" });
   } else if (!pcsAlive) {
     combat.status = "defeat";
     combat.reachable = [];
+    const foe = combat.tokens.find((t) => t.kind === "enemy");
+    if (combat.pve && foe) combat.pvpWinner = foe.name;
     emit(combat, { kind: "end", outcome: "defeat", line: "The party falls…" });
   }
 }
@@ -1115,7 +1436,9 @@ function pcSpellDc(pregen: Pregen | undefined, ability: string): number {
 }
 
 function monsterSaveBonus(token: CombatToken, ability: string): number {
+  if (token.saves && token.saves[ability] != null) return token.saves[ability]!;
   const mon = token.monsterId ? getMonster(token.monsterId) : undefined;
+  if (mon?.saves && mon.saves[ability] != null) return mon.saves[ability]!;
   return abilityMod(mon?.abilities[ability] ?? 10);
 }
 
@@ -1773,15 +2096,9 @@ export function performPcAction(
       dc: number;
       damage?: Array<{ dice: string; damageType: string }>;
     };
-    const saveRoll = rollCheck({
-      roller: target.name,
-      label: `${save.ability.toUpperCase()} save`,
-      bonus: monsterSaveBonus(target, save.ability),
-      dc: save.dc,
-      purpose: "save",
-    });
+    const { roll: saveRoll, ok } = creatureSave(target, save.ability, save.dc, false);
     rolls.push(saveRoll);
-    if (saveRoll.outcome === "fail" && save.damage?.length) {
+    if (!ok && save.damage?.length) {
       const extra = rollNotation(save.damage[0].dice);
       dmgTotal += extra.total;
       rolls.push(
@@ -1919,15 +2236,8 @@ function castSaveArea(
   ];
   const hits: StrikeHit[] = [];
   for (const e of caught) {
-    const save = rollCheck({
-      roller: e.name,
-      label: `${saveKey.toUpperCase()} save`,
-      bonus: monsterSaveBonus(e, saveKey),
-      dc,
-      purpose: "save",
-    });
+    const { roll: save, ok: saved } = creatureSave(e, saveKey, dc, true);
     rolls.push(save);
-    const saved = save.outcome === "success";
     const dmg = saved ? (effect.halfOnSuccess ? Math.floor(rolled.total / 2) : 0) : rolled.total;
     if (!saved && effect.onFail) addCondition(e, String(effect.onFail));
     hits.push({
@@ -1977,8 +2287,8 @@ function effectiveAc(token: CombatToken): number {
   return Math.max(token.ac, token.acFloor ?? 0) + (token.acBonus ?? 0);
 }
 
-function applyDamage(combat: CombatState, target: CombatToken, amount: number, crit = false, damageType = "untyped"): void {
-  let harm = amount;
+export function applyDamage(combat: CombatState, target: CombatToken, amount: number, crit = false, damageType = "untyped"): void {
+  let harm = harmAmount(target, amount, damageType);
   if (target.raging && ["bludgeoning", "piercing", "slashing"].includes(damageType)) harm = Math.floor(harm / 2);
   if (target.kind === "pc" && (target.dying || target.stable || target.hp <= 0)) {
     if (harm > 0) {
@@ -1994,7 +2304,7 @@ function applyDamage(combat: CombatState, target: CombatToken, amount: number, c
   target.hp = Math.max(0, target.hp - harm);
   if (target.concentrating && harm > 0) concentrationCheck(combat, target, harm);
   if (target.hp === 0 && !target.dead) {
-    if (combat.pvp === "ffa") {
+    if (combat.pvp === "ffa" || combat.pve) {
       markDead(combat, target);
     } else if (target.kind === "pc" && over < target.maxHp) {
       target.dying = true;
@@ -2318,6 +2628,7 @@ export function endTurn(combat: CombatState, playerId: string): void {
   if (combat.pending) throw new Error("REACTION_PENDING");
   const t = currentToken(combat);
   if (!t || t.kind !== "pc" || t.playerId !== playerId) throw new Error("NOT_YOUR_TURN");
+  runLegendaryWindow(combat, t);
   advanceTurn(combat);
 }
 
@@ -2462,6 +2773,7 @@ export function publicCombat(combat: CombatState, viewerPlayerId?: string) {
     encounterId: combat.encounterId,
     mapId: combat.mapId,
     pvp: combat.pvp ?? null,
+    pve: Boolean(combat.pve),
     pvpWinner: combat.pvpWinner ?? null,
     art: (() => {
       const m = /^arena_(.+)_(small|medium|large)$/.exec(combat.mapId);

@@ -100,3 +100,20 @@ test("kicking without being the host is refused", () => {
   const a = joinRoom(room.roomCode, "One", "brenna_ironveal", "ua");
   assert.throws(() => arenaKick(room.roomCode, "other", a.playerId), /ARENA_NOT_OWNER/);
 });
+
+test("arena PvE 1v1 seats one hero against a catalog monster", () => {
+  const room = createArena({ format: "pve_1v1", theme: "brewery", mapSize: "small", level: 1, privacy: "public", name: "Hunt" });
+  assert.equal(room.arena?.format, "pve_1v1");
+  const a = joinRoom(room.roomCode, "One", "brenna_ironveal", "user_pve");
+  assert.throws(() => joinRoom(room.roomCode, "Two", "quill_ashmere", "user_pve2"), /ARENA_FULL/);
+  assert.throws(() => arenaStart(room.roomCode), /ARENA_NOT_READY/);
+  arenaReady(room.roomCode, a.playerId);
+  arenaStart(room.roomCode);
+  const c = room.combat!;
+  assert.equal(c.pvp, undefined);
+  assert.equal(c.pve, true);
+  assert.equal(c.tokens.filter((t) => t.kind === "pc").length, 1);
+  assert.equal(c.tokens.filter((t) => t.kind === "enemy").length, 1);
+  assert.equal(c.width, 16);
+  assert.ok(c.tokens.find((t) => t.kind === "enemy")?.monsterId?.startsWith("srd_"));
+});

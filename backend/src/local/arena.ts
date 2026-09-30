@@ -10,6 +10,8 @@ import {
 } from "./arena-maps.js";
 import { startArenaCombat, type CombatState } from "./combat.js";
 import type { Room } from "./room.js";
+import { defaultMonsterId, listArenaMonsters } from "./srd-monsters.js";
+import { getMonster } from "./campaign.js";
 
 export const ARENA_FORMATS = {
   ffa_1v1: { seats: 2, teams: 0, label: "Duel 1v1" },
@@ -19,6 +21,7 @@ export const ARENA_FORMATS = {
   ffa_6: { seats: 6, teams: 0, label: "Free-for-all 6" },
   teams_2v2: { seats: 4, teams: 2, label: "Teams 2v2" },
   teams_3v3: { seats: 6, teams: 2, label: "Teams 3v3" },
+  pve_1v1: { seats: 1, teams: 0, label: "PvE Duel 1v1" },
 } as const;
 
 export type ArenaFormatId = keyof typeof ARENA_FORMATS;
@@ -38,6 +41,7 @@ export type ArenaConfig = {
   phase: "lobby" | "active" | "ended" | "hero_swap";
   heroSwapEndsAt?: number;
   lastResult?: string;
+  monsterId?: string;
 };
 
 const HERO_SWAP_MS = 30_000;
@@ -66,6 +70,7 @@ export function parseCreateArena(body: {
   level?: number;
   privacy?: string;
   name?: string;
+  monsterId?: string;
 }): Omit<ArenaConfig, "phase"> {
   const format = body.format ?? "ffa_1v1";
   if (!isArenaFormat(format)) throw new Error("ARENA_BAD_FORMAT");
@@ -77,7 +82,15 @@ export function parseCreateArena(body: {
   if (level !== 1 && level !== 2 && level !== 3) throw new Error("BAD_LEVEL");
   const privacy = body.privacy === "private" ? "private" : "public";
   const name = String(body.name ?? "").trim().slice(0, 24);
-  return { format, theme, size, level, privacy, name };
+  let monsterId: string | undefined;
+  if (format === "pve_1v1") {
+    monsterId = String(body.monsterId ?? defaultMonsterId(level));
+    if (!getMonster(monsterId) && !listArenaMonsters().some((m) => m.id === monsterId)) {
+      throw new Error("ARENA_BAD_MONSTER");
+    }
+    if (!getMonster(monsterId)) throw new Error("ARENA_BAD_MONSTER");
+  }
+  return { format, theme, size, level, privacy, name, monsterId };
 }
 
 export function suggestedSize(format: ArenaFormatId): ArenaSize {
@@ -104,6 +117,8 @@ export function listOpenArenas(rooms: Iterable<Room>): Array<Record<string, unkn
       level: a.level,
       seats: room.players.length,
       cap,
+      pve: a.format === "pve_1v1",
+      monsterName: a.monsterId ? getMonster(a.monsterId)?.name ?? a.monsterId : undefined,
     });
   }
   return out.sort((x, y) => String(x.roomCode).localeCompare(String(y.roomCode)));
@@ -127,12 +142,16 @@ export function publicArena(room: Room) {
     lastResult: a.lastResult ?? null,
     cap,
     teams,
+    pve: a.format === "pve_1v1",
+    monsterId: a.monsterId ?? null,
+    monsterName: a.monsterId ? getMonster(a.monsterId)?.name ?? a.monsterId : null,
     mapId: arenaMapId(a.theme, a.size),
     art: `/art/arena/${a.theme}-${a.size}.png`,
     catalog: {
       formats: Object.entries(ARENA_FORMATS).map(([id, v]) => ({ id, ...v })),
       themes: ARENA_THEMES,
       sizes: ["small", "medium", "large"],
+      monsters: listArenaMonsters(),
     },
     seats: room.players.map((p) => {
       const ap = p as ArenaPlayer;
@@ -229,11 +248,14 @@ export function beginArenaFight(room: Room): CombatState {
   const map = getArenaMap(arenaMapId(room.arena.theme, room.arena.size));
   if (!map) throw new Error("BAD_MAP");
   const teams = ARENA_FORMATS[room.arena.format].teams === 2;
+  const pve = room.arena.format === "pve_1v1";
   const combat = startArenaCombat({
     map,
     players: room.players as ArenaPlayer[],
     level: room.arena.level,
     teams,
+    pve,
+    monsterId: room.arena.monsterId,
   });
   room.arena.phase = "active";
   room.arena.heroSwapEndsAt = undefined;

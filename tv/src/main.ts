@@ -500,7 +500,24 @@ function openTableSettings() {
 
 let homeView: "modes" | "campaign" | "arena" | "create" | "join" = "modes";
 let arenaList: OpenArena[] = [];
-let arenaCreate = { format: "ffa_1v1", theme: "brewery", mapSize: "small" as "small" | "medium" | "large", level: 1, privacy: "public", name: "" };
+let arenaCreate = {
+  format: "ffa_1v1",
+  theme: "brewery",
+  mapSize: "small" as "small" | "medium" | "large",
+  level: 1,
+  privacy: "public",
+  name: "",
+  monsterId: "",
+  monsterQuery: "",
+  monsterCr: "",
+};
+let arenaMonsters: Array<{ id: string; name: string; cr: string; crValue: number; creatureType: string }> = [];
+
+function filteredArenaMonsters() {
+  const q = arenaCreate.monsterQuery.trim().toLowerCase();
+  const cr = arenaCreate.monsterCr;
+  return arenaMonsters.filter((m) => (!q || m.name.toLowerCase().includes(q)) && (!cr || m.cr === cr));
+}
 
 function renderHome() {
   const session = loadSession();
@@ -595,14 +612,33 @@ function renderHome() {
       <label>Hero level <select id="arenaLevel">${[1, 2, 3].map((l) => `<option value="${l}" ${arenaCreate.level === l ? "selected" : ""}>${l}</option>`).join("")}</select></label>
       <label>Privacy <select id="arenaPrivacy"><option value="public" ${arenaCreate.privacy === "public" ? "selected" : ""}>Public</option><option value="private" ${arenaCreate.privacy === "private" ? "selected" : ""}>Private (code only)</option></select></label>
       <label>Name <input id="arenaName" maxlength="24" value="${esc(arenaCreate.name)}" placeholder="Optional" /></label>
+      <div id="pveMonsterWrap" ${arenaCreate.format === "pve_1v1" ? "" : "hidden"}>
+        <label>Foe name <input id="arenaMonsterQ" value="${esc(arenaCreate.monsterQuery)}" placeholder="Filter by name" /></label>
+        <label>CR <select id="arenaMonsterCr"><option value="">Any</option>${[...new Set(arenaMonsters.map((m) => m.cr))].sort((a, b) => (arenaMonsters.find((m) => m.cr === a)?.crValue ?? 0) - (arenaMonsters.find((m) => m.cr === b)?.crValue ?? 0)).map((cr) => `<option value="${esc(cr)}" ${arenaCreate.monsterCr === cr ? "selected" : ""}>${esc(cr)}</option>`).join("")}</select></label>
+        <label>Creature <select id="arenaMonster">${filteredArenaMonsters().map((m) => `<option value="${esc(m.id)}" ${arenaCreate.monsterId === m.id ? "selected" : ""}>${esc(m.name)} (CR ${esc(m.cr)})</option>`).join("")}</select></label>
+      </div>
       <button type="submit" class="primary">Open the arena</button>
       <button type="button" class="ghost" id="btnHomeBack">↩ Arena</button>
     </form>`;
+    const pveWrap = $("pveMonsterWrap");
+    const refreshMonsters = () => {
+      arenaCreate.monsterQuery = ($("arenaMonsterQ") as HTMLInputElement | null)?.value ?? "";
+      arenaCreate.monsterCr = ($("arenaMonsterCr") as HTMLSelectElement | null)?.value ?? "";
+      const sel = $("arenaMonster") as HTMLSelectElement | null;
+      if (!sel) return;
+      const list = filteredArenaMonsters();
+      sel.innerHTML = list.map((m) => `<option value="${esc(m.id)}">${esc(m.name)} (CR ${esc(m.cr)})</option>`).join("");
+      if (list.some((m) => m.id === arenaCreate.monsterId)) sel.value = arenaCreate.monsterId;
+      else arenaCreate.monsterId = list[0]?.id ?? "";
+    };
     const syncSize = () => {
       const format = ($("arenaFormat") as HTMLSelectElement).value;
       ($("arenaSize") as HTMLSelectElement).value = suggestedSize(format);
+      if (pveWrap) pveWrap.hidden = format !== "pve_1v1";
     };
     $("arenaFormat").addEventListener("change", syncSize);
+    $("arenaMonsterQ")?.addEventListener("input", refreshMonsters);
+    $("arenaMonsterCr")?.addEventListener("change", refreshMonsters);
     $("arenaForm").addEventListener("submit", (e) => {
       e.preventDefault();
       arenaCreate = {
@@ -612,6 +648,9 @@ function renderHome() {
         level: Number(($("arenaLevel") as HTMLSelectElement).value),
         privacy: ($("arenaPrivacy") as HTMLSelectElement).value,
         name: ($("arenaName") as HTMLInputElement).value,
+        monsterId: ($("arenaMonster") as HTMLSelectElement | null)?.value ?? "",
+        monsterQuery: ($("arenaMonsterQ") as HTMLInputElement | null)?.value ?? "",
+        monsterCr: ($("arenaMonsterCr") as HTMLSelectElement | null)?.value ?? "",
       };
       sfx("uiConfirm");
       clearSession();
@@ -627,6 +666,7 @@ function renderHome() {
         level: arenaCreate.level,
         privacy: arenaCreate.privacy,
         name: arenaCreate.name,
+        monsterId: arenaCreate.format === "pve_1v1" ? arenaCreate.monsterId : undefined,
       });
       showPage("lobby");
     });
@@ -770,6 +810,19 @@ function renderLobby() {
   });
   const code = state?.roomCode ?? "······";
   $("roomCode").textContent = code;
+  const foe = state?.arena?.monsterName;
+  const codeParent = $("roomCode").parentElement;
+  if (codeParent) {
+    let tag = codeParent.querySelector(".pve-foe");
+    if (foe) {
+      if (!tag) {
+        tag = document.createElement("em");
+        tag.className = "pve-foe";
+        codeParent.appendChild(tag);
+      }
+      tag.textContent = `vs ${foe}`;
+    } else tag?.remove();
+  }
   const teams = (state?.arena?.teams ?? 0) > 0;
   $("lobbySeats").innerHTML = (state?.players ?? [])
     .map((p) => {
@@ -1265,6 +1318,7 @@ function connect() {
         campaigns = msg.payload.campaigns ?? [];
         pregens = msg.payload.pregens ?? [];
         portraits = msg.payload.portraits ?? [];
+        arenaMonsters = msg.payload.arena?.monsters ?? arenaMonsters;
         const catalog = msg.payload.chargen as ChargenCatalog | undefined;
         if (catalog && !chargenApi) {
           chargenApi = mountChargen({ root: $("chargenHost"), catalog, portraits, send, onCreated: (id) => (selectedHero = id) });

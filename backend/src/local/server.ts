@@ -18,6 +18,7 @@ import {
 import { announceTable } from "./announce.js";
 import { ARENA_FORMATS } from "./arena.js";
 import { ARENA_THEMES } from "./arena-maps.js";
+import { listArenaMonsters } from "./srd-monsters.js";
 import { ensureDataDir, REPO_ROOT } from "./paths.js";
 import { audioPath, narrationStatus, prewarmNarration, waitForNarration } from "./narration.js";
 import {
@@ -93,6 +94,7 @@ type ClientMsg = {
   level?: number;
   privacy?: string;
   name?: string;
+  monsterId?: string;
   teamId?: string;
   ready?: boolean;
   slot?: number;
@@ -394,6 +396,7 @@ wss.on("connection", (ws, req) => {
         formats: Object.entries(ARENA_FORMATS).map(([id, v]) => ({ id, ...v })),
         themes: ARENA_THEMES,
         sizes: ["small", "medium", "large"],
+        monsters: listArenaMonsters(),
       },
       narration: narrationStatus(),
     },
@@ -450,6 +453,7 @@ function handle(sock: Sock, msg: ClientMsg): void {
         level: msg.level,
         privacy: msg.privacy,
         name: msg.name,
+        monsterId: msg.monsterId,
       });
       bind(sock, room);
       send(sock, { eventType: "ROOM_STATE", payload: publicState(room, undefined, sock.user!.id) });

@@ -10,6 +10,7 @@ import os from "node:os";
 import path from "node:path";
 import type { AbilityDef, EncounterDef, Manifest, MapDef, MonsterDef, Pregen, StoryNode } from "./campaign.js";
 import { CAMPAIGN_DIR, CONTENT_ROOT, DATA_DIR, readJson } from "./paths.js";
+import { mergeSrdInto } from "./srd-monsters.js";
 
 export type CampaignRef = { campaignId: string; campaignVersion?: number };
 
@@ -115,7 +116,7 @@ function readPackDir(dir: string, version: number): Snapshot {
     }
   }
   const artDir = path.join(dir, "art");
-  return {
+  const snap: Snapshot = {
     id: manifest.id,
     version,
     manifest,
@@ -127,6 +128,8 @@ function readPackDir(dir: string, version: number): Snapshot {
     abilities: loadAbilities(path.join(dir, "abilities.json")),
     artDir: fs.existsSync(artDir) ? artDir : undefined,
   };
+  mergeSrdInto(snap);
+  return snap;
 }
 
 function validate(snap: Snapshot): void {

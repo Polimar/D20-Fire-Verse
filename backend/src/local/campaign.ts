@@ -128,6 +128,19 @@ export type MonsterDef = {
   abilities: Record<string, number>;
   actions: string[];
   aiProfile?: string;
+  cr?: string;
+  crValue?: number;
+  creatureType?: string;
+  saves?: Record<string, number>;
+  damageResistances?: string[];
+  damageImmunities?: string[];
+  damageVulnerabilities?: string[];
+  traits?: string[];
+  legendaryUses?: number;
+  legendaryActions?: string[];
+  bonusActions?: string[];
+  multiattack?: string[];
+  actionPool?: string[];
 };
 
 export type AbilityDef = {
@@ -208,7 +221,10 @@ export function portraitForCharacter(characterId: string | undefined): string | 
 }
 
 export function portraitForMonster(monsterId: string | undefined): string | null {
-  return monsterId && MONSTER_PORTRAITS.has(monsterId) ? portraitUrl(monsterId) : null;
+  if (!monsterId) return null;
+  if (MONSTER_PORTRAITS.has(monsterId)) return portraitUrl(monsterId);
+  if (monsterId.startsWith("srd_")) return `/art/portraits/${monsterId}.png`;
+  return null;
 }
 
 export function abilityMod(score: number): number {

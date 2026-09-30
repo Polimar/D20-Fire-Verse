@@ -9,11 +9,14 @@ import {
   proposeMove,
   resolveReaction,
   startCombat,
+  startArenaCombat,
+  applyDamage,
   clearShot,
   type CombatState,
   type CombatToken,
 } from "../src/local/combat.js";
 import { boot, scriptDice } from "./helpers.js";
+import { getArenaMap } from "../src/local/arena-maps.js";
 
 before(boot);
 
@@ -385,11 +388,27 @@ test("the wizard menu comes from the sheet and a spell spends a slot", () => {
   assert.equal(hero.slots?.["2"], 2);
   c.turnIndex = c.turnOrder.indexOf(hero.id);
   hero.hasAction = true;
-  hero.x = 5;
-  hero.y = 3;
   while (c.pending) resolveReaction(c, c.pending.playerId, false);
-  const foe = c.tokens.find((t) => t.kind === "enemy" && !t.dead && clearShot(c, hero.x, hero.y, t.x, t.y))!;
+  const foe = c.tokens.find((t) => t.kind === "enemy" && !t.dead)!;
   assert.ok(foe, "at least one rat should be in line of the wizard");
+  const spots = [
+    [foe.x, foe.y - 1],
+    [foe.x, foe.y + 1],
+    [foe.x - 1, foe.y],
+    [foe.x + 1, foe.y],
+  ];
+  const open = spots.find(
+    ([x, y]) =>
+      x >= 0 &&
+      y >= 0 &&
+      x < c.width &&
+      y < c.height &&
+      !c.walls[y][x] &&
+      !c.tokens.some((t) => t.x === x && t.y === y && !t.dead),
+  );
+  assert.ok(open);
+  hero.x = open[0]!;
+  hero.y = open[1]!;
   performPcAction(c, "P1", "spell_magic_missile", foe.id);
   assert.equal(hero.slots?.["1"], 3);
 });
@@ -520,5 +539,56 @@ test("hazards block a step but not a shot", () => {
 test("walls still block a shot across a gap", () => {
   const c = arena(3, 1, [brenna(0, 0), rat("en-1", 2, 0)], [[1, 0]]);
   assert.equal(clearShot(c, 0, 0, 2, 0), false);
+});
+
+test("fire resistance halves incoming fire", () => {
+  const foe = rat("en-1", 2, 0, { hp: 20, maxHp: 20, damageResistances: ["fire"] });
+  const c = arena(3, 1, [brenna(0, 0), foe]);
+  applyDamage(c, foe, 10, false, "fire");
+  assert.equal(foe.hp, 15);
+});
+
+test("PvE drops a hero at 0 HP with no death saves", () => {
+  const hero = brenna(0, 0, { hp: 4, maxHp: 28 });
+  const foe = rat("en-1", 1, 0);
+  const c = arena(3, 1, [hero, foe]);
+  c.pve = true;
+  applyDamage(c, hero, 10, false, "slashing");
+  assert.equal(hero.dead, true);
+});
+
+test("arena PvE loads a goblin with Nimble Escape", () => {
+  const map = getArenaMap("arena_brewery_small");
+  assert.ok(map);
+  const c = startArenaCombat({
+    map,
+    players: [{ playerId: "P1", characterId: "brenna_ironveal" }],
+    level: 1,
+    teams: false,
+    pve: true,
+    monsterId: "srd_goblin_minion",
+  });
+  const gob = c.tokens.find((t) => t.kind === "enemy");
+  assert.ok(gob);
+  assert.equal(gob.name, "Goblin Minion");
+  assert.ok(gob.bonusActionIds?.length);
+});
+
+test("legendary action fires after the hero ends a turn", () => {
+  const hero = brenna(0, 0);
+  const foe = rat("en-1", 1, 0, {
+    hp: 40,
+    maxHp: 40,
+    legendaryUses: 3,
+    legendaryLeft: 3,
+    legendaryActions: ["giant_rat_bite"],
+    actionIds: ["giant_rat_bite"],
+  });
+  const c = arena(4, 1, [hero, foe]);
+  c.turnOrder = ["pc-P1", "en-1"];
+  c.turnIndex = 0;
+  hero.hasAction = true;
+  endTurn(c, "P1");
+  assert.ok(c.events.some((e) => /legendary/i.test(e.line)));
 });
 

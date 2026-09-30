@@ -8,6 +8,7 @@ export const ARENA_FORMATS = [
   { id: "ffa_6", label: "Free-for-all 6", seats: 6, teams: 0 },
   { id: "teams_2v2", label: "Teams 2v2", seats: 4, teams: 2 },
   { id: "teams_3v3", label: "Teams 3v3", seats: 6, teams: 2 },
+  { id: "pve_1v1", label: "PvE Duel 1v1", seats: 1, teams: 0 },
 ] as const;
 
 export const ARENA_THEMES = [
@@ -58,6 +59,9 @@ export type ArenaPublic = {
   lastResult?: string | null;
   cap: number;
   teams: number;
+  pve?: boolean;
+  monsterId?: string | null;
+  monsterName?: string | null;
   mapId: string;
   art: string;
   seats: ArenaSeat[];

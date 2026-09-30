@@ -9,6 +9,15 @@ Internet-ready tables beside Campaign. The television is the table; phones are s
 
 A simultaneous wipe of every remaining fighter is a **draw**.
 
+## PvE 1v1
+
+`pve_1v1` seats one hero against one SRD monster (stat blocks from `content/srd/monsters-A-Z.md`). Same lobby → Ready → fight → 30s hero swap loop as a duel. **0 HP eliminates the hero** (no death saves). The monster uses campaign AI plus Multiattack, recharge, save actions, mapped `spell_*` ids, and legendary actions after the hero's turn.
+
+The create form filters the roster by **name** and **CR**. Default foe is the first catalog id whose CR fits the room level (L1 ≤ 1/4, L2 ≤ 1, L3 ≤ 2). Unique traits outside Pack Tactics / Legendary Resistance / Magic Resistance are not simulated. Large creatures still occupy one cell.
+
+Monster portraits live at `/art/portraits/{monsterId}.png`.
+
+
 ## Flow
 
 Lobby → Ready (full roster) → `START_ARENA` → fight → one-line result → **30s hero swap** → lobby Ready again.

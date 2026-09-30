@@ -234,6 +234,7 @@ export function createArena(opts: {
   level?: number;
   privacy?: string;
   name?: string;
+  monsterId?: string;
 }): Room {
   const cfg = parseCreateArena(opts);
   let roomCode = code();
