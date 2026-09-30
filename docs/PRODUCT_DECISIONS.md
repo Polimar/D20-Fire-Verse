@@ -50,4 +50,4 @@ Full SRD to L20 · map editor · shops · systemic loot/level-up · Cognito/acco
 - 4 pregens L3 + custom chargen
 
 ## Post-hackathon (not scheduled)
-Widen catalog on same effect schema; deeper Arcana console parity; ambient integrations if APIs exist.
+Widen catalog on same effect schema; deeper Arcana console parity; ambient integrations if APIs exist. Arena PvP (see `docs/ARENA.md`) ships on a personal branch; friends/leaderboard stay unranked until scoring is chosen.

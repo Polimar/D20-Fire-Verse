@@ -10,6 +10,7 @@ import {
   type MapDef,
   type Pregen,
 } from "./campaign.js";
+import { scalePregenToLevel, type ArenaMapDef } from "./arena-maps.js";
 import {
   critNotation,
   makeDiceRoll,
@@ -52,6 +53,7 @@ export type CombatToken = {
   playerId?: string;
   characterId?: string;
   monsterId?: string;
+  teamId?: string;
   actionIds: string[];
   bonusActionIds: string[];
   inventory: string[];
@@ -207,11 +209,13 @@ export type CombatState = {
   round: number;
   log: string[];
   reachable: Array<{ x: number; y: number }>;
-  status: "active" | "victory" | "defeat";
+  status: "active" | "victory" | "defeat" | "draw";
   events: CombatEvent[];
   seq: number;
   pending?: PendingReaction;
   aimRequest?: { playerId: string; abilityId: string };
+  pvp?: "ffa" | "teams";
+  pvpWinner?: string;
 };
 
 function wallGrid(map: MapDef): boolean[][] {
@@ -226,6 +230,25 @@ function wallGrid(map: MapDef): boolean[][] {
     }
   }
   return g;
+}
+
+function isFoe(combat: CombatState, actor: CombatToken, t: CombatToken): boolean {
+  if (t.dead || t.id === actor.id) return false;
+  if (!combat.pvp) {
+    if (actor.kind === "pc") return t.kind === "enemy";
+    return t.kind === "pc";
+  }
+  if (t.kind !== "pc") return false;
+  if (combat.pvp === "ffa") return true;
+  return Boolean(actor.teamId && t.teamId && actor.teamId !== t.teamId);
+}
+
+function isFriend(combat: CombatState, actor: CombatToken, t: CombatToken): boolean {
+  if (t.dead) return false;
+  if (!combat.pvp) return t.kind === "pc";
+  if (t.kind !== "pc") return false;
+  if (combat.pvp === "ffa") return t.id === actor.id;
+  return actor.teamId === t.teamId;
 }
 
 function tokenAt(combat: CombatState, x: number, y: number, ignoreId?: string): CombatToken | undefined {
@@ -267,7 +290,8 @@ function explore(combat: CombatState, token: CombatToken, budget: number): Map<s
       const ny = cur.y + dy;
       if (!inBounds(combat, nx, ny) || combat.walls[ny][nx]) continue;
       const blocker = tokenAt(combat, nx, ny, token.id);
-      if (blocker && blocker.kind !== token.kind) continue;
+      if (blocker && isFoe(combat, token, blocker)) continue;
+      if (blocker && !combat.pvp && blocker.kind !== token.kind) continue;
       const diagonal = dx !== 0 && dy !== 0;
       if (diagonal && (combat.walls[cur.y][nx] || combat.walls[ny][cur.x])) continue;
       const step = diagonal ? (cur.parity === 0 ? 1 : 2) : 1;
@@ -503,6 +527,83 @@ export function startCombat(
   });
   beginTurn(combat);
   settleEnemies(combat);
+  return combat;
+}
+
+export function startArenaCombat(opts: {
+  map: ArenaMapDef;
+  players: Array<{ playerId: string; characterId: string; characterName?: string; teamId?: string }>;
+  level: number;
+  teams: boolean;
+}): CombatState {
+  const map = opts.map;
+  const walls = wallGrid(map as unknown as MapDef);
+  const tokens: CombatToken[] = [];
+  opts.players.forEach((p, i) => {
+    const raw = getPregen(p.characterId);
+    if (!raw) throw new Error("BAD_CHARACTER");
+    const pregen = scalePregenToLevel(raw, opts.level);
+    const spot = opts.teams
+      ? (p.teamId === "b" ? map.spawn.teamB : map.spawn.teamA)[opts.players.filter((x, j) => j < i && (x.teamId ?? "a") === (p.teamId ?? "a")).length] ??
+        map.spawn.teamA[0]
+      : map.spawn.ffa[i] ?? map.spawn.ffa[0];
+    const initRoll = rollD20() + abilityMod(pregen.abilities.dex);
+    tokens.push({
+      id: `pc-${p.playerId}`,
+      kind: "pc",
+      name: pregen.name,
+      x: spot.x,
+      y: spot.y,
+      hp: pregen.hp,
+      maxHp: pregen.hp,
+      ac: pregen.ac,
+      speedCells: pregen.speedCells ?? 6,
+      movementLeft: pregen.speedCells ?? 6,
+      hasAction: true,
+      hasBonusAction: true,
+      initiative: initRoll,
+      playerId: p.playerId,
+      characterId: pregen.id,
+      teamId: opts.teams ? p.teamId ?? "a" : `ffa:${p.playerId}`,
+      actionIds: actionIdsFor(pregen),
+      bonusActionIds: bonusActionsFor(pregen),
+      inventory: [...(pregen.inventory ?? [])],
+      dead: false,
+      dodging: false,
+      disengaging: false,
+      hidden: false,
+      secondWindUsed: false,
+      reactionReady: true,
+    });
+    const hero = tokens[tokens.length - 1]!;
+    initSheet(hero, pregen);
+    refreshMenus(hero, pregen, getAbility);
+  });
+  const dexOf = (t: CombatToken) => getPregen(t.characterId!)?.abilities.dex ?? 10;
+  const turnOrder = [...tokens].sort((a, b) => b.initiative - a.initiative || dexOf(b) - dexOf(a)).map((t) => t.id);
+  const combat: CombatState = {
+    encounterId: map.id,
+    mapId: map.id,
+    width: map.width,
+    height: map.height,
+    walls,
+    tokens,
+    turnOrder,
+    turnIndex: 0,
+    round: 1,
+    log: [],
+    reachable: [],
+    status: "active",
+    events: [],
+    seq: 0,
+    pvp: opts.teams ? "teams" : "ffa",
+  };
+  emit(combat, {
+    kind: "start",
+    order: turnOrder,
+    line: `Arena initiative: ${turnOrder.map((id) => tokens.find((t) => t.id === id)!.name).join(", ")}.`,
+  });
+  beginTurn(combat);
   return combat;
 }
 
@@ -857,6 +958,42 @@ function enemyStrike(combat: CombatState, enemy: CombatToken, target: CombatToke
 
 function checkEnd(combat: CombatState): void {
   if (combat.status !== "active") return;
+  if (combat.pvp) {
+    const live = combat.tokens.filter((t) => t.kind === "pc" && !t.dead);
+    if (combat.pvp === "ffa") {
+      if (live.length === 1) {
+        combat.status = "victory";
+        combat.pvpWinner = live[0]!.name;
+        combat.reachable = [];
+        emit(combat, { kind: "end", outcome: "victory", line: `${live[0]!.name} is the last one standing.` });
+      } else if (live.length === 0) {
+        combat.status = "draw";
+        combat.reachable = [];
+        emit(combat, { kind: "end", outcome: "defeat", line: "No one remains standing. Draw." });
+      }
+      return;
+    }
+    const standing = new Set(
+      live.filter((t) => !t.dying || t.hp > 0).map((t) => t.teamId).filter(Boolean),
+    );
+    // Dying still counts for the team.
+    const teamsLeft = new Set(live.map((t) => t.teamId).filter(Boolean));
+    if (teamsLeft.size <= 1) {
+      const id = [...teamsLeft][0];
+      const name = id === "a" ? "Team A" : id === "b" ? "Team B" : "The last team";
+      if (!id) {
+        combat.status = "draw";
+        emit(combat, { kind: "end", outcome: "defeat", line: "Both teams fall. Draw." });
+      } else {
+        combat.status = "victory";
+        combat.pvpWinner = name;
+        emit(combat, { kind: "end", outcome: "victory", line: `${name} holds the floor.` });
+      }
+      combat.reachable = [];
+    }
+    void standing;
+    return;
+  }
   const pcsAlive = combat.tokens.some((t) => t.kind === "pc" && !t.dead);
   const enemiesAlive = combat.tokens.some((t) => t.kind === "enemy" && !t.dead);
   if (!enemiesAlive) {
@@ -960,7 +1097,7 @@ function castSpecial(
     return { rolls: [] };
   }
   if (effect.type === "pool_heal") {
-    const ally = targetId ? combat.tokens.find((x) => x.id === targetId && x.kind === "pc") : t;
+    const ally = targetId ? combat.tokens.find((x) => x.id === targetId && isFriend(combat, t, x)) : t;
     if (!ally) throw new Error("NEED_TARGET");
     const pool = t.layOnHands ?? 0;
     if (pool <= 0) throw new Error("ALREADY_USED");
@@ -980,7 +1117,7 @@ function castSpecial(
     if ((t.channelDivinity ?? 0) <= 0) throw new Error("ALREADY_USED");
     t.channelDivinity = (t.channelDivinity ?? 0) - 1;
     let pool = 5 * (pregen?.level ?? 1);
-    const allies = combat.tokens.filter((a) => a.kind === "pc" && !a.dead && chebyshev(a.x, a.y, t.x, t.y) <= 6);
+    const allies = combat.tokens.filter((a) => isFriend(combat, t, a) && !a.dead && chebyshev(a.x, a.y, t.x, t.y) <= 6);
     for (const ally of allies) {
       const half = Math.floor(ally.maxHp / 2);
       if (ally.hp >= half || pool <= 0) continue;
@@ -994,7 +1131,7 @@ function castSpecial(
   }
   if (effect.type === "inspire") {
     if ((t.bardicLeft ?? 0) <= 0) throw new Error("ALREADY_USED");
-    const ally = combat.tokens.find((x) => x.id === targetId && x.kind === "pc" && x.id !== t.id);
+    const ally = combat.tokens.find((x) => x.id === targetId && isFriend(combat, t, x) && x.id !== t.id);
     if (!ally) throw new Error("NEED_TARGET");
     t.bardicLeft = (t.bardicLeft ?? 0) - 1;
     ally.inspiration = (ally.inspiration ?? 0) + 1;
@@ -1056,7 +1193,7 @@ function castSpecial(
   }
   if (effect.type === "brand") {
     if (!targetId) throw new Error("NEED_TARGET");
-    const foe = combat.tokens.find((x) => x.id === targetId && x.kind === "enemy" && !x.dead);
+    const foe = combat.tokens.find((x) => x.id === targetId && isFoe(combat, t, x));
     if (!foe) throw new Error("BAD_TARGET");
     foe.brand = { by: t.id, dice: String(effect.dice ?? "1d6") };
     t.concentrating = { spellId: castId, targetId: foe.id };
@@ -1083,7 +1220,7 @@ function castSpecial(
     const origin = targetId ? combat.tokens.find((x) => x.id === targetId) : t;
     if (!origin) throw new Error("NEED_TARGET");
     const victims = combat.tokens
-      .filter((e) => e.kind === "enemy" && !e.dead && !hasCondition(e, "unconscious") && chebyshev(e.x, e.y, origin.x, origin.y) <= radius)
+      .filter((e) => isFoe(combat, t, e) && !hasCondition(e, "unconscious") && chebyshev(e.x, e.y, origin.x, origin.y) <= radius)
       .sort((a, b) => a.hp - b.hp);
     const names: string[] = [];
     for (const foe of victims) {
@@ -1120,7 +1257,7 @@ function castSpecial(
     return { rolls: [] };
   }
   if (effect.type === "restore") {
-    const ally = targetId ? combat.tokens.find((x) => x.id === targetId && x.kind === "pc") : t;
+    const ally = targetId ? combat.tokens.find((x) => x.id === targetId && isFriend(combat, t, x)) : t;
     if (!ally) throw new Error("NEED_TARGET");
     ally.conditions = (ally.conditions ?? []).filter((c) => !["blinded", "paralyzed", "poisoned"].includes(c));
     spendEconomy(t, false);
@@ -1129,7 +1266,7 @@ function castSpecial(
   }
   if (effect.type === "aid") {
     const amount = Number(effect.amount ?? 5);
-    const allies = combat.tokens.filter((a) => a.kind === "pc" && !a.dead).slice(0, Number(effect.allies ?? 3));
+    const allies = combat.tokens.filter((a) => isFriend(combat, t, a) && !a.dead).slice(0, Number(effect.allies ?? 3));
     for (const ally of allies) {
       ally.maxHp += amount;
       ally.hp += amount;
@@ -1237,7 +1374,7 @@ export function performPcAction(
   }
   if (effect.type === "help") {
     if (!targetId) throw new Error("NEED_TARGET");
-    const ally = combat.tokens.find((x) => x.id === targetId && x.kind === "pc" && !x.dead && x.id !== t.id);
+    const ally = combat.tokens.find((x) => x.id === targetId && isFriend(combat, t, x) && x.id !== t.id);
     if (!ally) throw new Error("BAD_TARGET");
     if (chebyshev(t.x, t.y, ally.x, ally.y) > 1) throw new Error("OUT_OF_RANGE");
     ally.helpingTargetId = t.id;
@@ -1358,7 +1495,7 @@ export function performPcAction(
   if (!targetId) throw new Error("NEED_TARGET");
   const target = combat.tokens.find((x) => x.id === targetId);
   if (!target || target.dead) throw new Error("BAD_TARGET");
-  if (target.kind !== "enemy") throw new Error("BAD_TARGET");
+  if (!isFoe(combat, t, target)) throw new Error("BAD_TARGET");
 
   if (effect.type === "save") {
     return castSaveArea(combat, t, target, ability.name, effect, pregen, isBonus);
@@ -1436,7 +1573,7 @@ export function performPcAction(
   if (t.fightingStyle === "archery" && ranged) attackBonus += 2;
   if (t.fightingStyle === "dueling" && !ranged) attackBonus += 2;
   const foeAdjacent = combat.tokens.some(
-    (e) => e.kind === "enemy" && !e.dead && chebyshev(e.x, e.y, t.x, t.y) <= 1,
+    (e) => isFoe(combat, t, e) && chebyshev(e.x, e.y, t.x, t.y) <= 1,
   );
   const easyTarget =
     Boolean(target.marked) ||
@@ -1662,7 +1799,7 @@ function castSaveArea(
   const dirY = aim.y - t.y;
   const dirLen = Math.hypot(dirX, dirY) || 1;
   const caught = combat.tokens.filter((e) => {
-    if (e.kind !== "enemy" || e.dead) return false;
+    if (!isFoe(combat, t, e) || e.dead) return false;
     if (shape === "one") return e.id === aim.id;
     if (shape === "sphere") return chebyshev(aim.x, aim.y, e.x, e.y) <= radius;
     if (shape === "cube") return chebyshev(t.x, t.y, e.x, e.y) <= length && e.id !== t.id;
@@ -1767,7 +1904,9 @@ function applyDamage(combat: CombatState, target: CombatToken, amount: number, c
   target.hp = Math.max(0, target.hp - harm);
   if (target.concentrating && harm > 0) concentrationCheck(combat, target, harm);
   if (target.hp === 0 && !target.dead) {
-    if (target.kind === "pc" && over < target.maxHp) {
+    if (combat.pvp === "ffa") {
+      markDead(combat, target);
+    } else if (target.kind === "pc" && over < target.maxHp) {
       target.dying = true;
       target.stable = false;
       target.deathSuccesses = 0;
@@ -2230,6 +2369,12 @@ export function publicCombat(combat: CombatState, viewerPlayerId?: string) {
   return {
     encounterId: combat.encounterId,
     mapId: combat.mapId,
+    pvp: combat.pvp ?? null,
+    pvpWinner: combat.pvpWinner ?? null,
+    art: (() => {
+      const m = /^arena_(.+)_(small|medium|large)$/.exec(combat.mapId);
+      return m ? `/art/arena/${m[1]}-${m[2]}.svg` : null;
+    })(),
     width: combat.width,
     height: combat.height,
     walls: combat.walls,
@@ -2249,6 +2394,7 @@ export function publicCombat(combat: CombatState, viewerPlayerId?: string) {
       playerId: t.playerId,
       characterId: t.characterId,
       monsterId: t.monsterId,
+      teamId: t.teamId ?? null,
       portrait: t.kind === "pc" ? portraitForCharacter(t.characterId) : portraitForMonster(t.monsterId),
       boss: t.kind === "enemy" && t.maxHp >= 30,
       actionIds: t.actionIds,

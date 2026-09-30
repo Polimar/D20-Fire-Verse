@@ -54,8 +54,25 @@ import {
 import { requestNarration } from "./narration.js";
 import { bindFrame, publishedVersion } from "./catalog.js";
 import { DATA_DIR } from "./paths.js";
+import { recordArenaResult } from "./auth.js";
 import { initSheet } from "./srd-sheet.js";
 import type { Player } from "./types.js";
+import type { ArenaConfig } from "./arena.js";
+import {
+  assertCanStart,
+  beginArenaFight,
+  closeHeroSwap,
+  finishArena,
+  HERO_SWAP_MS_EXPORT,
+  joinArenaSeat,
+  listOpenArenas,
+  parseCreateArena,
+  pickArenaHero,
+  publicArena,
+  setArenaReady,
+  setArenaTeam,
+  type ArenaPlayer,
+} from "./arena.js";
 
 export type { Player };
 export type { CheckOffer, PuzzleCoop, VoteState };
@@ -110,10 +127,13 @@ export type Room = {
   }>;
   autosaveId?: string;
   updatedAt: string;
+  mode?: "campaign" | "arena";
+  arena?: ArenaConfig;
 };
 
 const voteTimers = new Map<string, ReturnType<typeof setTimeout>>();
 const puzzleIdleTimers = new Map<string, ReturnType<typeof setTimeout>>();
+const heroSwapTimers = new Map<string, ReturnType<typeof setTimeout>>();
 let onRoomMutated: ((roomCode: string) => void) | null = null;
 
 /** Server wires this so vote / check timers can broadcast ROOM_STATE. */
@@ -206,6 +226,45 @@ function narrate(room: Room, display: string, spoken: string = display): void {
   room.narrationSeq = (room.narrationSeq ?? 0) + 1;
 }
 
+export function createArena(opts: {
+  ownerUserId?: string;
+  format?: string;
+  theme?: string;
+  mapSize?: string;
+  level?: number;
+  privacy?: string;
+  name?: string;
+}): Room {
+  const cfg = parseCreateArena(opts);
+  let roomCode = code();
+  while (rooms.has(roomCode)) roomCode = code();
+  const campaignId = getManifest().id;
+  const campaignVersion = publishedVersion(campaignId);
+  if (campaignVersion == null) throw new Error("CAMPAIGN_NOT_FOUND");
+  const room: Room = {
+    roomCode,
+    campaignId,
+    campaignVersion,
+    ownerUserId: opts.ownerUserId,
+    nodeId: "ARENA_LOBBY",
+    flags: [],
+    players: [],
+    visitedRooms: [],
+    mapTokens: [],
+    mode: "arena",
+    arena: { ...cfg, phase: "lobby" },
+    updatedAt: new Date().toISOString(),
+  };
+  narrate(room, `Arena ${cfg.name || roomCode}. ${cfg.format.replace(/_/g, " ")} at level ${cfg.level}.`);
+  rooms.set(roomCode, room);
+  persist(room);
+  return room;
+}
+
+export function arenasPublic(): ReturnType<typeof listOpenArenas> {
+  return listOpenArenas(rooms.values());
+}
+
 export function createRoom(opts?: { campaignId?: string; ownerUserId?: string }): Room {
   let roomCode = code();
   while (rooms.has(roomCode)) roomCode = code();
@@ -253,6 +312,11 @@ export function joinRoom(
   userId?: string,
 ): { room: Room; playerId: string } {
   const room = requireRoom(roomCode);
+  if (room.mode === "arena") {
+    const playerId = joinArenaSeat(room, displayName, characterId, userId);
+    touch(room);
+    return { room, playerId };
+  }
   if (room.players.length >= 3) throw new Error("ROOM_FULL");
   const pregen = getPregen(characterId);
   if (!pregen) throw new Error("BAD_CHARACTER");
@@ -544,17 +608,17 @@ function voiceFor(text: string | undefined, seq: number) {
   return { key: requestNarration(text), seq, text };
 }
 
-export function publicState(room: Room, viewerPlayerId?: string) {
+export function publicState(room: Room, viewerPlayerId?: string, viewerUserId?: string) {
   const leave = bindFrame({ campaignId: room.campaignId, campaignVersion: room.campaignVersion });
   try {
-    return publicStateBody(room, viewerPlayerId);
+    return publicStateBody(room, viewerPlayerId, viewerUserId);
   } finally {
     leave();
   }
 }
 
-function publicStateBody(room: Room, viewerPlayerId?: string) {
-  const node = getNode(room.nodeId);
+function publicStateBody(room: Room, viewerPlayerId?: string, viewerUserId?: string) {
+  const node = room.mode === "arena" ? undefined : getNode(room.nodeId);
   const choices = node ? resolveChoices(room, node) : [];
   const coop = room.puzzleCoop ?? emptyPuzzleCoop();
   const progress =
@@ -626,8 +690,11 @@ function publicStateBody(room: Room, viewerPlayerId?: string) {
   return {
     roomCode: room.roomCode,
     campaignId: room.campaignId,
+    mode: room.mode ?? "campaign",
+    isHost: Boolean(viewerUserId && room.ownerUserId === viewerUserId),
+    arena: publicArena(room),
     nodeId: room.nodeId,
-    nodeType: node?.type ?? "end",
+    nodeType: room.mode === "arena" ? "arena" : (node?.type ?? "end"),
     alexaScene: publishedScene(room, node),
     narration: room.lastNarration,
     narrationSeq: seq,
@@ -664,7 +731,7 @@ function publicStateBody(room: Room, viewerPlayerId?: string) {
     localPlayerId: viewerPlayerId ?? null,
     rest: (() => {
       const budget = room.restBudget ?? 2;
-      const offer = room.restOffer === true && budget > 0;
+      const offer = room.mode !== "arena" && room.restOffer === true && budget > 0;
       return {
         offer,
         budget,
@@ -677,6 +744,7 @@ function publicStateBody(room: Room, viewerPlayerId?: string) {
 
 export function choose(roomCode: string, choiceId: string, playerId?: string): Room {
   const room = requireRoom(roomCode);
+  if (room.mode === "arena") throw new Error("NOT_ARENA");
   const node = getNode(room.nodeId);
   if (!node) {
     if (room.nodeId === "END_SAVE" || room.nodeId === "END_WIN") throw new Error("ADVENTURE_OVER");
@@ -1232,6 +1300,33 @@ function requireCombat(room: Room): CombatState {
 
 function afterCombatAction(room: Room): void {
   const combat = requireCombat(room);
+  if (room.mode === "arena" && (combat.status === "victory" || combat.status === "defeat" || combat.status === "draw")) {
+    finishArena(room, combat);
+    narrate(room, room.arena?.lastResult ?? "The arena is still.");
+    const winTeam = combat.pvp === "teams" ? (combat.pvpWinner === "Team B" ? "b" : combat.pvpWinner === "Team A" ? "a" : null) : null;
+    const winners = combat.status === "draw"
+      ? []
+      : winTeam
+        ? room.players.filter((p) => (p as ArenaPlayer).teamId === winTeam).map((p) => p.userId).filter((id): id is string => Boolean(id))
+        : room.players
+            .filter((p) => combat.tokens.some((t) => t.playerId === p.playerId && t.name === combat.pvpWinner && !t.dead))
+            .map((p) => p.userId)
+            .filter((id): id is string => Boolean(id));
+    try {
+      recordArenaResult({
+        roomCode: room.roomCode,
+        format: room.arena?.format ?? "ffa_1v1",
+        level: room.arena?.level ?? 1,
+        winners,
+        participants: room.players.map((p) => p.userId).filter((id): id is string => Boolean(id)),
+      });
+    } catch {
+      /* scoring store is optional */
+    }
+    armHeroSwap(room);
+    touch(room);
+    return;
+  }
   if (combat.status === "victory") finishCombat(room);
   else if (combat.status === "defeat") {
     narrate(
@@ -1285,6 +1380,7 @@ function eachHero(room: Room, apply: (tokenId: string, pregen: NonNullable<Retur
 
 export function shortRest(roomCode: string): Room {
   const room = requireRoom(roomCode);
+  if (room.mode === "arena") throw new Error("NOT_ARENA");
   if (room.combat?.status === "active") throw new Error("COMBAT_ACTIVE");
   if (room.restOffer !== true) throw new Error("REST_NOT_OFFERED");
   const budget = room.restBudget ?? 2;
@@ -1341,6 +1437,7 @@ export function shortRest(roomCode: string): Room {
 
 export function longRest(roomCode: string): Room {
   const room = requireRoom(roomCode);
+  if (room.mode === "arena") throw new Error("NOT_ARENA");
   if (room.combat?.status === "active") throw new Error("COMBAT_ACTIVE");
   if (room.restOffer !== true) throw new Error("REST_NOT_OFFERED");
   const budget = room.restBudget ?? 2;
@@ -1381,6 +1478,72 @@ export function longRest(roomCode: string): Room {
   narrate(room, "A long rest. Wounds close, spells return, and the party stands ready. No rests left this tale.");
   touch(room);
   return room;
+}
+
+export function arenaSetTeam(roomCode: string, playerId: string, teamId: string): Room {
+  const room = requireRoom(roomCode);
+  setArenaTeam(room, playerId, teamId);
+  touch(room);
+  return room;
+}
+
+export function arenaReady(roomCode: string, playerId: string, ready = true): Room {
+  const room = requireRoom(roomCode);
+  setArenaReady(room, playerId, ready);
+  touch(room);
+  return room;
+}
+
+export function arenaPickHero(roomCode: string, playerId: string, characterId: string, userId?: string): Room {
+  const room = requireRoom(roomCode);
+  pickArenaHero(room, playerId, characterId, userId);
+  touch(room);
+  return room;
+}
+
+export function arenaStart(roomCode: string, actorUserId?: string): Room {
+  const room = requireRoom(roomCode);
+  assertCanStart(room, actorUserId);
+  beginArenaFight(room);
+  narrate(room, "Steel out. The arena will have a winner.");
+  touch(room);
+  autosave(room);
+  return room;
+}
+
+export function arenaKick(roomCode: string, actorUserId: string | undefined, targetPlayerId: string): Room {
+  const room = requireRoom(roomCode);
+  if (!room.arena) throw new Error("NOT_ARENA");
+  if (room.arena.phase === "active") throw new Error("ARENA_IN_FIGHT");
+  if (room.ownerUserId && actorUserId !== room.ownerUserId) throw new Error("ARENA_NOT_OWNER");
+  room.players = room.players.filter((p) => p.playerId !== targetPlayerId);
+  if (room.players.length === 0) {
+    closeRoom(room.roomCode);
+    return room;
+  }
+  touch(room);
+  return room;
+}
+
+function armHeroSwap(room: Room): void {
+  const t = heroSwapTimers.get(room.roomCode);
+  if (t) clearTimeout(t);
+  const wait = Math.max(0, (room.arena?.heroSwapEndsAt ?? Date.now()) - Date.now());
+  heroSwapTimers.set(
+    room.roomCode,
+    setTimeout(() => {
+      heroSwapTimers.delete(room.roomCode);
+      try {
+        const r = getRoom(room.roomCode);
+        if (!r) return;
+        closeHeroSwap(r);
+        touch(r);
+        notify(r);
+      } catch {
+        /* gone */
+      }
+    }, wait || HERO_SWAP_MS_EXPORT),
+  );
 }
 
 export function combatEndTurn(roomCode: string, playerId: string): Room {
@@ -1505,6 +1668,9 @@ export function closeRoom(roomCode: string): void {
   const room = getRoom(roomCode);
   if (!room) throw new Error("ROOM_NOT_FOUND");
   clearVoteTimer(room.roomCode);
+  const swap = heroSwapTimers.get(room.roomCode);
+  if (swap) clearTimeout(swap);
+  heroSwapTimers.delete(room.roomCode);
   const idle = puzzleIdleTimers.get(room.roomCode);
   if (idle) clearTimeout(idle);
   puzzleIdleTimers.delete(room.roomCode);
@@ -1556,7 +1722,7 @@ export function playerDisconnect(roomCode: string, playerId: string): Room | und
 function nearestEnemy(combat: CombatState, playerId: string) {
   const me = combat.tokens.find((t) => t.playerId === playerId && !t.dead);
   if (!me) return null;
-  const enemies = combat.tokens.filter((t) => t.kind === "enemy" && !t.dead);
+  const enemies = combat.tokens.filter((t) => !t.dead && t.id !== me.id && (combat.pvp ? t.teamId !== me.teamId : t.kind === "enemy"));
   if (!enemies.length) return null;
   enemies.sort((a, b) => {
     const da = Math.max(Math.abs(a.x - me.x), Math.abs(a.y - me.y));

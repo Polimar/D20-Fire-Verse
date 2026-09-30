@@ -16,6 +16,8 @@ import {
   type ChargenDraft,
 } from "./chargen.js";
 import { announceTable } from "./announce.js";
+import { ARENA_FORMATS } from "./arena.js";
+import { ARENA_THEMES } from "./arena-maps.js";
 import { ensureDataDir, REPO_ROOT } from "./paths.js";
 import { audioPath, narrationStatus, prewarmNarration, waitForNarration } from "./narration.js";
 import {
@@ -37,6 +39,13 @@ import {
   combatMove,
   withdraw,
   beginCombat,
+  createArena,
+  arenasPublic,
+  arenaSetTeam,
+  arenaReady,
+  arenaPickHero,
+  arenaStart,
+  arenaKick,
   createRoom,
   getRoom,
   joinRoom,
@@ -78,6 +87,14 @@ type ClientMsg = {
   intent?: string;
   draft?: ChargenDraft;
   sequence?: string[];
+  format?: string;
+  theme?: string;
+  mapSize?: string;
+  level?: number;
+  privacy?: string;
+  name?: string;
+  teamId?: string;
+  ready?: boolean;
   slot?: number;
   optionId?: string;
   puzzleDraft?: string[];
@@ -154,6 +171,12 @@ app.get("/api/health", (_req, res) => {
 
 /** Where a phone on the same Wi-Fi can reach the companion (for the join QR code). */
 app.get("/api/table-info", (req, res) => {
+  const publicBase = process.env.FIREVERSE_PUBLIC_URL?.replace(/\/$/, "");
+  if (publicBase) {
+    const companionUrl = `${publicBase}/companion/`;
+    res.json({ hosts: lanAddresses(), companionUrl, publicUrl: publicBase });
+    return;
+  }
   const hosts = lanAddresses();
   const hostHeader = String(req.headers.host ?? "");
   const requestHost = hostHeader.split(":")[0] || "";
@@ -263,7 +286,7 @@ function broadcast(roomCode: string): void {
       s.send(
         JSON.stringify({
           eventType: "ROOM_STATE",
-          payload: publicState(room, s.playerId),
+          payload: publicState(room, s.playerId, s.user?.id),
         }),
       );
     }
@@ -345,6 +368,11 @@ wss.on("connection", (ws, req) => {
       pregens: pregenList(sock.user?.id),
       portraits: PORTRAITS.map((id) => ({ id, url: portraitUrl(id) })),
       chargen: getChargenCatalog(),
+      arena: {
+        formats: Object.entries(ARENA_FORMATS).map(([id, v]) => ({ id, ...v })),
+        themes: ARENA_THEMES,
+        sizes: ["small", "medium", "large"],
+      },
       narration: narrationStatus(),
     },
   });
@@ -388,7 +416,57 @@ function handle(sock: Sock, msg: ClientMsg): void {
     case "CREATE_ROOM": {
       const room = createRoom({ campaignId: msg.campaignId, ownerUserId: sock.user!.id });
       bind(sock, room);
-      send(sock, { eventType: "ROOM_STATE", payload: publicState(room) });
+      send(sock, { eventType: "ROOM_STATE", payload: publicState(room, undefined, sock.user!.id) });
+      return;
+    }
+    case "CREATE_ARENA": {
+      const room = createArena({
+        ownerUserId: sock.user!.id,
+        format: msg.format,
+        theme: msg.theme,
+        mapSize: msg.mapSize,
+        level: msg.level,
+        privacy: msg.privacy,
+        name: msg.name,
+      });
+      bind(sock, room);
+      send(sock, { eventType: "ROOM_STATE", payload: publicState(room, undefined, sock.user!.id) });
+      return;
+    }
+    case "LIST_ARENAS": {
+      send(sock, { eventType: "ARENA_LIST", payload: { arenas: arenasPublic() } });
+      return;
+    }
+    case "JOIN_ARENA": {
+      if (!msg.roomCode || !msg.characterId) throw new Error("MISSING_FIELDS");
+      const { room, playerId } = joinRoom(msg.roomCode, msg.displayName || "Player", msg.characterId, sock.user!.id);
+      bind(sock, room, playerId);
+      broadcast(room.roomCode);
+      return;
+    }
+    case "SET_ARENA_TEAM": {
+      if (!msg.roomCode || !msg.teamId) throw new Error("MISSING_FIELDS");
+      broadcast(arenaSetTeam(msg.roomCode, pid(), msg.teamId).roomCode);
+      return;
+    }
+    case "ARENA_READY": {
+      if (!msg.roomCode) throw new Error("MISSING_FIELDS");
+      broadcast(arenaReady(msg.roomCode, pid(), msg.ready !== false).roomCode);
+      return;
+    }
+    case "START_ARENA": {
+      if (!msg.roomCode) throw new Error("MISSING_FIELDS");
+      broadcast(arenaStart(msg.roomCode, sock.user?.id).roomCode);
+      return;
+    }
+    case "ARENA_PICK_HERO": {
+      if (!msg.roomCode || !msg.characterId) throw new Error("MISSING_FIELDS");
+      broadcast(arenaPickHero(msg.roomCode, pid(), msg.characterId, sock.user?.id).roomCode);
+      return;
+    }
+    case "ARENA_KICK": {
+      if (!msg.roomCode || !msg.playerId) throw new Error("MISSING_FIELDS");
+      broadcast(arenaKick(msg.roomCode, sock.user?.id, msg.playerId).roomCode);
       return;
     }
     case "CREATE_CHARACTER": {

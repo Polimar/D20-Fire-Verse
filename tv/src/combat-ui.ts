@@ -162,7 +162,7 @@ export class CombatUi {
       board.setBoard(this.fightKey, c.width, c.height, c.walls, c.tokens);
       if (opts.resumed || !c.events.some((e) => e.kind === "start")) this.director!.skipTo(c);
       else this.director!.skipTo({ ...c, seq: Math.min(...c.events.map((e) => e.seq)) - 1 });
-      this.paintBackdrop(s.nodeId);
+      this.paintBackdrop();
     }
     this.awaiting = false;
     this.director!.feed(c, this.playerId);
@@ -178,8 +178,15 @@ export class CombatUi {
     hideCoach();
   }
 
-  private paintBackdrop(nodeId: string) {
-    const area = roomForNode(nodeId) ?? "mosaic";
+  private paintBackdrop() {
+    const art = this.combat?.art;
+    if (art) {
+      this.el.board.style.backgroundImage = `linear-gradient(rgba(12,8,6,.28), rgba(12,8,6,.45)), url(${art})`;
+      this.el.board.style.backgroundSize = "100% 100%, 100% 100%";
+      this.el.board.style.backgroundPosition = "0 0, 0 0";
+      return;
+    }
+    const area = roomForNode(this.lastNode) ?? "mosaic";
     const crop = cropStyle(DUNGEON_ROOMS[area]);
     this.el.board.style.backgroundImage = "linear-gradient(rgba(12,8,6,.55), rgba(12,8,6,.78)), url(/art/dungeon-map.jpg)";
     this.el.board.style.backgroundSize = `100% 100%, ${crop.size}`;
@@ -214,11 +221,21 @@ export class CombatUi {
   }
 
   private foes(): Token[] {
-    return (this.combat?.tokens ?? []).filter((t) => t.kind !== "pc" && !t.dead);
+    const me = this.me();
+    return (this.combat?.tokens ?? []).filter((t) => {
+      if (t.dead || t.id === me?.id) return false;
+      if (this.combat?.pvp) return Boolean(me && t.teamId && t.teamId !== me.teamId);
+      return t.kind !== "pc";
+    });
   }
 
   private allies(): Token[] {
-    return (this.combat?.tokens ?? []).filter((t) => t.kind === "pc" && !t.dead);
+    const me = this.me();
+    return (this.combat?.tokens ?? []).filter((t) => {
+      if (t.dead) return false;
+      if (this.combat?.pvp) return Boolean(me && t.teamId && t.teamId === me.teamId);
+      return t.kind === "pc";
+    });
   }
 
   private tokenAt(c: Cell): Token | undefined {
@@ -424,7 +441,8 @@ export class CombatUi {
       .map((t) => {
         const ratio = t.maxHp ? Math.max(0, t.hp / t.maxHp) : 0;
         const mine = t.playerId && t.playerId === this.playerId;
-        return `<li class="init ${t.kind === "pc" ? "pc" : "foe"} ${t.id === current ? "now" : ""} ${t.dead ? "dead" : ""} ${mine ? "mine" : ""}" style="--hp:${ratio}">
+        const foe = this.combat?.pvp ? Boolean(this.me() && t.teamId && t.teamId !== this.me()?.teamId) : t.kind !== "pc";
+        return `<li class="init ${foe ? "foe" : "pc"} ${t.id === current ? "now" : ""} ${t.dead ? "dead" : ""} ${mine ? "mine" : ""}" style="--hp:${ratio}">
           <span class="init-face">${t.portrait ? `<img src="${t.portrait}" alt="" />` : esc(t.name.slice(0, 1))}</span>
           <span class="init-name">${esc(t.name.split(" ")[0]!)}</span>
           <span class="init-hp"><i></i></span>

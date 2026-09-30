@@ -3,14 +3,18 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import {
+  acceptFriend,
+  arenaLeaderboard,
   assertAdmin,
   clearSessionCookie,
   createUser,
+  listFriends,
   listUsers,
   login,
   logout,
   openAuth,
   readSessionCookie,
+  requestFriend,
   sessionCookie,
   updateUser,
   userFromToken,
@@ -76,6 +80,53 @@ export function mountAccountRoutes(app: Express): void {
       return;
     }
     res.json({ user });
+  });
+
+  app.get("/api/friends", (req, res) => {
+    const user = requestUser(req);
+    if (!user) {
+      res.status(401).json({ error: "AUTH_REQUIRED" });
+      return;
+    }
+    res.json({ friends: listFriends(user.id) });
+  });
+
+  app.post("/api/friends", (req, res) => {
+    const user = requestUser(req);
+    if (!user) {
+      res.status(401).json({ error: "AUTH_REQUIRED" });
+      return;
+    }
+    try {
+      requestFriend(user.id, String(req.body?.username ?? ""));
+      res.json({ ok: true, friends: listFriends(user.id) });
+    } catch (err) {
+      fail(res, err);
+    }
+  });
+
+  app.post("/api/friends/accept", (req, res) => {
+    const user = requestUser(req);
+    if (!user) {
+      res.status(401).json({ error: "AUTH_REQUIRED" });
+      return;
+    }
+    try {
+      acceptFriend(user.id, String(req.body?.userId ?? ""));
+      res.json({ ok: true, friends: listFriends(user.id) });
+    } catch (err) {
+      fail(res, err);
+    }
+  });
+
+  app.get("/api/arena/leaderboard", (req, res) => {
+    const user = requestUser(req);
+    if (!user) {
+      res.status(401).json({ error: "AUTH_REQUIRED" });
+      return;
+    }
+    const scope = req.query.scope === "friends" ? "friends" : "global";
+    res.json({ scope, rows: arenaLeaderboard(scope, user.id) });
   });
 
   app.get("/api/campaigns", (_req, res) => {

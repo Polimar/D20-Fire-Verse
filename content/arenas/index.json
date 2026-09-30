@@ -1,0 +1,218 @@
+[
+  {
+    "id": "arena_brewery_small",
+    "theme": "brewery",
+    "size": "small",
+    "art": "/art/arena/brewery-small.svg"
+  },
+  {
+    "id": "arena_brewery_medium",
+    "theme": "brewery",
+    "size": "medium",
+    "art": "/art/arena/brewery-medium.svg"
+  },
+  {
+    "id": "arena_brewery_large",
+    "theme": "brewery",
+    "size": "large",
+    "art": "/art/arena/brewery-large.svg"
+  },
+  {
+    "id": "arena_crypt_small",
+    "theme": "crypt",
+    "size": "small",
+    "art": "/art/arena/crypt-small.svg"
+  },
+  {
+    "id": "arena_crypt_medium",
+    "theme": "crypt",
+    "size": "medium",
+    "art": "/art/arena/crypt-medium.svg"
+  },
+  {
+    "id": "arena_crypt_large",
+    "theme": "crypt",
+    "size": "large",
+    "art": "/art/arena/crypt-large.svg"
+  },
+  {
+    "id": "arena_ship_small",
+    "theme": "ship",
+    "size": "small",
+    "art": "/art/arena/ship-small.svg"
+  },
+  {
+    "id": "arena_ship_medium",
+    "theme": "ship",
+    "size": "medium",
+    "art": "/art/arena/ship-medium.svg"
+  },
+  {
+    "id": "arena_ship_large",
+    "theme": "ship",
+    "size": "large",
+    "art": "/art/arena/ship-large.svg"
+  },
+  {
+    "id": "arena_inn_yard_small",
+    "theme": "inn_yard",
+    "size": "small",
+    "art": "/art/arena/inn_yard-small.svg"
+  },
+  {
+    "id": "arena_inn_yard_medium",
+    "theme": "inn_yard",
+    "size": "medium",
+    "art": "/art/arena/inn_yard-medium.svg"
+  },
+  {
+    "id": "arena_inn_yard_large",
+    "theme": "inn_yard",
+    "size": "large",
+    "art": "/art/arena/inn_yard-large.svg"
+  },
+  {
+    "id": "arena_elf_ruin_small",
+    "theme": "elf_ruin",
+    "size": "small",
+    "art": "/art/arena/elf_ruin-small.svg"
+  },
+  {
+    "id": "arena_elf_ruin_medium",
+    "theme": "elf_ruin",
+    "size": "medium",
+    "art": "/art/arena/elf_ruin-medium.svg"
+  },
+  {
+    "id": "arena_elf_ruin_large",
+    "theme": "elf_ruin",
+    "size": "large",
+    "art": "/art/arena/elf_ruin-large.svg"
+  },
+  {
+    "id": "arena_lava_hall_small",
+    "theme": "lava_hall",
+    "size": "small",
+    "art": "/art/arena/lava_hall-small.svg"
+  },
+  {
+    "id": "arena_lava_hall_medium",
+    "theme": "lava_hall",
+    "size": "medium",
+    "art": "/art/arena/lava_hall-medium.svg"
+  },
+  {
+    "id": "arena_lava_hall_large",
+    "theme": "lava_hall",
+    "size": "large",
+    "art": "/art/arena/lava_hall-large.svg"
+  },
+  {
+    "id": "arena_ice_court_small",
+    "theme": "ice_court",
+    "size": "small",
+    "art": "/art/arena/ice_court-small.svg"
+  },
+  {
+    "id": "arena_ice_court_medium",
+    "theme": "ice_court",
+    "size": "medium",
+    "art": "/art/arena/ice_court-medium.svg"
+  },
+  {
+    "id": "arena_ice_court_large",
+    "theme": "ice_court",
+    "size": "large",
+    "art": "/art/arena/ice_court-large.svg"
+  },
+  {
+    "id": "arena_sand_ruin_small",
+    "theme": "sand_ruin",
+    "size": "small",
+    "art": "/art/arena/sand_ruin-small.svg"
+  },
+  {
+    "id": "arena_sand_ruin_medium",
+    "theme": "sand_ruin",
+    "size": "medium",
+    "art": "/art/arena/sand_ruin-medium.svg"
+  },
+  {
+    "id": "arena_sand_ruin_large",
+    "theme": "sand_ruin",
+    "size": "large",
+    "art": "/art/arena/sand_ruin-large.svg"
+  },
+  {
+    "id": "arena_sewer_small",
+    "theme": "sewer",
+    "size": "small",
+    "art": "/art/arena/sewer-small.svg"
+  },
+  {
+    "id": "arena_sewer_medium",
+    "theme": "sewer",
+    "size": "medium",
+    "art": "/art/arena/sewer-medium.svg"
+  },
+  {
+    "id": "arena_sewer_large",
+    "theme": "sewer",
+    "size": "large",
+    "art": "/art/arena/sewer-large.svg"
+  },
+  {
+    "id": "arena_coliseum_small",
+    "theme": "coliseum",
+    "size": "small",
+    "art": "/art/arena/coliseum-small.svg"
+  },
+  {
+    "id": "arena_coliseum_medium",
+    "theme": "coliseum",
+    "size": "medium",
+    "art": "/art/arena/coliseum-medium.svg"
+  },
+  {
+    "id": "arena_coliseum_large",
+    "theme": "coliseum",
+    "size": "large",
+    "art": "/art/arena/coliseum-large.svg"
+  },
+  {
+    "id": "arena_swamp_small",
+    "theme": "swamp",
+    "size": "small",
+    "art": "/art/arena/swamp-small.svg"
+  },
+  {
+    "id": "arena_swamp_medium",
+    "theme": "swamp",
+    "size": "medium",
+    "art": "/art/arena/swamp-medium.svg"
+  },
+  {
+    "id": "arena_swamp_large",
+    "theme": "swamp",
+    "size": "large",
+    "art": "/art/arena/swamp-large.svg"
+  },
+  {
+    "id": "arena_tower_roof_small",
+    "theme": "tower_roof",
+    "size": "small",
+    "art": "/art/arena/tower_roof-small.svg"
+  },
+  {
+    "id": "arena_tower_roof_medium",
+    "theme": "tower_roof",
+    "size": "medium",
+    "art": "/art/arena/tower_roof-medium.svg"
+  },
+  {
+    "id": "arena_tower_roof_large",
+    "theme": "tower_roof",
+    "size": "large",
+    "art": "/art/arena/tower_roof-large.svg"
+  }
+]

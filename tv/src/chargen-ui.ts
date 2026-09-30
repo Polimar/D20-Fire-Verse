@@ -242,7 +242,7 @@ export function mountChargen(opts: {
   onCreated: (id: string) => void;
 }): {
   destroy: () => void;
-  open: () => void;
+  open: (opts?: { lockLevel?: 1 | 2 | 3 }) => void;
   close: () => void;
   /** Back on the remote: one step back, or close from the first step. */
   back: () => void;
@@ -260,6 +260,7 @@ export function mountChargen(opts: {
   let error = "";
   let submitting = false;
   let returnFocus: HTMLElement | null = null;
+  let lockLevel: 1 | 2 | 3 | null = null;
 
   const panel = document.createElement("section");
   panel.className = "chargen-panel";
@@ -355,6 +356,10 @@ export function mountChargen(opts: {
 
   function render() {
     const el = body();
+    if (lockLevel) {
+      draft.level = lockLevel;
+      if (draft.step === 0) draft.step = 1;
+    }
     const { hp, ac, abs, cls, race } = previewHpAc(draft, cat);
     const stepTitle = STEPS[draft.step] ?? "";
     let content = "";
@@ -690,6 +695,7 @@ export function mountChargen(opts: {
     );
     el.querySelectorAll("[data-level]").forEach((b) =>
       b.addEventListener("click", () => {
+        if (lockLevel) return;
         draft.level = Number((b as HTMLElement).dataset.level) as 1 | 2 | 3;
         focusSel = "#cgNext:not([hidden])";
         render();
@@ -1066,13 +1072,20 @@ export function mountChargen(opts: {
   }
 
   function stepBack() {
-    if (draft.step === 0) setOpen(false);
+    if (draft.step === 0 || (lockLevel && draft.step <= 1)) setOpen(false);
     else goStep(draft.step - 1);
   }
 
   return {
     destroy: () => panel.remove(),
-    open: () => setOpen(true),
+    open: (opts) => {
+      lockLevel = opts?.lockLevel ?? null;
+      if (lockLevel) {
+        draft.level = lockLevel;
+        if (draft.step === 0) draft.step = 1;
+      }
+      setOpen(true);
+    },
     close: () => setOpen(false),
     back: () => stepBack(),
     isOpen: () => open,
@@ -1105,6 +1118,7 @@ export function mountChargen(opts: {
     onCreatedClose: () => {
       submitting = false;
       setOpen(false);
+      lockLevel = null;
       draft = defaultDraft(cat);
     },
   };

@@ -59,6 +59,7 @@ export type Token = {
   playerId?: string;
   characterId?: string;
   monsterId?: string;
+  teamId?: string | null;
   portrait: string;
   boss: boolean;
   movementLeft: number;
@@ -86,6 +87,8 @@ export type MenuAction = {
 export type CombatPublic = {
   encounterId: string;
   mapId: string;
+  pvp?: string | null;
+  art?: string | null;
   width: number;
   height: number;
   walls: boolean[][];
@@ -98,7 +101,7 @@ export type CombatPublic = {
   reachable: Cell[];
   log: string[];
   events: CombatEvent[];
-  status: "active" | "victory" | "defeat";
+  status: "active" | "victory" | "defeat" | "draw";
   pendingReaction?: { playerId: string; prompt: string; acceptLabel: string; declineLabel: string } | null;
   aimRequest?: { playerId: string; abilityId: string } | null;
   actions: MenuAction[];
@@ -121,11 +124,16 @@ export type Player = {
   characterId: string;
   characterName: string;
   portrait: string;
+  teamId?: string | null;
+  ready?: boolean;
 };
 
 export type RoomState = {
   roomCode: string;
   campaignId: string;
+  mode?: "campaign" | "arena";
+  isHost?: boolean;
+  arena?: import("./arena-ui").ArenaPublic | null;
   nodeId: string;
   nodeType: string;
   alexaScene?: string;

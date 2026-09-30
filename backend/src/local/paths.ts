@@ -10,6 +10,25 @@ export const CAMPAIGN_DIR = path.join(
   "campaigns",
   "luppolandia-brew",
 );
+
+function loadRootEnv(): void {
+  const file = path.join(REPO_ROOT, ".env");
+  if (!fs.existsSync(file)) return;
+  for (const line of fs.readFileSync(file, "utf8").split("\n")) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith("#")) continue;
+    const eq = trimmed.indexOf("=");
+    if (eq < 1) continue;
+    const key = trimmed.slice(0, eq).trim();
+    let val = trimmed.slice(eq + 1).trim();
+    if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
+      val = val.slice(1, -1);
+    }
+    if (process.env[key] === undefined) process.env[key] = val;
+  }
+}
+loadRootEnv();
+
 export const DATA_DIR = process.env.FIREVERSE_DATA_DIR
   ? path.resolve(process.env.FIREVERSE_DATA_DIR)
   : path.join(REPO_ROOT, "backend", "data");

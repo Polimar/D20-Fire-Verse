@@ -28,6 +28,14 @@ export type ClientAction =
   | "END_TURN"
   | "REQUEST_SAVE"
   | "RESUME_SAVE"
+  | "CREATE_ARENA"
+  | "LIST_ARENAS"
+  | "JOIN_ARENA"
+  | "SET_ARENA_TEAM"
+  | "ARENA_READY"
+  | "START_ARENA"
+  | "ARENA_PICK_HERO"
+  | "ARENA_KICK"
   | "VOICE_INTENT"
   | "PING";
 
@@ -39,7 +47,8 @@ export type ServerEvent =
   | "ABILITY_ROLLS"
   | "PONG"
   | "ERROR"
-  | "SAVE_ACK";
+  | "SAVE_ACK"
+  | "ARENA_LIST";
 
 export type ClientMessage = {
   action: ClientAction;
@@ -58,6 +67,15 @@ export type ClientMessage = {
   saveId?: string;
   intent?: string;
   sequence?: string[];
+  campaignId?: string;
+  format?: string;
+  theme?: string;
+  mapSize?: string;
+  level?: number;
+  privacy?: string;
+  name?: string;
+  teamId?: string;
+  ready?: boolean;
 };
 
 export const VOICE_INTENTS = [
@@ -79,6 +97,7 @@ const ERROR_TEXT: Record<string, string> = {
   BAD_ROLE: "The role must be player or admin.",
   USERNAME_TAKEN: "That username is already in use.",
   USER_NOT_FOUND: "That account no longer exists.",
+  FRIEND_SELF: "You cannot add yourself as a friend.",
   BAD_ABILITY_EFFECT: "That ability uses an effect the table does not know.",
   BAD_CAMPAIGN_ID: "The campaign id may use lowercase letters, numbers, and dashes.",
   BAD_START_NODE: "The campaign has no starting scene.",
@@ -90,6 +109,16 @@ const ERROR_TEXT: Record<string, string> = {
   CAMPAIGN_NOT_FOUND: "That campaign is not published.",
   ROOM_NOT_FOUND: "That table doesn't exist anymore. Check the room code or start a new one.",
   ROOM_FULL: "This table already seats three heroes.",
+  ARENA_FULL: "That arena has no free seats.",
+  ARENA_NOT_READY: "Everyone must pick a hero, pick a team, and ready up.",
+  ARENA_TEAMS: "Teams must be even before the fight starts.",
+  ARENA_BAD_FORMAT: "That arena format is not available.",
+  ARENA_BAD_THEME: "That arena theme is not available.",
+  ARENA_BAD_SIZE: "Pick a small, medium, or large floor.",
+  ARENA_NOT_OWNER: "Only the host can start or kick from this arena.",
+  ARENA_NO_SWAP: "Hero swaps are only open between rounds.",
+  NOT_ARENA: "That action is for an arena table.",
+  ARENA_IN_FIGHT: "The arena fight is already under way.",
   BAD_CHARACTER: "That hero isn't available. Pick another one.",
   CHARACTER_TAKEN: "Someone at the table is already playing that hero.",
   IN_COMBAT: "Not now — a fight is under way.",

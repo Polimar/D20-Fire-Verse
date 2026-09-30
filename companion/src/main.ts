@@ -54,6 +54,18 @@ type TableState = {
   roomCode: string;
   nodeId: string;
   nodeType: string;
+  mode?: string;
+  isHost?: boolean;
+  arena?: {
+    formatLabel: string;
+    level: number;
+    phase: string;
+    teams: number;
+    cap: number;
+    lastResult?: string | null;
+    heroSwapEndsAt?: number | null;
+    seats: Array<{ playerId: string; characterName: string; teamId?: string | null; ready?: boolean }>;
+  } | null;
   alexaScene?: string;
   narration?: string;
   speaker?: { id: string; name: string; portrait: string } | null;
@@ -147,6 +159,7 @@ app.innerHTML = `
       <button type="submit" class="primary">Find the table</button>
     </form>
     <p class="meta" id="joinHint">The code is on the television, above the QR code.</p>
+    <div id="arenaBrowse" class="heroes"></div>
     <div class="heroes" id="heroes"></div>
   </section>
 
@@ -225,15 +238,20 @@ function renderHeroes() {
     $("joinHint").textContent = roomCode ? "Looking for the table…" : "The code is on the television, above the QR code.";
     return;
   }
-  const taken = new Set(state.players.map((p) => p.characterId));
+  const taken = new Set(state.mode === "arena" ? [] : state.players.map((p) => p.characterId));
   const inFight = state.combat?.status === "active";
-  $("joinHint").textContent = inFight ? "A fight is on. You can take a seat as soon as it ends." : "Choose who you'll play. The television shows the rest.";
+  const lv = state.arena?.level;
+  $("joinHint").textContent = inFight
+    ? "A fight is on. You can take a seat as soon as it ends."
+    : state.mode === "arena"
+      ? `Arena ${state.arena?.formatLabel ?? ""} · heroes at level ${lv ?? ""}. Same pregen can sit more than once.`
+      : "Choose who you'll play. The television shows the rest.";
   box.innerHTML = pregens
     .map((p) => {
       const busy = taken.has(p.id);
       return `<button type="button" class="hero" data-hero="${esc(p.id)}" ${busy || inFight ? "disabled" : ""}>
         ${p.portrait ? `<img src="${esc(p.portrait)}" alt="" loading="lazy" />` : `<span class="mark">${esc(p.name.slice(0, 1))}</span>`}
-        <span><strong>${esc(p.name)}</strong><em>${esc([srdLabel(p.race), srdLabel(p.class), `Level ${p.level}`].filter(Boolean).join(" · "))}</em>${busy ? `<i>At the table</i>` : ""}</span>
+        <span><strong>${esc(p.name)}</strong><em>${esc([srdLabel(p.race), srdLabel(p.class), `Level ${lv ?? p.level}`].filter(Boolean).join(" · "))}</em>${busy ? `<i>At the table</i>` : ""}</span>
       </button>`;
     })
     .join("");
@@ -285,7 +303,19 @@ function renderSeat() {
         : "";
   } else {
     turn.hidden = true;
-    if (s.skillCheck && s.nodeType === "skill_check") {
+    if (s.mode === "arena") {
+      const seatArena = s.arena?.seats.find((x) => x.playerId === seat.playerId);
+      const teams = (s.arena?.teams ?? 0) > 0;
+      const swap = s.arena?.phase === "hero_swap";
+      turn.hidden = false;
+      turn.textContent = swap ? s.arena?.lastResult ?? "Change hero or keep this one." : `${s.arena?.formatLabel ?? "Arena"} · L${s.arena?.level ?? ""}`;
+      controls.innerHTML = `
+      ${teams ? `<button type="button" data-team="a">Team A</button><button type="button" data-team="b">Team B</button>` : ""}
+      <button type="button" class="primary" data-ready="${seatArena?.ready ? "0" : "1"}">${seatArena?.ready ? "Unready" : "Ready"}</button>
+      <p class="meta">Change hero</p>
+      ${pregens.map((p) => `<button type="button" data-pick="${esc(p.id)}">${esc(p.name)}</button>`).join("")}
+      <p class="meta">${seatArena?.teamId ? `Team ${String(seatArena.teamId).toUpperCase()}` : teams ? "Pick a team" : "Free-for-all"}</p>`;
+    } else if (s.skillCheck && s.nodeType === "skill_check") {
       const skill = (s.skillCheck.skill ?? s.skillCheck.ability).replace(/_/g, " ");
       const roster = s.checkOffer?.roster ?? [];
       const helpers = new Set(s.checkOffer?.helpers ?? []);
@@ -341,6 +371,21 @@ function renderSeat() {
           .join("");
     }
   }
+  controls.querySelectorAll<HTMLElement>("[data-pick]").forEach((b) =>
+    b.addEventListener("click", () => {
+      send({ action: "ARENA_PICK_HERO", roomCode: s.roomCode, playerId, characterId: b.dataset.pick });
+    }),
+  );
+  controls.querySelectorAll<HTMLElement>("[data-team]").forEach((b) =>
+    b.addEventListener("click", () => {
+      send({ action: "SET_ARENA_TEAM", roomCode: s.roomCode, playerId, teamId: b.dataset.team });
+    }),
+  );
+  controls.querySelectorAll<HTMLElement>("[data-ready]").forEach((b) =>
+    b.addEventListener("click", () => {
+      send({ action: "ARENA_READY", roomCode: s.roomCode, playerId, ready: b.dataset.ready === "1" });
+    }),
+  );
   controls.querySelectorAll<HTMLElement>("[data-ability]").forEach((b) =>
     b.addEventListener("click", () => {
       const id = b.dataset.ability;
@@ -453,8 +498,28 @@ function connect() {
       case "HELLO":
         pregens = msg.payload?.pregens ?? [];
         attach();
+        if (signedIn) send({ action: "LIST_ARENAS" });
         render();
         break;
+      case "ARENA_LIST": {
+        const box = $("arenaBrowse");
+        const list = (msg.payload?.arenas ?? []) as Array<{ roomCode: string; name: string; formatLabel: string; level: number; seats: number; cap: number }>;
+        box.innerHTML = list
+          .map(
+            (a) =>
+              `<button type="button" class="hero" data-join="${esc(a.roomCode)}"><span><strong>${esc(a.name)}</strong><em>${esc(a.formatLabel)} · L${a.level} · ${a.seats}/${a.cap} · ${esc(a.roomCode)}</em></span></button>`,
+          )
+          .join("");
+        box.querySelectorAll<HTMLElement>("[data-join]").forEach((b) =>
+          b.addEventListener("click", () => {
+            roomCode = b.dataset.join ?? "";
+            ($("roomCode") as HTMLInputElement).value = roomCode;
+            playerId = null;
+            attach();
+          }),
+        );
+        break;
+      }
       case "SEAT":
         if (msg.payload?.playerId) {
           playerId = msg.payload.playerId;

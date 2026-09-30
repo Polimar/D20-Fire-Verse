@@ -7,6 +7,7 @@ import { describeError, scriptRuns, srdLabel, type CastMember } from "@d20-firev
 import { normalizeScene, sceneLabel, unlockAudio, type RoomScene } from "./audio";
 import { mountChargen, type ChargenCatalog } from "./chargen-ui";
 import { CombatUi } from "./combat-ui";
+import { ARENA_FORMATS, ARENA_THEMES, suggestedSize, type OpenArena } from "./arena-ui";
 import { isD20, rollD20 } from "./dice3d";
 import { DUNGEON_ROOMS, roomForNode, type DungeonRoomId } from "./dungeon-map";
 import { onMusicChange, setMusic, toggleMusic, type MusicTrack } from "./music";
@@ -496,6 +497,10 @@ function openTableSettings() {
 
 // ------------------------------------------------------------------ home
 
+let homeView: "modes" | "campaign" | "arena" | "create" | "join" = "modes";
+let arenaList: OpenArena[] = [];
+let arenaCreate = { format: "ffa_1v1", theme: "brewery", mapSize: "small" as "small" | "medium" | "large", level: 1, privacy: "public", name: "" };
+
 function renderHome() {
   const session = loadSession();
   const welcome = $("homeWelcome");
@@ -518,30 +523,150 @@ function renderHome() {
           .map((c) => `<option value="${esc(c.id)}">${esc(c.title)}</option>`)
           .join("")}</select></label>`
       : "";
-  cta.innerHTML = `${cont}
+  if (homeView === "modes") {
+    cta.innerHTML = `
+      <button type="button" class="primary" id="btnModeCampaign" data-autofocus>Campaign</button>
+      <button type="button" id="btnModeArena">Arena</button>
+      <button type="button" class="ghost" id="btnSettings">Settings</button>
+      ${account?.role === "admin" ? `<button type="button" class="ghost" id="btnAdmin">Manage the table</button>` : ""}`;
+    $("btnModeCampaign").addEventListener("click", () => {
+      homeView = "campaign";
+      renderHome();
+    });
+    $("btnModeArena").addEventListener("click", () => {
+      homeView = "arena";
+      renderHome();
+    });
+  } else if (homeView === "campaign") {
+    cta.innerHTML = `${cont}
     ${camp}
     <button type="button" class="${session ? "" : "primary"}" id="btnNew" ${session ? "" : "data-autofocus"}>Begin a new tale</button>
     <button type="button" class="ghost" id="btnLoad">Load a save code</button>
+    <button type="button" class="ghost" id="btnHomeBack">↩ Modes</button>
     <button type="button" class="ghost" id="btnSettings">Settings</button>
     ${account?.role === "admin" ? `<button type="button" class="ghost" id="btnAdmin">Manage the table</button>` : ""}`;
-  $("btnContinue")?.addEventListener("click", () => continueSession());
-  $("btnNew").addEventListener("click", () => {
-    sfx("uiConfirm");
-    clearSession();
-    playerId = null;
-    state = null;
-    spectating = false;
-    lobbyEntry = null;
-    const campaignId = ($("campPick") as HTMLSelectElement | null)?.value || campaigns[0]?.id;
-    send({ action: "CREATE_ROOM", campaignId });
-    showPage("lobby");
-    renderLobby();
-  });
-  $("btnLoad").addEventListener("click", () => {
-    $("homeLoad").hidden = !$("homeLoad").hidden;
-    if (!$("homeLoad").hidden) $("saveId").focus();
-  });
-  $("btnSettings").addEventListener("click", () => openTableSettings());
+    $("btnContinue")?.addEventListener("click", () => continueSession());
+    $("btnNew").addEventListener("click", () => {
+      sfx("uiConfirm");
+      clearSession();
+      playerId = null;
+      state = null;
+      spectating = false;
+      lobbyEntry = null;
+      const campaignId = ($("campPick") as HTMLSelectElement | null)?.value || campaigns[0]?.id;
+      send({ action: "CREATE_ROOM", campaignId });
+      showPage("lobby");
+      renderLobby();
+    });
+    $("btnLoad").addEventListener("click", () => {
+      $("homeLoad").hidden = !$("homeLoad").hidden;
+      if (!$("homeLoad").hidden) $("saveId").focus();
+    });
+    $("btnHomeBack").addEventListener("click", () => {
+      homeView = "modes";
+      renderHome();
+    });
+  } else if (homeView === "arena") {
+    cta.innerHTML = `
+      <button type="button" class="primary" id="btnArenaCreate" data-autofocus>Create arena</button>
+      <button type="button" id="btnArenaJoin">Join an arena</button>
+      <button type="button" class="ghost" id="btnHomeBack">↩ Modes</button>
+      <button type="button" class="ghost" id="btnSettings">Settings</button>`;
+    $("btnArenaCreate").addEventListener("click", () => {
+      homeView = "create";
+      renderHome();
+    });
+    $("btnArenaJoin").addEventListener("click", () => {
+      homeView = "join";
+      send({ action: "LIST_ARENAS" });
+      renderHome();
+    });
+    $("btnHomeBack").addEventListener("click", () => {
+      homeView = "modes";
+      renderHome();
+    });
+  } else if (homeView === "create") {
+    cta.innerHTML = `<form class="arena-form" id="arenaForm">
+      <label>Format <select id="arenaFormat">${ARENA_FORMATS.map((f) => `<option value="${f.id}" ${arenaCreate.format === f.id ? "selected" : ""}>${esc(f.label)}</option>`).join("")}</select></label>
+      <label>Theme <select id="arenaTheme">${ARENA_THEMES.map((t) => `<option value="${t.id}" ${arenaCreate.theme === t.id ? "selected" : ""}>${esc(t.label)}</option>`).join("")}</select></label>
+      <label>Size <select id="arenaSize">${["small", "medium", "large"].map((s) => `<option value="${s}" ${arenaCreate.mapSize === s ? "selected" : ""}>${s}</option>`).join("")}</select></label>
+      <label>Hero level <select id="arenaLevel">${[1, 2, 3].map((l) => `<option value="${l}" ${arenaCreate.level === l ? "selected" : ""}>${l}</option>`).join("")}</select></label>
+      <label>Privacy <select id="arenaPrivacy"><option value="public" ${arenaCreate.privacy === "public" ? "selected" : ""}>Public</option><option value="private" ${arenaCreate.privacy === "private" ? "selected" : ""}>Private (code only)</option></select></label>
+      <label>Name <input id="arenaName" maxlength="24" value="${esc(arenaCreate.name)}" placeholder="Optional" /></label>
+      <button type="submit" class="primary">Open the arena</button>
+      <button type="button" class="ghost" id="btnHomeBack">↩ Arena</button>
+    </form>`;
+    const syncSize = () => {
+      const format = ($("arenaFormat") as HTMLSelectElement).value;
+      ($("arenaSize") as HTMLSelectElement).value = suggestedSize(format);
+    };
+    $("arenaFormat").addEventListener("change", syncSize);
+    $("arenaForm").addEventListener("submit", (e) => {
+      e.preventDefault();
+      arenaCreate = {
+        format: ($("arenaFormat") as HTMLSelectElement).value,
+        theme: ($("arenaTheme") as HTMLSelectElement).value,
+        mapSize: ($("arenaSize") as HTMLSelectElement).value as "small" | "medium" | "large",
+        level: Number(($("arenaLevel") as HTMLSelectElement).value),
+        privacy: ($("arenaPrivacy") as HTMLSelectElement).value,
+        name: ($("arenaName") as HTMLInputElement).value,
+      };
+      sfx("uiConfirm");
+      clearSession();
+      playerId = null;
+      state = null;
+      spectating = true;
+      lobbyEntry = null;
+      send({
+        action: "CREATE_ARENA",
+        format: arenaCreate.format,
+        theme: arenaCreate.theme,
+        mapSize: arenaCreate.mapSize,
+        level: arenaCreate.level,
+        privacy: arenaCreate.privacy,
+        name: arenaCreate.name,
+      });
+      showPage("lobby");
+    });
+    $("btnHomeBack").addEventListener("click", () => {
+      homeView = "arena";
+      renderHome();
+    });
+  } else {
+    cta.innerHTML = `
+      <label>Code <input id="arenaJoinCode" maxlength="6" autocapitalize="characters" placeholder="ABC123" /></label>
+      <button type="button" class="primary" id="btnArenaCode">Join with code</button>
+      <div class="arena-list" id="arenaBrowse">${
+        arenaList.length
+          ? arenaList
+              .map(
+                (a) =>
+                  `<button type="button" class="ghost arena-open" data-code="${esc(a.roomCode)}"><strong>${esc(a.name)}</strong><span>${esc(a.formatLabel)} · L${a.level} · ${a.seats}/${a.cap} · ${esc(a.roomCode)}</span></button>`,
+              )
+              .join("")
+          : `<p class="meta">No public arenas are waiting. Create one, or enter a private code.</p>`
+      }</div>
+      <button type="button" class="ghost" id="btnHomeBack">↩ Arena</button>`;
+    $("btnArenaCode").addEventListener("click", () => {
+      const code = ($("arenaJoinCode") as HTMLInputElement).value.trim().toUpperCase();
+      if (code.length < 4) return;
+      spectating = true;
+      send({ action: "REJOIN", roomCode: code });
+      showPage("lobby");
+    });
+    cta.querySelectorAll<HTMLElement>(".arena-open").forEach((b) =>
+      b.addEventListener("click", () => {
+        spectating = true;
+        send({ action: "REJOIN", roomCode: b.dataset.code });
+        showPage("lobby");
+      }),
+    );
+    $("btnHomeBack").addEventListener("click", () => {
+      homeView = "arena";
+      renderHome();
+    });
+  }
+  $("btnSettings")?.addEventListener("click", () => openTableSettings());
   $("btnMenuSettings").addEventListener("click", () => openTableSettings());
   $("btnAdmin")?.addEventListener("click", () => openAdmin());
   void companionUrl().then((url) => {
@@ -592,16 +717,20 @@ function storyMovedOn(s: RoomState): boolean {
 
 function renderLobby() {
   const grid = $("heroGrid");
-  const taken = new Set((state?.players ?? []).map((p) => p.characterId));
+  const arena = state?.mode === "arena";
+  const taken = new Set(arena ? [] : (state?.players ?? []).map((p) => p.characterId));
+  const level = state?.arena?.level;
+  const swapping = state?.arena?.phase === "hero_swap";
   grid.innerHTML =
     pregens
       .map((p) => {
         const busy = taken.has(p.id);
+        const lv = arena && level ? level : p.level;
         return `<button type="button" class="hero-card ${busy ? "taken" : ""}" data-hero="${esc(p.id)}" ${busy ? "disabled" : ""} ${selectedHero === p.id ? "data-autofocus" : ""}>
           <span class="hero-portrait">${p.portrait ? `<img src="${esc(p.portrait)}" alt="" loading="lazy" />` : ""}</span>
           <span class="hero-copy">
             <strong>${esc(p.name)}</strong>
-            <em>${esc([srdLabel(p.race), srdLabel(p.class), `level ${p.level}`].filter(Boolean).join(" · "))}${p.custom ? " · forged" : ""}</em>
+            <em>${esc([srdLabel(p.race), srdLabel(p.class), `level ${lv}`].filter(Boolean).join(" · "))}${p.custom ? " · forged" : ""}</em>
             <span>${esc(p.summary)}</span>
           </span>
           ${busy ? `<span class="hero-taken">At the table</span>` : ""}
@@ -610,7 +739,7 @@ function renderLobby() {
       .join("") +
     `<button type="button" class="hero-card forge" id="btnForge">
       <span class="hero-portrait forge-mark" aria-hidden="true">✦</span>
-      <span class="hero-copy"><strong>Forge a new hero</strong><em>SRD 5.1 · levels 1–3</em><span>Race, class, background, ability scores and a painted portrait.</span></span>
+      <span class="hero-copy"><strong>Forge a new hero</strong><em>SRD 5.1 · ${arena && level ? `level ${level}` : "levels 1–3"}</em><span>Race, class, background, ability scores and a painted portrait.</span></span>
     </button>`;
   if (!grid.querySelector("[data-autofocus]")) grid.querySelector("button:not([disabled])")?.setAttribute("data-autofocus", "");
   grid.querySelectorAll<HTMLElement>("[data-hero]").forEach((b) =>
@@ -625,27 +754,63 @@ function renderLobby() {
       selectedHero = id;
       sfx("uiConfirm");
       const hero = pregens.find((p) => p.id === id);
-      send({ action: "JOIN_ROOM", roomCode: state.roomCode, characterId: id, displayName: hero?.name ?? "Hero" });
+      if (arena && playerId && swapping) {
+        send({ action: "ARENA_PICK_HERO", roomCode: state.roomCode, characterId: id, playerId });
+      } else {
+        send({ action: "JOIN_ROOM", roomCode: state.roomCode, characterId: id, displayName: hero?.name ?? "Hero" });
+      }
       window.setTimeout(() => (joining = false), 3000);
     }),
   );
   $("btnForge").addEventListener("click", () => {
     sfx("uiConfirm");
-    chargenApi?.open();
+    chargenApi?.open(arena && level ? { lockLevel: level as 1 | 2 | 3 } : undefined);
   });
   const code = state?.roomCode ?? "······";
   $("roomCode").textContent = code;
+  const teams = (state?.arena?.teams ?? 0) > 0;
   $("lobbySeats").innerHTML = (state?.players ?? [])
-    .map((p) => `<li><img src="${esc(p.portrait)}" alt="" /><span>${esc(p.characterName)}</span><em>${p.playerId === playerId ? "this TV" : "phone"}</em></li>`)
+    .map((p) => {
+      const mine = p.playerId === playerId;
+      const team = teams
+        ? `<button type="button" data-team="a" data-pid="${esc(p.playerId)}" ${p.teamId === "a" ? "class='primary'" : ""}>A</button>
+           <button type="button" data-team="b" data-pid="${esc(p.playerId)}" ${p.teamId === "b" ? "class='primary'" : ""}>B</button>`
+        : "";
+      const ready = arena
+        ? `<em>${p.ready ? "ready" : "waiting"}</em>${mine ? `<button type="button" data-ready="${p.ready ? "0" : "1"}">${p.ready ? "Unready" : "Ready"}</button>` : ""}`
+        : `<em>${mine ? "this TV" : "phone"}</em>`;
+      return `<li><img src="${esc(p.portrait)}" alt="" /><span>${esc(p.characterName)}</span>${team}${ready}</li>`;
+    })
     .join("");
+  $("lobbySeats").querySelectorAll<HTMLElement>("[data-team]").forEach((b) =>
+    b.addEventListener("click", () => {
+      if (b.dataset.pid !== playerId) return;
+      send({ action: "SET_ARENA_TEAM", roomCode: state!.roomCode, teamId: b.dataset.team, playerId });
+    }),
+  );
+  $("lobbySeats").querySelectorAll<HTMLElement>("[data-ready]").forEach((b) =>
+    b.addEventListener("click", () => {
+      send({ action: "ARENA_READY", roomCode: state!.roomCode, ready: b.dataset.ready === "1", playerId });
+    }),
+  );
   const phones = (state?.players ?? []).length;
   const watch = $("btnLobbyWatch");
-  watch.hidden = phones === 0;
-  watch.textContent = phones === 1 ? "Begin with the phone player" : `Begin with the ${phones} phone players`;
+  if (arena) {
+    const cap = state?.arena?.cap ?? 0;
+    watch.hidden = !state?.isHost;
+    watch.textContent = swapping ? "Hero swap — wait for Ready" : `Start arena (${phones}/${cap})`;
+    const left = state?.arena?.heroSwapEndsAt ? Math.max(0, Math.ceil((state.arena.heroSwapEndsAt - Date.now()) / 1000)) : 0;
+    $("lobbyQrHint").textContent = swapping
+      ? `${state?.arena?.lastResult ?? "Round over."} ${left}s to change heroes.`
+      : `Scan to join. ${state?.arena?.formatLabel ?? ""} · L${state?.arena?.level ?? ""} · ${state?.arena?.theme ?? ""}`;
+  } else {
+    watch.hidden = phones === 0;
+    watch.textContent = phones === 1 ? "Begin with the phone player" : `Begin with the ${phones} phone players`;
+  }
   if (state?.roomCode) {
     const code = state.roomCode;
     void companionUrl(code).then((url) => {
-      paintCompanionQr($("lobbyQr"), url, $("lobbyQrHint"), `Scan to join table ${code} from a phone.`);
+      paintCompanionQr($("lobbyQr"), url, arena ? null : $("lobbyQrHint"), `Scan to join table ${code} from a phone.`);
     });
   }
 }
@@ -653,6 +818,10 @@ function renderLobby() {
 $("btnLobbyWatch").addEventListener("click", () => {
   if (!state?.players.length) return;
   sfx("uiConfirm");
+  if (state.mode === "arena") {
+    send({ action: "START_ARENA", roomCode: state.roomCode });
+    return;
+  }
   spectating = true;
   route();
 });
@@ -967,6 +1136,27 @@ async function routeNow() {
   document.body.dataset.room = roomScene(s);
   const seated = !!playerId && s.players.some((p) => p.playerId === playerId);
 
+  if (s.mode === "arena") {
+    if (s.combat) {
+      showPage("combat");
+      setScene(sceneForNode("fight_cellar_rats").art, "ember");
+      setMusic(musicFor(s));
+      $("combatChapter").textContent = s.arena?.formatLabel ?? "Arena";
+      $("combatTitle").textContent = s.arena?.name || s.roomCode;
+      await combat.render(s, { resumed: resumedFirstState });
+      resumedFirstState = false;
+      return;
+    }
+    if (page === "combat" && combat.wantsOutro(s)) {
+      const outro = s.combatOutro!;
+      await combat.playOutro(s);
+      void speak(outro.voice, { interrupt: false });
+    }
+    showPage("lobby");
+    renderLobby();
+    return;
+  }
+
   const watching = s.players.length > 0 && (spectating || storyMovedOn(s));
   if (!seated && !s.combat && page !== "story" && !watching) {
     showPage("lobby");
@@ -1089,6 +1279,10 @@ function connect() {
       }
       case "SEAT":
         if (msg.payload.playerId) playerId = msg.payload.playerId;
+        break;
+      case "ARENA_LIST":
+        arenaList = msg.payload?.arenas ?? [];
+        if (page === "home" && homeView === "join") renderHome();
         break;
       case "ROOM_STATE":
         onRoomState(msg.payload as RoomState);

@@ -375,6 +375,7 @@ test("the wizard menu comes from the sheet and a spell spends a slot", () => {
   assert.equal(hero.slots?.["2"], 2);
   c.turnIndex = c.turnOrder.indexOf(hero.id);
   hero.hasAction = true;
+  while (c.pending) resolveReaction(c, c.pending.playerId, false);
   const foe = c.tokens.find((t) => t.kind === "enemy" && !t.dead)!;
   performPcAction(c, "P1", "spell_magic_missile", foe.id);
   assert.equal(hero.slots?.["1"], 3);

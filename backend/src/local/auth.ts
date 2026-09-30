@@ -40,6 +40,22 @@ function database(): DatabaseSync {
       user_id TEXT NOT NULL,
       created_at TEXT NOT NULL
     );
+    CREATE TABLE IF NOT EXISTS friendships (
+      user_a TEXT NOT NULL,
+      user_b TEXT NOT NULL,
+      status TEXT NOT NULL,
+      created_at TEXT NOT NULL,
+      PRIMARY KEY (user_a, user_b)
+    );
+    CREATE TABLE IF NOT EXISTS arena_results (
+      id TEXT PRIMARY KEY,
+      room_code TEXT NOT NULL,
+      format TEXT NOT NULL,
+      level INTEGER NOT NULL,
+      winners TEXT NOT NULL,
+      participants TEXT NOT NULL,
+      ended_at TEXT NOT NULL
+    );
   `);
   const count = db.prepare("SELECT COUNT(*) AS n FROM users").get() as { n: number };
   if (count.n === 0) {
@@ -182,4 +198,106 @@ export function assertAdmin(user: SessionUser | null): SessionUser {
   if (!user) throw new Error("AUTH_REQUIRED");
   if (user.role !== "admin" || user.disabled) throw new Error("FORBIDDEN");
   return user;
+}
+
+function pairKey(a: string, b: string): [string, string] {
+  return a < b ? [a, b] : [b, a];
+}
+
+function userRow(id: string): SessionUser | null {
+  const row = database()
+    .prepare("SELECT id, username, role, disabled FROM users WHERE id = ?")
+    .get(id) as { id: string; username: string; role: Role; disabled: number } | undefined;
+  if (!row) return null;
+  return { id: row.id, username: row.username, role: row.role, disabled: row.disabled === 1 };
+}
+
+function userByName(username: string): SessionUser | null {
+  const row = database()
+    .prepare("SELECT id, username, role, disabled FROM users WHERE username = ? COLLATE NOCASE")
+    .get(username.trim()) as { id: string; username: string; role: Role; disabled: number } | undefined;
+  if (!row) return null;
+  return { id: row.id, username: row.username, role: row.role, disabled: row.disabled === 1 };
+}
+
+export function requestFriend(fromUserId: string, username: string): void {
+  const target = userByName(username);
+  if (!target) throw new Error("USER_NOT_FOUND");
+  if (target.id === fromUserId) throw new Error("FRIEND_SELF");
+  const [a, b] = pairKey(fromUserId, target.id);
+  const row = database()
+    .prepare("SELECT status FROM friendships WHERE user_a = ? AND user_b = ?")
+    .get(a, b) as { status: string } | undefined;
+  if (row?.status === "accepted") return;
+  database()
+    .prepare(
+      "INSERT INTO friendships (user_a, user_b, status, created_at) VALUES (?, ?, 'pending', ?) ON CONFLICT(user_a, user_b) DO UPDATE SET status = 'pending'",
+    )
+    .run(a, b, new Date().toISOString());
+}
+
+export function acceptFriend(userId: string, otherUserId: string): void {
+  const [a, b] = pairKey(userId, otherUserId);
+  database()
+    .prepare("UPDATE friendships SET status = 'accepted' WHERE user_a = ? AND user_b = ?")
+    .run(a, b);
+}
+
+export function listFriends(userId: string): { id: string; username: string; status: string }[] {
+  const rows = database()
+    .prepare("SELECT user_a, user_b, status FROM friendships WHERE user_a = ? OR user_b = ?")
+    .all(userId, userId) as { user_a: string; user_b: string; status: string }[];
+  return rows.map((r) => {
+    const other = r.user_a === userId ? r.user_b : r.user_a;
+    const u = userRow(other);
+    return { id: other, username: u?.username ?? other, status: r.status };
+  });
+}
+
+export function recordArenaResult(row: {
+  roomCode: string;
+  format: string;
+  level: number;
+  winners: string[];
+  participants: string[];
+}): void {
+  database()
+    .prepare(
+      "INSERT INTO arena_results (id, room_code, format, level, winners, participants, ended_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
+    )
+    .run(
+      `ar_${randomBytes(8).toString("hex")}`,
+      row.roomCode,
+      row.format,
+      row.level,
+      JSON.stringify(row.winners),
+      JSON.stringify(row.participants),
+      new Date().toISOString(),
+    );
+}
+
+export function arenaLeaderboard(scope: "global" | "friends", userId?: string): { username: string; wins: number; losses: number }[] {
+  const rows = database().prepare("SELECT winners, participants FROM arena_results").all() as {
+    winners: string;
+    participants: string;
+  }[];
+  const friendIds =
+    scope === "friends" && userId
+      ? new Set(listFriends(userId).filter((f) => f.status === "accepted").map((f) => f.id).concat(userId))
+      : null;
+  const tally = new Map<string, { wins: number; losses: number }>();
+  for (const r of rows) {
+    const winners = JSON.parse(r.winners) as string[];
+    const parts = JSON.parse(r.participants) as string[];
+    for (const p of parts) {
+      if (friendIds && !friendIds.has(p)) continue;
+      const cur = tally.get(p) ?? { wins: 0, losses: 0 };
+      if (winners.includes(p)) cur.wins += 1;
+      else cur.losses += 1;
+      tally.set(p, cur);
+    }
+  }
+  return [...tally.entries()]
+    .map(([id, s]) => ({ username: userRow(id)?.username ?? id, wins: s.wins, losses: s.losses }))
+    .sort((a, b) => b.wins - a.wins);
 }

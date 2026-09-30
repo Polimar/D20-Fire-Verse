@@ -40,7 +40,7 @@ export type Overlay = {
   myId?: string;
 };
 
-const PC_RING = [0x5aa0e8, 0xe8c050, 0x7bc47f];
+const PC_RING = [0x5aa0e8, 0xe8c050, 0x7bc47f, 0xc07be8, 0xe87b50, 0x7be8d0];
 const ENEMY_RING = 0xd8503c;
 const BOSS_RING = 0xff7a2a;
 const GOLD = 0xf0c27a;
@@ -264,6 +264,8 @@ export class Board {
   }
 
   private ringColor(t: Token) {
+    if (t.teamId === "a") return 0x3d7ee8;
+    if (t.teamId === "b") return 0xe85a3d;
     if (t.kind === "pc") return PC_RING[(this.pcIndex.get(t.id) ?? 0) % PC_RING.length]!;
     return t.boss ? BOSS_RING : ENEMY_RING;
   }
