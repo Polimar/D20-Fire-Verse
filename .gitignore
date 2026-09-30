@@ -41,3 +41,6 @@ backend/data/
 
 __pycache__/
 *.pyc
+
+# Arena occupancy masks used only as image-gen references
+tv/public/art/arena/_mask-*.png

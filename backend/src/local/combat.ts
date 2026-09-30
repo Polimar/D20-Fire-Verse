@@ -354,6 +354,51 @@ function chebyshev(ax: number, ay: number, bx: number, by: number): number {
   return Math.max(Math.abs(ax - bx), Math.abs(ay - by));
 }
 
+/**
+ * Supercover line from cell center to cell center. Start and end cells are ignored.
+ * A grid corner counts as blocked if either adjacent wall cell is occupied (no peeking).
+ */
+export function clearShot(combat: CombatState, ax: number, ay: number, bx: number, by: number): boolean {
+  const walls = combat.walls;
+  if (!walls?.length) return true;
+  if (ax === bx && ay === by) return true;
+  const nx = Math.abs(bx - ax);
+  const ny = Math.abs(by - ay);
+  const sx = Math.sign(bx - ax);
+  const sy = Math.sign(by - ay);
+  const blocked = (cx: number, cy: number) => {
+    if ((cx === ax && cy === ay) || (cx === bx && cy === by)) return false;
+    return Boolean(walls[cy]?.[cx]);
+  };
+  let x = ax;
+  let y = ay;
+  let ix = 0;
+  let iy = 0;
+  while (ix < nx || iy < ny) {
+    const t = (1 + 2 * ix) * ny - (1 + 2 * iy) * nx;
+    if (t === 0) {
+      if (blocked(x + sx, y) || blocked(x, y + sy)) return false;
+      x += sx;
+      y += sy;
+      ix += 1;
+      iy += 1;
+    } else if (t < 0) {
+      x += sx;
+      ix += 1;
+    } else {
+      y += sy;
+      iy += 1;
+    }
+    if (x === bx && y === by) return true;
+    if (blocked(x, y)) return false;
+  }
+  return true;
+}
+
+function demandShot(combat: CombatState, from: CombatToken, to: CombatToken): void {
+  if (!clearShot(combat, from.x, from.y, to.x, to.y)) throw new Error("NO_SHOT");
+}
+
 function refreshReachable(combat: CombatState): void {
   const current = currentToken(combat);
   if (current && current.kind === "pc" && !current.dead && combat.status === "active") {
@@ -765,7 +810,14 @@ function enemyAttacks(enemy: CombatToken): AttackSpec[] {
   return out;
 }
 
-function pickEnemyAttack(enemy: CombatToken, attacks: AttackSpec[], dist: number): AttackSpec | undefined {
+function pickEnemyAttack(
+  combat: CombatState,
+  enemy: CombatToken,
+  attacks: AttackSpec[],
+  target: CombatToken,
+): AttackSpec | undefined {
+  if (!clearShot(combat, enemy.x, enemy.y, target.x, target.y)) return undefined;
+  const dist = chebyshev(enemy.x, enemy.y, target.x, target.y);
   const inReach = attacks.filter((a) => a.range >= dist && (a.range <= 1 || !enemy.webCooldown));
   if (!inReach.length) return undefined;
   if (dist <= 1) return inReach.find((a) => a.range <= 1) ?? inReach[0];
@@ -788,7 +840,7 @@ function runEnemyTurn(combat: CombatState, enemy: CombatToken): void {
   const melee = attacks.some((a) => a.range <= 1);
   const startDist = chebyshev(enemy.x, enemy.y, target.x, target.y);
 
-  const shouldMove = startDist > 1 && (melee || !pickEnemyAttack(enemy, attacks, startDist));
+  const shouldMove = startDist > 1 && (melee || !pickEnemyAttack(combat, enemy, attacks, target));
   let moved = false;
   if (shouldMove) {
     const visits = explore(combat, enemy, enemy.movementLeft);
@@ -816,8 +868,7 @@ function runEnemyTurn(combat: CombatState, enemy: CombatToken): void {
     }
   }
 
-  const dist = chebyshev(enemy.x, enemy.y, target.x, target.y);
-  const attack = pickEnemyAttack(enemy, attacks, dist);
+  const attack = pickEnemyAttack(combat, enemy, attacks, target);
   if (attack && enemy.hasAction) {
     enemy.hasAction = false;
     enemyStrike(combat, enemy, target, attack);
@@ -836,6 +887,7 @@ function runEnemyTurn(combat: CombatState, enemy: CombatToken): void {
 }
 
 function enemyStrike(combat: CombatState, enemy: CombatToken, target: CombatToken, attack: AttackSpec): void {
+  if (!clearShot(combat, enemy.x, enemy.y, target.x, target.y)) return;
   const unseen = Boolean(target.invisible) || Boolean(target.blur);
   const mode: D20Mode = target.dodging || unseen ? "disadvantage" : "normal";
   const roll = rollAttack({
@@ -1195,6 +1247,7 @@ function castSpecial(
     if (!targetId) throw new Error("NEED_TARGET");
     const foe = combat.tokens.find((x) => x.id === targetId && isFoe(combat, t, x));
     if (!foe) throw new Error("BAD_TARGET");
+    demandShot(combat, t, foe);
     foe.brand = { by: t.id, dice: String(effect.dice ?? "1d6") };
     t.concentrating = { spellId: castId, targetId: foe.id };
     spendEconomy(t, isBonus);
@@ -1220,7 +1273,13 @@ function castSpecial(
     const origin = targetId ? combat.tokens.find((x) => x.id === targetId) : t;
     if (!origin) throw new Error("NEED_TARGET");
     const victims = combat.tokens
-      .filter((e) => isFoe(combat, t, e) && !hasCondition(e, "unconscious") && chebyshev(e.x, e.y, origin.x, origin.y) <= radius)
+      .filter(
+        (e) =>
+          isFoe(combat, t, e) &&
+          !hasCondition(e, "unconscious") &&
+          chebyshev(e.x, e.y, origin.x, origin.y) <= radius &&
+          clearShot(combat, origin.x, origin.y, e.x, e.y),
+      )
       .sort((a, b) => a.hp - b.hp);
     const names: string[] = [];
     for (const foe of victims) {
@@ -1277,6 +1336,9 @@ function castSpecial(
   }
   if (effect.type === "rays") {
     if (!targetId) throw new Error("NEED_TARGET");
+    const rayTarget = combat.tokens.find((x) => x.id === targetId && !x.dead);
+    if (!rayTarget) throw new Error("BAD_TARGET");
+    demandShot(combat, t, rayTarget);
     const rays = Number(effect.rays ?? 3);
     const rolls: DiceRoll[] = [];
     spendEconomy(t, isBonus);
@@ -1507,6 +1569,7 @@ export function performPcAction(
   const range = Number(atkEffect.rangeCells ?? 1);
   const dist = chebyshev(t.x, t.y, target.x, target.y);
   if (dist > range) throw new Error("OUT_OF_RANGE");
+  demandShot(combat, t, target);
 
   if (atkEffect.type === "auto_hit") {
     const missiles = Number(atkEffect.missiles ?? 1);
@@ -1795,11 +1858,14 @@ function castSaveArea(
   const length = Number(effect.lengthCells ?? effect.rangeCells ?? 3);
   const radius = Number(effect.radius ?? length);
   if (shape !== "cube" && chebyshev(t.x, t.y, aim.x, aim.y) > length) throw new Error("OUT_OF_RANGE");
+  demandShot(combat, t, aim);
+  const origin = shape === "sphere" ? aim : t;
   const dirX = aim.x - t.x;
   const dirY = aim.y - t.y;
   const dirLen = Math.hypot(dirX, dirY) || 1;
   const caught = combat.tokens.filter((e) => {
     if (!isFoe(combat, t, e) || e.dead) return false;
+    if (!clearShot(combat, origin.x, origin.y, e.x, e.y)) return false;
     if (shape === "one") return e.id === aim.id;
     if (shape === "sphere") return chebyshev(aim.x, aim.y, e.x, e.y) <= radius;
     if (shape === "cube") return chebyshev(t.x, t.y, e.x, e.y) <= length && e.id !== t.id;
@@ -2064,6 +2130,7 @@ function reactorLeaving(combat: CombatState, mover: CombatToken, from: Cell, to:
     const was = chebyshev(other.x, other.y, from.x, from.y) <= 1;
     const still = chebyshev(other.x, other.y, to.x, to.y) <= 1;
     if (!was || still) return false;
+    if (!clearShot(combat, other.x, other.y, from.x, from.y)) return false;
     if (other.kind === "pc") return Boolean(meleeOf(other));
     return enemyAttacks(other).some((attack) => attack.range <= 1);
   });
@@ -2159,6 +2226,7 @@ function resolveSpellAttack(
   if (!target) throw new Error("BAD_TARGET");
   const range = Number(effect.rangeCells ?? 1);
   if (chebyshev(attacker.x, attacker.y, target.x, target.y) > range) throw new Error("OUT_OF_RANGE");
+  demandShot(combat, attacker, target);
   const key = spellKey(attacker, pregen, String(effect.ability ?? "str"));
   const prof = pregen?.proficiencyBonus ?? 2;
   const bonus = abilityMod(pregen?.abilities[key] ?? 10) + (effect.spellAttack || effect.proficient ? prof : 0);
@@ -2373,7 +2441,7 @@ export function publicCombat(combat: CombatState, viewerPlayerId?: string) {
     pvpWinner: combat.pvpWinner ?? null,
     art: (() => {
       const m = /^arena_(.+)_(small|medium|large)$/.exec(combat.mapId);
-      return m ? `/art/arena/${m[1]}-${m[2]}.svg` : null;
+      return m ? `/art/arena/${m[1]}-${m[2]}.png` : null;
     })(),
     width: combat.width,
     height: combat.height,

@@ -148,6 +148,7 @@ const ERROR_TEXT: Record<string, string> = {
   NEED_TARGET: "Pick a target first.",
   BAD_TARGET: "That's not a valid target.",
   OUT_OF_RANGE: "Out of range — move closer first.",
+  NO_SHOT: "A wall stands between you.",
   ALREADY_USED: "You've already used that this fight.",
   NO_ITEM: "You don't have that item anymore.",
   NOT_ATTACK: "That ability isn't an attack.",

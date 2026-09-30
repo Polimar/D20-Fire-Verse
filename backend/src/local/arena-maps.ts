@@ -142,7 +142,7 @@ export function buildArenaMap(theme: ArenaThemeId, size: ArenaSize): ArenaMapDef
     cellSizeFt: 5,
     walls: [...perimeter(n), ...pillars(n, theme)],
     spawn: { ffa: ffaSpots(n), teamA: teams.a, teamB: teams.b },
-    art: `/art/arena/${theme}-${size}.svg`,
+    art: `/art/arena/${theme}-${size}.png`,
   };
 }
 

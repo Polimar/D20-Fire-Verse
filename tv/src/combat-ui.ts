@@ -29,6 +29,42 @@ type Aim = { action: MenuAction };
 const cheb = (a: Cell, b: Cell) => Math.max(Math.abs(a.x - b.x), Math.abs(a.y - b.y));
 const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]!);
 
+function clearShot(walls: boolean[][] | undefined, ax: number, ay: number, bx: number, by: number): boolean {
+  if (!walls?.length) return true;
+  if (ax === bx && ay === by) return true;
+  const nx = Math.abs(bx - ax);
+  const ny = Math.abs(by - ay);
+  const sx = Math.sign(bx - ax);
+  const sy = Math.sign(by - ay);
+  const blocked = (cx: number, cy: number) => {
+    if ((cx === ax && cy === ay) || (cx === bx && cy === by)) return false;
+    return Boolean(walls[cy]?.[cx]);
+  };
+  let x = ax;
+  let y = ay;
+  let ix = 0;
+  let iy = 0;
+  while (ix < nx || iy < ny) {
+    const t = (1 + 2 * ix) * ny - (1 + 2 * iy) * nx;
+    if (t === 0) {
+      if (blocked(x + sx, y) || blocked(x, y + sy)) return false;
+      x += sx;
+      y += sy;
+      ix += 1;
+      iy += 1;
+    } else if (t < 0) {
+      x += sx;
+      ix += 1;
+    } else {
+      y += sy;
+      iy += 1;
+    }
+    if (x === bx && y === by) return true;
+    if (blocked(x, y)) return false;
+  }
+  return true;
+}
+
 export class CombatUi {
   private host: CombatHost;
   private el: {
@@ -181,7 +217,9 @@ export class CombatUi {
   private paintBackdrop() {
     const art = this.combat?.art;
     if (art) {
-      this.el.board.style.backgroundImage = `linear-gradient(rgba(12,8,6,.28), rgba(12,8,6,.45)), url(${art})`;
+      this.el.board.style.backgroundImage = art.endsWith(".png")
+        ? `linear-gradient(rgba(12,8,6,.08), rgba(12,8,6,.16)), url(${art})`
+        : `linear-gradient(rgba(12,8,6,.28), rgba(12,8,6,.45)), url(${art})`;
       this.el.board.style.backgroundSize = "100% 100%, 100% 100%";
       this.el.board.style.backgroundPosition = "0 0, 0 0";
       return;
@@ -302,7 +340,7 @@ export class CombatUi {
     if (!me) return;
     const strike = this.strikeAction();
     const foes = this.foes().sort((a, b) => cheb(a, me) - cheb(b, me) || a.hp - b.hp);
-    const inReach = strike ? foes.filter((f) => cheb(f, me) <= strike.range) : [];
+    const inReach = strike ? foes.filter((f) => this.canStrike(me, f, strike.range)) : [];
     if (inReach.length && me.hasAction) {
       this.cursor = { x: inReach[0]!.x, y: inReach[0]!.y };
       coach("strike");
@@ -321,6 +359,14 @@ export class CombatUi {
     return pool.filter((t) => action.targetKind !== "ally" || cheb(t, me) <= Math.max(1, action.range) || t.id === me.id);
   }
 
+  private hasLine(a: Cell, b: Cell): boolean {
+    return clearShot(this.combat?.walls, a.x, a.y, b.x, b.y);
+  }
+
+  private canStrike(me: Cell, target: Cell, range: number): boolean {
+    return cheb(target, me) <= Math.max(1, range) && this.hasLine(me, target);
+  }
+
   // ------------------------------------------------------------------ painting
 
   private cursorState(): Overlay["cursorState"] {
@@ -328,12 +374,14 @@ export class CombatUi {
     const at = this.tokenAt(this.cursor);
     if (!me) return "blocked";
     if (this.aim) {
-      const ok = this.aimTargets(this.aim.action).some((t) => t.id === at?.id) && (!at || cheb(at, me) <= Math.max(1, this.aim.action.range) || this.aim.action.targetKind === "ally");
+      const ok =
+        this.aimTargets(this.aim.action).some((t) => t.id === at?.id) &&
+        (!at || this.aim.action.targetKind === "ally" || this.canStrike(me, at, this.aim.action.range));
       return ok ? (this.aim.action.targetKind === "ally" ? "ally" : "attack") : "blocked";
     }
     if (at && at.kind !== "pc") {
       const strike = this.strikeAction();
-      if (strike && cheb(at, me) <= strike.range) return "attack";
+      if (strike && this.canStrike(me, at, strike.range)) return "attack";
       return me.movementLeft > 0 ? "approach" : "blocked";
     }
     if (at) return at.id === me.id ? "move" : "blocked";
@@ -351,11 +399,17 @@ export class CombatUi {
     if (me && this.canAct()) {
       if (this.aim) {
         for (const t of this.aimTargets(this.aim.action)) {
-          targets.push({ id: t.id, x: t.x, y: t.y, kind: this.aim.action.targetKind === "ally" ? "ally" : "enemy", inRange: this.aim.action.targetKind === "ally" || cheb(t, me) <= Math.max(1, this.aim.action.range) });
+          targets.push({
+            id: t.id,
+            x: t.x,
+            y: t.y,
+            kind: this.aim.action.targetKind === "ally" ? "ally" : "enemy",
+            inRange: this.aim.action.targetKind === "ally" || this.canStrike(me, t, this.aim.action.range),
+          });
         }
       } else {
         const strike = this.strikeAction();
-        for (const f of this.foes()) targets.push({ id: f.id, x: f.x, y: f.y, kind: "enemy", inRange: !!strike && cheb(f, me) <= strike.range });
+        for (const f of this.foes()) targets.push({ id: f.id, x: f.x, y: f.y, kind: "enemy", inRange: !!strike && this.canStrike(me, f, strike.range) });
       }
     }
     const state = live ? this.cursorState() : "move";
@@ -406,8 +460,16 @@ export class CombatUi {
           hint = me && this.cursor.x === me.x && this.cursor.y === me.y ? "Steer with the D-pad · ▼ more actions · ⏯ end turn" : `OK — walk here (${Math.max(0, this.route(this.cursor).length - 1) * 5} ft)`;
           break;
         case "blocked":
-        default:
-          hint = me?.hasAction || me?.movementLeft ? "Out of reach from here · ▼ more actions" : "Turn spent — ⏯ ends it";
+        default: {
+          const foe = this.tokenAt(this.cursor);
+          const strike = this.strikeAction();
+          const walled = Boolean(foe && me && strike && cheb(foe, me) <= strike.range && !this.hasLine(me, foe));
+          hint = walled
+            ? "A wall stands between you"
+            : me?.hasAction || me?.movementLeft
+              ? "Out of reach from here · ▼ more actions"
+              : "Turn spent — ⏯ ends it";
+        }
       }
     }
     this.el.meta.dataset.hint = hint;
@@ -575,7 +637,10 @@ export class CombatUi {
       this.aim = { action: a };
       const me = this.me()!;
       const targets = this.aimTargets(a).sort((x, y) => cheb(x, me) - cheb(y, me));
-      const first = a.targetKind === "ally" ? targets.find((t) => t.hp < t.maxHp) ?? targets[0] : targets.find((t) => cheb(t, me) <= a.range) ?? targets[0];
+      const first =
+        a.targetKind === "ally"
+          ? (targets.find((t) => t.hp < t.maxHp) ?? targets[0])
+          : (targets.find((t) => this.canStrike(me, t, a.range)) ?? targets[0]);
       if (first) this.cursor = { x: first.x, y: first.y };
       sfx("uiConfirm");
       this.el.board.focus();
@@ -634,9 +699,12 @@ export class CombatUi {
         this.host.toast(a.targetKind === "ally" ? "Pick an ally for that." : "Pick a foe for that.", "bad");
         return;
       }
-      if (a.targetKind !== "ally" && cheb(valid, me) > Math.max(1, a.range)) {
+      if (a.targetKind !== "ally" && !this.canStrike(me, valid, a.range)) {
         sfx("uiError");
-        this.host.toast(`${valid.name} is out of reach for ${a.name}.`, "bad");
+        this.host.toast(
+          cheb(valid, me) > Math.max(1, a.range) ? `${valid.name} is out of reach for ${a.name}.` : "A wall stands between you.",
+          "bad",
+        );
         return;
       }
       this.aim = null;
@@ -651,9 +719,14 @@ export class CombatUi {
         this.host.toast("Your action is spent — ⏯ ends the turn.", "bad");
         return;
       }
-      if (cheb(at, me) <= strike.range) {
+      if (this.canStrike(me, at, strike.range)) {
         sfx("uiConfirm");
         this.send({ action: "PERFORM_ACTION", abilityId: strike.id, targetId: at.id });
+        return;
+      }
+      if (cheb(at, me) <= strike.range && !this.hasLine(me, at)) {
+        sfx("uiError");
+        this.host.toast("A wall stands between you.", "bad");
         return;
       }
       const cell = me.movementLeft > 0 ? this.approachCell(at, strike.range) : null;

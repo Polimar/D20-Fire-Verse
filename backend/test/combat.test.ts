@@ -9,6 +9,7 @@ import {
   proposeMove,
   resolveReaction,
   startCombat,
+  clearShot,
   type CombatState,
   type CombatToken,
 } from "../src/local/combat.js";
@@ -375,8 +376,11 @@ test("the wizard menu comes from the sheet and a spell spends a slot", () => {
   assert.equal(hero.slots?.["2"], 2);
   c.turnIndex = c.turnOrder.indexOf(hero.id);
   hero.hasAction = true;
+  hero.x = 5;
+  hero.y = 3;
   while (c.pending) resolveReaction(c, c.pending.playerId, false);
-  const foe = c.tokens.find((t) => t.kind === "enemy" && !t.dead)!;
+  const foe = c.tokens.find((t) => t.kind === "enemy" && !t.dead && clearShot(c, hero.x, hero.y, t.x, t.y))!;
+  assert.ok(foe, "at least one rat should be in line of the wizard");
   performPcAction(c, "P1", "spell_magic_missile", foe.id);
   assert.equal(hero.slots?.["1"], 3);
 });
@@ -455,3 +459,44 @@ test("a paralyzed hero keeps the turn so the foe acts only once", () => {
   assert.equal(current?.id, hero.id);
   assert.equal(hero.hasAction, false);
 });
+
+test("a wall between attacker and target blocks a ranged shot", () => {
+  const hero = quill(0, 0, { actionIds: ["spell_magic_missile"] });
+  const foe = rat("en-1", 2, 0, { hp: 30, maxHp: 30 });
+  const blocked = arena(6, 1, [hero, foe], [[1, 0]]);
+  assert.throws(() => performPcAction(blocked, "P1", "spell_magic_missile", "en-1"), /NO_SHOT/);
+  assert.equal(hero.hasAction, true);
+  assert.equal(foe.hp, 30);
+
+  const openHero = quill(0, 0, { actionIds: ["spell_magic_missile"] });
+  const openFoe = rat("en-1", 2, 0, { hp: 30, maxHp: 30 });
+  const open = arena(6, 1, [openHero, openFoe]);
+  performPcAction(open, "P1", "spell_magic_missile", "en-1");
+  assert.ok(open.events.some((e) => e.kind === "strike"));
+  assert.ok(openFoe.hp < 30);
+});
+
+test("melee into an adjacent square is not blocked", () => {
+  const hero = brenna(0, 0);
+  const foe = rat("en-1", 1, 0, { hp: 30, maxHp: 30 });
+  const c = arena(4, 1, [hero, foe], [[2, 0]]);
+  const restore = scriptDice([
+    [20, 12],
+    [8, 4],
+  ]);
+  try {
+    performPcAction(c, "P1", "longsword_attack", "en-1");
+  } finally {
+    restore();
+  }
+  const strike = c.events.at(-1);
+  assert.ok(strike?.kind === "strike");
+  assert.equal(strike.hits[0].outcome, "hit");
+});
+
+test("walls still block a step even when shots care about them", () => {
+  const c = arena(4, 1, [brenna(0, 0)], [[1, 0]]);
+  assert.equal(pathTo(c, c.tokens[0], 2, 0), null);
+  assert.equal(computeReachable(c, "pc-P1").length, 0);
+});
+

@@ -125,10 +125,10 @@ for (const theme of THEMES) {
       cellSizeFt: 5,
       walls: [...perimeter(n), ...pillars(n, theme.id)],
       spawn: { ffa: ffaSpots(n), teamA: teams.a, teamB: teams.b },
-      art: `/art/arena/${theme.id}-${size}.svg`,
+      art: `/art/arena/${theme.id}-${size}.png`,
     };
     fs.writeFileSync(path.join(jsonDir, `${map.id}.json`), JSON.stringify(map, null, 2) + "\n");
-    fs.writeFileSync(path.join(artDir, `${theme.id}-${size}.svg`), svgFor(theme.id, size, map.walls));
+    fs.writeFileSync(path.join(artDir, `${theme.id}-${size}.png`), svgFor(theme.id, size, map.walls));
     index.push({ id: map.id, theme: theme.id, size, art: map.art });
   }
 }

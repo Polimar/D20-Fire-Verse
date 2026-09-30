@@ -128,7 +128,7 @@ export function publicArena(room: Room) {
     cap,
     teams,
     mapId: arenaMapId(a.theme, a.size),
-    art: `/art/arena/${a.theme}-${a.size}.svg`,
+    art: `/art/arena/${a.theme}-${a.size}.png`,
     catalog: {
       formats: Object.entries(ARENA_FORMATS).map(([id, v]) => ({ id, ...v })),
       themes: ARENA_THEMES,
