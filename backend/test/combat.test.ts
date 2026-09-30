@@ -7,6 +7,7 @@ import {
   pathTo,
   performPcAction,
   proposeMove,
+  resolveReaction,
   startCombat,
   type CombatState,
   type CombatToken,
@@ -377,4 +378,79 @@ test("the wizard menu comes from the sheet and a spell spends a slot", () => {
   const foe = c.tokens.find((t) => t.kind === "enemy" && !t.dead)!;
   performPcAction(c, "P1", "spell_magic_missile", foe.id);
   assert.equal(hero.slots?.["1"], 3);
+});
+
+test("leaving a foe's reach provokes one opportunity attack and the move still finishes", () => {
+  const hero = brenna(0, 1, { movementLeft: 6 });
+  const foe = rat("en-1", 0, 2, { reactionReady: true, hp: 30, maxHp: 30 });
+  const c = arena(8, 3, [hero, foe]);
+  c.reachable = computeReachable(c, "pc-P1");
+  const restore = scriptDice([
+    [20, 10],
+    [4, 1],
+  ]);
+  try {
+    proposeMove(c, "P1", 3, 1);
+  } finally {
+    restore();
+  }
+  assert.equal(hero.x, 3);
+  assert.equal(hero.y, 1);
+  assert.equal(c.events.filter((e) => e.kind === "strike").length, 1);
+  assert.equal(foe.reactionReady, false);
+  assert.equal(c.pending, undefined);
+});
+
+test("invisibility then stepping away asks for Shield once and then completes the move", () => {
+  const hero = quill(0, 1, {
+    sheetDriven: true,
+    spells: ["spell_invisibility"],
+    actionIds: ["spell_invisibility"],
+    slots: { "1": 4, "2": 2 },
+    spellAbility: "int",
+    reactionIds: ["spell_shield"],
+    reactionReady: true,
+    movementLeft: 6,
+  });
+  const foe = rat("en-1", 0, 2, { reactionReady: true, hp: 40, maxHp: 40 });
+  const c = arena(8, 3, [hero, foe]);
+  performPcAction(c, "P1", "spell_invisibility");
+  assert.equal(hero.invisible, true);
+  c.reachable = computeReachable(c, hero.id);
+  const restore = scriptDice([
+    [20, 18],
+    [20, 15],
+    [4, 2],
+    [20, 14],
+  ]);
+  try {
+    proposeMove(c, "P1", 3, 1);
+    assert.equal(c.pending?.kind, "shield");
+    resolveReaction(c, "P1", false);
+  } finally {
+    restore();
+  }
+  assert.equal(hero.x, 3);
+  assert.equal(hero.y, 1);
+  assert.equal(c.events.filter((e) => e.kind === "strike").length, 1);
+  assert.equal(c.pending, undefined);
+});
+
+test("a paralyzed hero keeps the turn so the foe acts only once", () => {
+  const hero = brenna(0, 0, { conditions: ["paralyzed"] });
+  const c = arena(6, 1, [hero, rat("en-1", 4, 0)]);
+  const restore = scriptDice([
+    [20, 12],
+    [4, 2],
+  ]);
+  try {
+    endTurn(c, "P1");
+  } finally {
+    restore();
+  }
+  assert.equal(c.events.filter((e) => e.kind === "strike").length, 1);
+  assert.equal(c.status, "active");
+  const current = c.tokens.find((t) => t.id === c.turnOrder[c.turnIndex]);
+  assert.equal(current?.id, hero.id);
+  assert.equal(hero.hasAction, false);
 });

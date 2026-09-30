@@ -398,6 +398,7 @@ export function startCombat(
       disengaging: false,
       hidden: false,
       secondWindUsed: false,
+      reactionReady: true,
     });
     const hero = tokens[tokens.length - 1]!;
     initSheet(hero, pregen, carry?.[p.playerId]);
@@ -438,6 +439,7 @@ export function startCombat(
         disengaging: false,
         hidden: false,
         secondWindUsed: false,
+        reactionReady: true,
       });
     }
   }
@@ -557,6 +559,15 @@ function beginTurn(combat: CombatState): void {
         return;
       }
     } else if (hasCondition(t, "incapacitated") || hasCondition(t, "paralyzed") || hasCondition(t, "unconscious")) {
+      if (t.kind === "pc") {
+        t.movementLeft = 0;
+        t.hasAction = false;
+        t.hasBonusAction = false;
+        t.reactionReady = false;
+        emit(combat, { kind: "turn", tokenId: t.id, round: combat.round, line: `Round ${combat.round} — ${t.name} cannot act.` });
+        combat.reachable = [];
+        return;
+      }
       stepIndex(combat);
       guard += 1;
       continue;
@@ -724,7 +735,8 @@ function runEnemyTurn(combat: CombatState, enemy: CombatToken): void {
 }
 
 function enemyStrike(combat: CombatState, enemy: CombatToken, target: CombatToken, attack: AttackSpec): void {
-  const mode: D20Mode = target.dodging ? "disadvantage" : "normal";
+  const unseen = Boolean(target.invisible) || Boolean(target.blur);
+  const mode: D20Mode = target.dodging || unseen ? "disadvantage" : "normal";
   const roll = rollAttack({
     roller: enemy.name,
     label: `${attack.name} vs ${target.name}`,
@@ -838,7 +850,7 @@ function enemyStrike(combat: CombatState, enemy: CombatToken, target: CombatToke
     style: attack.range > 1 ? "ranged" : "melee",
     rolls,
     hits: [{ targetId: target.id, outcome: roll.outcome ?? "miss", damage, hp: hpAfter }],
-    line: `${enemy.name} ${verb} ${target.name}: ${roll.total} vs AC ${effectiveAc(target)}${mode === "disadvantage" ? " (dodging)" : ""}. ${tail}`,
+    line: `${enemy.name} ${verb} ${target.name}: ${roll.total} vs AC ${effectiveAc(target)}${mode === "disadvantage" ? (target.dodging ? " (dodging)" : " (unseen)") : ""}. ${tail}`,
   });
   if (damage > 0) applyDamage(combat, target, damage, crit, dtype);
 }
@@ -1909,7 +1921,7 @@ function reactorLeaving(combat: CombatState, mover: CombatToken, from: Cell, to:
   if (mover.disengaging) return undefined;
   return combat.tokens.find((other) => {
     if (other.dead || other.dying || other.id === mover.id || other.kind === mover.kind) return false;
-    if (!other.reactionReady && other.kind === "pc") return false;
+    if (!other.reactionReady) return false;
     const was = chebyshev(other.x, other.y, from.x, from.y) <= 1;
     const still = chebyshev(other.x, other.y, to.x, to.y) <= 1;
     if (!was || still) return false;
@@ -1972,7 +1984,7 @@ function commitMove(combat: CombatState, mover: CombatToken, path: Cell[], cost:
     return;
   }
   const attack = enemyAttacks(reactor).find((item) => item.range <= 1);
-    if (attack && reactor.kind === "enemy") {
+  if (attack && reactor.kind === "enemy") {
     reactor.reactionReady = false;
     enemyStrike(combat, reactor, mover, attack);
     if (combat.pending) {
@@ -1981,8 +1993,17 @@ function commitMove(combat: CombatState, mover: CombatToken, path: Cell[], cost:
       return;
     }
   }
+  continueAfterThreat(combat, mover, rest);
+}
+
+/** The provoking step is taken once, then the rest of the path is checked again. */
+function continueAfterThreat(combat: CombatState, mover: CombatToken, rest: Cell[]): void {
+  if (mover.dead || mover.dying || rest.length < 2) return;
+  const from = rest[0]!;
+  const to = rest[1]!;
+  if (mover.x === from.x && mover.y === from.y) finishMove(combat, mover, [from, to], 1);
   if (mover.dead || mover.dying) return;
-  commitMove(combat, mover, rest, rest.length - 1);
+  if (rest.length > 2 && mover.x === to.x && mover.y === to.y) commitMove(combat, mover, rest.slice(1), rest.length - 2);
 }
 
 function resolveSpellAttack(
@@ -2301,7 +2322,7 @@ function deliverBlow(combat: CombatState, pending: PendingReaction, damage: numb
   checkEnd(combat);
   if (pending.resumePath && pending.resumeMoverId && !combat.pending) {
     const mover = combat.tokens.find((token) => token.id === pending.resumeMoverId);
-    if (mover && !mover.dead && !mover.dying) commitMove(combat, mover, pending.resumePath, pending.resumePath.length - 1);
+    if (mover) continueAfterThreat(combat, mover, pending.resumePath);
   }
 }
 
@@ -2353,10 +2374,12 @@ export function resolveReaction(combat: CombatState, playerId: string, accept: b
     const effect = ability?.effects[0];
     const pregen = reactor.characterId ? getPregen(reactor.characterId) : undefined;
     if (effect) resolveSpellAttack(combat, reactor, pregen, ability?.name ?? "Opportunity Attack", effect, mover.id, true, true);
+    if (combat.pending && pending.path && mover) {
+      combat.pending.resumePath = pending.path;
+      combat.pending.resumeMoverId = mover.id;
+    }
   }
-  if (!combat.pending && mover && pending.path && !mover.dead && !mover.dying) {
-    commitMove(combat, mover, pending.path, pending.cost ?? Math.max(0, pending.path.length - 1));
-  }
+  if (!combat.pending && mover && pending.path) continueAfterThreat(combat, mover, pending.path);
   refreshReachable(combat);
 }
 
