@@ -169,22 +169,44 @@ app.get("/api/health", (_req, res) => {
   });
 });
 
+const PUBLIC_SITE = "https://www.d20fireverse.it";
+
+/** A configured public URL is used only when it is a hostname, not a raw address on port 3100. */
+function configuredPublicSite(): string {
+  const raw = process.env.FIREVERSE_PUBLIC_URL?.trim();
+  if (!raw) return PUBLIC_SITE;
+  try {
+    const url = new URL(raw.includes("://") ? raw : `https://${raw}`);
+    const ip = /^\d{1,3}(\.\d{1,3}){3}$/.test(url.hostname);
+    if (ip || url.port === "3100") return PUBLIC_SITE;
+    return `${url.protocol}//${url.hostname}`;
+  } catch {
+    return PUBLIC_SITE;
+  }
+}
+
 /** Where a phone on the same Wi-Fi can reach the companion (for the join QR code). */
 app.get("/api/table-info", (req, res) => {
-  const publicBase = process.env.FIREVERSE_PUBLIC_URL?.replace(/\/$/, "");
-  if (publicBase) {
-    const companionUrl = `${publicBase}/companion/`;
-    res.json({ hosts: lanAddresses(), companionUrl, publicUrl: publicBase });
+  const hosts = lanAddresses();
+  const forwarded = String(req.headers["x-forwarded-host"] ?? "").split(",")[0]?.trim() ?? "";
+  const forwardedName = forwarded.split(":")[0] ?? "";
+  const forwardedLoopback = !forwardedName || forwardedName === "localhost" || forwardedName === "127.0.0.1" || forwardedName === "::1";
+  if (forwarded && !forwardedLoopback) {
+    const proto = String(req.headers["x-forwarded-proto"] ?? "https").split(",")[0]?.trim() === "http" ? "http" : "https";
+    const publicUrl = `${proto}://${forwardedName}`;
+    res.json({ hosts, companionUrl: `${publicUrl}/companion/`, publicUrl });
     return;
   }
-  const hosts = lanAddresses();
   const hostHeader = String(req.headers.host ?? "");
   const requestHost = hostHeader.split(":")[0] || "";
-  const requestPort = hostHeader.includes(":") ? hostHeader.slice(hostHeader.indexOf(":") + 1) : "";
   const loopback = !requestHost || requestHost === "localhost" || requestHost === "127.0.0.1" || requestHost === "::1";
-  // Prefer the address the television is already using; fall back to a LAN IP when the TV is on loopback.
-  const host = loopback ? (hosts[0] ?? (requestHost || "127.0.0.1")) : requestHost;
-  const port = companionBuilt ? Number(loopback ? PORT : requestPort || PORT) : COMPANION_DEV_PORT;
+  if (!loopback) {
+    const publicUrl = configuredPublicSite();
+    res.json({ hosts, companionUrl: `${publicUrl}/companion/`, publicUrl });
+    return;
+  }
+  const host = hosts[0] ?? (requestHost || "127.0.0.1");
+  const port = companionBuilt ? PORT : COMPANION_DEV_PORT;
   res.json({
     hosts,
     companionUrl: `http://${host}:${port}/companion/`,

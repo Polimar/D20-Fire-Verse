@@ -400,6 +400,7 @@ body[data-tone="victory"] .vignette {
   text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8);
 }
 .home-welcome[hidden] { display: none; }
+.home-welcome .ghost { margin-left: 0.75rem; vertical-align: middle; }
 .home-cta .arena-form { display: grid; gap: 0.55rem; min-width: 18rem; }
 .home-cta .arena-form label, .home-cta .arena-form select, .home-cta .arena-form input { width: 100%; }
 .arena-list { display: flex; flex-direction: column; gap: 0.45rem; max-height: 40vh; overflow: auto; width: min(22rem, 100%); }

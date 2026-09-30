@@ -53,6 +53,7 @@ appRoot.innerHTML = `
       <label>Username <input id="loginUser" autocomplete="username" data-autofocus /></label>
       <label>Password <input id="loginPass" type="password" autocomplete="current-password" /></label>
       <button type="submit" class="primary">Enter</button>
+      <p class="meta">Create your account on your phone. Scan the code once a table is open.</p>
       <p class="meta err" id="loginError"></p>
     </form>
   </div>
@@ -506,7 +507,8 @@ function renderHome() {
   const welcome = $("homeWelcome");
   if (account?.username) {
     welcome.hidden = false;
-    welcome.textContent = `Welcome, ${account.username}.`;
+    welcome.innerHTML = `Welcome, ${esc(account.username)}. <button type="button" class="ghost" id="btnLogout">Log out</button>`;
+    $("btnLogout").addEventListener("click", () => void logOut());
   } else {
     welcome.hidden = true;
     welcome.textContent = "";
@@ -1439,6 +1441,37 @@ async function readAccount(res: Response): Promise<Account | null> {
   }
 }
 
+async function logOut(): Promise<void> {
+  await fetch("/api/logout", { method: "POST", credentials: "same-origin" });
+  account = null;
+  $("loginGate").hidden = false;
+  renderHome();
+  ws?.close();
+}
+
+$("loginForm").addEventListener("submit", async (ev) => {
+  ev.preventDefault();
+  $("loginError").textContent = "";
+  const res = await fetch("/api/login", {
+    method: "POST",
+    credentials: "same-origin",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      username: ($("loginUser") as HTMLInputElement).value,
+      password: ($("loginPass") as HTMLInputElement).value,
+    }),
+  });
+  if (!res.ok) {
+    const body = (await res.json().catch(() => null)) as { error?: string } | null;
+    $("loginError").textContent = describeError(body?.error ?? "BAD_LOGIN");
+    return;
+  }
+  account = await readAccount(res);
+  $("loginGate").hidden = true;
+  renderHome();
+  if (!ws || ws.readyState === WebSocket.CLOSED) connect();
+});
+
 async function ensureLogin(): Promise<void> {
   const me = await fetch("/api/me", { credentials: "same-origin" });
   if (me.ok) {
@@ -1448,34 +1481,11 @@ async function ensureLogin(): Promise<void> {
     return;
   }
   $("loginGate").hidden = false;
-  await new Promise<void>((resolve) => {
-    $("loginForm").addEventListener("submit", async (ev) => {
-      ev.preventDefault();
-      $("loginError").textContent = "";
-      const res = await fetch("/api/login", {
-        method: "POST",
-        credentials: "same-origin",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          username: ($("loginUser") as HTMLInputElement).value,
-          password: ($("loginPass") as HTMLInputElement).value,
-        }),
-      });
-      if (!res.ok) {
-        $("loginError").textContent = "That username or password is wrong.";
-        return;
-      }
-      account = await readAccount(res);
-      $("loginGate").hidden = true;
-      renderHome();
-      resolve();
-    });
-  });
 }
 
 void ensureLogin().then(() => {
   requestAnimationFrame(() => restoreFocus());
-  connect();
+  if (account) connect();
 });
 
 if (import.meta.env.DEV) {

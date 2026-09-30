@@ -1,8 +1,9 @@
 /** Table management for an admin, opened from the title screen. Same session cookie as the table. */
 
+import { describeError } from "@d20-fireverse/protocol";
 import { sfx } from "./sfx";
 
-type Tab = "users" | "rooms" | "saves" | "camps";
+type Tab = "users" | "rooms" | "saves" | "camps" | "mail";
 
 type AdminUser = { id: string; username: string; role: "admin" | "player"; disabled: boolean };
 type RoomRow = {
@@ -97,6 +98,7 @@ export function openAdmin() {
           <button type="button" class="ghost" data-tab="rooms">Rooms</button>
           <button type="button" class="ghost" data-tab="saves">Saves</button>
           <button type="button" class="ghost" data-tab="camps">Campaigns</button>
+          <button type="button" class="ghost" data-tab="mail">Mail</button>
         </nav>
         <div id="adminBody"></div>
         <div class="row modal-actions">
@@ -108,7 +110,7 @@ export function openAdmin() {
     overlay.querySelectorAll<HTMLButtonElement>("[data-tab]").forEach((b) => {
       b.addEventListener("click", () => {
         const next = b.dataset.tab;
-        if (next !== "users" && next !== "rooms" && next !== "saves" && next !== "camps") return;
+        if (next !== "users" && next !== "rooms" && next !== "saves" && next !== "camps" && next !== "mail") return;
         tab = next;
         resetUserId = null;
         sfx("uiMove");
@@ -153,7 +155,8 @@ async function refresh() {
     if (tab === "users") await renderUsers(gen);
     else if (tab === "rooms") await renderRooms(gen);
     else if (tab === "saves") await renderSaves(gen);
-    else await renderCamps(gen);
+    else if (tab === "camps") await renderCamps(gen);
+    else await renderMail(gen);
   } catch (err) {
     if (gen !== paintGen) return;
     const live = body();
@@ -164,6 +167,55 @@ async function refresh() {
 function still(gen: number): HTMLElement | null {
   if (gen !== paintGen || !overlay || overlay.hidden) return null;
   return body();
+}
+
+async function renderMail(gen: number) {
+  const status = await api<{ configured: boolean; senderEmail: string; senderName: string; keyHint: string }>("/api/admin/brevo");
+  const host = still(gen);
+  if (!host) return;
+  host.innerHTML = `<form id="adminBrevo" class="admin-block">
+      <h3>Registration mail</h3>
+      <p class="meta">Brevo sends one message when someone creates an account. The sender address must already be verified in Brevo. The key stays on this machine.</p>
+      <div class="admin-grid">
+        ${field("API key", `<input id="brevoKey" type="password" autocomplete="off" placeholder="${status.keyHint ? esc(status.keyHint) : "xkeysib-…"}" />`)}
+        ${field("Sender email", `<input id="brevoFrom" type="email" autocomplete="off" value="${esc(status.senderEmail)}" />`)}
+        ${field("Sender name", `<input id="brevoName" autocomplete="off" value="${esc(status.senderName)}" />`)}
+      </div>
+      <button type="submit" class="primary">Save</button>
+      <button type="button" class="ghost" id="brevoTest">Send a test to the sender</button>
+      <p class="admin-err" id="brevoErr"></p>
+    </form>`;
+  host.querySelector("#adminBrevo")!.addEventListener("submit", async (ev) => {
+    ev.preventDefault();
+    const err = host.querySelector("#brevoErr");
+    if (err) err.textContent = "";
+    try {
+      await api("/api/admin/brevo", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          apiKey: (host.querySelector("#brevoKey") as HTMLInputElement).value,
+          senderEmail: (host.querySelector("#brevoFrom") as HTMLInputElement).value,
+          senderName: (host.querySelector("#brevoName") as HTMLInputElement).value,
+        }),
+      });
+      sfx("uiConfirm");
+      void refresh();
+    } catch (e) {
+      if (err) err.textContent = describeError(e instanceof Error ? e.message : "");
+    }
+  });
+  host.querySelector("#brevoTest")!.addEventListener("click", async () => {
+    const err = host.querySelector("#brevoErr");
+    if (err) err.textContent = "";
+    try {
+      await api("/api/admin/brevo/test", { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" });
+      if (err) err.textContent = "Test sent.";
+      sfx("uiConfirm");
+    } catch (e) {
+      if (err) err.textContent = describeError(e instanceof Error ? e.message : "");
+    }
+  });
 }
 
 async function renderUsers(gen: number) {

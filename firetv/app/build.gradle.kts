@@ -3,8 +3,9 @@ plugins {
     id("org.jetbrains.kotlin.android")
 }
 
-/** A table address baked into the build, e.g. `-Pfireverse.tableUrl=http://192.168.1.20:3100`. Empty means "find it". */
-val tableUrl = (findProperty("fireverse.tableUrl") as String?).orEmpty()
+/** A table address baked into the build. Defaults to the public site. Override with `-Pfireverse.tableUrl=http://192.168.1.20:3100`. */
+val tableUrl = (findProperty("fireverse.tableUrl") as String?)?.takeIf { it.isNotBlank() }
+    ?: "https://www.d20fireverse.it/"
 
 /** Release signing comes from the environment; without it the release build is signed with the debug key. */
 val keystorePath: String? = System.getenv("FIREVERSE_KEYSTORE")

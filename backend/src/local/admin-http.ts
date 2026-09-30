@@ -7,11 +7,14 @@ import {
   arenaLeaderboard,
   assertAdmin,
   clearSessionCookie,
+  authenticate,
+  confirmRegistration,
   createUser,
   listFriends,
   listUsers,
-  login,
   logout,
+  registerPlayer,
+  resendConfirmation,
   openAuth,
   readSessionCookie,
   requestFriend,
@@ -33,7 +36,8 @@ import {
   updateDraftNode,
 } from "./catalog.js";
 import type { EncounterDef, StoryNode } from "./campaign.js";
-import { closeRoom, listRooms, listSaves } from "./room.js";
+import { brevoStatus, readBrevo, sendMail, writeBrevo } from "./mail.js";
+import { closeRoom, getRoom, listRooms, listSaves } from "./room.js";
 
 const page = fs.readFileSync(path.join(path.dirname(fileURLToPath(import.meta.url)), "admin.html"), "utf8");
 
@@ -58,13 +62,55 @@ export function mountAccountRoutes(app: Express): void {
   app.post("/api/login", (req, res) => {
     const username = String(req.body?.username ?? "");
     const password = String(req.body?.password ?? "");
-    const found = login(username, password);
-    if (!found) {
+    const found = authenticate(username, password);
+    if (found.kind === "unconfirmed") {
+      res.status(403).json({ error: "UNCONFIRMED" });
+      return;
+    }
+    if (found.kind !== "ok") {
       res.status(401).json({ error: "BAD_LOGIN" });
       return;
     }
     res.setHeader("Set-Cookie", sessionCookie(found.token, secure(req)));
     res.json({ user: found.user });
+  });
+
+  app.post("/api/register", async (req, res) => {
+    try {
+      const roomCode = String(req.body?.roomCode ?? "").trim().toUpperCase();
+      if (!getRoom(roomCode)) throw new Error("ROOM_NOT_FOUND");
+      if (!readBrevo()) throw new Error("MAIL_NOT_CONFIGURED");
+      await registerPlayer({
+        username: String(req.body?.username ?? ""),
+        password: String(req.body?.password ?? ""),
+        email: String(req.body?.email ?? ""),
+        roomCode,
+      });
+      res.json({ ok: true });
+    } catch (err) {
+      fail(res, err);
+    }
+  });
+
+  app.post("/api/register/resend", async (req, res) => {
+    try {
+      await resendConfirmation(String(req.body?.username ?? ""), String(req.body?.password ?? ""));
+      res.json({ ok: true });
+    } catch (err) {
+      fail(res, err);
+    }
+  });
+
+  app.get("/api/confirm", (req, res) => {
+    const token = String(req.query.token ?? "");
+    const confirmed = token ? confirmRegistration(token) : null;
+    if (!confirmed) {
+      res.status(400).type("html").send("<p>That confirmation link is no longer valid.</p>");
+      return;
+    }
+    res.setHeader("Set-Cookie", sessionCookie(confirmed.session, secure(req)));
+    const room = confirmed.roomCode ? `?room=${encodeURIComponent(confirmed.roomCode)}` : "";
+    res.redirect(302, `/companion/${room}`);
   });
 
   app.post("/api/logout", (req, res) => {
@@ -164,6 +210,42 @@ export function handleCampaignImport(req: Request, res: Response): void {
 export function mountAdminRoutes(app: Express): void {
   app.get("/admin", (_req, res) => {
     res.type("html").send(page);
+  });
+
+  app.get("/api/admin/brevo", (req, res) => {
+    try {
+      assertAdmin(requestUser(req));
+      res.json(brevoStatus());
+    } catch (err) {
+      fail(res, err);
+    }
+  });
+
+  app.post("/api/admin/brevo", (req, res) => {
+    try {
+      assertAdmin(requestUser(req));
+      writeBrevo({
+        apiKey: String(req.body?.apiKey ?? ""),
+        senderEmail: String(req.body?.senderEmail ?? ""),
+        senderName: String(req.body?.senderName ?? ""),
+      });
+      res.json(brevoStatus());
+    } catch (err) {
+      fail(res, err);
+    }
+  });
+
+  app.post("/api/admin/brevo/test", async (req, res) => {
+    try {
+      assertAdmin(requestUser(req));
+      const cfg = readBrevo();
+      if (!cfg) throw new Error("MAIL_NOT_CONFIGURED");
+      const to = String(req.body?.to ?? cfg.senderEmail);
+      await sendMail(to, "D20 FireVerse mail test", "<p>Brevo is configured. This is the only kind of mail the table sends, and only when someone creates an account.</p>");
+      res.json({ ok: true });
+    } catch (err) {
+      fail(res, err);
+    }
   });
 
   app.get("/api/admin/users", (req, res) => {

@@ -14,6 +14,7 @@
     <string name="manual_heading">Or type the table address</string>
     <string name="manual_hint">192.168.1.20:3100</string>
     <string name="connect">Connect</string>
+    <string name="amazon">Continue with Amazon</string>
     <string name="retry">Search again</string>
     <string name="bad_address">That doesn\'t look like an address. Try something like 192.168.1.20:3100.</string>
     <string name="exit_again">Press Back again to leave the table</string>

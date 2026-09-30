@@ -136,3 +136,19 @@ input { width: 100%; padding: 0.85rem 1rem; border-radius: 11px; border: 1px sol
 .login-gate[hidden] { display: none; }
 .login-gate input { width: 100%; box-sizing: border-box; }
 .err { color: #ffb4a2; }
+.login-gate label { display: block; margin-top: 0.45rem; }
+.throw {
+  display: grid;
+  gap: 0.15rem;
+  min-height: 7.5rem;
+  margin: 0.4rem 0 0.8rem;
+  padding: 1rem;
+  border-radius: var(--radius);
+  border: 1px dashed var(--copper-bright);
+  background: rgba(200, 102, 44, 0.14);
+  touch-action: none;
+  user-select: none;
+}
+.throw strong { font-family: Cinzel, serif; font-size: 2rem; }
+.throw[data-spent="1"] { opacity: 0.5; }
+.throw-result { font-variant-numeric: tabular-nums; }

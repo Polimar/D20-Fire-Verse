@@ -7,6 +7,7 @@ import { randomBytes, scryptSync, timingSafeEqual } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { DatabaseSync } from "node:sqlite";
+import { confirmationLetter, sendMail } from "./mail.js";
 import { DATA_DIR } from "./paths.js";
 
 export type Role = "admin" | "player";
@@ -57,6 +58,13 @@ function database(): DatabaseSync {
       ended_at TEXT NOT NULL
     );
   `);
+  const cols = new Set(
+    (db.prepare("PRAGMA table_info(users)").all() as Array<{ name: string }>).map((c) => c.name),
+  );
+  if (!cols.has("email")) db.exec("ALTER TABLE users ADD COLUMN email TEXT");
+  if (!cols.has("confirm_token")) db.exec("ALTER TABLE users ADD COLUMN confirm_token TEXT");
+  if (!cols.has("confirm_room")) db.exec("ALTER TABLE users ADD COLUMN confirm_room TEXT");
+  db.exec("CREATE UNIQUE INDEX IF NOT EXISTS users_email ON users(email) WHERE email IS NOT NULL");
   const count = db.prepare("SELECT COUNT(*) AS n FROM users").get() as { n: number };
   if (count.n === 0) {
     createUser("admin", "admin", "admin");
@@ -135,19 +143,102 @@ export function updateUser(
   return { id: next.id, username: next.username, role: next.role, disabled: next.disabled === 1 };
 }
 
-export function login(username: string, password: string): { token: string; user: SessionUser } | null {
-  const row = database()
-    .prepare("SELECT id, username, password, role, disabled FROM users WHERE username = ? COLLATE NOCASE")
-    .get(username.trim()) as
-    | { id: string; username: string; password: string; role: Role; disabled: number }
-    | undefined;
-  if (!row || row.disabled || !passwordMatches(password, row.password)) return null;
+type AuthRow = {
+  id: string;
+  username: string;
+  password: string;
+  role: Role;
+  disabled: number;
+  email: string | null;
+  confirm_token: string | null;
+  confirm_room: string | null;
+};
+
+function authRow(username: string): AuthRow | undefined {
+  return database()
+    .prepare(
+      "SELECT id, username, password, role, disabled, email, confirm_token, confirm_room FROM users WHERE username = ? COLLATE NOCASE",
+    )
+    .get(username.trim()) as AuthRow | undefined;
+}
+
+function openSession(userId: string): string {
   const token = randomBytes(32).toString("hex");
-  database().prepare("INSERT INTO sessions (token, user_id, created_at) VALUES (?, ?, ?)").run(token, row.id, new Date().toISOString());
+  database().prepare("INSERT INTO sessions (token, user_id, created_at) VALUES (?, ?, ?)").run(token, userId, new Date().toISOString());
+  return token;
+}
+
+export type LoginResult =
+  | { kind: "ok"; token: string; user: SessionUser }
+  | { kind: "unconfirmed" }
+  | { kind: "bad" };
+
+export function authenticate(username: string, password: string): LoginResult {
+  const row = authRow(username);
+  if (!row || !passwordMatches(password, row.password)) return { kind: "bad" };
+  if (row.disabled && row.confirm_token) return { kind: "unconfirmed" };
+  if (row.disabled) return { kind: "bad" };
   return {
-    token,
+    kind: "ok",
+    token: openSession(row.id),
     user: { id: row.id, username: row.username, role: row.role, disabled: false },
   };
+}
+
+export function login(username: string, password: string): { token: string; user: SessionUser } | null {
+  const result = authenticate(username, password);
+  return result.kind === "ok" ? { token: result.token, user: result.user } : null;
+}
+
+const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+export async function registerPlayer(input: {
+  username: string;
+  password: string;
+  email: string;
+  roomCode: string;
+}): Promise<void> {
+  const name = input.username.trim();
+  const email = input.email.trim().toLowerCase();
+  const roomCode = input.roomCode.trim().toUpperCase();
+  if (!/^[a-zA-Z0-9._-]{2,32}$/.test(name)) throw new Error("BAD_USERNAME");
+  if (input.password.length < 4) throw new Error("BAD_PASSWORD");
+  if (!EMAIL.test(email)) throw new Error("BAD_EMAIL");
+  if (userByName(name)) throw new Error("USERNAME_TAKEN");
+  const taken = database().prepare("SELECT id FROM users WHERE email = ? COLLATE NOCASE").get(email);
+  if (taken) throw new Error("EMAIL_TAKEN");
+  const id = `user_${randomBytes(8).toString("hex")}`;
+  const token = randomBytes(24).toString("hex");
+  database()
+    .prepare(
+      "INSERT INTO users (id, username, password, role, disabled, created_at, email, confirm_token, confirm_room) VALUES (?, ?, ?, 'player', 1, ?, ?, ?, ?)",
+    )
+    .run(id, name, hashPassword(input.password), new Date().toISOString(), email, token, roomCode);
+  try {
+    const letter = confirmationLetter(token);
+    await sendMail(email, letter.subject, letter.html);
+  } catch (err) {
+    database().prepare("DELETE FROM users WHERE id = ?").run(id);
+    throw err;
+  }
+}
+
+export async function resendConfirmation(username: string, password: string): Promise<void> {
+  const row = authRow(username);
+  if (!row || !passwordMatches(password, row.password) || !row.disabled || !row.confirm_token || !row.email) {
+    throw new Error("BAD_LOGIN");
+  }
+  const letter = confirmationLetter(row.confirm_token);
+  await sendMail(row.email, letter.subject, letter.html);
+}
+
+export function confirmRegistration(token: string): { session: string; roomCode: string } | null {
+  const row = database()
+    .prepare("SELECT id, confirm_room FROM users WHERE confirm_token = ?")
+    .get(token) as { id: string; confirm_room: string | null } | undefined;
+  if (!row) return null;
+  database().prepare("UPDATE users SET disabled = 0, confirm_token = NULL WHERE id = ?").run(row.id);
+  return { session: openSession(row.id), roomCode: row.confirm_room ?? "" };
 }
 
 export function logout(token: string | null): void {

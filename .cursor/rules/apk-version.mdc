@@ -1,0 +1,10 @@
+---
+description: Bump the Fire TV app version on every install over an existing one
+alwaysApply: true
+---
+
+# Fire TV versioning
+
+`firetv/app/build.gradle.kts` ships `versionCode` 1 and `versionName` 1.0.0 because no Stick has the app yet.
+
+Every later APK that installs over an existing one raises `versionCode` by 1 and updates `versionName`. Do not reuse a versionCode that already left this machine.

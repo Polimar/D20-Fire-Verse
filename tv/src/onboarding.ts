@@ -14,11 +14,19 @@ type TableInfo = { companionUrl: string; hosts: string[] };
 
 let tableInfo: Promise<TableInfo | null> | null = null;
 
+const PUBLIC_COMPANION = "https://www.d20fireverse.it/companion/";
+
 function sameOriginCompanion(): string {
   return new URL("/companion/", location.href).href;
 }
 
+function onLoopback(): boolean {
+  const host = location.hostname;
+  return host === "localhost" || host === "127.0.0.1" || host === "::1";
+}
+
 export function companionBase(): Promise<string> {
+  if (!onLoopback()) return Promise.resolve(PUBLIC_COMPANION);
   if (!tableInfo) {
     tableInfo = fetch("/api/table-info")
       .then((r) => (r.ok ? (r.json() as Promise<TableInfo>) : null))

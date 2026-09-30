@@ -106,8 +106,16 @@ class MainActivity : Activity() {
             go
         }
 
-        val remembered = prefs.getString(KEY_URL, null)
-            ?: BuildConfig.DEFAULT_TABLE_URL.takeIf { it.isNotBlank() }?.let(TableAddress::normalize)
+        val baked = BuildConfig.DEFAULT_TABLE_URL.takeIf { it.isNotBlank() }?.let(TableAddress::normalize)
+        val saved = prefs.getString(KEY_URL, null)
+        val remembered = when {
+            saved != null && baked != null && (saved.contains(":3100") || isRawIp(saved)) -> {
+                prefs.edit().putString(KEY_URL, baked).apply()
+                baked
+            }
+            saved != null -> saved
+            else -> baked
+        }
         if (remembered != null) reach(remembered) else showConnect(null, pickFirst = true)
     }
 
@@ -378,6 +386,11 @@ class MainActivity : Activity() {
         web?.destroy()
         web = null
         super.onDestroy()
+    }
+
+    private fun isRawIp(url: String): Boolean {
+        val host = Uri.parse(url).host ?: return false
+        return host.matches(Regex("""\d{1,3}(\.\d{1,3}){3}"""))
     }
 
     private companion object {

@@ -37,6 +37,7 @@ function speechCtor(): SpeechSessionCtor | null {
 
 type Pregen = { id: string; name: string; summary: string; class: string; race?: string; level: number; portrait?: string };
 type Seat = { playerId: string; characterId: string; characterName: string; portrait: string };
+type DiceFace = { notation: string; values: number[]; total: number };
 type Token = { id: string; playerId?: string; name: string; hp: number; maxHp: number; ac: number; dead: boolean; kind: string };
 type MenuAction = { id: string; name: string; available: boolean; targetKind: string };
 type PuzzleState = {
@@ -72,6 +73,7 @@ type TableState = {
   players: Seat[];
   choices: Array<{ id: string; label: string }>;
   skillCheck?: { ability: string; skill?: string; dc: number };
+  lastDice?: DiceFace | null;
   vote?: {
     nodeId: string;
     votes: Array<{ playerId: string; choiceId: string; name: string; portrait: string | null }>;
@@ -141,13 +143,20 @@ app.innerHTML = `
   </header>
 
   <section class="panel login-gate" id="loginGate">
-    <h2>Sign in</h2>
+    <h2 id="authTitle">Sign in</h2>
     <form id="loginForm">
       <label for="loginUser">Username</label>
       <input id="loginUser" autocomplete="username" />
       <label for="loginPass">Password</label>
       <input id="loginPass" type="password" autocomplete="current-password" />
-      <button type="submit" class="primary">Enter</button>
+      <p id="registerFields" hidden>
+        <label for="loginEmail">Email</label>
+        <input id="loginEmail" type="email" autocomplete="email" />
+        <span class="meta" id="registerRoom"></span>
+      </p>
+      <button type="submit" class="primary" id="authSubmit">Enter</button>
+      <button type="button" class="ghost" id="btnAuthMode">Create account</button>
+      <button type="button" class="ghost" id="btnResend" hidden>Send the confirmation again</button>
       <p class="meta err" id="loginError"></p>
     </form>
   </section>
@@ -168,7 +177,10 @@ app.innerHTML = `
     <div class="turn" id="turn" hidden></div>
     <div class="controls" id="controls"></div>
     <p class="narr" id="narr"></p>
-    <div class="row-end"><button type="button" class="ghost small" id="btnLeave">Leave this seat</button></div>
+    <div class="row-end">
+      <button type="button" class="ghost small" id="btnLeave">Leave this seat</button>
+      <button type="button" class="ghost small" id="btnLogout">Log out</button>
+    </div>
   </section>
 
   <section class="panel" id="micPanel" hidden>
@@ -218,6 +230,7 @@ function me(): Seat | undefined {
 }
 
 let signedIn = false;
+let creating = false;
 
 function render() {
   const seated = !!state && !!me();
@@ -265,6 +278,15 @@ function renderHeroes() {
   );
 }
 
+function throwPad(action: MenuAction | undefined): string {
+  if (!action) return "";
+  return `<div class="throw" data-throw="${esc(action.id)}" data-target="${esc(action.targetKind)}" role="button" tabindex="0">
+    <span class="throw-kicker">Swipe to throw</span>
+    <strong>d20</strong>
+    <span class="meta">The die lands on the television.</span>
+  </div>`;
+}
+
 function renderSeat() {
   const s = state!;
   const seat = me()!;
@@ -297,9 +319,9 @@ function renderSeat() {
          <button type="button" class="primary" data-react="yes">${esc(pending.acceptLabel)}</button>
          <button type="button" data-react="no">${esc(pending.declineLabel)}</button>`
       : mine
-        ? `${actions.map(button).join("")}${bonus.map(button).join("")}
+        ? `${throwPad(actions.find((a) => a.available) ?? bonus.find((a) => a.available))}${actions.map(button).join("")}${bonus.map(button).join("")}
            <button type="button" class="primary" data-intent="end_turn">End turn</button>
-           <p class="meta">A targeted action is aimed with the television remote.</p>`
+           <p class="meta">Swipe to throw. A targeted action is aimed with the television remote. The die lands there.</p>`
         : "";
   } else {
     turn.hidden = true;
@@ -319,8 +341,10 @@ function renderSeat() {
       const skill = (s.skillCheck.skill ?? s.skillCheck.ability).replace(/_/g, " ");
       const roster = s.checkOffer?.roster ?? [];
       const helpers = new Set(s.checkOffer?.helpers ?? []);
+      const iCanRoll = roster.some((r) => r.playerId === seat.playerId);
       controls.innerHTML = `
-        <p class="meta">Who attempts ${esc(skill)} · DC ${s.skillCheck.dc}? Pledge Help before they step up for advantage.</p>
+        ${iCanRoll ? throwPad({ id: "volunteer", targetKind: "none", available: true, name: "d20" }) : ""}
+        <p class="meta">Who attempts ${esc(skill)} · DC ${s.skillCheck.dc}? Swipe to throw the d20. Pledge Help before they step up for advantage.</p>
         ${roster
           .map((r) => {
             const mine = r.playerId === seat.playerId;
@@ -333,7 +357,7 @@ function renderSeat() {
             : ""
         }`;
     } else if (s.nodeType === "encounter" && !s.combat) {
-      controls.innerHTML = `<button type="button" class="primary big" data-begin-fight="1">Roll initiative</button>
+      controls.innerHTML = `${throwPad({ id: "begin", targetKind: "none", available: true, name: "d20" })}<button type="button" class="primary big" data-begin-fight="1">Roll initiative</button>
         <button type="button" data-withdraw="1">Step back</button>
         <p class="meta">Hear them coming — then open the fight on the television.</p>`;
     } else if (s.puzzle) {
@@ -443,12 +467,60 @@ function renderSeat() {
       send({ action: "VOLUNTEER_CHECK", roomCode: s.roomCode, playerId: seat.playerId });
     }),
   );
-  controls.querySelectorAll<HTMLElement>("[data-help]").forEach((b) =>
+  controls.querySelectorAll<HTMLElement>("[data-throw]").forEach((pad) => {
+    let startX = 0;
+    let startY = 0;
+    let armed = false;
+    const fire = () => {
+      if (pad.dataset.spent === "1") return;
+      pad.dataset.spent = "1";
+      if (navigator.vibrate) navigator.vibrate(20);
+      const id = pad.dataset.throw;
+      const target = pad.dataset.target;
+      if (id === "volunteer") {
+        send({ action: "VOLUNTEER_CHECK", roomCode: s.roomCode, playerId: seat.playerId });
+        return;
+      }
+      if (id === "begin") {
+        send({ action: "BEGIN_COMBAT", roomCode: s.roomCode });
+        return;
+      }
+      if (!id) return;
+      const needsAim = target === "enemy" || target === "ally" || target === "cell";
+      send(
+        needsAim
+          ? { action: "AIM_ACTION", roomCode: s.roomCode, playerId, abilityId: id }
+          : { action: "PERFORM_ACTION", roomCode: s.roomCode, playerId, abilityId: id },
+      );
+    };
+    pad.addEventListener("pointerdown", (ev) => {
+      armed = true;
+      startX = ev.clientX;
+      startY = ev.clientY;
+      try {
+        pad.setPointerCapture(ev.pointerId);
+      } catch {
+        /* the pad can still read the release */
+      }
+    });
+    pad.addEventListener("pointerup", (ev) => {
+      if (!armed) return;
+      armed = false;
+      if (Math.hypot(ev.clientX - startX, ev.clientY - startY) > 48) fire();
+    });
+  });
+  if (s.lastDice?.values?.length) {
+    const line = document.createElement("p");
+    line.className = "meta throw-result";
+    line.textContent = `${s.lastDice.notation}: ${s.lastDice.values.join(", ")} = ${s.lastDice.total}`;
+    controls.appendChild(line);
+  }
+  controls.querySelectorAll<HTMLElement>("[data-help]").forEach((b) => {
     b.addEventListener("click", () => {
       if (navigator.vibrate) navigator.vibrate(12);
       send({ action: "VOLUNTEER_CHECK", roomCode: s.roomCode, playerId, help: true });
-    }),
-  );
+    });
+  });
   controls.querySelectorAll<HTMLElement>("[data-claim]").forEach((b) =>
     b.addEventListener("click", () => {
       if (navigator.vibrate) navigator.vibrate(12);
@@ -574,6 +646,16 @@ $("codeForm").addEventListener("submit", (e) => {
   attach();
 });
 
+$("btnLogout").addEventListener("click", () => {
+  void fetch("/api/logout", { method: "POST", credentials: "same-origin" }).then(() => {
+    signedIn = false;
+    playerId = null;
+    state = null;
+    saveStored(null);
+    ws?.close();
+    render();
+  });
+});
 $("btnLeave").addEventListener("click", () => {
   playerId = null;
   saveStored({ roomCode, playerId: null });
@@ -634,37 +716,95 @@ document.addEventListener("visibilitychange", () => {
   if (!document.hidden && ws?.readyState === WebSocket.OPEN) attach();
 });
 
-async function ensureLogin(): Promise<void> {
-  const me = await fetch("/api/me", { credentials: "same-origin" });
-  if (me.ok) {
-    signedIn = true;
+function paintAuthMode() {
+  $("authTitle").textContent = creating ? "Create account" : "Sign in";
+  $("authSubmit").textContent = creating ? "Create account" : "Enter";
+  $("btnAuthMode").textContent = creating ? "I already have an account" : "Create account";
+  $("registerFields").hidden = !creating;
+  $("registerRoom").textContent = creating
+    ? roomCode
+      ? `This account joins table ${roomCode}.`
+      : "Open a table on the television first. The code has to be on the QR."
+    : "";
+  $("authSubmit").toggleAttribute("disabled", creating && !roomCode);
+}
+
+$("btnAuthMode").addEventListener("click", () => {
+  creating = !creating;
+  $("loginError").textContent = "";
+  $("btnResend").hidden = true;
+  paintAuthMode();
+});
+
+$("btnResend").addEventListener("click", async () => {
+  $("loginError").textContent = "";
+  const res = await fetch("/api/register/resend", {
+    method: "POST",
+    credentials: "same-origin",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      username: ($("loginUser") as HTMLInputElement).value,
+      password: ($("loginPass") as HTMLInputElement).value,
+    }),
+  });
+  const body = (await res.json().catch(() => null)) as { error?: string } | null;
+  $("loginError").textContent = res.ok ? "Confirmation sent again." : describeError(body?.error ?? "MAIL_FAILED");
+});
+
+$("loginForm").addEventListener("submit", async (ev) => {
+  ev.preventDefault();
+  $("loginError").textContent = "";
+  $("btnResend").hidden = true;
+  const username = ($("loginUser") as HTMLInputElement).value;
+  const password = ($("loginPass") as HTMLInputElement).value;
+  if (creating) {
+    const res = await fetch("/api/register", {
+      method: "POST",
+      credentials: "same-origin",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        username,
+        password,
+        email: ($("loginEmail") as HTMLInputElement).value,
+        roomCode,
+      }),
+    });
+    const body = (await res.json().catch(() => null)) as { error?: string } | null;
+    $("loginError").textContent = res.ok
+      ? "Check your email and confirm the account. The table won't write again."
+      : describeError(body?.error ?? "MAIL_FAILED");
     return;
   }
-  await new Promise<void>((resolve) => {
-    $("loginForm").addEventListener("submit", async (ev) => {
-      ev.preventDefault();
-      $("loginError").textContent = "";
-      const res = await fetch("/api/login", {
-        method: "POST",
-        credentials: "same-origin",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          username: ($("loginUser") as HTMLInputElement).value,
-          password: ($("loginPass") as HTMLInputElement).value,
-        }),
-      });
-      if (!res.ok) {
-        $("loginError").textContent = "That username or password is wrong.";
-        return;
-      }
-      signedIn = true;
-      resolve();
-    });
+  const res = await fetch("/api/login", {
+    method: "POST",
+    credentials: "same-origin",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ username, password }),
   });
+  if (!res.ok) {
+    const body = (await res.json().catch(() => null)) as { error?: string } | null;
+    const code = body?.error ?? "BAD_LOGIN";
+    $("loginError").textContent = describeError(code);
+    $("btnResend").hidden = code !== "UNCONFIRMED";
+    return;
+  }
+  signedIn = true;
+  render();
+  connect();
+});
+
+async function ensureLogin(): Promise<void> {
+  paintAuthMode();
+  const me = await fetch("/api/me", { credentials: "same-origin" });
+  if (me.ok) signedIn = true;
+}
+
+if ("serviceWorker" in navigator) {
+  void navigator.serviceWorker.register("/companion/sw.js").catch(() => undefined);
 }
 
 render();
 void ensureLogin().then(() => {
   render();
-  connect();
+  if (signedIn) connect();
 });

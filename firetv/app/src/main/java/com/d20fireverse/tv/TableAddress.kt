@@ -26,9 +26,11 @@ object TableAddress {
         val host = uri.host?.takeIf { it.isNotEmpty() } ?: return null
         val bracketed = if (host.contains(':') && !host.startsWith("[")) "[$host]" else host
         if (!HOST.matches(bracketed)) return null
+        val explicitUrl = raw.contains("://")
         val port = when {
             uri.port > 0 -> uri.port
             scheme == "https" -> 443
+            explicitUrl -> 80
             else -> DEFAULT_PORT
         }
         return "$scheme://$bracketed:$port/"
