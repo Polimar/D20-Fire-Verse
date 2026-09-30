@@ -2374,9 +2374,11 @@ export function resolveReaction(combat: CombatState, playerId: string, accept: b
     const effect = ability?.effects[0];
     const pregen = reactor.characterId ? getPregen(reactor.characterId) : undefined;
     if (effect) resolveSpellAttack(combat, reactor, pregen, ability?.name ?? "Opportunity Attack", effect, mover.id, true, true);
-    if (combat.pending && pending.path && mover) {
-      combat.pending.resumePath = pending.path;
-      combat.pending.resumeMoverId = mover.id;
+    // resolveSpellAttack may open a Shield prompt; attach the unfinished path (TS loses track after pending was cleared).
+    const followUp = combat.pending as PendingReaction | undefined;
+    if (followUp && pending.path && mover) {
+      followUp.resumePath = pending.path;
+      followUp.resumeMoverId = mover.id;
     }
   }
   if (!combat.pending && mover && pending.path) continueAfterThreat(combat, mover, pending.path);

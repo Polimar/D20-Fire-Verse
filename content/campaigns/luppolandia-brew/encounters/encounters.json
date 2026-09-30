@@ -25,7 +25,7 @@
       ]
     },
     "victory": "all_enemies_defeated",
-    "intro": "Something squeals behind the barrels. Then another voice answers it, and another. Red eyes blink awake in the dark, and the pack pours out across the flagstones toward you.",
+    "intro": "Soft claws scrape the flagstones behind the barrels. Then another set answers, and another — the patter of small rodents racing toward you through the dark. Red eyes blink awake between the casks. The cellar exhales musk and hunger as the pack pours out across the floor.",
     "outro": "The last rat twitches and lies still. In the sudden quiet you can hear the cellar breathe, and something glints between the vessels on the far wall."
   },
   "hole_rats": {
@@ -55,7 +55,7 @@
     },
     "victory": "all_enemies_defeated",
     "notes": "Oneshot: after 1st side room / first seal.",
-    "intro": "The threshold hole coughs up dust and fur. Two giant rats scramble out of the dark, starving and furious that you are standing in their way.",
+    "intro": "From the threshold hole comes a hurried scratching — claws on stone, closer with every breath. Dust and fur cough up from the dark. Two giant rats scramble into the corridor, starving and furious that you are standing in their way.",
     "outro": "The rats go limp at the edge of the hole. Whatever is feeding them down there is still awake."
   },
   "well_centipedes": {
@@ -84,7 +84,7 @@
       ]
     },
     "victory": "all_enemies_defeated",
-    "intro": "The pulley shrieks. From the throat of the well, a rustle of a hundred legs climbs the stones, and glossy mandibles crest the rim.",
+    "intro": "From the throat of the well, strange chittering rises — wet, many-legged, and always closer. The pulley shrieks. A rustle of a hundred legs climbs the stones, and glossy mandibles crest the rim.",
     "outro": "The centipedes curl and fall back into the well. The echo of their legs takes a long time to stop."
   },
   "hole_centipedes": {
@@ -114,7 +114,7 @@
     },
     "victory": "all_enemies_defeated",
     "notes": "Oneshot: after 2nd seal.",
-    "intro": "Burnt hair and a dry clicking rise from the hole. Giant centipedes spill over its rim, mandibles wet and searching.",
+    "intro": "Burnt hair and a dry clicking climb from the hole, the sound growing nearer until it fills the corridor. Giant centipedes spill over its rim, mandibles wet and searching.",
     "outro": "The centipedes lie in a tangle of legs. The rim of the hole is warm to the touch."
   },
   "lab_infernal_spider": {
@@ -146,7 +146,7 @@
       ]
     },
     "victory": "all_enemies_defeated",
-    "intro": "The ceiling moves. Ember silk drips like molten glass as the Infernal Spider unfolds, eight burning eyes fixed on you. This is the thing that has been poisoning the brew. [[spider: You drank from my nest, little brewers. Now I drink from you.]]",
+    "intro": "Something shifts in the rafters — silk whispering, closer. Embers drip like molten glass. The ceiling moves as the Infernal Spider unfolds, eight burning eyes fixed on you. This is the thing that has been poisoning the brew. [[spider: You drank from my nest, little brewers. Now I drink from you.]]",
     "outro": "[[spider: My silk… my children…]] The Infernal Spider shrieks, and its fire gutters out. It folds in on itself and crashes to the laboratory floor. The silk goes dark all at once."
   },
   "corridor_magma_rat": {
@@ -178,7 +178,7 @@
       ]
     },
     "victory": "all_enemies_defeated",
-    "intro": "The mosaic cracks and glows. A rat the size of a pony drags itself out of the heat, fur smoking, lava dripping from its jaws. The exit tax has come due. [[magma_rat: Mmm. Heroes, lightly roasted.]]",
+    "intro": "Heat blooms under the mosaic. Something heavy scrapes closer through the orange glow — claws, then a hiss of steam. A rat the size of a pony drags itself out of the heat, fur smoking, lava dripping from its jaws. The exit tax has come due. [[magma_rat: Mmm. Heroes, lightly roasted.]]",
     "outro": "The Magma Rat hisses one last cloud of steam and cools into black stone. The way up to the brewery is clear."
   }
 }

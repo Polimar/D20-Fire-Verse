@@ -296,6 +296,10 @@ function renderSeat() {
             ? `<button type="button" data-help="1">Pledge Help (advantage)</button>`
             : ""
         }`;
+    } else if (s.nodeType === "encounter" && !s.combat) {
+      controls.innerHTML = `<button type="button" class="primary big" data-begin-fight="1">Roll initiative</button>
+        <button type="button" data-withdraw="1">Step back</button>
+        <p class="meta">Hear them coming — then open the fight on the television.</p>`;
     } else if (s.puzzle) {
       const holder = s.puzzle.holderId;
       const multi = s.players.length > 1;
@@ -345,6 +349,17 @@ function renderSeat() {
   controls.querySelectorAll<HTMLElement>("[data-rest]").forEach((b) =>
     b.addEventListener("click", () => {
       send({ action: b.dataset.rest === "long" ? "LONG_REST" : "SHORT_REST", roomCode: s.roomCode, playerId });
+    }),
+  );
+  controls.querySelectorAll<HTMLElement>("[data-begin-fight]").forEach((b) =>
+    b.addEventListener("click", () => {
+      if (navigator.vibrate) navigator.vibrate(12);
+      send({ action: "BEGIN_COMBAT", roomCode: s.roomCode });
+    }),
+  );
+  controls.querySelectorAll<HTMLElement>("[data-withdraw]").forEach((b) =>
+    b.addEventListener("click", () => {
+      send({ action: "WITHDRAW", roomCode: s.roomCode });
     }),
   );
   controls.querySelectorAll<HTMLElement>("[data-intent]").forEach((b) =>
