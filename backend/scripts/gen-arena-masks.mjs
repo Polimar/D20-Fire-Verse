@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/** Occupancy masks from arena JSON: walls black, floor light, spawn A blue / B red / FFA gold. */
+/** Occupancy masks from arena JSON: walls black, hazards teal, floor light, spawn A blue / B red / FFA gold. */
 import fs from "node:fs";
 import path from "node:path";
 import zlib from "node:zlib";
@@ -71,6 +71,7 @@ for (const name of files) {
     rgb[i + 2] = 180;
   }
   const blocked = Array.from({ length: n }, () => Array(n).fill(false));
+  const hazard = Array.from({ length: n }, () => Array(n).fill(false));
   for (const w of map.walls ?? []) {
     for (let y = w.y; y < w.y + w.h; y++) {
       for (let x = w.x; x < w.x + w.w; x++) {
@@ -78,9 +79,17 @@ for (const name of files) {
       }
     }
   }
+  for (const w of map.hazards ?? []) {
+    for (let y = w.y; y < w.y + w.h; y++) {
+      for (let x = w.x; x < w.x + w.w; x++) {
+        if (y >= 0 && y < n && x >= 0 && x < n) hazard[y][x] = true;
+      }
+    }
+  }
   for (let y = 0; y < n; y++) {
     for (let x = 0; x < n; x++) {
       if (blocked[y][x]) paintCell(rgb, n, x, y, 18, 16, 14);
+      else if (hazard[y][x]) paintCell(rgb, n, x, y, 24, 110, 118);
     }
   }
   for (const s of map.spawn?.ffa ?? []) paintCell(rgb, n, s.x, s.y, 210, 170, 40);

@@ -43,6 +43,24 @@ test("arena create, public list, duplicate pregen, ready and start 1v1", () => {
   const map = getArenaMap("arena_brewery_small");
   assert.equal(map?.width, 16);
   assert.ok(map?.spawn.ffa.length);
+  assert.ok((map?.hazards?.length ?? 0) > 0);
+});
+
+test("arena art marks water as hazards and keeps spawns on floor", () => {
+  const swamp = getArenaMap("arena_swamp_small");
+  assert.ok(swamp);
+  assert.ok((swamp.hazards?.length ?? 0) > 0);
+  const blocked = Array.from({ length: swamp.height }, () => Array.from({ length: swamp.width }, () => false));
+  for (const w of [...swamp.walls, ...(swamp.hazards ?? [])]) {
+    for (let y = w.y; y < w.y + w.h; y += 1) {
+      for (let x = w.x; x < w.x + w.w; x += 1) blocked[y][x] = true;
+    }
+  }
+  for (const p of [...swamp.spawn.ffa, ...swamp.spawn.teamA, ...swamp.spawn.teamB]) {
+    assert.equal(blocked[p.y][p.x], false, `spawn ${p.x},${p.y} blocked`);
+  }
+  const lava = getArenaMap("arena_lava_hall_small");
+  assert.ok((lava?.hazards?.length ?? 0) > 0);
 });
 
 test("team format refuses start until sides are even", () => {

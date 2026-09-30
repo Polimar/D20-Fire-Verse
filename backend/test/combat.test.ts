@@ -40,15 +40,24 @@ function token(over: Partial<CombatToken> & Pick<CombatToken, "id" | "kind" | "x
   };
 }
 
-function arena(width: number, height: number, tokens: CombatToken[], walls: Array<[number, number]> = []): CombatState {
+function arena(
+  width: number,
+  height: number,
+  tokens: CombatToken[],
+  walls: Array<[number, number]> = [],
+  hazards: Array<[number, number]> = [],
+): CombatState {
   const grid = Array.from({ length: height }, () => Array.from({ length: width }, () => false));
   for (const [x, y] of walls) grid[y][x] = true;
+  const hz = Array.from({ length: height }, () => Array.from({ length: width }, () => false));
+  for (const [x, y] of hazards) hz[y][x] = true;
   return {
     encounterId: "test",
     mapId: "test",
     width,
     height,
     walls: grid,
+    hazards: hz,
     tokens,
     turnOrder: tokens.map((t) => t.id),
     turnIndex: 0,
@@ -498,5 +507,18 @@ test("walls still block a step even when shots care about them", () => {
   const c = arena(4, 1, [brenna(0, 0)], [[1, 0]]);
   assert.equal(pathTo(c, c.tokens[0], 2, 0), null);
   assert.equal(computeReachable(c, "pc-P1").length, 0);
+});
+
+test("hazards block a step but not a shot", () => {
+  const hero = brenna(0, 0);
+  const foe = rat("en-1", 2, 0, { hp: 30, maxHp: 30 });
+  const c = arena(3, 1, [hero, foe], [], [[1, 0]]);
+  assert.equal(pathTo(c, hero, 2, 0), null);
+  assert.equal(clearShot(c, 0, 0, 2, 0), true);
+});
+
+test("walls still block a shot across a gap", () => {
+  const c = arena(3, 1, [brenna(0, 0), rat("en-1", 2, 0)], [[1, 0]]);
+  assert.equal(clearShot(c, 0, 0, 2, 0), false);
 });
 

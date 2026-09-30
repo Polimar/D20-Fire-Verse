@@ -98,6 +98,7 @@ export type MapDef = {
   width: number;
   height: number;
   walls: Array<{ x: number; y: number; w: number; h: number }>;
+  hazards?: Array<{ x: number; y: number; w: number; h: number }>;
   spawn: {
     pcs: Array<{ x: number; y: number }>;
     enemies: Array<{ x: number; y: number }>;

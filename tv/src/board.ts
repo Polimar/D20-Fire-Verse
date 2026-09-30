@@ -53,6 +53,8 @@ export class Board {
   readonly app: Application;
   private world = new Container();
   private floor = new Graphics();
+  private mapSprite: Sprite | null = null;
+  private mapArt = "";
   private overlayG = new Graphics();
   private pathG = new Graphics();
   private tokenLayer = new Container();
@@ -96,6 +98,7 @@ export class Board {
     this.ox = Math.floor((w - this.cols * this.cell) / 2);
     this.oy = Math.floor((h - this.rows * this.cell) / 2);
     this.drawFloor();
+    this.layoutMap();
     for (const p of this.pawns.values()) {
       const c = this.center(p.cell);
       p.root.position.set(c.x, c.y);
@@ -134,7 +137,10 @@ export class Board {
     const contrast = settings().highContrast;
     const w = this.cols * c;
     const h = this.rows * c;
-    g.roundRect(this.ox - 12, this.oy - 12, w + 24, h + 24, 16).fill({ color: 0x0a0705, alpha: 0.96 });
+    const art = Boolean(this.mapArt);
+    if (!art) {
+      g.roundRect(this.ox - 12, this.oy - 12, w + 24, h + 24, 16).fill({ color: 0x0a0705, alpha: 0.96 });
+    }
     g.roundRect(this.ox - 12, this.oy - 12, w + 24, h + 24, 16).stroke({ width: 2, color: 0x8a5a30, alpha: 0.8 });
     g.roundRect(this.ox - 5, this.oy - 5, w + 10, h + 10, 10).stroke({ width: 1, color: 0x3a2818, alpha: 0.9 });
     for (let y = 0; y < this.rows; y += 1) {
@@ -142,6 +148,10 @@ export class Board {
         const px = this.ox + x * c;
         const py = this.oy + y * c;
         const n = hash2(x, y);
+        if (art) {
+          g.rect(px + 0.5, py + 0.5, c - 1, c - 1).stroke({ width: 1, color: 0x000000, alpha: contrast ? 0.55 : 0.28 });
+          continue;
+        }
         if (this.isWall(x, y)) {
           g.rect(px, py, c, c).fill({ color: contrast ? 0x000000 : 0x0d0907 });
           if (!contrast) {
@@ -166,6 +176,49 @@ export class Board {
         }
       }
     }
+  }
+
+  private layoutMap() {
+    const sprite = this.mapSprite;
+    if (!sprite) return;
+    const w = this.cols * this.cell;
+    const h = this.rows * this.cell;
+    sprite.position.set(this.ox, this.oy);
+    sprite.width = w;
+    sprite.height = h;
+    sprite.visible = true;
+  }
+
+  /** Painted VTT floor, sized to the cell lattice. Empty url clears it. */
+  setMapArt(url: string | null) {
+    const next = url ?? "";
+    if (next === this.mapArt && this.mapSprite) {
+      this.layoutMap();
+      this.drawFloor();
+      return;
+    }
+    this.mapArt = next;
+    if (this.mapSprite) {
+      this.world.removeChild(this.mapSprite);
+      this.mapSprite.destroy();
+      this.mapSprite = null;
+    }
+    if (!next) {
+      this.drawFloor();
+      return;
+    }
+    void Assets.load<Texture>(next).then((tex) => {
+      if (this.mapArt !== next) return;
+      if (this.mapSprite) {
+        this.world.removeChild(this.mapSprite);
+        this.mapSprite.destroy();
+      }
+      const sprite = new Sprite(tex);
+      this.mapSprite = sprite;
+      this.world.addChildAt(sprite, 0);
+      this.layoutMap();
+      this.drawFloor();
+    });
   }
 
   // ------------------------------------------------------------------ board & tokens

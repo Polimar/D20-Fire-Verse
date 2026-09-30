@@ -196,6 +196,7 @@ export class CombatUi {
       this.awaiting = false;
       this.displayTurnId = c.currentTokenId;
       board.setBoard(this.fightKey, c.width, c.height, c.walls, c.tokens);
+      board.setMapArt(c.art && c.art.endsWith(".png") ? c.art : null);
       if (opts.resumed || !c.events.some((e) => e.kind === "start")) this.director!.skipTo(c);
       else this.director!.skipTo({ ...c, seq: Math.min(...c.events.map((e) => e.seq)) - 1 });
       this.paintBackdrop();
@@ -216,10 +217,13 @@ export class CombatUi {
 
   private paintBackdrop() {
     const art = this.combat?.art;
+    if (art?.endsWith(".png")) {
+      this.el.board.style.backgroundImage = "none";
+      this.el.board.style.backgroundColor = "#0a0705";
+      return;
+    }
     if (art) {
-      this.el.board.style.backgroundImage = art.endsWith(".png")
-        ? `linear-gradient(rgba(12,8,6,.08), rgba(12,8,6,.16)), url(${art})`
-        : `linear-gradient(rgba(12,8,6,.28), rgba(12,8,6,.45)), url(${art})`;
+      this.el.board.style.backgroundImage = `linear-gradient(rgba(12,8,6,.28), rgba(12,8,6,.45)), url(${art})`;
       this.el.board.style.backgroundSize = "100% 100%, 100% 100%";
       this.el.board.style.backgroundPosition = "0 0, 0 0";
       return;

@@ -92,6 +92,7 @@ export type CombatPublic = {
   width: number;
   height: number;
   walls: boolean[][];
+  hazards?: boolean[][];
   round: number;
   seq: number;
   tokens: Token[];

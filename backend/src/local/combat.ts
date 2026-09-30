@@ -203,6 +203,8 @@ export type CombatState = {
   width: number;
   height: number;
   walls: boolean[][];
+  /** Liquids: block movement, not line of fire. */
+  hazards: boolean[][];
   tokens: CombatToken[];
   turnOrder: string[];
   turnIndex: number;
@@ -218,18 +220,32 @@ export type CombatState = {
   pvpWinner?: string;
 };
 
-function wallGrid(map: MapDef): boolean[][] {
-  const g = Array.from({ length: map.height }, () =>
-    Array.from({ length: map.width }, () => false),
-  );
-  for (const w of map.walls) {
+function rectGrid(
+  width: number,
+  height: number,
+  rects: Array<{ x: number; y: number; w: number; h: number }> | undefined,
+): boolean[][] {
+  const g = Array.from({ length: height }, () => Array.from({ length: width }, () => false));
+  for (const w of rects ?? []) {
     for (let y = w.y; y < w.y + w.h; y += 1) {
       for (let x = w.x; x < w.x + w.w; x += 1) {
-        if (y >= 0 && y < map.height && x >= 0 && x < map.width) g[y][x] = true;
+        if (y >= 0 && y < height && x >= 0 && x < width) g[y][x] = true;
       }
     }
   }
   return g;
+}
+
+function wallGrid(map: MapDef): boolean[][] {
+  return rectGrid(map.width, map.height, map.walls);
+}
+
+function hazardGrid(map: MapDef): boolean[][] {
+  return rectGrid(map.width, map.height, map.hazards);
+}
+
+function blockedMove(combat: CombatState, x: number, y: number): boolean {
+  return Boolean(combat.walls[y]?.[x] || combat.hazards[y]?.[x]);
 }
 
 function isFoe(combat: CombatState, actor: CombatToken, t: CombatToken): boolean {
@@ -288,12 +304,12 @@ function explore(combat: CombatState, token: CombatToken, budget: number): Map<s
     for (const [dx, dy] of STEPS) {
       const nx = cur.x + dx;
       const ny = cur.y + dy;
-      if (!inBounds(combat, nx, ny) || combat.walls[ny][nx]) continue;
+      if (!inBounds(combat, nx, ny) || blockedMove(combat, nx, ny)) continue;
       const blocker = tokenAt(combat, nx, ny, token.id);
       if (blocker && isFoe(combat, token, blocker)) continue;
       if (blocker && !combat.pvp && blocker.kind !== token.kind) continue;
       const diagonal = dx !== 0 && dy !== 0;
-      if (diagonal && (combat.walls[cur.y][nx] || combat.walls[ny][cur.x])) continue;
+      if (diagonal && (blockedMove(combat, nx, cur.y) || blockedMove(combat, cur.x, ny))) continue;
       const step = diagonal ? (cur.parity === 0 ? 1 : 2) : 1;
       const cost = cur.cost + step;
       if (cost > budget) continue;
@@ -433,6 +449,7 @@ export function startCombat(
   const n = Math.min(3, Math.max(1, players.length));
   const scale = encounter.scaling[String(n)] || encounter.scaling["1"];
   const walls = wallGrid(map);
+  const hazards = hazardGrid(map);
   const tokens: CombatToken[] = [];
 
   players.forEach((p, i) => {
@@ -525,6 +542,7 @@ export function startCombat(
           nx < map.width &&
           ny < map.height &&
           !walls[ny][nx] &&
+          !hazards[ny][nx] &&
           !tokens.some((t) => t.x === nx && t.y === ny)
         ) {
           tokens[i].x = nx;
@@ -555,6 +573,7 @@ export function startCombat(
     width: map.width,
     height: map.height,
     walls,
+    hazards,
     tokens,
     turnOrder,
     turnIndex: 0,
@@ -583,6 +602,7 @@ export function startArenaCombat(opts: {
 }): CombatState {
   const map = opts.map;
   const walls = wallGrid(map as unknown as MapDef);
+  const hazards = hazardGrid(map as unknown as MapDef);
   const tokens: CombatToken[] = [];
   opts.players.forEach((p, i) => {
     const raw = getPregen(p.characterId);
@@ -632,6 +652,7 @@ export function startArenaCombat(opts: {
     width: map.width,
     height: map.height,
     walls,
+    hazards,
     tokens,
     turnOrder,
     turnIndex: 0,
@@ -657,6 +678,9 @@ export function hydrateCombat(combat: CombatState): CombatState {
   if (!Array.isArray(combat.events)) combat.events = [];
   if (typeof combat.seq !== "number") combat.seq = 0;
   if (typeof combat.round !== "number") combat.round = 1;
+  if (!combat.hazards?.length) {
+    combat.hazards = Array.from({ length: combat.height }, () => Array.from({ length: combat.width }, () => false));
+  }
   refreshReachable(combat);
   return combat;
 }
@@ -1258,7 +1282,7 @@ function castSpecial(
     if (!dest) throw new Error("NEED_TARGET");
     const range = Number(effect.rangeCells ?? 6);
     if (chebyshev(t.x, t.y, dest.x, dest.y) > range) throw new Error("OUT_OF_RANGE");
-    if (tokenAt(combat, dest.x, dest.y) || combat.walls[dest.y]?.[dest.x]) throw new Error("UNREACHABLE");
+    if (tokenAt(combat, dest.x, dest.y) || blockedMove(combat, dest.x, dest.y)) throw new Error("UNREACHABLE");
     t.x = dest.x;
     t.y = dest.y;
     spendEconomy(t, isBonus);
@@ -2446,6 +2470,7 @@ export function publicCombat(combat: CombatState, viewerPlayerId?: string) {
     width: combat.width,
     height: combat.height,
     walls: combat.walls,
+    hazards: combat.hazards ?? [],
     round: combat.round,
     seq: combat.seq,
     tokens: combat.tokens.map((t) => ({
