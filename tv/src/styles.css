@@ -1698,6 +1698,56 @@ html[data-motion="reduced"] .sp-wave i { transform: scaleY(0.6); }
   .sp-wave { display: none; }
 }
 
+.admin-modal.map-wide .modal-card { width: min(96rem, 100%); max-height: 96vh; overflow: auto; }
+.map-editor { display: grid; gap: 0.7rem; }
+.map-toolbar { display: flex; flex-wrap: wrap; gap: 0.4rem; align-items: center; }
+.map-toolbar .meta { flex: 1 1 12rem; }
+.map-toolbar [data-brush].on { border-color: var(--gold); color: var(--gold); }
+.map-paint {
+  display: grid;
+  grid-template-columns: repeat(var(--cols), minmax(0, 1fr));
+  grid-template-rows: repeat(var(--rows), minmax(0, 1fr));
+  aspect-ratio: var(--cols) / var(--rows);
+  max-height: min(70vh, 52rem);
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  overflow: hidden;
+  background: #120c09;
+  outline: none;
+}
+.map-paint.has-art {
+  background-image: var(--map-art);
+  background-size: 100% 100%;
+}
+.map-paint:focus-visible { box-shadow: 0 0 0 2px var(--gold); }
+.map-cell {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  border: 1px solid rgba(0, 0, 0, 0.35);
+}
+.map-cell[data-k="wall"] { background: rgba(8, 6, 4, 0.82); }
+.map-cell[data-k="hazard"] { background: rgba(70, 120, 200, 0.42); }
+.map-cell[data-k="floor"] { background: transparent; }
+.map-paint:not(.has-art) .map-cell[data-k="floor"] { background: rgba(80, 62, 42, 0.45); }
+.map-cell.on { outline: 2px solid var(--gold); outline-offset: -2px; z-index: 1; }
+.map-cell i {
+  position: absolute;
+  inset: auto 1px 1px auto;
+  font-size: 0.55rem;
+  font-style: normal;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--gold);
+  text-shadow: 0 1px 2px #000;
+  pointer-events: none;
+}
+.map-cell i.foe { color: var(--danger); }
+.map-cell i.lab { color: var(--frost); }
+html[data-contrast="high"] .map-cell[data-k="wall"] { background: #000; }
+html[data-contrast="high"] .map-cell[data-k="hazard"] { background: #2450c8; }
+
 .admin-modal .modal-card { width: min(72rem, 100%); }
 .admin-tabs { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 0.2rem 0 1rem; }
 .admin-table { width: 100%; border-collapse: collapse; }

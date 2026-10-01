@@ -27,15 +27,20 @@ import {
 import {
   artDirFor,
   draftSnapshot,
+  getBuiltinMap,
   importCampaignZip,
+  listBuiltinMaps,
   listCampaigns,
   listPublished,
   publishCampaign,
+  saveBuiltinCampaignMap,
   unpublishCampaign,
   updateDraftEncounter,
   updateDraftNode,
 } from "./catalog.js";
 import type { EncounterDef, StoryNode } from "./campaign.js";
+import { getArenaMap, listArenaMapFiles, saveArenaMapFile } from "./arena-maps.js";
+import { compactRects, parseCellGrid } from "./map-grid.js";
 import { brevoStatus, readBrevo, sendMail, writeBrevo } from "./mail.js";
 import { closeRoom, getRoom, listRooms, listSaves } from "./room.js";
 
@@ -376,6 +381,109 @@ export function mountAdminRoutes(app: Express): void {
       assertAdmin(requestUser(req));
       unpublishCampaign(String(req.params.id));
       res.json({ ok: true });
+    } catch (err) {
+      fail(res, err);
+    }
+  });
+
+  app.get("/api/admin/maps", (req, res) => {
+    try {
+      assertAdmin(requestUser(req));
+      const campaign = listBuiltinMaps().map((m) => ({
+        source: "campaign" as const,
+        id: m.id,
+        name: m.name,
+        width: m.width,
+        height: m.height,
+      }));
+      const arenas = listArenaMapFiles().map((m) => ({
+        source: "arena" as const,
+        id: m.id,
+        name: m.name,
+        width: m.width,
+        height: m.height,
+      }));
+      res.json({ maps: [...campaign, ...arenas] });
+    } catch (err) {
+      fail(res, err);
+    }
+  });
+
+  app.get("/api/admin/maps/:source/:id", (req, res) => {
+    try {
+      assertAdmin(requestUser(req));
+      const source = String(req.params.source);
+      const id = String(req.params.id);
+      if (source === "campaign") {
+        const map = getBuiltinMap(id);
+        if (!map) throw new Error("BAD_MAP");
+        res.json({
+          source,
+          id: map.id,
+          name: map.name,
+          width: map.width,
+          height: map.height,
+          walls: map.walls,
+          hazards: map.hazards ?? [],
+          spawn: map.spawn,
+          labels: (map as { labels?: Record<string, { x: number; y: number }> }).labels ?? null,
+          art: null,
+        });
+        return;
+      }
+      if (source === "arena") {
+        const map = getArenaMap(id);
+        if (!map) throw new Error("BAD_MAP");
+        res.json({
+          source,
+          id: map.id,
+          name: map.name,
+          width: map.width,
+          height: map.height,
+          walls: map.walls,
+          hazards: map.hazards ?? [],
+          spawn: map.spawn,
+          art: map.art?.startsWith("/") ? map.art : `/art/arena/${map.theme}-${map.size}.png`,
+        });
+        return;
+      }
+      throw new Error("BAD_MAP");
+    } catch (err) {
+      fail(res, err);
+    }
+  });
+
+  app.put("/api/admin/maps/:source/:id", (req, res) => {
+    try {
+      assertAdmin(requestUser(req));
+      const source = String(req.params.source);
+      const id = String(req.params.id);
+      const current =
+        source === "campaign" ? getBuiltinMap(id) : source === "arena" ? getArenaMap(id) : undefined;
+      if (!current) throw new Error("BAD_MAP");
+      const wallsGrid = parseCellGrid(req.body?.walls, current.width, current.height);
+      const hazardGrid = parseCellGrid(req.body?.hazards ?? [], current.width, current.height);
+      if (!wallsGrid || !hazardGrid) throw new Error("BAD_MAP");
+      for (let y = 0; y < current.height; y += 1) {
+        for (let x = 0; x < current.width; x += 1) {
+          if (wallsGrid[y]![x]) hazardGrid[y]![x] = false;
+        }
+      }
+      const walls = compactRects(wallsGrid);
+      const hazards = compactRects(hazardGrid);
+      const saved =
+        source === "campaign"
+          ? saveBuiltinCampaignMap(id, walls, hazards)
+          : saveArenaMapFile(id, walls, hazards);
+      res.json({
+        source,
+        id: saved.id,
+        name: saved.name,
+        width: saved.width,
+        height: saved.height,
+        walls: saved.walls,
+        hazards: saved.hazards ?? [],
+      });
     } catch (err) {
       fail(res, err);
     }

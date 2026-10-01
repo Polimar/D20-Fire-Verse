@@ -9,6 +9,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import type { AbilityDef, EncounterDef, Manifest, MapDef, MonsterDef, Pregen, StoryNode } from "./campaign.js";
+import type { CellRect } from "./map-grid.js";
 import { CAMPAIGN_DIR, CONTENT_ROOT, DATA_DIR, readJson } from "./paths.js";
 import { mergeSrdInto } from "./srd-monsters.js";
 
@@ -330,6 +331,37 @@ export function updateDraftEncounter(id: string, encounter: EncounterDef): Snaps
   draft.encounters[encounter.id] = encounter;
   writePack(draftDir(id), draft);
   return draft;
+}
+
+export function saveBuiltinCampaignMap(mapId: string, walls: CellRect[], hazards: CellRect[]): MapDef {
+  initCatalog();
+  const file = path.join(CAMPAIGN_DIR, "maps", "maps.json");
+  const maps = readJson<Record<string, MapDef>>(file);
+  const cur = maps[mapId];
+  if (!cur) throw new Error("BAD_MAP");
+  const next = { ...cur, walls, hazards };
+  maps[mapId] = next;
+  fs.writeFileSync(file, `${JSON.stringify(maps, null, 2)}\n`);
+  const version = published.get(BUILTIN);
+  if (version != null) {
+    const snap = snapshots.get(key(BUILTIN, version));
+    if (snap) snap.maps[mapId] = next;
+  }
+  return next;
+}
+
+export function listBuiltinMaps(): MapDef[] {
+  initCatalog();
+  const version = published.get(BUILTIN);
+  const snap = version != null ? snapshots.get(key(BUILTIN, version)) : undefined;
+  return snap ? Object.values(snap.maps) : [];
+}
+
+export function getBuiltinMap(mapId: string): MapDef | undefined {
+  initCatalog();
+  const version = published.get(BUILTIN);
+  const snap = version != null ? snapshots.get(key(BUILTIN, version)) : undefined;
+  return snap?.maps[mapId];
 }
 
 export function publishCampaign(id: string): Snapshot {

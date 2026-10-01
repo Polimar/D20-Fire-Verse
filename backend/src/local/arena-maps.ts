@@ -162,6 +162,36 @@ export function getArenaMap(id: string): ArenaMapDef | undefined {
   return buildArenaMap(theme, size);
 }
 
+const ARENAS_DIR = path.join(CONTENT_ROOT, "arenas");
+
+export function listArenaMapFiles(): ArenaMapDef[] {
+  if (!fs.existsSync(ARENAS_DIR)) return [];
+  const out: ArenaMapDef[] = [];
+  for (const name of fs.readdirSync(ARENAS_DIR).sort()) {
+    if (!name.endsWith(".json")) continue;
+    try {
+      const map = JSON.parse(fs.readFileSync(path.join(ARENAS_DIR, name), "utf8")) as ArenaMapDef;
+      if (map?.id && map.width && map.height) out.push(map);
+    } catch {
+      /* skip a broken import */
+    }
+  }
+  return out;
+}
+
+export function saveArenaMapFile(
+  id: string,
+  walls: Array<{ x: number; y: number; w: number; h: number }>,
+  hazards: Array<{ x: number; y: number; w: number; h: number }>,
+): ArenaMapDef {
+  const file = path.join(ARENAS_DIR, `${id}.json`);
+  if (!fs.existsSync(file)) throw new Error("BAD_MAP");
+  const cur = JSON.parse(fs.readFileSync(file, "utf8")) as ArenaMapDef;
+  const next = { ...cur, walls, hazards };
+  fs.writeFileSync(file, `${JSON.stringify(next, null, 2)}\n`);
+  return next;
+}
+
 export function allArenaMaps(): ArenaMapDef[] {
   const out: ArenaMapDef[] = [];
   for (const t of ARENA_THEMES) {

@@ -65,6 +65,7 @@ export class Board {
   private cols = 1;
   private rows = 1;
   private walls: boolean[][] = [];
+  private hazards: boolean[][] = [];
   private cell = 48;
   private ox = 0;
   private oy = 0;
@@ -130,6 +131,10 @@ export class Board {
     return !!this.walls[y]?.[x];
   }
 
+  isHazard(x: number, y: number) {
+    return !!this.hazards[y]?.[x];
+  }
+
   size() {
     return { cols: this.cols, rows: this.rows };
   }
@@ -154,9 +159,7 @@ export class Board {
         const n = hash2(x, y);
         if (art) {
           g.rect(px + 0.5, py + 0.5, c - 1, c - 1).stroke({ width: 1, color: 0x000000, alpha: contrast ? 0.55 : 0.28 });
-          continue;
-        }
-        if (this.isWall(x, y)) {
+        } else if (this.isWall(x, y)) {
           g.rect(px, py, c, c).fill({ color: contrast ? 0x000000 : 0x0d0907 });
           if (!contrast) {
             const course = Math.max(4, Math.floor(c / 3));
@@ -177,6 +180,12 @@ export class Board {
           g.rect(px + 0.5, py + 0.5, c - 1, c - 1).stroke({ width: 1, color: 0x000000, alpha: contrast ? 0.6 : 0.4 });
           if (!contrast && n > 0.72) g.circle(px + c * (0.25 + 0.5 * hash2(y, x)), py + c * (0.3 + 0.4 * n), Math.max(1, c * 0.04)).fill({ color: 0x1a130d, alpha: 0.6 });
           if (!contrast) g.rect(px + 1, py + 1, c - 2, 1).fill({ color: 0xffe0b0, alpha: 0.05 });
+        }
+        if (art && this.isWall(x, y)) {
+          g.rect(px, py, c, c).fill({ color: 0x050302, alpha: contrast ? 0.78 : 0.55 });
+        } else if (this.isHazard(x, y) && !this.isWall(x, y)) {
+          g.rect(px, py, c, c).fill({ color: contrast ? 0x2450c8 : 0x3a78c8, alpha: art ? 0.42 : 0.32 });
+          g.rect(px + 2, py + c * 0.55, c - 4, Math.max(2, c * 0.28)).fill({ color: 0x9ec4ff, alpha: contrast ? 0.55 : 0.28 });
         }
       }
     }
@@ -228,7 +237,7 @@ export class Board {
   // ------------------------------------------------------------------ board & tokens
 
   /** New fight or re-layout: walls, dimensions, pawns snapped to their cells. */
-  setBoard(key: string, cols: number, rows: number, walls: boolean[][], tokens: Token[]) {
+  setBoard(key: string, cols: number, rows: number, walls: boolean[][], tokens: Token[], hazards?: boolean[][]) {
     const fresh = key !== this.boardKey;
     if (fresh) {
       this.boardKey = key;
@@ -242,6 +251,7 @@ export class Board {
     this.cols = cols;
     this.rows = rows;
     this.walls = walls;
+    this.hazards = hazards ?? [];
     this.layout();
     this.sync(tokens, { snap: true });
     return fresh;

@@ -195,7 +195,7 @@ export class CombatUi {
       this.aim = null;
       this.awaiting = false;
       this.displayTurnId = c.currentTokenId;
-      board.setBoard(this.fightKey, c.width, c.height, c.walls, c.tokens);
+      board.setBoard(this.fightKey, c.width, c.height, c.walls, c.tokens, c.hazards);
       board.setMapArt(c.art && c.art.endsWith(".png") ? c.art : null);
       if (opts.resumed || !c.events.some((e) => e.kind === "start")) this.director!.skipTo(c);
       else this.director!.skipTo({ ...c, seq: Math.min(...c.events.map((e) => e.seq)) - 1 });

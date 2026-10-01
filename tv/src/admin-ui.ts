@@ -1,9 +1,18 @@
 /** Table management for an admin, opened from the title screen. Same session cookie as the table. */
 
 import { describeError } from "@d20-fireverse/protocol";
+import {
+  closeMapEditor,
+  handleMapEditorKey,
+  mapEditorOpen,
+  renderMapPainter,
+  type MapListItem,
+  type MapPaint,
+} from "./map-editor";
+import type { RemoteKey } from "./nav";
 import { sfx } from "./sfx";
 
-type Tab = "users" | "rooms" | "saves" | "camps" | "mail";
+type Tab = "users" | "rooms" | "saves" | "camps" | "maps" | "mail";
 
 type AdminUser = { id: string; username: string; role: "admin" | "player"; disabled: boolean };
 type RoomRow = {
@@ -98,6 +107,7 @@ export function openAdmin() {
           <button type="button" class="ghost" data-tab="rooms">Rooms</button>
           <button type="button" class="ghost" data-tab="saves">Saves</button>
           <button type="button" class="ghost" data-tab="camps">Campaigns</button>
+          <button type="button" class="ghost" data-tab="maps">Maps</button>
           <button type="button" class="ghost" data-tab="mail">Mail</button>
         </nav>
         <div id="adminBody"></div>
@@ -110,9 +120,11 @@ export function openAdmin() {
     overlay.querySelectorAll<HTMLButtonElement>("[data-tab]").forEach((b) => {
       b.addEventListener("click", () => {
         const next = b.dataset.tab;
-        if (next !== "users" && next !== "rooms" && next !== "saves" && next !== "camps" && next !== "mail") return;
+        if (next !== "users" && next !== "rooms" && next !== "saves" && next !== "camps" && next !== "maps" && next !== "mail") return;
         tab = next;
         resetUserId = null;
+        closeMapEditor();
+        overlay?.classList.remove("map-wide");
         sfx("uiMove");
         void refresh();
       });
@@ -125,11 +137,19 @@ export function openAdmin() {
 
 export function closeAdmin() {
   if (!overlay || overlay.hidden) return;
+  closeMapEditor();
+  overlay.classList.remove("map-wide");
   overlay.hidden = true;
   paintGen += 1;
   sfx("uiBack");
   if (opener?.isConnected && opener.offsetParent) opener.focus({ preventScroll: true });
   opener = null;
+}
+
+export function handleAdminKey(key: RemoteKey): boolean {
+  if (!overlay || overlay.hidden) return false;
+  if (mapEditorOpen() && handleMapEditorKey(key)) return true;
+  return false;
 }
 
 function markTabs() {
@@ -156,6 +176,7 @@ async function refresh() {
     else if (tab === "rooms") await renderRooms(gen);
     else if (tab === "saves") await renderSaves(gen);
     else if (tab === "camps") await renderCamps(gen);
+    else if (tab === "maps") await renderMaps(gen);
     else await renderMail(gen);
   } catch (err) {
     if (gen !== paintGen) return;
@@ -167,6 +188,70 @@ async function refresh() {
 function still(gen: number): HTMLElement | null {
   if (gen !== paintGen || !overlay || overlay.hidden) return null;
   return body();
+}
+
+async function renderMaps(gen: number) {
+  overlay?.classList.remove("map-wide");
+  const { maps } = await api<{ maps: MapListItem[] }>("/api/admin/maps");
+  const host = still(gen);
+  if (!host) return;
+  const camps = maps.filter((m) => m.source === "campaign");
+  const arenas = maps.filter((m) => m.source === "arena");
+  const rows = (list: MapListItem[]) =>
+    list
+      .map(
+        (m) => `<tr>
+          <td>${esc(m.name)}</td>
+          <td>${esc(m.id)}</td>
+          <td>${m.width}×${m.height}</td>
+          <td class="admin-actions"><button type="button" data-src="${esc(m.source)}" data-id="${esc(m.id)}">Paint</button></td>
+        </tr>`,
+      )
+      .join("");
+  host.innerHTML = `<div class="admin-block">
+      <h3>Encounter maps</h3>
+      <p class="meta">Paint floor, walls, and hazards on imported grids. Save writes the JSON in content/; the next fight uses it.</p>
+      <h4>Campaign</h4>
+      <table class="admin-table"><tr><th>Name</th><th>Id</th><th>Size</th><th></th></tr>${rows(camps) || `<tr><td colspan="4">No campaign maps</td></tr>`}</table>
+      <h4>Arena</h4>
+      <table class="admin-table"><tr><th>Name</th><th>Id</th><th>Size</th><th></th></tr>${rows(arenas) || `<tr><td colspan="4">No arena files</td></tr>`}</table>
+    </div>`;
+  host.querySelectorAll<HTMLButtonElement>("[data-src]").forEach((b) => {
+    b.addEventListener("click", () => {
+      const src = b.dataset.src as MapListItem["source"] | undefined;
+      const id = b.dataset.id;
+      if (src && id) void openMapPainter(src, id);
+    });
+  });
+}
+
+async function openMapPainter(source: MapListItem["source"], id: string) {
+  if (!overlay) return;
+  overlay.classList.add("map-wide");
+  const host = body();
+  if (!host) return;
+  host.innerHTML = `<p class="meta">Loading map…</p>`;
+  try {
+    const spec = await api<MapPaint>(`/api/admin/maps/${source}/${id}`);
+    const live = body();
+    if (!live || overlay.hidden || tab !== "maps") return;
+    renderMapPainter(live, spec, {
+      onBack: () => {
+        closeMapEditor();
+        overlay?.classList.remove("map-wide");
+        void refresh();
+      },
+      onSave: async (s) => {
+        await api(`/api/admin/maps/${source}/${id}`, {
+          method: "PUT",
+          body: JSON.stringify({ walls: s.walls, hazards: s.hazards }),
+        });
+      },
+    });
+  } catch (err) {
+    const live = body();
+    if (live) live.innerHTML = `<p class="admin-err">${esc(err instanceof Error ? err.message : "ERROR")}</p>`;
+  }
 }
 
 async function renderMail(gen: number) {

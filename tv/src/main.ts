@@ -18,7 +18,7 @@ import { puzzleBack, puzzleKindForNode, renderInteractivePuzzle } from "./puzzle
 import { chapterCard, mountScenes, setScene } from "./scenefx";
 import { ART, sceneForNode } from "./scenes";
 import { clearSession, loadSession, saveSession, type Session } from "./session";
-import { adminOpen, closeAdmin, openAdmin } from "./admin-ui";
+import { adminOpen, closeAdmin, handleAdminKey, openAdmin } from "./admin-ui";
 import { closeSettings, openSettings, settingsOpen } from "./settings-ui";
 import { onSettings, settings } from "./settings";
 import { sfx } from "./sfx";
@@ -1372,6 +1372,7 @@ function connect() {
 // ------------------------------------------------------------------ remote
 
 function handleBack(): boolean {
+  if (adminOpen() && handleAdminKey("back")) return true;
   if (adminOpen()) {
     closeAdmin();
     return true;
@@ -1434,6 +1435,10 @@ window.addEventListener("keydown", (e) => {
     else if (!$("leaveModal").hidden) closeLeaveModal();
     else if (settingsOpen()) closeSettings();
     else openTableSettings();
+    return;
+  }
+  if (adminOpen() && handleAdminKey(key)) {
+    e.preventDefault();
     return;
   }
   if (!settingsOpen() && $("leaveModal").hidden && page === "combat" && !document.querySelector(".modal:not([hidden])") && combat.handleKey(key)) {
