@@ -18,4 +18,19 @@ class TableBridge(private val activity: MainActivity) {
 
     @JavascriptInterface
     fun version(): String = BuildConfig.VERSION_NAME
+
+    /** True when this build carries the LWA SDK and an API key for this package. */
+    @JavascriptInterface
+    fun amazonAvailable(): Boolean = activity.amazonAvailable
+
+    /** The answer comes back through `window.fireverseNative.amazonToken()` or `amazonError()`. */
+    @JavascriptInterface
+    fun amazonSignIn(interactive: Boolean) {
+        activity.runOnUiThread { activity.amazonSignIn(interactive) }
+    }
+
+    @JavascriptInterface
+    fun amazonSignOut() {
+        activity.runOnUiThread { activity.amazonSignOut() }
+    }
 }

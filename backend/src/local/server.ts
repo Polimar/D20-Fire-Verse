@@ -3,8 +3,25 @@ import os from "node:os";
 import path from "node:path";
 import fs from "node:fs";
 import express from "express";
-import { actionNeedsAuth, type SessionUser } from "./auth.js";
+import { actionNeedsAuth, activeUserById, type SessionUser } from "./auth.js";
 import { handleCampaignImport, mountAccountRoutes, mountAdminRoutes, requestUser } from "./admin-http.js";
+import { announceScene } from "./alexa.js";
+import {
+  armGrace,
+  claimConsole,
+  consoleForKey,
+  forgetConsole,
+  getConsole,
+  isConsoleId,
+  isConsoleView,
+  issuePairToken,
+  knownConsoles,
+  phoneLinked,
+  redeemPairToken,
+  setConsoleView,
+  unlinkPhone,
+  type ConsoleView,
+} from "./companion-link.js";
 import { listPublished } from "./catalog.js";
 import { WebSocketServer, type WebSocket } from "ws";
 import { loadCampaign, listPregens, getManifest, portraitForCharacter, PORTRAITS, portraitUrl } from "./campaign.js";
@@ -49,6 +66,7 @@ import {
   arenaKick,
   createRoom,
   getRoom,
+  heroSheet,
   joinRoom,
   loadPersistedRooms,
   playerDisconnect,
@@ -57,6 +75,7 @@ import {
   requestSave,
   resumeSave,
   retryCombat,
+  roomScene,
   scriptedLines,
   setRoomMutationHook,
   voiceIntent,
@@ -101,7 +120,38 @@ type ClientMsg = {
   optionId?: string;
   puzzleDraft?: string[];
   help?: boolean;
+  /** Pairing: the one-time token from the TV's QR, the phone's key, the TV's current screen. */
+  token?: string;
+  key?: string;
+  view?: string;
+  reason?: string;
+  /** Trackpad deltas in phone pixels, and the mouse switch. */
+  dx?: number;
+  dy?: number;
+  on?: boolean;
 };
+
+/** What a paired phone may do at the table, always as the hero its TV sat with. */
+const PHONE_ACTIONS = new Set([
+  "CHOOSE",
+  "CAST_VOTE",
+  "VOLUNTEER_CHECK",
+  "CLAIM_PUZZLE",
+  "RELEASE_PUZZLE",
+  "BEGIN_COMBAT",
+  "WITHDRAW",
+  "PERFORM_ACTION",
+  "AIM_ACTION",
+  "REACT",
+  "END_TURN",
+  "SHORT_REST",
+  "LONG_REST",
+  "VOICE_INTENT",
+  "ARENA_READY",
+  "SET_ARENA_TEAM",
+]);
+
+const TABLE_VIEWS: ReadonlySet<ConsoleView> = new Set(["lobby", "story", "combat"]);
 
 ensureDataDir();
 loadCampaign();
@@ -293,6 +343,10 @@ type Sock = WebSocket & {
   user?: SessionUser | null;
   abilityRolls?: number[];
   alive?: boolean;
+  /** A signed-in television: the id it keeps for this app session. */
+  consoleId?: string;
+  /** A paired phone: the console it follows. Never holds a seat of its own. */
+  companionOf?: string;
 };
 
 const dropTimers = new Map<string, NodeJS.Timeout>();
@@ -301,20 +355,26 @@ function seatKey(roomCode: string, playerId: string) {
   return `${roomCode}:${playerId}`;
 }
 
+function openSockets(): Sock[] {
+  return [...wss.clients].filter((c) => c.readyState === 1) as Sock[];
+}
+
 function broadcast(roomCode: string): void {
   const room = getRoom(roomCode);
   if (!room) return;
-  for (const client of wss.clients) {
-    const s = client as Sock;
-    if (s.readyState === 1 && s.roomCode === roomCode) {
-      s.send(
-        JSON.stringify({
-          eventType: "ROOM_STATE",
-          payload: publicState(room, s.playerId, s.user?.id),
-        }),
-      );
-    }
+  const consoles = new Set<string>();
+  for (const s of openSockets()) {
+    if (s.roomCode !== roomCode) continue;
+    s.send(
+      JSON.stringify({
+        eventType: "ROOM_STATE",
+        payload: publicState(room, s.playerId, s.user?.id),
+      }),
+    );
+    if (s.consoleId) consoles.add(s.consoleId);
   }
+  for (const id of consoles) pushCompanion(id);
+  announceScene(roomCode, roomScene(room));
 }
 
 setRoomMutationHook((roomCode) => broadcast(roomCode));
@@ -322,6 +382,177 @@ setRoomMutationHook((roomCode) => broadcast(roomCode));
 function send(ws: WebSocket, obj: unknown): void {
   if (ws.readyState === 1) ws.send(JSON.stringify(obj));
 }
+
+// ------------------------------------------------------------------ the phone beside the TV
+
+function consoleTv(consoleId: string): Sock | null {
+  let tv: Sock | null = null;
+  for (const s of openSockets()) if (s.consoleId === consoleId) tv = s;
+  return tv;
+}
+
+function consolePhones(consoleId: string): Sock[] {
+  return openSockets().filter((s) => s.companionOf === consoleId);
+}
+
+/**
+ * What the phone shows: the screen its TV is on and, at a table, that table as this player sees
+ * it plus the full sheet of the hero the TV sat with. Nobody else's sheet ever goes out.
+ */
+function companionState(consoleId: string) {
+  const c = getConsole(consoleId);
+  if (!c) return null;
+  const tv = consoleTv(consoleId);
+  const room = TABLE_VIEWS.has(c.view) && tv?.roomCode ? getRoom(tv.roomCode) : undefined;
+  const playerId = room && tv?.playerId && room.players.some((p) => p.playerId === tv.playerId) ? tv.playerId : undefined;
+  return {
+    username: activeUserById(c.userId)?.username ?? "",
+    view: c.view,
+    tvOnline: tv !== null,
+    room: room ? publicState(room, playerId, c.userId) : null,
+    sheet: room && playerId ? heroSheet(room, playerId) : null,
+  };
+}
+
+function pushCompanion(consoleId: string): void {
+  const phones = consolePhones(consoleId);
+  if (!phones.length) return;
+  const payload = companionState(consoleId);
+  if (!payload) return;
+  const text = JSON.stringify({ eventType: "COMPANION_STATE", payload });
+  for (const phone of phones) phone.send(text);
+}
+
+/** The TV hides its QR while a phone is linked, and shows whether that phone is awake. */
+function tellTvLink(consoleId: string): void {
+  const tv = consoleTv(consoleId);
+  if (!tv) return;
+  send(tv, {
+    eventType: "COMPANION_LINK",
+    payload: { linked: phoneLinked(consoleId), online: consolePhones(consoleId).length > 0 },
+  });
+}
+
+type DropReason = "logout" | "title" | "tv_closed" | "signed_out" | "replaced";
+
+function releasePhone(phone: Sock, reason: DropReason): void {
+  send(phone, { eventType: "UNPAIRED", payload: { reason } });
+  phone.companionOf = undefined;
+  phone.user = null;
+}
+
+function dropPhone(consoleId: string, reason: DropReason): void {
+  const had = unlinkPhone(consoleId);
+  for (const phone of consolePhones(consoleId)) releasePhone(phone, reason);
+  if (had) tellTvLink(consoleId);
+}
+
+function consoleGone(consoleId: string): void {
+  dropPhone(consoleId, "tv_closed");
+  forgetConsole(consoleId);
+}
+
+function attachPhone(sock: Sock, consoleId: string, key?: string): void {
+  const c = getConsole(consoleId);
+  const user = c ? activeUserById(c.userId) : null;
+  if (!c || !user) {
+    dropPhone(consoleId, "signed_out");
+    throw new Error("NOT_PAIRED");
+  }
+  for (const other of consolePhones(consoleId)) if (other !== sock) releasePhone(other, "replaced");
+  sock.companionOf = consoleId;
+  sock.user = user;
+  send(sock, { eventType: "PAIRED", payload: { key: key ?? null, username: user.username } });
+  pushCompanion(consoleId);
+  tellTvLink(consoleId);
+}
+
+/** Messages from a phone. Returns false when the message is not a phone's to handle. */
+function handlePhone(sock: Sock, msg: ClientMsg): boolean {
+  if (msg.action === "PAIR") {
+    const { consoleId, key } = redeemPairToken(msg.token);
+    const previous = consoleForKey(msg.key);
+    if (previous && previous.id !== consoleId) dropPhone(previous.id, "replaced");
+    attachPhone(sock, consoleId, key);
+    return true;
+  }
+  if (msg.action === "COMPANION_RESUME") {
+    const c = consoleForKey(msg.key);
+    if (!c) {
+      send(sock, { eventType: "UNPAIRED", payload: { reason: "expired" } });
+      return true;
+    }
+    attachPhone(sock, c.id);
+    return true;
+  }
+  const consoleId = sock.companionOf;
+  if (!consoleId) return false;
+  const tv = consoleTv(consoleId);
+  switch (msg.action) {
+    case "PING":
+      send(sock, { eventType: "PONG", payload: { t: Date.now() } });
+      return true;
+    case "POINTER": {
+      const clamp = (v: unknown) => Math.max(-600, Math.min(600, Number(v) || 0));
+      if (tv) send(tv, { eventType: "POINTER", payload: { kind: "move", dx: clamp(msg.dx), dy: clamp(msg.dy) } });
+      return true;
+    }
+    case "POINTER_TAP":
+      if (tv) send(tv, { eventType: "POINTER", payload: { kind: "tap" } });
+      return true;
+    case "POINTER_BACK":
+      if (tv) send(tv, { eventType: "POINTER", payload: { kind: "back" } });
+      return true;
+    case "POINTER_MODE":
+      if (tv) send(tv, { eventType: "POINTER", payload: { kind: msg.on ? "show" : "hide" } });
+      return true;
+    default:
+      break;
+  }
+  if (!PHONE_ACTIONS.has(msg.action)) throw new Error("NOT_ALLOWED");
+  const c = getConsole(consoleId);
+  if (!tv?.roomCode || !c || !TABLE_VIEWS.has(c.view)) throw new Error("NO_TABLE");
+  if (!tv.playerId) throw new Error("NO_SEAT");
+  handle(sock, { ...msg, roomCode: tv.roomCode, playerId: tv.playerId });
+  return true;
+}
+
+/** Messages only a signed-in television sends about its phone. */
+function handleConsole(sock: Sock, msg: ClientMsg): boolean {
+  switch (msg.action) {
+    case "CONSOLE_VIEW": {
+      if (!sock.consoleId) throw new Error("BAD_CONSOLE");
+      if (!isConsoleView(msg.view)) throw new Error("MISSING_FIELDS");
+      setConsoleView(sock.consoleId, msg.view);
+      pushCompanion(sock.consoleId);
+      return true;
+    }
+    case "PAIR_REQUEST": {
+      if (!sock.consoleId) throw new Error("BAD_CONSOLE");
+      if (phoneLinked(sock.consoleId)) {
+        tellTvLink(sock.consoleId);
+        return true;
+      }
+      const offer = issuePairToken(sock.consoleId);
+      send(sock, { eventType: "PAIR_OFFER", payload: { ...offer, now: Date.now() } });
+      return true;
+    }
+    case "UNPAIR":
+      if (sock.consoleId) dropPhone(sock.consoleId, msg.reason === "logout" ? "logout" : "title");
+      return true;
+    default:
+      return false;
+  }
+}
+
+/** A TV message may have moved its table without a broadcast (create, rejoin, resume). */
+function afterTvMessage(sock: Sock): void {
+  if (sock.consoleId) pushCompanion(sock.consoleId);
+  const room = sock.roomCode ? getRoom(sock.roomCode) : undefined;
+  if (room) announceScene(room.roomCode, roomScene(room));
+}
+
+for (const id of knownConsoles()) armGrace(id, () => consoleGone(id));
 
 function bind(sock: Sock, room: Room, playerId?: string): void {
   sock.roomCode = room.roomCode;
@@ -379,6 +610,13 @@ wss.on("connection", (ws, req) => {
   const sock = ws as Sock;
   sock.alive = true;
   sock.user = requestUser(req);
+  const consoleId = new URL(req.url ?? "/", "http://table").searchParams.get("console");
+  if (sock.user && isConsoleId(consoleId)) {
+    const known = getConsole(consoleId);
+    if (known && known.userId !== sock.user.id) dropPhone(consoleId, "signed_out");
+    claimConsole(consoleId, sock.user.id);
+    sock.consoleId = consoleId;
+  }
   sock.on("pong", () => {
     sock.alive = true;
   });
@@ -401,9 +639,18 @@ wss.on("connection", (ws, req) => {
       narration: narrationStatus(),
     },
   });
+  if (sock.consoleId) {
+    tellTvLink(sock.consoleId);
+    pushCompanion(sock.consoleId);
+  }
 
   ws.on("close", () => {
-    const { roomCode, playerId } = sock;
+    const { roomCode, playerId, consoleId: tvConsole, companionOf } = sock;
+    if (tvConsole && !consoleTv(tvConsole)) {
+      pushCompanion(tvConsole);
+      armGrace(tvConsole, () => consoleGone(tvConsole));
+    }
+    if (companionOf) tellTvLink(companionOf);
     if (!roomCode || !playerId) return;
     armDropTimer(roomCode, playerId);
   });
@@ -417,12 +664,17 @@ wss.on("connection", (ws, req) => {
       return;
     }
     try {
+      if (handlePhone(sock, msg)) return;
+      if (handleConsole(sock, msg)) return;
       handle(sock, msg);
+      afterTvMessage(sock);
     } catch (err) {
+      const code = err instanceof Error ? err.message : "ERROR";
+      console.error(`ws ${msg.action} failed: ${code}`);
       send(ws, {
         eventType: "ERROR",
         payload: {
-          code: err instanceof Error ? err.message : "ERROR",
+          code,
           action: msg.action,
         },
       });

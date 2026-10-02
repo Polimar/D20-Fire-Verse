@@ -2,6 +2,9 @@ import "@fontsource/cinzel/700.css";
 import "@fontsource-variable/literata/opsz.css";
 import "./styles.css";
 import { describeError, plainNarration, srdLabel } from "@d20-fireverse/protocol";
+import { isSheetTab, pcSheetHtml, type PcSheet, type SheetTab } from "@d20-fireverse/protocol/sheet";
+import { pairTokenFrom, startScanner, type ScannerHandle, type ScanProblem } from "./scanner";
+import { mountTrackpad } from "./trackpad";
 
 interface SpeechAlt {
   readonly transcript: string;
@@ -35,36 +38,27 @@ function speechCtor(): SpeechSessionCtor | null {
   return w.SpeechRecognition ?? w.webkitSpeechRecognition ?? null;
 }
 
-type Pregen = { id: string; name: string; summary: string; class: string; race?: string; level: number; portrait?: string };
 type Seat = { playerId: string; characterId: string; characterName: string; portrait: string };
-type DiceFace = { notation: string; values: number[]; total: number };
+type DiceFace = { notation: string; values: number[]; total: number; label?: string };
+type CombatEvent = { seq: number; kind: string; line: string; tokenId?: string; rolls?: DiceFace[] };
 type Token = { id: string; playerId?: string; name: string; hp: number; maxHp: number; ac: number; dead: boolean; kind: string };
 type MenuAction = { id: string; name: string; available: boolean; targetKind: string };
 type PuzzleState = {
   kind: string;
-  picked: string[];
-  need: number;
-  fails: number;
-  feedback: string;
-  draft?: string[];
   holderId?: string | null;
   holderName?: string | null;
-  hints?: Array<{ playerId: string; name: string; slot: number; optionId: string }>;
 } | null;
 type TableState = {
   roomCode: string;
   nodeId: string;
   nodeType: string;
   mode?: string;
-  isHost?: boolean;
   arena?: {
     formatLabel: string;
     level: number;
     phase: string;
     teams: number;
-    cap: number;
     lastResult?: string | null;
-    heroSwapEndsAt?: number | null;
     seats: Array<{ playerId: string; characterName: string; teamId?: string | null; ready?: boolean }>;
   } | null;
   alexaScene?: string;
@@ -74,16 +68,8 @@ type TableState = {
   choices: Array<{ id: string; label: string }>;
   skillCheck?: { ability: string; skill?: string; dc: number };
   lastDice?: DiceFace | null;
-  vote?: {
-    nodeId: string;
-    votes: Array<{ playerId: string; choiceId: string; name: string; portrait: string | null }>;
-    remainingMs: number;
-  } | null;
-  checkOffer?: {
-    roster: Array<{ playerId: string; name: string; bonus: number }>;
-    volunteers: string[];
-    helpers: string[];
-  } | null;
+  vote?: { votes: Array<{ playerId: string; choiceId: string }>; remainingMs: number } | null;
+  checkOffer?: { roster: Array<{ playerId: string; name: string; bonus: number }>; helpers: string[] } | null;
   puzzle: PuzzleState;
   combat: {
     status: string;
@@ -93,114 +79,126 @@ type TableState = {
     tokens: Token[];
     actionMenu: { actions: MenuAction[]; bonusActions?: MenuAction[] } | null;
     pendingReaction?: { playerId: string; prompt: string; acceptLabel: string; declineLabel: string } | null;
+    events?: CombatEvent[];
   } | null;
   localPlayerId: string | null;
-  rest?: {
-    offer: boolean;
-    budget: number;
-    canShort: boolean;
-    canLong: boolean;
-  };
+  rest?: { offer: boolean; budget: number; canShort: boolean; canLong: boolean };
 };
+type ConsoleView = "title" | "campaign" | "arena" | "lobby" | "story" | "combat";
+type CompanionState = {
+  username: string;
+  view: ConsoleView;
+  tvOnline: boolean;
+  room: TableState | null;
+  sheet: PcSheet | null;
+};
+type Mode = "scan" | "linking" | "paired";
 
-const STORE = "fireverse.companion.v1";
-type Stored = { roomCode: string; playerId: string | null };
+const KEY_STORE = "fireverse.companion.v2";
+const MOUSE_STORE = "fireverse.companion.mouse";
 
-function loadStored(): Stored | null {
+function readKey(): string | null {
   try {
-    const s = JSON.parse(localStorage.getItem(STORE) ?? "null") as Stored | null;
-    return s?.roomCode ? s : null;
+    localStorage.removeItem("fireverse.companion.v1");
+    return localStorage.getItem(KEY_STORE);
   } catch {
     return null;
   }
 }
-function saveStored(s: Stored | null) {
+
+function writeKey(key: string | null): void {
   try {
-    if (s) localStorage.setItem(STORE, JSON.stringify(s));
-    else localStorage.removeItem(STORE);
+    if (key) localStorage.setItem(KEY_STORE, key);
+    else localStorage.removeItem(KEY_STORE);
   } catch {
-    /* private mode: the seat just won't survive a reload */
+    /* private mode: the link just won't survive a reload */
   }
 }
 
 const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]!);
-const cleanCode = (s: string) => s.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 6);
-
-const params = new URLSearchParams(location.search);
-const stored = loadStored();
-let roomCode = cleanCode(params.get("room") ?? stored?.roomCode ?? "");
-let playerId: string | null = params.get("seat") ?? (stored && stored.roomCode === roomCode ? stored.playerId : null);
-if (params.has("room")) history.replaceState(null, "", location.pathname);
 
 const app = document.querySelector<HTMLElement>("#app")!;
 app.innerHTML = `
-  <header class="mast">
-    <div>
-      <p class="kicker">D20 FireVerse · Companion</p>
-      <h1 id="mastTitle">Take a seat</h1>
+  <section class="scan" id="scanView" hidden>
+    <p class="kicker">D20 FireVerse</p>
+    <h1>Scan your TV</h1>
+    <div class="scan-frame" id="scanFrame">
+      <video id="scanVideo" muted playsinline autoplay></video>
+      <span class="scan-reticle" aria-hidden="true"></span>
     </div>
-    <span class="conn" id="conn">Connecting…</span>
-  </header>
-
-  <section class="panel login-gate" id="loginGate">
-    <h2 id="authTitle">Sign in</h2>
-    <form id="loginForm">
-      <label for="loginUser">Username</label>
-      <input id="loginUser" autocomplete="username" />
-      <label for="loginPass">Password</label>
-      <input id="loginPass" type="password" autocomplete="current-password" />
-      <p id="registerFields" hidden>
-        <label for="loginEmail">Email</label>
-        <input id="loginEmail" type="email" autocomplete="email" />
-        <span class="meta" id="registerRoom"></span>
-      </p>
-      <button type="submit" class="primary" id="authSubmit">Enter</button>
-      <button type="button" class="ghost" id="btnAuthMode">Create account</button>
-      <button type="button" class="ghost" id="btnResend" hidden>Send the confirmation again</button>
-      <p class="meta err" id="loginError"></p>
-    </form>
-  </section>
-
-  <section class="panel" id="joinPanel" hidden>
-    <form class="code-row" id="codeForm">
-      <label for="roomCode">Table code</label>
-      <input id="roomCode" maxlength="6" autocapitalize="characters" autocomplete="off" spellcheck="false" placeholder="ABC123" inputmode="text" />
-      <button type="submit" class="primary">Find the table</button>
-    </form>
-    <p class="meta" id="joinHint">The code is on the television, above the QR code.</p>
-    <div id="arenaBrowse" class="heroes"></div>
-    <div class="heroes" id="heroes"></div>
-  </section>
-
-  <section class="panel seat-panel" id="seatPanel" hidden>
-    <div class="who" id="who"></div>
-    <div class="turn" id="turn" hidden></div>
-    <div class="controls" id="controls"></div>
-    <p class="narr" id="narr"></p>
-    <div class="row-end">
-      <button type="button" class="ghost small" id="btnLeave">Leave this seat</button>
-      <button type="button" class="ghost small" id="btnLogout">Log out</button>
+    <p class="meta" id="scanHint">Point the camera at the code on your TV.</p>
+    <div class="scan-problem" id="scanProblem" hidden>
+      <p id="scanProblemText"></p>
+      <button type="button" class="primary" id="btnCamera">Allow the camera</button>
     </div>
   </section>
 
-  <section class="panel" id="micPanel" hidden>
-    <h2>Say it</h2>
-    <p class="meta">“Choose two”, “attack”, “magic missile”, “end turn”.</p>
-    <button type="button" id="btnMic" class="mic">Tap and speak</button>
+  <section class="linking" id="linkingView" hidden>
+    <span class="spinner" aria-hidden="true"></span>
+    <p id="linkingText">Linking to your TV…</p>
   </section>
+
+  <div class="paired" id="pairedView" hidden>
+    <header class="mast">
+      <div>
+        <p class="kicker" id="mastKicker">Your controller</p>
+        <h1 id="mastTitle">D20 FireVerse</h1>
+      </div>
+      <span class="conn" id="conn">Connecting…</span>
+    </header>
+    <p class="tv-away" id="tvAway" hidden>The TV is away. Your controller comes back with it.</p>
+    <button type="button" class="mouse-toggle" id="btnMouse" aria-pressed="false">
+      <span class="mouse-glyph" aria-hidden="true"></span><span id="mouseLabel">Mouse</span>
+    </button>
+    <section class="panel status-panel">
+      <div class="turn" id="turn" hidden></div>
+      <p class="meta" id="where"></p>
+      <div class="controls" id="controls"></div>
+      <p class="narr" id="narr"></p>
+    </section>
+    <section class="panel sheet-panel" id="sheetPanel"></section>
+    <section class="panel" id="micPanel" hidden>
+      <h2>Say it</h2>
+      <p class="meta">“Choose two”, “attack”, “magic missile”, “end turn”.</p>
+      <button type="button" id="btnMic" class="mic">Tap and speak</button>
+    </section>
+    <section class="pad-dock" id="padDock" hidden>
+      <div class="trackpad" id="trackpad" role="application" aria-label="Trackpad for the TV pointer">
+        <span>Drag to move the pointer · tap to press</span>
+      </div>
+      <div class="pad-keys">
+        <button type="button" id="padBack">Back</button>
+        <button type="button" class="primary" id="padOk">OK</button>
+      </div>
+    </section>
+  </div>
 
   <p class="toast" id="toast" role="status" hidden></p>
 `;
 
 const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
 
+let mode: Mode = "scan";
 let ws: WebSocket | null = null;
-let state: TableState | null = null;
-let pregens: Pregen[] = [];
 let reconnectDelay = 800;
+let reconnectTimer = 0;
 let toastTimer = 0;
-
-($("roomCode") as HTMLInputElement).value = roomCode;
+let pairToken: string | null = null;
+let phoneKey: string | null = readKey();
+let view: CompanionState | null = null;
+let sheetTab: SheetTab = "overview";
+let swiping = false;
+let renderQueued = false;
+let scanner: ScannerHandle | null = null;
+let scanStarting = false;
+let foreignHintAt = 0;
+let mouseOn = (() => {
+  try {
+    return localStorage.getItem(MOUSE_STORE) === "1";
+  } catch {
+    return false;
+  }
+})();
 
 function toast(text: string, kind: "bad" | "ok" = "bad") {
   const el = $("toast");
@@ -213,455 +211,527 @@ function toast(text: string, kind: "bad" | "ok" = "bad") {
 
 function send(obj: Record<string, unknown>): boolean {
   if (!ws || ws.readyState !== WebSocket.OPEN) {
-    toast("Reconnecting to the table — try again in a moment.");
+    toast("Reconnecting to the table. Try again in a moment.");
     return false;
   }
   ws.send(JSON.stringify(obj));
   return true;
 }
 
-function attach() {
-  if (!roomCode) return;
-  send({ action: "REJOIN", roomCode, playerId: playerId ?? undefined });
+/** Trackpad traffic is fire-and-forget: a dropped nudge needs no toast. */
+function sendQuiet(obj: Record<string, unknown>): boolean {
+  if (!ws || ws.readyState !== WebSocket.OPEN) return false;
+  ws.send(JSON.stringify(obj));
+  return true;
 }
 
-function me(): Seat | undefined {
-  return state?.players.find((p) => p.playerId === playerId);
+// ------------------------------------------------------------------ modes
+
+function setMode(next: Mode, note?: string): void {
+  mode = next;
+  $("scanView").hidden = next !== "scan";
+  $("linkingView").hidden = next !== "linking";
+  $("pairedView").hidden = next !== "paired";
+  document.body.dataset.mode = next;
+  if (next === "scan") {
+    $("scanHint").textContent = note ?? "Point the camera at the code on your TV.";
+    void openCamera();
+  } else {
+    closeCamera();
+  }
+  if (next === "paired") paintMouse();
+  else document.body.classList.remove("mouse-on");
 }
 
-let signedIn = false;
-let creating = false;
-
-function render() {
-  const seated = !!state && !!me();
-  $("loginGate").hidden = signedIn;
-  $("joinPanel").hidden = !signedIn || seated;
-  $("seatPanel").hidden = !seated;
-  $("micPanel").hidden = !seated;
-  $("mastTitle").textContent = seated ? me()!.characterName : state ? `Table ${state.roomCode}` : "Take a seat";
-  document.body.dataset.room = state?.alexaScene ?? "tavern";
-  if (seated) renderSeat();
-  else renderHeroes();
+/** The link is over: forget the key, close the socket, and go back to the camera. */
+function unpaired(note: string): void {
+  writeKey(null);
+  phoneKey = null;
+  pairToken = null;
+  view = null;
+  window.clearTimeout(reconnectTimer);
+  const old = ws;
+  ws = null;
+  old?.close();
+  setMode("scan", note);
 }
 
-function renderHeroes() {
-  const box = $("heroes");
-  if (!state) {
-    box.innerHTML = "";
-    $("joinHint").textContent = roomCode ? "Looking for the table…" : "The code is on the television, above the QR code.";
+const UNPAIRED_NOTE: Record<string, string> = {
+  logout: "The TV signed out. Scan the code when it is back.",
+  title: "The TV went back to the title. Scan the new code to play again.",
+  tv_closed: "The game closed on the TV. Scan the code when it is back.",
+  signed_out: "Someone else signed in on that TV. Scan its code to link again.",
+  replaced: "Another phone took over this TV.",
+  expired: "This link has ended. Scan the code on your TV.",
+};
+
+// ------------------------------------------------------------------ camera
+
+const PROBLEM_TEXT: Record<ScanProblem, string> = {
+  insecure: "The camera only works on the secure site. Open www.d20fireverse.it/companion on this phone.",
+  denied: "The camera is blocked for this site. Allow it in the browser settings, then try again.",
+  "no-camera": "This phone has no camera the browser can use.",
+  failed: "The camera didn't start. Try again.",
+};
+
+async function openCamera(): Promise<void> {
+  if (scanner || scanStarting) return;
+  scanStarting = true;
+  $("scanProblem").hidden = true;
+  $("scanFrame").hidden = false;
+  const handle = await startScanner(
+    $("scanVideo") as HTMLVideoElement,
+    (text) => {
+      const token = pairTokenFrom(text);
+      if (token) {
+        if (navigator.vibrate) navigator.vibrate(30);
+        pair(token);
+        return;
+      }
+      if (Date.now() - foreignHintAt > 3000) {
+        foreignHintAt = Date.now();
+        $("scanHint").textContent = "That isn't a D20 FireVerse code. Scan the one on your TV.";
+      }
+    },
+    (problem) => {
+      $("scanFrame").hidden = true;
+      $("scanProblem").hidden = false;
+      $("scanProblemText").textContent = PROBLEM_TEXT[problem];
+      $("btnCamera").hidden = problem === "insecure" || problem === "no-camera";
+      $("btnCamera").textContent = problem === "denied" ? "Try again" : "Allow the camera";
+    },
+  );
+  scanStarting = false;
+  if (mode !== "scan") {
+    handle?.stop();
     return;
   }
-  const taken = new Set(state.mode === "arena" ? [] : state.players.map((p) => p.characterId));
-  const inFight = state.combat?.status === "active";
-  const lv = state.arena?.level;
-  $("joinHint").textContent = inFight
-    ? "A fight is on. You can take a seat as soon as it ends."
-    : state.mode === "arena"
-      ? `Arena ${state.arena?.formatLabel ?? ""} · heroes at level ${lv ?? ""}. Same pregen can sit more than once.`
-      : "Choose who you'll play. The television shows the rest.";
-  box.innerHTML = pregens
-    .map((p) => {
-      const busy = taken.has(p.id);
-      return `<button type="button" class="hero" data-hero="${esc(p.id)}" ${busy || inFight ? "disabled" : ""}>
-        ${p.portrait ? `<img src="${esc(p.portrait)}" alt="" loading="lazy" />` : `<span class="mark">${esc(p.name.slice(0, 1))}</span>`}
-        <span><strong>${esc(p.name)}</strong><em>${esc([srdLabel(p.race), srdLabel(p.class), `Level ${lv ?? p.level}`].filter(Boolean).join(" · "))}</em>${busy ? `<i>At the table</i>` : ""}</span>
-      </button>`;
-    })
-    .join("");
-  box.querySelectorAll<HTMLElement>("[data-hero]").forEach((b) =>
-    b.addEventListener("click", () => {
-      const hero = pregens.find((p) => p.id === b.dataset.hero);
-      if (!hero || !state) return;
-      b.setAttribute("aria-busy", "true");
-      send({ action: "JOIN_ROOM", roomCode: state.roomCode, characterId: hero.id, displayName: hero.name });
-    }),
-  );
+  scanner = handle;
 }
 
-function throwPad(action: MenuAction | undefined): string {
-  if (!action) return "";
-  return `<div class="throw" data-throw="${esc(action.id)}" data-target="${esc(action.targetKind)}" role="button" tabindex="0">
-    <span class="throw-kicker">Swipe to throw</span>
-    <strong>d20</strong>
-    <span class="meta">The die lands on the television.</span>
-  </div>`;
+function closeCamera(): void {
+  scanner?.stop();
+  scanner = null;
 }
 
-function renderSeat() {
-  const s = state!;
-  const seat = me()!;
-  const token = s.combat?.tokens.find((t) => t.playerId === seat.playerId);
-  const ratio = token ? Math.max(0, token.hp / Math.max(1, token.maxHp)) : 1;
-  $("who").innerHTML = `
-    <img src="${esc(seat.portrait)}" alt="" />
-    <div>
-      <strong>${esc(seat.characterName)}</strong>
-      <span class="meta">${token ? `${token.hp}/${token.maxHp} HP · AC ${token.ac}` : "Exploring"}</span>
-      <span class="hp"><i style="width:${Math.round(ratio * 100)}%"></i></span>
-    </div>`;
+$("btnCamera").addEventListener("click", () => void openCamera());
 
-  const turn = $("turn");
-  const controls = $("controls");
-  const combat = s.combat?.status === "active" ? s.combat : null;
-  if (combat) {
-    const mine = !!token && combat.currentTokenId === token.id;
-    turn.hidden = false;
-    turn.className = `turn ${mine ? "mine" : ""}`;
-    turn.textContent = token?.dead ? "You are down — your allies can still turn this." : mine ? "Your turn" : `Round ${combat.round} · ${combat.currentName ?? "…"} is acting`;
-    const pending = combat.pendingReaction;
-    const mineReact = pending && pending.playerId === seat.playerId;
-    const actions = combat.actionMenu?.actions ?? [];
-    const bonus = combat.actionMenu?.bonusActions ?? [];
-    const button = (a: MenuAction) =>
-      `<button type="button" data-ability="${esc(a.id)}" data-target="${esc(a.targetKind)}" ${a.available ? "" : "disabled"}>${esc(a.name)}</button>`;
-    controls.innerHTML = mineReact
-      ? `<p class="meta">${esc(pending.prompt)}</p>
-         <button type="button" class="primary" data-react="yes">${esc(pending.acceptLabel)}</button>
-         <button type="button" data-react="no">${esc(pending.declineLabel)}</button>`
-      : mine
-        ? `${throwPad(actions.find((a) => a.available) ?? bonus.find((a) => a.available))}${actions.map(button).join("")}${bonus.map(button).join("")}
-           <button type="button" class="primary" data-intent="end_turn">End turn</button>
-           <p class="meta">Swipe to throw. A targeted action is aimed with the television remote. The die lands there.</p>`
-        : "";
-  } else {
-    turn.hidden = true;
-    if (s.mode === "arena") {
-      const seatArena = s.arena?.seats.find((x) => x.playerId === seat.playerId);
-      const teams = (s.arena?.teams ?? 0) > 0;
-      const swap = s.arena?.phase === "hero_swap";
-      turn.hidden = false;
-      turn.textContent = swap ? s.arena?.lastResult ?? "Change hero or keep this one." : `${s.arena?.formatLabel ?? "Arena"} · L${s.arena?.level ?? ""}`;
-      controls.innerHTML = `
-      ${teams ? `<button type="button" data-team="a">Team A</button><button type="button" data-team="b">Team B</button>` : ""}
-      <button type="button" class="primary" data-ready="${seatArena?.ready ? "0" : "1"}">${seatArena?.ready ? "Unready" : "Ready"}</button>
-      <p class="meta">Change hero</p>
-      ${pregens.map((p) => `<button type="button" data-pick="${esc(p.id)}">${esc(p.name)}</button>`).join("")}
-      <p class="meta">${seatArena?.teamId ? `Team ${String(seatArena.teamId).toUpperCase()}` : teams ? "Pick a team" : "Free-for-all"}</p>`;
-    } else if (s.skillCheck && s.nodeType === "skill_check") {
-      const skill = (s.skillCheck.skill ?? s.skillCheck.ability).replace(/_/g, " ");
-      const roster = s.checkOffer?.roster ?? [];
-      const helpers = new Set(s.checkOffer?.helpers ?? []);
-      const iCanRoll = roster.some((r) => r.playerId === seat.playerId);
-      controls.innerHTML = `
-        ${iCanRoll ? throwPad({ id: "volunteer", targetKind: "none", available: true, name: "d20" }) : ""}
-        <p class="meta">Who attempts ${esc(skill)} · DC ${s.skillCheck.dc}? Swipe to throw the d20. Pledge Help before they step up for advantage.</p>
-        ${roster
-          .map((r) => {
-            const mine = r.playerId === seat.playerId;
-            return `<button type="button" class="${mine ? "primary" : ""}" data-volunteer="${esc(r.playerId)}" ${mine ? "" : "disabled"}>${esc(r.name)} · ${r.bonus >= 0 ? "+" : ""}${r.bonus}${helpers.has(r.playerId) ? " · helping" : ""}</button>`;
-          })
-          .join("")}
-        ${
-          roster.some((r) => r.playerId !== seat.playerId)
-            ? `<button type="button" data-help="1">Pledge Help (advantage)</button>`
-            : ""
-        }`;
-    } else if (s.nodeType === "encounter" && !s.combat) {
-      controls.innerHTML = `${throwPad({ id: "begin", targetKind: "none", available: true, name: "d20" })}<button type="button" class="primary big" data-begin-fight="1">Roll initiative</button>
-        <button type="button" data-withdraw="1">Step back</button>
-        <p class="meta">Hear them coming — then open the fight on the television.</p>`;
-    } else if (s.puzzle) {
-      const holder = s.puzzle.holderId;
-      const multi = s.players.length > 1;
-      if (multi && !holder) {
-        controls.innerHTML = `<button type="button" class="primary big" data-claim="1">Take the mechanism</button>
-          <p class="meta">First hands place the symbols. Others can soft-suggest on the TV.</p>`;
-      } else if (multi && holder === seat.playerId) {
-        controls.innerHTML = `<p class="meta">You hold the mechanism — place symbols on the television.</p>
-          <button type="button" data-release="1">Pass the mechanism</button>`;
-      } else if (multi) {
-        controls.innerHTML = `<p class="meta">${esc(s.puzzle.holderName ?? "An ally")} holds the mechanism. Soft-suggest from the TV, or wait your turn.</p>`;
-      } else {
-        controls.innerHTML = `<p class="meta">A puzzle is on the television. Work it with the remote.</p>`;
-      }
-    } else {
-      const voting = !!(s.vote && s.players.length > 1);
-      const sec = voting ? Math.ceil(s.vote!.remainingMs / 1000) : 0;
-      const rest = s.rest;
-      const restBtns =
-        rest?.offer && (rest.canShort || rest.canLong)
-          ? `${rest.canShort ? `<button type="button" data-rest="short">Short rest · costs 1</button>` : ""}${
-              rest.canLong ? `<button type="button" data-rest="long">Long rest · costs 2</button>` : ""
-            }<p class="meta">One long rest or two short rests this tale · ${rest.budget} left</p>`
-          : "";
-      controls.innerHTML =
-        restBtns +
-        (voting ? `<p class="meta">Party vote · ${sec}s left</p>` : "") +
-        s.choices
-          .map((c, i) => {
-            const mine = s.vote?.votes.find((v) => v.playerId === seat.playerId)?.choiceId === c.id;
-            return `<button type="button" class="${i === 0 ? "primary" : ""} ${mine ? "voted" : ""}" data-choice="${esc(c.id)}"><b>${i + 1}</b>${esc(c.label)}${mine ? " · your vote" : ""}</button>`;
-          })
-          .join("");
-    }
-  }
-  controls.querySelectorAll<HTMLElement>("[data-pick]").forEach((b) =>
-    b.addEventListener("click", () => {
-      send({ action: "ARENA_PICK_HERO", roomCode: s.roomCode, playerId, characterId: b.dataset.pick });
-    }),
-  );
-  controls.querySelectorAll<HTMLElement>("[data-team]").forEach((b) =>
-    b.addEventListener("click", () => {
-      send({ action: "SET_ARENA_TEAM", roomCode: s.roomCode, playerId, teamId: b.dataset.team });
-    }),
-  );
-  controls.querySelectorAll<HTMLElement>("[data-ready]").forEach((b) =>
-    b.addEventListener("click", () => {
-      send({ action: "ARENA_READY", roomCode: s.roomCode, playerId, ready: b.dataset.ready === "1" });
-    }),
-  );
-  controls.querySelectorAll<HTMLElement>("[data-ability]").forEach((b) =>
-    b.addEventListener("click", () => {
-      const id = b.dataset.ability;
-      if (!id) return;
-      if (navigator.vibrate) navigator.vibrate(12);
-      const needsAim = b.dataset.target === "enemy" || b.dataset.target === "ally" || b.dataset.target === "cell";
-      send(
-        needsAim
-          ? { action: "AIM_ACTION", roomCode: s.roomCode, playerId, abilityId: id }
-          : { action: "PERFORM_ACTION", roomCode: s.roomCode, playerId, abilityId: id },
-      );
-    }),
-  );
-  controls.querySelectorAll<HTMLElement>("[data-react]").forEach((b) =>
-    b.addEventListener("click", () => {
-      send({ action: "REACT", roomCode: s.roomCode, playerId, accept: b.dataset.react === "yes" });
-    }),
-  );
-  controls.querySelectorAll<HTMLElement>("[data-rest]").forEach((b) =>
-    b.addEventListener("click", () => {
-      send({ action: b.dataset.rest === "long" ? "LONG_REST" : "SHORT_REST", roomCode: s.roomCode, playerId });
-    }),
-  );
-  controls.querySelectorAll<HTMLElement>("[data-begin-fight]").forEach((b) =>
-    b.addEventListener("click", () => {
-      if (navigator.vibrate) navigator.vibrate(12);
-      send({ action: "BEGIN_COMBAT", roomCode: s.roomCode });
-    }),
-  );
-  controls.querySelectorAll<HTMLElement>("[data-withdraw]").forEach((b) =>
-    b.addEventListener("click", () => {
-      send({ action: "WITHDRAW", roomCode: s.roomCode });
-    }),
-  );
-  controls.querySelectorAll<HTMLElement>("[data-intent]").forEach((b) =>
-    b.addEventListener("click", () => {
-      if (navigator.vibrate) navigator.vibrate(12);
-      send({ action: "VOICE_INTENT", roomCode: s.roomCode, playerId, intent: b.dataset.intent });
-    }),
-  );
-  controls.querySelectorAll<HTMLElement>("[data-choice]").forEach((b) =>
-    b.addEventListener("click", () => {
-      if (navigator.vibrate) navigator.vibrate(12);
-      if (s.players.length > 1) {
-        send({ action: "CAST_VOTE", roomCode: s.roomCode, playerId, choiceId: b.dataset.choice });
-      } else {
-        send({ action: "CHOOSE", roomCode: s.roomCode, playerId, choiceId: b.dataset.choice });
-      }
-    }),
-  );
-  controls.querySelectorAll<HTMLElement>("[data-volunteer]").forEach((b) =>
-    b.addEventListener("click", () => {
-      if (b.hasAttribute("disabled") || b.dataset.volunteer !== seat.playerId) return;
-      if (navigator.vibrate) navigator.vibrate(12);
-      send({ action: "VOLUNTEER_CHECK", roomCode: s.roomCode, playerId: seat.playerId });
-    }),
-  );
-  controls.querySelectorAll<HTMLElement>("[data-throw]").forEach((pad) => {
-    let startX = 0;
-    let startY = 0;
-    let armed = false;
-    const fire = () => {
-      if (pad.dataset.spent === "1") return;
-      pad.dataset.spent = "1";
-      if (navigator.vibrate) navigator.vibrate(20);
-      const id = pad.dataset.throw;
-      const target = pad.dataset.target;
-      if (id === "volunteer") {
-        send({ action: "VOLUNTEER_CHECK", roomCode: s.roomCode, playerId: seat.playerId });
-        return;
-      }
-      if (id === "begin") {
-        send({ action: "BEGIN_COMBAT", roomCode: s.roomCode });
-        return;
-      }
-      if (!id) return;
-      const needsAim = target === "enemy" || target === "ally" || target === "cell";
-      send(
-        needsAim
-          ? { action: "AIM_ACTION", roomCode: s.roomCode, playerId, abilityId: id }
-          : { action: "PERFORM_ACTION", roomCode: s.roomCode, playerId, abilityId: id },
-      );
-    };
-    pad.addEventListener("pointerdown", (ev) => {
-      armed = true;
-      startX = ev.clientX;
-      startY = ev.clientY;
-      try {
-        pad.setPointerCapture(ev.pointerId);
-      } catch {
-        /* the pad can still read the release */
-      }
-    });
-    pad.addEventListener("pointerup", (ev) => {
-      if (!armed) return;
-      armed = false;
-      if (Math.hypot(ev.clientX - startX, ev.clientY - startY) > 48) fire();
-    });
-  });
-  if (s.lastDice?.values?.length) {
-    const line = document.createElement("p");
-    line.className = "meta throw-result";
-    line.textContent = `${s.lastDice.notation}: ${s.lastDice.values.join(", ")} = ${s.lastDice.total}`;
-    controls.appendChild(line);
-  }
-  controls.querySelectorAll<HTMLElement>("[data-help]").forEach((b) => {
-    b.addEventListener("click", () => {
-      if (navigator.vibrate) navigator.vibrate(12);
-      send({ action: "VOLUNTEER_CHECK", roomCode: s.roomCode, playerId, help: true });
-    });
-  });
-  controls.querySelectorAll<HTMLElement>("[data-claim]").forEach((b) =>
-    b.addEventListener("click", () => {
-      if (navigator.vibrate) navigator.vibrate(12);
-      send({ action: "CLAIM_PUZZLE", roomCode: s.roomCode, playerId });
-    }),
-  );
-  controls.querySelectorAll<HTMLElement>("[data-release]").forEach((b) =>
-    b.addEventListener("click", () => {
-      if (navigator.vibrate) navigator.vibrate(12);
-      send({ action: "RELEASE_PUZZLE", roomCode: s.roomCode, playerId });
-    }),
-  );
-  const speaker = s.speaker;
-  const narrLead = plainNarration(s.narration).split(/\n{2,}/)[0]!.slice(0, 320);
-  const narr = $("narr");
-  if (speaker?.portrait) {
-    narr.innerHTML = `<span class="speaker-inline"><img src="${esc(speaker.portrait)}" alt="" /><strong>${esc(speaker.name)}</strong></span>`;
-    narr.append(document.createTextNode(narrLead));
-  } else {
-    narr.textContent = narrLead;
-  }
+// ------------------------------------------------------------------ link
+
+function pair(token: string): void {
+  pairToken = token;
+  $("linkingText").textContent = "Linking to your TV…";
+  setMode("linking");
+  connect();
 }
 
-function connect() {
+function connect(): void {
+  if (!pairToken && !phoneKey) return;
+  window.clearTimeout(reconnectTimer);
+  const old = ws;
+  ws = null;
+  old?.close();
   const proto = location.protocol === "https:" ? "wss" : "ws";
-  ws = new WebSocket(`${proto}://${location.host}/ws`);
+  const sock = new WebSocket(`${proto}://${location.host}/ws`);
+  ws = sock;
   const conn = $("conn");
-  ws.onopen = () => {
+  sock.onopen = () => {
+    if (ws !== sock) return;
     reconnectDelay = 800;
     conn.textContent = "Live";
     conn.className = "conn ok";
+    if (pairToken) sock.send(JSON.stringify({ action: "PAIR", token: pairToken, key: phoneKey ?? undefined }));
+    else if (phoneKey) sock.send(JSON.stringify({ action: "COMPANION_RESUME", key: phoneKey }));
   };
-  ws.onclose = () => {
+  sock.onclose = () => {
+    if (ws !== sock) return;
     conn.textContent = "Reconnecting…";
     conn.className = "conn bad";
-    window.setTimeout(connect, reconnectDelay);
+    reconnectTimer = window.setTimeout(connect, reconnectDelay);
     reconnectDelay = Math.min(8000, reconnectDelay * 1.6);
   };
-  ws.onmessage = (ev) => {
+  sock.onmessage = (ev) => {
+    if (ws !== sock) return;
     let msg: { eventType?: string; payload?: any };
     try {
       msg = JSON.parse(String(ev.data));
     } catch {
       return;
     }
-    switch (msg.eventType) {
-      case "HELLO":
-        pregens = msg.payload?.pregens ?? [];
-        attach();
-        if (signedIn) send({ action: "LIST_ARENAS" });
-        render();
-        break;
-      case "ARENA_LIST": {
-        const box = $("arenaBrowse");
-        const list = (msg.payload?.arenas ?? []) as Array<{ roomCode: string; name: string; formatLabel: string; level: number; seats: number; cap: number }>;
-        box.innerHTML = list
-          .map(
-            (a) =>
-              `<button type="button" class="hero" data-join="${esc(a.roomCode)}"><span><strong>${esc(a.name)}</strong><em>${esc(a.formatLabel)} · L${a.level} · ${a.seats}/${a.cap} · ${esc(a.roomCode)}</em></span></button>`,
-          )
-          .join("");
-        box.querySelectorAll<HTMLElement>("[data-join]").forEach((b) =>
-          b.addEventListener("click", () => {
-            roomCode = b.dataset.join ?? "";
-            ($("roomCode") as HTMLInputElement).value = roomCode;
-            playerId = null;
-            attach();
-          }),
-        );
-        break;
-      }
-      case "SEAT":
-        if (msg.payload?.playerId) {
-          playerId = msg.payload.playerId;
-          saveStored({ roomCode, playerId });
-        }
-        break;
-      case "ROOM_STATE":
-        state = msg.payload as TableState;
-        roomCode = state.roomCode;
-        if (state.localPlayerId) playerId = state.localPlayerId;
-        if (playerId && !state.players.some((p) => p.playerId === playerId)) playerId = null;
-        saveStored({ roomCode, playerId });
-        render();
-        break;
-      case "CHARACTER_CREATED":
-        pregens = msg.payload?.pregens ?? pregens;
-        render();
-        break;
-      case "ERROR": {
-        const code = String(msg.payload?.code ?? "");
-        if (msg.payload?.action === "REJOIN") {
-          if (playerId) {
-            playerId = null;
-            attach();
-            return;
-          }
-          state = null;
-          saveStored(null);
-          render();
-          toast(code === "ROOM_NOT_FOUND" ? "No table with that code. Check the television." : describeError(code));
-          return;
-        }
-        document.querySelectorAll("[aria-busy]").forEach((b) => b.removeAttribute("aria-busy"));
-        toast(describeError(code));
-        break;
-      }
-      default:
-        break;
-    }
+    onMessage(msg);
   };
 }
 
-$("codeForm").addEventListener("submit", (e) => {
-  e.preventDefault();
-  const code = cleanCode(($("roomCode") as HTMLInputElement).value);
-  if (code.length < 4) {
-    toast("Type the table code shown on the television.");
+function onMessage(msg: { eventType?: string; payload?: any }): void {
+  switch (msg.eventType) {
+    case "HELLO":
+    case "PONG":
+      return;
+    case "PAIRED": {
+      const key = msg.payload?.key as string | null;
+      if (key) {
+        phoneKey = key;
+        writeKey(key);
+      }
+      pairToken = null;
+      setMode("paired");
+      render();
+      return;
+    }
+    case "COMPANION_STATE":
+      view = msg.payload as CompanionState;
+      if (mode !== "paired") setMode("paired");
+      render();
+      return;
+    case "UNPAIRED":
+      unpaired(UNPAIRED_NOTE[String(msg.payload?.reason ?? "expired")] ?? UNPAIRED_NOTE.expired!);
+      return;
+    case "ERROR": {
+      const code = String(msg.payload?.code ?? "");
+      if (msg.payload?.action === "PAIR" || code === "NOT_PAIRED") {
+        unpaired(describeError(code));
+        return;
+      }
+      document.querySelectorAll("[aria-busy]").forEach((b) => b.removeAttribute("aria-busy"));
+      toast(describeError(code));
+      return;
+    }
+    default:
+      return;
+  }
+}
+
+// ------------------------------------------------------------------ the controller
+
+function me(room: TableState | null): Seat | undefined {
+  return room?.players.find((p) => p.playerId === room.localPlayerId);
+}
+
+function myToken(room: TableState | null, seat: Seat | undefined): Token | undefined {
+  return seat ? room?.combat?.tokens.find((t) => t.playerId === seat.playerId) : undefined;
+}
+
+const WHERE: Record<ConsoleView, string> = {
+  title: "The TV is on the title screen. Pick Campaign or Arena there.",
+  campaign: "Choosing a campaign on the TV.",
+  arena: "In the arena hall on the TV.",
+  lobby: "Gathering the party.",
+  story: "",
+  combat: "",
+};
+
+function render(): void {
+  if (mode !== "paired") return;
+  if (swiping) {
+    renderQueued = true;
     return;
   }
-  roomCode = code;
-  playerId = null;
-  attach();
-});
+  renderQueued = false;
+  const s = view;
+  const room = s?.room ?? null;
+  const seat = me(room);
+  $("mastKicker").textContent = s?.username ? `${s.username} · your controller` : "Your controller";
+  $("mastTitle").textContent = seat?.characterName ?? "D20 FireVerse";
+  $("tvAway").hidden = !s || s.tvOnline;
+  document.body.dataset.room = room?.alexaScene ?? "tavern";
+  const where = s ? WHERE[s.view] : "Waiting for the TV…";
+  $("where").textContent =
+    room && !seat ? `Table ${room.roomCode}. Choose your hero on the TV${mouseOn ? " with the trackpad below." : ". Turn on the mouse to point at it from here."}` : where;
+  $("where").hidden = !$("where").textContent;
+  renderControls(room, seat);
+  renderSheet(room, seat, s?.sheet ?? null);
+  $("micPanel").hidden = !seat;
+  const narr = $("narr");
+  const lead = room && seat ? plainNarration(room.narration).split(/\n{2,}/)[0]!.slice(0, 320) : "";
+  if (room?.speaker?.portrait && lead) {
+    narr.innerHTML = `<span class="speaker-inline"><img src="${esc(room.speaker.portrait)}" alt="" /><strong>${esc(room.speaker.name)}</strong></span>`;
+    narr.append(document.createTextNode(lead));
+  } else {
+    narr.textContent = lead;
+  }
+  narr.hidden = !lead;
+}
 
-$("btnLogout").addEventListener("click", () => {
-  void fetch("/api/logout", { method: "POST", credentials: "same-origin" }).then(() => {
-    signedIn = false;
-    playerId = null;
-    state = null;
-    saveStored(null);
-    ws?.close();
-    render();
-  });
-});
-$("btnLeave").addEventListener("click", () => {
-  playerId = null;
-  saveStored({ roomCode, playerId: null });
-  attach();
+function renderSheet(room: TableState | null, seat: Seat | undefined, sheet: PcSheet | null): void {
+  const host = $("sheetPanel");
+  if (!sheet) {
+    const where = view?.view;
+    const hint = room || where === "campaign" || where === "arena"
+      ? "Pick your hero on the TV. Their sheet appears here once you sit at the table."
+      : "Open a campaign or an arena on the TV. Your hero's sheet appears here.";
+    host.innerHTML = `<div class="sheet-empty"><h2>Your hero</h2><p class="meta">${hint}</p></div>`;
+    return;
+  }
+  const token = myToken(room, seat);
+  const mine = !!token && room?.combat?.status === "active" && room.combat.currentTokenId === token.id;
+  host.innerHTML = pcSheetHtml(sheet, sheetTab, { isMyTurn: mine, showEconomy: room?.combat?.status === "active" });
+}
+
+$("sheetPanel").addEventListener("click", (ev) => {
+  const b = (ev.target as Element).closest<HTMLElement>("[data-sheet-tab]");
+  const tab = b?.dataset.sheetTab;
+  if (!isSheetTab(tab)) return;
+  sheetTab = tab;
   render();
 });
+
+const needsAim = (target: string | undefined) => target === "enemy" || target === "ally" || target === "cell";
+
+function throwPad(id: string, targetKind: string, label = "d20"): string {
+  const note = needsAim(targetKind) ? "Then pick the target on the TV." : "The die lands on your TV.";
+  return `<div class="throw" data-throw="${esc(id)}" data-target="${esc(targetKind)}" role="button" tabindex="0" aria-label="Swipe to throw: ${esc(label)}">
+    <span class="die" aria-hidden="true">20</span>
+    <span><span class="throw-kicker">Swipe to throw</span><strong>${esc(label)}</strong><span class="meta">${note}</span></span>
+  </div>`;
+}
+
+function renderControls(room: TableState | null, seat: Seat | undefined): void {
+  const turn = $("turn");
+  const controls = $("controls");
+  turn.hidden = true;
+  turn.className = "turn";
+  if (!room || !seat) {
+    controls.innerHTML = "";
+    return;
+  }
+  const combat = room.combat?.status === "active" ? room.combat : null;
+  const token = myToken(room, seat);
+  if (combat) {
+    const mine = !!token && combat.currentTokenId === token.id;
+    turn.hidden = false;
+    turn.className = `turn ${mine ? "mine" : ""}`;
+    turn.textContent = token?.dead
+      ? "You are down. Your allies can still turn this."
+      : mine
+        ? "Your turn"
+        : `Round ${combat.round} · ${combat.currentName ?? "…"} is acting`;
+    const pending = combat.pendingReaction;
+    const actions = combat.actionMenu?.actions ?? [];
+    const bonus = combat.actionMenu?.bonusActions ?? [];
+    const button = (a: MenuAction) =>
+      `<button type="button" data-ability="${esc(a.id)}" data-target="${esc(a.targetKind)}" ${a.available ? "" : "disabled"}>${esc(a.name)}</button>`;
+    if (pending && pending.playerId === seat.playerId) {
+      controls.innerHTML = `<p class="meta">${esc(pending.prompt)}</p>
+         <button type="button" class="primary" data-react="yes">${esc(pending.acceptLabel)}</button>
+         <button type="button" data-react="no">${esc(pending.declineLabel)}</button>`;
+    } else if (mine) {
+      const first = actions.find((a) => a.available) ?? bonus.find((a) => a.available);
+      controls.innerHTML = `${first ? throwPad(first.id, first.targetKind, first.name) : ""}
+        ${actions.map(button).join("")}${bonus.map(button).join("")}
+        <button type="button" class="primary" data-intent="end_turn">End turn</button>
+        <p class="meta">A targeted action is aimed on the TV, with the remote or the mouse.</p>`;
+    } else {
+      controls.innerHTML = "";
+    }
+  } else if (room.mode === "arena") {
+    const seatArena = room.arena?.seats.find((x) => x.playerId === seat.playerId);
+    const teams = (room.arena?.teams ?? 0) > 0;
+    turn.hidden = false;
+    turn.textContent =
+      room.arena?.phase === "hero_swap" ? (room.arena?.lastResult ?? "Change hero on the TV, or keep this one.") : `${room.arena?.formatLabel ?? "Arena"} · L${room.arena?.level ?? ""}`;
+    controls.innerHTML = `
+      ${teams ? `<div class="row2"><button type="button" data-team="a" class="${seatArena?.teamId === "a" ? "voted" : ""}">Team A</button><button type="button" data-team="b" class="${seatArena?.teamId === "b" ? "voted" : ""}">Team B</button></div>` : ""}
+      <button type="button" class="primary" data-ready="${seatArena?.ready ? "0" : "1"}">${seatArena?.ready ? "Unready" : "Ready"}</button>
+      <p class="meta">${seatArena?.teamId ? `Team ${String(seatArena.teamId).toUpperCase()}` : teams ? "Pick a team" : "Free-for-all"}</p>`;
+  } else if (room.skillCheck && room.nodeType === "skill_check") {
+    const skill = srdLabel(room.skillCheck.skill ?? room.skillCheck.ability);
+    const roster = room.checkOffer?.roster ?? [];
+    const helpers = new Set(room.checkOffer?.helpers ?? []);
+    const mineRow = roster.find((r) => r.playerId === seat.playerId);
+    controls.innerHTML = `
+      <p class="meta">${esc(skill)} · DC ${room.skillCheck.dc}</p>
+      ${mineRow ? throwPad("volunteer", "none", `${skill} check`) : ""}
+      ${mineRow ? `<p class="meta">Your bonus ${mineRow.bonus >= 0 ? "+" : ""}${mineRow.bonus}${helpers.has(seat.playerId) ? " · helping" : ""}</p>` : ""}
+      ${roster.some((r) => r.playerId !== seat.playerId) ? `<button type="button" data-help="1">Pledge Help (advantage)</button>` : ""}`;
+  } else if (room.nodeType === "encounter" && !room.combat) {
+    controls.innerHTML = `${throwPad("begin", "none", "Initiative")}
+      <button type="button" class="primary big" data-begin-fight="1">Roll initiative</button>
+      <button type="button" data-withdraw="1">Step back</button>`;
+  } else if (room.puzzle) {
+    const holder = room.puzzle.holderId;
+    const multi = room.players.length > 1;
+    if (multi && !holder) {
+      controls.innerHTML = `<button type="button" class="primary big" data-claim="1">Take the mechanism</button>
+        <p class="meta">First hands place the symbols on the TV.</p>`;
+    } else if (multi && holder === seat.playerId) {
+      controls.innerHTML = `<p class="meta">You hold the mechanism. Place the symbols on the TV.</p>
+        <button type="button" data-release="1">Pass the mechanism</button>`;
+    } else {
+      controls.innerHTML = `<p class="meta">${multi ? `${esc(room.puzzle.holderName ?? "An ally")} holds the mechanism.` : "A puzzle is on the TV. Work it with the remote or the mouse."}</p>`;
+    }
+  } else {
+    const voting = !!(room.vote && room.players.length > 1);
+    const sec = voting ? Math.ceil(room.vote!.remainingMs / 1000) : 0;
+    const rest = room.rest;
+    const restBtns =
+      rest?.offer && (rest.canShort || rest.canLong)
+        ? `${rest.canShort ? `<button type="button" data-rest="short">Short rest · costs 1</button>` : ""}${
+            rest.canLong ? `<button type="button" data-rest="long">Long rest · costs 2</button>` : ""
+          }<p class="meta">One long rest or two short rests this tale · ${rest.budget} left</p>`
+        : "";
+    controls.innerHTML =
+      restBtns +
+      (voting ? `<p class="meta">Party vote · ${sec}s left</p>` : "") +
+      room.choices
+        .map((c, i) => {
+          const voted = room.vote?.votes.find((v) => v.playerId === seat.playerId)?.choiceId === c.id;
+          return `<button type="button" class="${i === 0 ? "primary" : ""} ${voted ? "voted" : ""}" data-choice="${esc(c.id)}"><b>${i + 1}</b>${esc(c.label)}${voted ? " · your vote" : ""}</button>`;
+        })
+        .join("");
+  }
+  const result = lastRollText(room, token);
+  if (result) {
+    const line = document.createElement("p");
+    line.className = "meta throw-result";
+    line.textContent = result;
+    controls.appendChild(line);
+  }
+}
+
+const rollText = (r: DiceFace) => `${r.label ?? r.notation}: ${r.values.join(", ")} = ${r.total}`;
+
+/** The total of the die this phone threw: the TV shows the tumble, the phone keeps the number. */
+function lastRollText(room: TableState, token: Token | undefined): string | null {
+  if (room.combat) {
+    const mine = token
+      ? [...(room.combat.events ?? [])].reverse().find((e) => e.tokenId === token.id && e.rolls?.length)
+      : undefined;
+    return mine ? `Last roll · ${mine.rolls!.map(rollText).join(" · ")}` : null;
+  }
+  return room.lastDice?.values?.length ? `Last roll · ${rollText(room.lastDice)}` : null;
+}
+
+function buzz(ms = 12): void {
+  if (navigator.vibrate) navigator.vibrate(ms);
+}
+
+/** One press on the controller, as a message the table already understands. */
+function act(el: HTMLElement): void {
+  const room = view?.room;
+  if (!room) return;
+  const d = el.dataset;
+  if (d.ability) {
+    buzz();
+    send({ action: needsAim(d.target) ? "AIM_ACTION" : "PERFORM_ACTION", abilityId: d.ability });
+  } else if (d.react) send({ action: "REACT", accept: d.react === "yes" });
+  else if (d.intent) {
+    buzz();
+    send({ action: "VOICE_INTENT", intent: d.intent });
+  } else if (d.team) send({ action: "SET_ARENA_TEAM", teamId: d.team });
+  else if (d.ready) send({ action: "ARENA_READY", ready: d.ready === "1" });
+  else if (d.help) {
+    buzz();
+    send({ action: "VOLUNTEER_CHECK", help: true });
+  } else if (d.beginFight) {
+    buzz();
+    send({ action: "BEGIN_COMBAT" });
+  } else if (d.withdraw) send({ action: "WITHDRAW" });
+  else if (d.claim) send({ action: "CLAIM_PUZZLE" });
+  else if (d.release) send({ action: "RELEASE_PUZZLE" });
+  else if (d.rest) send({ action: d.rest === "long" ? "LONG_REST" : "SHORT_REST" });
+  else if (d.choice) {
+    buzz();
+    send({ action: room.players.length > 1 ? "CAST_VOTE" : "CHOOSE", choiceId: d.choice });
+  }
+}
+
+$("controls").addEventListener("click", (ev) => {
+  const b = (ev.target as Element).closest<HTMLButtonElement>("button");
+  if (!b || b.disabled) return;
+  act(b);
+});
+
+/** The swipe: the phone gives the feel of the throw, the die itself lands on the TV. */
+function throwDie(pad: HTMLElement): void {
+  if (pad.dataset.spent === "1") return;
+  pad.dataset.spent = "1";
+  pad.classList.add("thrown");
+  buzz(24);
+  const id = pad.dataset.throw;
+  if (id === "volunteer") send({ action: "VOLUNTEER_CHECK" });
+  else if (id === "begin") send({ action: "BEGIN_COMBAT" });
+  else if (id) send({ action: needsAim(pad.dataset.target) ? "AIM_ACTION" : "PERFORM_ACTION", abilityId: id });
+}
+
+{
+  let pad: HTMLElement | null = null;
+  let startX = 0;
+  let startY = 0;
+  const controls = $("controls");
+  controls.addEventListener("pointerdown", (ev) => {
+    const hit = (ev.target as Element).closest<HTMLElement>("[data-throw]");
+    if (!hit) return;
+    pad = hit;
+    swiping = true;
+    startX = ev.clientX;
+    startY = ev.clientY;
+    try {
+      hit.setPointerCapture(ev.pointerId);
+    } catch {
+      /* the pad can still read the release */
+    }
+  });
+  controls.addEventListener("pointermove", (ev) => {
+    if (!pad) return;
+    const dx = ev.clientX - startX;
+    const dy = ev.clientY - startY;
+    pad.style.setProperty("--tilt", `${Math.max(-18, Math.min(18, dx / 6))}deg`);
+    pad.style.setProperty("--lift", `${Math.max(-40, Math.min(0, dy / 3))}px`);
+  });
+  const end = (ev: PointerEvent, cancelled: boolean) => {
+    if (!pad) return;
+    const hit = pad;
+    pad = null;
+    swiping = false;
+    hit.style.removeProperty("--tilt");
+    hit.style.removeProperty("--lift");
+    if (!cancelled && Math.hypot(ev.clientX - startX, ev.clientY - startY) > 48) throwDie(hit);
+    if (renderQueued) render();
+  };
+  controls.addEventListener("pointerup", (ev) => end(ev, false));
+  controls.addEventListener("pointercancel", (ev) => end(ev, true));
+  controls.addEventListener("keydown", (ev) => {
+    const hit = (ev.target as Element).closest<HTMLElement>("[data-throw]");
+    if (hit && (ev.key === "Enter" || ev.key === " ")) {
+      ev.preventDefault();
+      throwDie(hit);
+    }
+  });
+}
+
+// ------------------------------------------------------------------ mouse
+
+function paintMouse(): void {
+  document.body.classList.toggle("mouse-on", mouseOn && mode === "paired");
+  $("padDock").hidden = !(mouseOn && mode === "paired");
+  $("btnMouse").setAttribute("aria-pressed", String(mouseOn));
+  $("mouseLabel").textContent = mouseOn ? "Mouse on" : "Mouse off";
+}
+
+$("btnMouse").addEventListener("click", () => {
+  mouseOn = !mouseOn;
+  try {
+    localStorage.setItem(MOUSE_STORE, mouseOn ? "1" : "0");
+  } catch {
+    /* the switch just won't be remembered */
+  }
+  buzz(8);
+  paintMouse();
+  sendQuiet({ action: "POINTER_MODE", on: mouseOn });
+  render();
+});
+
+mountTrackpad($("trackpad"), sendQuiet);
+$("padOk").addEventListener("click", () => {
+  buzz(10);
+  sendQuiet({ action: "POINTER_TAP" });
+});
+$("padBack").addEventListener("click", () => {
+  buzz(10);
+  sendQuiet({ action: "POINTER_BACK" });
+});
+
+// ------------------------------------------------------------------ voice
 
 function intentFromSpeech(text: string): { intent?: string; choice?: number } | null {
   const t = text.toLowerCase();
@@ -693,13 +763,12 @@ $("btnMic").addEventListener("click", () => {
   rec.onresult = (ev) => {
     const said = ev.results[0]?.[0]?.transcript ?? "";
     const heard = intentFromSpeech(said);
-    if (!heard || !state) {
-      toast(`Heard “${said}” — that isn't a table command.`);
+    if (!heard || !view?.room) {
+      toast(`Heard “${said}”. That isn't a table command.`);
       return;
     }
     toast(`Heard “${said}”`, "ok");
-    const intent = heard.intent ?? `choose_${heard.choice}`;
-    send({ action: "VOICE_INTENT", roomCode: state.roomCode, playerId, intent });
+    send({ action: "VOICE_INTENT", intent: heard.intent ?? `choose_${heard.choice}` });
   };
   rec.onerror = (ev) => toast(ev.error === "not-allowed" ? "The microphone is blocked for this page." : "The microphone didn't catch that.");
   rec.onend = () => {
@@ -712,99 +781,32 @@ $("btnMic").addEventListener("click", () => {
   rec.start();
 });
 
+// ------------------------------------------------------------------ start
+
 document.addEventListener("visibilitychange", () => {
-  if (!document.hidden && ws?.readyState === WebSocket.OPEN) attach();
-});
-
-function paintAuthMode() {
-  $("authTitle").textContent = creating ? "Create account" : "Sign in";
-  $("authSubmit").textContent = creating ? "Create account" : "Enter";
-  $("btnAuthMode").textContent = creating ? "I already have an account" : "Create account";
-  $("registerFields").hidden = !creating;
-  $("registerRoom").textContent = creating
-    ? roomCode
-      ? `This account joins table ${roomCode}.`
-      : "Open a table on the television first. The code has to be on the QR."
-    : "";
-  $("authSubmit").toggleAttribute("disabled", creating && !roomCode);
-}
-
-$("btnAuthMode").addEventListener("click", () => {
-  creating = !creating;
-  $("loginError").textContent = "";
-  $("btnResend").hidden = true;
-  paintAuthMode();
-});
-
-$("btnResend").addEventListener("click", async () => {
-  $("loginError").textContent = "";
-  const res = await fetch("/api/register/resend", {
-    method: "POST",
-    credentials: "same-origin",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      username: ($("loginUser") as HTMLInputElement).value,
-      password: ($("loginPass") as HTMLInputElement).value,
-    }),
-  });
-  const body = (await res.json().catch(() => null)) as { error?: string } | null;
-  $("loginError").textContent = res.ok ? "Confirmation sent again." : describeError(body?.error ?? "MAIL_FAILED");
-});
-
-$("loginForm").addEventListener("submit", async (ev) => {
-  ev.preventDefault();
-  $("loginError").textContent = "";
-  $("btnResend").hidden = true;
-  const username = ($("loginUser") as HTMLInputElement).value;
-  const password = ($("loginPass") as HTMLInputElement).value;
-  if (creating) {
-    const res = await fetch("/api/register", {
-      method: "POST",
-      credentials: "same-origin",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        username,
-        password,
-        email: ($("loginEmail") as HTMLInputElement).value,
-        roomCode,
-      }),
-    });
-    const body = (await res.json().catch(() => null)) as { error?: string } | null;
-    $("loginError").textContent = res.ok
-      ? "Check your email and confirm the account. The table won't write again."
-      : describeError(body?.error ?? "MAIL_FAILED");
+  if (document.hidden) {
+    if (mode === "scan") closeCamera();
     return;
   }
-  const res = await fetch("/api/login", {
-    method: "POST",
-    credentials: "same-origin",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ username, password }),
-  });
-  if (!res.ok) {
-    const body = (await res.json().catch(() => null)) as { error?: string } | null;
-    const code = body?.error ?? "BAD_LOGIN";
-    $("loginError").textContent = describeError(code);
-    $("btnResend").hidden = code !== "UNCONFIRMED";
-    return;
-  }
-  signedIn = true;
-  render();
-  connect();
+  if (mode === "scan") void openCamera();
+  else if (!ws || ws.readyState === WebSocket.CLOSED) connect();
 });
-
-async function ensureLogin(): Promise<void> {
-  paintAuthMode();
-  const me = await fetch("/api/me", { credentials: "same-origin" });
-  if (me.ok) signedIn = true;
-}
 
 if ("serviceWorker" in navigator) {
   void navigator.serviceWorker.register("/companion/sw.js").catch(() => undefined);
 }
 
-render();
-void ensureLogin().then(() => {
-  render();
-  if (signedIn) connect();
-});
+{
+  const fromQr = new URLSearchParams(location.search).get("pair");
+  history.replaceState(null, "", location.pathname);
+  const token = fromQr ? pairTokenFrom(`${location.origin}/companion/?pair=${fromQr}`) : null;
+  if (token) {
+    pair(token);
+  } else if (phoneKey) {
+    $("linkingText").textContent = "Finding your TV…";
+    setMode("linking");
+    connect();
+  } else {
+    setMode("scan");
+  }
+}

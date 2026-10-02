@@ -64,6 +64,10 @@ export function setScopeProvider(fn: () => HTMLElement) {
   scopeProvider = fn;
 }
 
+export function navScope(): HTMLElement {
+  return scopeProvider();
+}
+
 export function focusables(root: HTMLElement = scopeProvider()): HTMLElement[] {
   return [...root.querySelectorAll<HTMLElement>(FOCUSABLE)].filter(visible);
 }

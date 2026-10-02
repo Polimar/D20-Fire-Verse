@@ -64,11 +64,18 @@ once; *Settings → Show first-fight tips again* brings it back.
 
 ## Phones (companion)
 
-The title and lobby show a QR code. Scanning it opens `/companion/` on the table's LAN address: pick a
-hero to take a seat, tap story choices, roll skill checks, and on your turn attack, cast or end the
-turn — or speak a short command. A phone seat survives screen locks and reloads (it rejoins on its
-own). The TV can host a phone-only party: *Begin with the phone players* in the lobby, or just let a
-phone make the first choice and the TV follows.
+Each signed-in TV shows **its own** one-time QR code (title and lobby). The phone that scans it
+becomes that player's personal controller — no login on the phone, and an unpaired phone shows only
+the camera. The QR then gives way to a *Phone linked* card. The link ends on Log out, on going back
+to the title from a table, or when the TV app closes (45 s grace, `CONSOLE_GRACE_MS`); the phone
+returns to the camera and scans again.
+
+The phone follows that TV: title, campaign, arena, lobby, story and combat. Once the TV sits with a
+hero, the phone shows that hero's full sheet and the player's own buttons (story choices, votes,
+checks, actions, End turn). **Swipe** the die pad to throw: the die lands on the TV and the total
+appears on the phone. The **Mouse** switch adds a trackpad under the sheet — drag moves a pointer on
+the TV, tap is OK — so the hero can be picked from the phone too; the remote keeps working and the
+last command wins.
 
 If a seated player drops mid-fight for more than 20 s (`DROP_GRACE_MS`) while others are still at
 the table, their hero Dodges and passes the turn so nobody is held hostage. If nobody is watching,
@@ -143,15 +150,19 @@ pip install -r tools/sfx/requirements.txt   && python3 tools/sfx/render.py
 [`firetv/`](firetv/) is the living-room app: a Kotlin WebView shell for Fire TV and Android TV
 (Fire OS 5 / Android 5.1 and later) that puts the table full screen with autoplaying narration.
 
-**Install** the signed build from [`releases/firetv/`](releases/firetv/) (≈ 450 KB):
+**Install** the signed build from [`releases/firetv/`](releases/firetv/) (≈ 570 KB):
 
 - *Downloader app* — on the Fire TV enable *Settings → My Fire TV → Developer options → Install unknown
   apps* for Downloader, then open the raw GitHub URL of the APK.
 - *adb* — enable *ADB debugging* in the same menu, then
-  `adb connect <fire-tv-ip>:5555 && adb install -r releases/firetv/d20-fireverse-firetv-1.0.0.apk`.
+  `adb connect <fire-tv-ip>:5555 && adb install -r releases/firetv/d20-fireverse-firetv-1.0.1.apk`.
 
-Signing certificate SHA-256 `33:36:3D:54:97:A7:41:97:D4:73:90:5B:86:7E:47:17:1C:C0:8F:C3:AF:66:A3:DD:61:FA:75:6A:E4:5A:8B:8B`
-(`apksigner verify --print-certs`). Updates install over it only when signed with the same key.
+Signing certificate SHA-256 `C4:F4:D8:23:62:4C:6C:5B:F1:84:E6:74:5F:43:54:45:52:80:70:88:F7:81:FC:67:2B:A5:89:65:18:DB:CA:E7`
+(`apksigner verify --print-certs`). Updates install over it only when signed with the same key. 1.0.0
+was signed with a throwaway CI key: uninstall it once before installing 1.0.1.
+
+**Login with Amazon** is the main sign-in on the Stick once the SDK, an API key and the server keys are
+in place; until then the test account is offered. Setup: [`docs/AMAZON_LOGIN.md`](docs/AMAZON_LOGIN.md).
 
 **First launch** finds the table by itself: the server announces `_fireverse._tcp` over mDNS
 (`ANNOUNCE=off` to silence it) and the app lists every table on the Wi‑Fi — with one table it sits

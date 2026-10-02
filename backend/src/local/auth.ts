@@ -64,7 +64,9 @@ function database(): DatabaseSync {
   if (!cols.has("email")) db.exec("ALTER TABLE users ADD COLUMN email TEXT");
   if (!cols.has("confirm_token")) db.exec("ALTER TABLE users ADD COLUMN confirm_token TEXT");
   if (!cols.has("confirm_room")) db.exec("ALTER TABLE users ADD COLUMN confirm_room TEXT");
+  if (!cols.has("amazon_user_id")) db.exec("ALTER TABLE users ADD COLUMN amazon_user_id TEXT");
   db.exec("CREATE UNIQUE INDEX IF NOT EXISTS users_email ON users(email) WHERE email IS NOT NULL");
+  db.exec("CREATE UNIQUE INDEX IF NOT EXISTS users_amazon ON users(amazon_user_id) WHERE amazon_user_id IS NOT NULL");
   const count = db.prepare("SELECT COUNT(*) AS n FROM users").get() as { n: number };
   if (count.n === 0) {
     createUser("admin", "admin", "admin");
@@ -190,6 +192,50 @@ export function login(username: string, password: string): { token: string; user
   return result.kind === "ok" ? { token: result.token, user: result.user } : null;
 }
 
+/** A readable, unique username from the Amazon profile name ("Ada Lovelace" → "Ada.Lovelace", then "Ada.Lovelace2"). */
+function freeUsername(name: string | undefined): string {
+  const base =
+    (name ?? "")
+      .normalize("NFKD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .trim()
+      .replace(/\s+/g, ".")
+      .replace(/[^a-zA-Z0-9._-]/g, "")
+      .replace(/^[._-]+|[._-]+$/g, "")
+      .slice(0, 28) || "adventurer";
+  const stem = base.length >= 2 ? base : `${base}.player`;
+  if (!userByName(stem)) return stem;
+  for (let n = 2; n < 10_000; n += 1) {
+    const candidate = `${stem.slice(0, 32 - String(n).length)}${n}`;
+    if (!userByName(candidate)) return candidate;
+  }
+  return `adventurer.${randomBytes(4).toString("hex")}`;
+}
+
+/**
+ * Sign in with a verified Amazon profile. The first visit creates a player account bound to the
+ * Amazon user id; later visits find it again even if the profile name changed.
+ */
+export function signInWithAmazon(profile: { amazonUserId: string; name?: string }): { token: string; user: SessionUser } {
+  const amazonId = profile.amazonUserId.trim();
+  if (!/^amzn1\.account\.[A-Za-z0-9]+$/.test(amazonId)) throw new Error("AMAZON_FAILED");
+  const row = database()
+    .prepare("SELECT id, username, role, disabled FROM users WHERE amazon_user_id = ?")
+    .get(amazonId) as { id: string; username: string; role: Role; disabled: number } | undefined;
+  if (row) {
+    if (row.disabled) throw new Error("FORBIDDEN");
+    return { token: openSession(row.id), user: { id: row.id, username: row.username, role: row.role, disabled: false } };
+  }
+  const id = `user_${randomBytes(8).toString("hex")}`;
+  const username = freeUsername(profile.name);
+  database()
+    .prepare(
+      "INSERT INTO users (id, username, password, role, disabled, created_at, amazon_user_id) VALUES (?, ?, ?, 'player', 0, ?, ?)",
+    )
+    .run(id, username, hashPassword(randomBytes(24).toString("hex")), new Date().toISOString(), amazonId);
+  return { token: openSession(id), user: { id, username, role: "player", disabled: false } };
+}
+
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export async function registerPlayer(input: {
@@ -293,6 +339,12 @@ export function assertAdmin(user: SessionUser | null): SessionUser {
 
 function pairKey(a: string, b: string): [string, string] {
   return a < b ? [a, b] : [b, a];
+}
+
+/** The account behind a paired phone. Null once the account is gone or disabled. */
+export function activeUserById(id: string): SessionUser | null {
+  const u = userRow(id);
+  return u && !u.disabled ? u : null;
 }
 
 function userRow(id: string): SessionUser | null {

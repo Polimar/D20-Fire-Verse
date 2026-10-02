@@ -4,6 +4,7 @@
   "start_url": "/companion/",
   "scope": "/companion/",
   "display": "standalone",
+  "orientation": "portrait",
   "background_color": "#120c09",
   "theme_color": "#120c09",
   "icons": [

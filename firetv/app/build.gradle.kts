@@ -10,6 +10,13 @@ val tableUrl = (findProperty("fireverse.tableUrl") as String?)?.takeIf { it.isNo
 /** Release signing comes from the environment; without it the release build is signed with the debug key. */
 val keystorePath: String? = System.getenv("FIREVERSE_KEYSTORE")
 
+/**
+ * The Login with Amazon SDK may not be redistributed, so it is not in git: scripts/fetch-lwa-sdk.sh
+ * drops it in libs/. Without it the app builds with a stub and the page offers the test account.
+ */
+val lwaJar = file("libs/login-with-amazon-sdk.jar")
+val withLwa = lwaJar.isFile
+
 android {
     namespace = "com.d20fireverse.tv"
     compileSdk = 35
@@ -18,9 +25,16 @@ android {
         applicationId = "com.d20fireverse.tv"
         minSdk = 22
         targetSdk = 35
-        versionCode = 1
-        versionName = "1.0.0"
+        versionCode = 2
+        versionName = "1.0.1"
         buildConfigField("String", "DEFAULT_TABLE_URL", "\"$tableUrl\"")
+        manifestPlaceholders["lwaEnabled"] = withLwa.toString()
+    }
+
+    sourceSets {
+        getByName("main") {
+            java.srcDir(if (withLwa) "src/lwa/java" else "src/nolwa/java")
+        }
     }
 
     signingConfigs {
@@ -55,4 +69,8 @@ android {
     kotlinOptions {
         jvmTarget = "17"
     }
+}
+
+dependencies {
+    if (withLwa) implementation(files(lwaJar))
 }

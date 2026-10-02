@@ -52,6 +52,8 @@ export type CombatToken = {
   initiative: number;
   playerId?: string;
   characterId?: string;
+  /** The hero's level when it differs from the catalog pregen (arena heroes are scaled). */
+  level?: number;
   monsterId?: string;
   teamId?: string;
   actionIds: string[];
@@ -688,6 +690,7 @@ export function startArenaCombat(opts: {
       id: `pc-${p.playerId}`,
       kind: "pc",
       name: pregen.name,
+      level: pregen.level,
       x: spot.x,
       y: spot.y,
       hp: pregen.hp,
@@ -2649,7 +2652,7 @@ type MenuAction = {
   available: boolean;
 };
 
-function buildPcSheet(
+export function buildPcSheet(
   token: CombatToken,
   actionMenu: { actions: MenuAction[]; bonusActions: MenuAction[] } | null,
 ) {
@@ -2660,7 +2663,7 @@ function buildPcSheet(
     portrait: portraitForCharacter(token.characterId),
     name: token.name,
     summary: pregen?.summary ?? "",
-    level: pregen?.level ?? 1,
+    level: token.level ?? pregen?.level ?? 1,
     className: pregen?.class ?? "adventurer",
     race: (pregen as { race?: string } | undefined)?.race ?? "",
     background: (pregen as { background?: string } | undefined)?.background ?? "",

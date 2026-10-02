@@ -11,9 +11,19 @@ import { ARENA_FORMATS, ARENA_THEMES, suggestedSize, type OpenArena } from "./ar
 import { isD20, rollD20 } from "./dice3d";
 import { DUNGEON_ROOMS, roomForNode, type DungeonRoomId } from "./dungeon-map";
 import { onMusicChange, setMusic, toggleMusic, type MusicTrack } from "./music";
-import { registerNativeBack } from "./native";
+import { nativeAmazonReady, nativeAmazonSignIn, nativeAmazonSignOut, nativeApp, registerNativeBack } from "./native";
 import { moveFocus, ownsArrows, remoteKey, restoreFocus, setScopeProvider, type RemoteKey } from "./nav";
-import { companionUrl, paintCompanionQr, REMOTE_LEGEND } from "./onboarding";
+import { REMOTE_LEGEND } from "./onboarding";
+import {
+  consoleId,
+  mountPhoneLink,
+  phoneLinkHost,
+  phoneLinkOffer,
+  phoneLinkStatus,
+  resetPhoneLink,
+  unlinkPhone,
+} from "./phone-link";
+import { mountPointer, onPointer, type TrackpadEvent } from "./pointer";
 import { puzzleBack, puzzleKindForNode, renderInteractivePuzzle } from "./puzzles";
 import { chapterCard, mountScenes, setScene } from "./scenefx";
 import { ART, sceneForNode } from "./scenes";
@@ -46,16 +56,26 @@ appRoot.innerHTML = `
     <button type="button" class="menu-hint" id="btnMenuSettings" title="Settings (Menu on the remote, S on the keyboard)"><kbd aria-hidden="true">☰</kbd> Settings</button>
   </header>
 
-  <div class="login-gate" id="loginGate">
-    <form class="login-card" id="loginForm">
+  <div class="login-gate" id="loginGate" hidden>
+    <div class="login-card">
       <p class="home-kicker">The table</p>
       <h2>Sign in</h2>
-      <label>Username <input id="loginUser" autocomplete="username" data-autofocus /></label>
-      <label>Password <input id="loginPass" type="password" autocomplete="current-password" /></label>
-      <button type="submit" class="primary">Enter</button>
-      <p class="meta">Create your account on your phone. Scan the code once a table is open.</p>
-      <p class="meta err" id="loginError"></p>
-    </form>
+      <div class="login-ways">
+        <section class="login-amazon">
+          <button type="button" class="primary amazon-btn" id="btnAmazon" data-autofocus>Continue with Amazon</button>
+          <p class="meta" id="amazonNote"></p>
+        </section>
+        <details class="login-test" id="loginTest">
+          <summary>Test account</summary>
+          <form id="loginForm">
+            <label>Username <input id="loginUser" autocomplete="username" /></label>
+            <label>Password <input id="loginPass" type="password" autocomplete="current-password" /></label>
+            <button type="submit">Enter</button>
+          </form>
+        </details>
+      </div>
+      <p class="meta err" id="loginError" role="alert"></p>
+    </div>
   </div>
 
   <main class="pages">
@@ -73,9 +93,9 @@ appRoot.innerHTML = `
       </div>
       <aside class="home-side">
         <div class="card qr-card">
-          <p class="card-kicker">Bring a phone</p>
+          <p class="card-kicker">Your phone</p>
           <div class="qr" id="homeQr"></div>
-          <p class="meta">Scan to open the companion and take a seat from the couch.</p>
+          <p class="meta" id="homeQrHint"></p>
         </div>
         <div class="card legend-card">
           <p class="card-kicker">The remote is all you need</p>
@@ -95,8 +115,9 @@ appRoot.innerHTML = `
         <div class="card room-card">
           <p class="card-kicker">This table</p>
           <p class="room-code" id="roomCode">······</p>
+          <p class="meta" id="lobbyStatus"></p>
           <div class="qr" id="lobbyQr"></div>
-          <p class="meta" id="lobbyQrHint">Scan to join this table from a phone.</p>
+          <p class="meta" id="lobbyQrHint"></p>
           <ul class="seats" id="lobbySeats"></ul>
         </div>
         <button type="button" class="primary" id="btnLobbyWatch" hidden>Begin with the party</button>
@@ -232,16 +253,53 @@ function toast(text: string, kind: "bad" | "ok" | "info" = "bad") {
   }, kind === "bad" ? 4200 : 3200);
 }
 
+/** Create or rejoin that has not been confirmed by a room state yet. Resent when the socket opens. */
+let pendingTable: Record<string, unknown> | null = null;
+/** Last create or rejoin, kept so a failed open can be tried again from the lobby. */
+let tableRequest: Record<string, unknown> | null = null;
+let tableError: string | null = null;
+/** Hero chosen before the room code existed. Seated as soon as the table opens. */
+let pendingHeroId: string | null = null;
+
+function socketOpen(): boolean {
+  return !!ws && ws.readyState === WebSocket.OPEN;
+}
+
+function deliver(obj: Record<string, unknown>): boolean {
+  if (!socketOpen() || !ws) return false;
+  ws.send(JSON.stringify(obj));
+  return true;
+}
+
+function flushPendingTable(): void {
+  if (!pendingTable || state?.roomCode) return;
+  deliver(pendingTable);
+}
+
 function send(obj: Record<string, unknown>) {
-  if (!ws || ws.readyState !== WebSocket.OPEN) {
+  if (!deliver(obj)) {
     sfx("uiError");
     toast("The table is reconnecting. Try again in a moment.", "info");
-    return;
   }
-  ws.send(JSON.stringify(obj));
+}
+
+/** Open a campaign or arena, and keep the request until a room state arrives. */
+function openTable(msg: Record<string, unknown>): void {
+  tableRequest = msg;
+  pendingTable = msg;
+  tableError = null;
+  pendingHeroId = null;
+  if (!deliver(msg)) {
+    sfx("uiError");
+    toast("The link to the table is down. It will open as soon as it is back.", "info");
+  }
+  showPage("lobby");
+  renderLobby();
 }
 
 function scopeRoot(): HTMLElement {
+  const gate = document.querySelector<HTMLElement>("#loginGate:not([hidden])");
+  if (gate) return gate;
   const modal = settingsOpen() ?? document.querySelector<HTMLElement>(".modal:not([hidden])");
   if (modal) return modal;
   const cg = document.querySelector<HTMLElement>(".chargen-panel.is-open");
@@ -250,10 +308,26 @@ function scopeRoot(): HTMLElement {
 }
 setScopeProvider(scopeRoot);
 
+let reportedView = "";
+
+/** The screen this TV is on, as its phone shows it. */
+function currentView(): "title" | "campaign" | "arena" | PageId {
+  if (page !== "home") return page;
+  if (homeView === "modes") return "title";
+  return homeView === "campaign" ? "campaign" : "arena";
+}
+
+function reportView(force = false): void {
+  const view = currentView();
+  if (!account || (!force && view === reportedView)) return;
+  if (deliver({ action: "CONSOLE_VIEW", view })) reportedView = view;
+}
+
 function showPage(next: PageId) {
   if (page === next && document.querySelector(`.page.active`)) {
     return;
   }
+  if (next === "home" && page !== "home") unlinkPhone("title");
   page = next;
   document.body.dataset.page = next;
   document.body.classList.toggle("in-combat", next === "combat");
@@ -277,6 +351,7 @@ function showPage(next: PageId) {
   if (next !== "combat") combat.reset();
   const inPlay = next === "story" || next === "combat";
   $("playControls").hidden = !inPlay;
+  reportView();
   requestAnimationFrame(() => restoreFocus(null));
 }
 
@@ -573,9 +648,7 @@ function renderHome() {
       spectating = false;
       lobbyEntry = null;
       const campaignId = ($("campPick") as HTMLSelectElement | null)?.value || campaigns[0]?.id;
-      send({ action: "CREATE_ROOM", campaignId });
-      showPage("lobby");
-      renderLobby();
+      openTable({ action: "CREATE_ROOM", campaignId });
     });
     $("btnLoad").addEventListener("click", () => {
       $("homeLoad").hidden = !$("homeLoad").hidden;
@@ -658,7 +731,7 @@ function renderHome() {
       state = null;
       spectating = true;
       lobbyEntry = null;
-      send({
+      openTable({
         action: "CREATE_ARENA",
         format: arenaCreate.format,
         theme: arenaCreate.theme,
@@ -668,7 +741,6 @@ function renderHome() {
         name: arenaCreate.name,
         monsterId: arenaCreate.format === "pve_1v1" ? arenaCreate.monsterId : undefined,
       });
-      showPage("lobby");
     });
     $("btnHomeBack").addEventListener("click", () => {
       homeView = "arena";
@@ -693,14 +765,18 @@ function renderHome() {
       const code = ($("arenaJoinCode") as HTMLInputElement).value.trim().toUpperCase();
       if (code.length < 4) return;
       spectating = true;
-      send({ action: "REJOIN", roomCode: code });
-      showPage("lobby");
+      playerId = null;
+      state = null;
+      lobbyEntry = null;
+      openTable({ action: "REJOIN", roomCode: code });
     });
     cta.querySelectorAll<HTMLElement>(".arena-open").forEach((b) =>
       b.addEventListener("click", () => {
         spectating = true;
-        send({ action: "REJOIN", roomCode: b.dataset.code });
-        showPage("lobby");
+        playerId = null;
+        state = null;
+        lobbyEntry = null;
+        openTable({ action: "REJOIN", roomCode: b.dataset.code });
       }),
     );
     $("btnHomeBack").addEventListener("click", () => {
@@ -711,10 +787,7 @@ function renderHome() {
   $("btnSettings")?.addEventListener("click", () => openTableSettings());
   $("btnMenuSettings").addEventListener("click", () => openTableSettings());
   $("btnAdmin")?.addEventListener("click", () => openAdmin());
-  void companionUrl().then((url) => {
-    const label = url.replace(/^https?:\/\//, "").replace(/\/$/, "");
-    paintCompanionQr($("homeQr"), url, $("homeQr").parentElement?.querySelector<HTMLElement>(".meta"), `Scan or open ${label}`);
-  });
+  reportView();
 }
 
 function continueSession() {
@@ -724,7 +797,11 @@ function continueSession() {
   pendingRejoin = session;
   resumedFirstState = true;
   spectating = !session.playerId;
-  send({ action: "REJOIN", roomCode: session.roomCode, playerId: session.playerId ?? undefined });
+  const msg = { action: "REJOIN", roomCode: session.roomCode, playerId: session.playerId ?? undefined };
+  tableRequest = msg;
+  pendingTable = msg;
+  tableError = null;
+  if (!deliver(msg)) toast("The link to the table is down. It will open as soon as it is back.", "info");
 }
 
 $("btnResume").addEventListener("click", () => {
@@ -788,20 +865,18 @@ function renderLobby() {
     b.addEventListener("click", () => {
       const id = b.dataset.hero!;
       if (!state?.roomCode) {
-        toast("Setting the table… try again in a moment.", "info");
+        pendingHeroId = id;
+        selectedHero = id;
+        if (!pendingTable && tableRequest) pendingTable = tableRequest;
+        tableError = null;
+        if (pendingTable && !deliver(pendingTable)) {
+          toast("The link to the table is down. It will open as soon as it is back.", "info");
+        } else {
+          toast("Setting the table… you'll take this seat as soon as it opens.", "info");
+        }
         return;
       }
-      if (joining) return;
-      joining = true;
-      selectedHero = id;
-      sfx("uiConfirm");
-      const hero = pregens.find((p) => p.id === id);
-      if (arena && playerId && swapping) {
-        send({ action: "ARENA_PICK_HERO", roomCode: state.roomCode, characterId: id, playerId });
-      } else {
-        send({ action: "JOIN_ROOM", roomCode: state.roomCode, characterId: id, displayName: hero?.name ?? "Hero" });
-      }
-      window.setTimeout(() => (joining = false), 3000);
+      seatHero(id);
     }),
   );
   $("btnForge").addEventListener("click", () => {
@@ -833,7 +908,7 @@ function renderLobby() {
         : "";
       const ready = arena
         ? `<em>${p.ready ? "ready" : "waiting"}</em>${mine ? `<button type="button" data-ready="${p.ready ? "0" : "1"}">${p.ready ? "Unready" : "Ready"}</button>` : ""}`
-        : `<em>${mine ? "this TV" : "phone"}</em>`;
+        : `<em>${mine ? "this TV" : "another TV"}</em>`;
       return `<li><img src="${esc(p.portrait)}" alt="" /><span>${esc(p.characterName)}</span>${team}${ready}</li>`;
     })
     .join("");
@@ -855,19 +930,34 @@ function renderLobby() {
     watch.hidden = !state?.isHost;
     watch.textContent = swapping ? "Hero swap — wait for Ready" : `Start arena (${phones}/${cap})`;
     const left = state?.arena?.heroSwapEndsAt ? Math.max(0, Math.ceil((state.arena.heroSwapEndsAt - Date.now()) / 1000)) : 0;
-    $("lobbyQrHint").textContent = swapping
+    $("lobbyStatus").textContent = swapping
       ? `${state?.arena?.lastResult ?? "Round over."} ${left}s to change heroes.`
-      : `Scan to join. ${state?.arena?.formatLabel ?? ""} · L${state?.arena?.level ?? ""} · ${state?.arena?.theme ?? ""}`;
+      : `Friends join from their own TV with this code. ${state?.arena?.formatLabel ?? ""} · L${state?.arena?.level ?? ""} · ${state?.arena?.theme ?? ""}`;
   } else {
     watch.hidden = phones === 0;
-    watch.textContent = phones === 1 ? "Begin with the phone player" : `Begin with the ${phones} phone players`;
+    watch.textContent = phones === 1 ? "Begin with the hero at the table" : `Begin with the ${phones} heroes at the table`;
+    $("lobbyStatus").textContent = "Friends join from their own TV with this code.";
   }
-  if (state?.roomCode) {
-    const code = state.roomCode;
-    void companionUrl(code).then((url) => {
-      paintCompanionQr($("lobbyQr"), url, arena ? null : $("lobbyQrHint"), `Scan to join table ${code} from a phone.`);
-    });
+  if (!state?.roomCode) {
+    $("lobbyStatus").textContent = tableError ?? "Opening the table…";
+    watch.hidden = true;
   }
+}
+
+function seatHero(id: string): void {
+  if (!state?.roomCode || joining) return;
+  joining = true;
+  selectedHero = id;
+  sfx("uiConfirm");
+  const hero = pregens.find((p) => p.id === id);
+  const arena = state.mode === "arena";
+  const swapping = state.arena?.phase === "hero_swap";
+  if (arena && playerId && swapping) {
+    send({ action: "ARENA_PICK_HERO", roomCode: state.roomCode, characterId: id, playerId });
+  } else {
+    send({ action: "JOIN_ROOM", roomCode: state.roomCode, characterId: id, displayName: hero?.name ?? "Hero" });
+  }
+  window.setTimeout(() => (joining = false), 3000);
 }
 
 $("btnLobbyWatch").addEventListener("click", () => {
@@ -1243,6 +1333,10 @@ async function routeNow() {
 
 function onRoomState(next: RoomState) {
   state = next;
+  pendingTable = null;
+  tableError = null;
+  const queuedHero = pendingHeroId;
+  pendingHeroId = null;
   setCast(next.cast);
   if (next.localPlayerId) playerId = next.localPlayerId;
   joining = false;
@@ -1267,11 +1361,23 @@ function onRoomState(next: RoomState) {
     savedTimer = window.setTimeout(() => (chip.hidden = true), 2600);
   }
   lastAutosave = next.autosaveId ? `${next.autosaveId}:${next.nodeId}` : lastAutosave;
+  const alreadySeated = !!queuedHero && next.players.some((p) => p.playerId === playerId && p.characterId === queuedHero);
+  if (queuedHero && next.roomCode && !alreadySeated) seatHero(queuedHero);
   route();
 }
 
 function onError(code: string, action?: string) {
   joining = false;
+  if (action === "CREATE_ROOM" || action === "CREATE_ARENA") {
+    pendingTable = null;
+    pendingHeroId = null;
+    tableError = describeError(code);
+    sfx("uiError");
+    toast(tableError, "bad");
+    if (page !== "lobby") showPage("lobby");
+    else renderLobby();
+    return;
+  }
   if (action === "CREATE_CHARACTER" || action === "ROLL_ABILITIES") chargenApi?.failed();
   if (action === "REJOIN" || (code === "ROOM_NOT_FOUND" && pendingRejoin)) {
     const session = pendingRejoin ?? loadSession();
@@ -1292,21 +1398,32 @@ function onError(code: string, action?: string) {
 }
 
 function connect() {
+  if (ws && ws.readyState !== WebSocket.CLOSED) return;
   const proto = location.protocol === "https:" ? "wss" : "ws";
-  ws = new WebSocket(`${proto}://${location.host}/ws`);
+  const sock = new WebSocket(`${proto}://${location.host}/ws?console=${encodeURIComponent(consoleId())}`);
+  ws = sock;
   const conn = $("conn");
-  ws.addEventListener("open", () => {
+  sock.addEventListener("open", () => {
+    if (ws !== sock) return;
     reconnectDelay = 800;
     conn.textContent = "Table live";
     conn.className = "conn ok";
   });
-  ws.addEventListener("close", () => {
+  sock.addEventListener("close", () => {
+    if (ws !== sock) return;
+    reportedView = "";
+    if (!account) {
+      conn.textContent = "Signed out";
+      conn.className = "conn";
+      return;
+    }
     conn.textContent = "Reconnecting…";
     conn.className = "conn bad";
     window.setTimeout(connect, reconnectDelay);
     reconnectDelay = Math.min(8000, reconnectDelay * 1.6);
   });
-  ws.addEventListener("message", (ev) => {
+  sock.addEventListener("message", (ev) => {
+    if (ws !== sock) return;
     let msg: { eventType: string; payload: any };
     try {
       msg = JSON.parse(String(ev.data));
@@ -1324,7 +1441,9 @@ function connect() {
           chargenApi = mountChargen({ root: $("chargenHost"), catalog, portraits, send, onCreated: (id) => (selectedHero = id) });
         } else if (catalog) chargenApi?.refresh(catalog);
         if (page === "lobby") renderLobby();
+        reportView(true);
         const session = loadSession();
+        if (!state?.roomCode) flushPendingTable();
         if (state?.roomCode) {
           resumedFirstState = true;
           send({ action: "REJOIN", roomCode: state.roomCode, playerId: playerId ?? undefined });
@@ -1359,6 +1478,15 @@ function connect() {
         break;
       case "SAVE_ACK":
         toast(`Saved. Code: ${msg.payload.saveId}`, "ok");
+        break;
+      case "PAIR_OFFER":
+        phoneLinkOffer(msg.payload);
+        break;
+      case "COMPANION_LINK":
+        phoneLinkStatus(msg.payload);
+        break;
+      case "POINTER":
+        onPointer(msg.payload as TrackpadEvent);
         break;
       case "ERROR":
         onError(msg.payload?.code, msg.payload?.action);
@@ -1501,11 +1629,36 @@ async function readAccount(res: Response): Promise<Account | null> {
 }
 
 async function logOut(): Promise<void> {
+  unlinkPhone("logout");
+  nativeAmazonSignOut();
   await fetch("/api/logout", { method: "POST", credentials: "same-origin" });
   account = null;
-  $("loginGate").hidden = false;
+  reportedView = "";
+  resetPhoneLink();
+  showLoginGate();
   renderHome();
   ws?.close();
+}
+
+/** A session cookie was just set: open a socket that carries it, replacing any anonymous one. */
+async function signedIn(res: Response): Promise<void> {
+  account = await readAccount(res);
+  if (!account) {
+    $("loginError").textContent = describeError("BAD_LOGIN");
+    return;
+  }
+  $("loginGate").hidden = true;
+  renderHome();
+  const stale = ws;
+  ws = null;
+  stale?.close();
+  connect();
+  requestAnimationFrame(() => restoreFocus());
+}
+
+async function failedLogin(res: Response, fallback: string): Promise<void> {
+  const body = (await res.json().catch(() => null)) as { error?: string } | null;
+  $("loginError").textContent = describeError(body?.error ?? fallback);
 }
 
 $("loginForm").addEventListener("submit", async (ev) => {
@@ -1521,26 +1674,124 @@ $("loginForm").addEventListener("submit", async (ev) => {
     }),
   });
   if (!res.ok) {
-    const body = (await res.json().catch(() => null)) as { error?: string } | null;
-    $("loginError").textContent = describeError(body?.error ?? "BAD_LOGIN");
+    await failedLogin(res, "BAD_LOGIN");
     return;
   }
-  account = await readAccount(res);
-  $("loginGate").hidden = true;
-  renderHome();
-  if (!ws || ws.readyState === WebSocket.CLOSED) connect();
+  await signedIn(res);
 });
 
+// ------------------------------------------------------------------ Login with Amazon
+
+let amazonOnServer = false;
+let amazonBusy = false;
+
+async function loginWithAmazonToken(accessToken: string): Promise<void> {
+  const res = await fetch("/api/login/amazon", {
+    method: "POST",
+    credentials: "same-origin",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ accessToken }),
+  });
+  amazonBusy = false;
+  paintAmazon();
+  if (!res.ok) {
+    await failedLogin(res, "AMAZON_FAILED");
+    return;
+  }
+  await signedIn(res);
+}
+
+/** Interactive: the player pressed the button. Silent: a start-up attempt that only works once approved. */
+function amazonOnStick(interactive: boolean): void {
+  if (amazonBusy) return;
+  amazonBusy = true;
+  paintAmazon();
+  const started = nativeAmazonSignIn(interactive, {
+    token: (t) => void loginWithAmazonToken(t),
+    error: (code) => {
+      amazonBusy = false;
+      paintAmazon();
+      if (interactive) $("loginError").textContent = describeError(code);
+    },
+  });
+  if (!started) {
+    amazonBusy = false;
+    paintAmazon();
+  }
+}
+
+function paintAmazon(): void {
+  const onStick = nativeApp() !== null;
+  const ready = amazonOnServer && (!onStick || nativeAmazonReady());
+  const btn = $("btnAmazon") as HTMLButtonElement;
+  btn.disabled = !ready || amazonBusy;
+  btn.textContent = amazonBusy ? "Asking Amazon…" : "Continue with Amazon";
+  $("amazonNote").textContent = ready
+    ? onStick
+      ? "The Amazon account on this Fire TV. You approve it once."
+      : "Use your Amazon account. You approve it once."
+    : describeError("AMAZON_NOT_CONFIGURED");
+}
+
+$("btnAmazon").addEventListener("click", () => {
+  $("loginError").textContent = "";
+  if (nativeApp()) {
+    amazonOnStick(true);
+    return;
+  }
+  location.href = "/api/login/amazon/start";
+});
+
+function showLoginGate(): void {
+  const onStick = nativeApp() !== null;
+  const gate = $("loginGate");
+  gate.classList.toggle("on-stick", onStick);
+  ($("loginTest") as HTMLDetailsElement).open = !onStick || !amazonOnServer;
+  paintAmazon();
+  gate.hidden = false;
+  requestAnimationFrame(() => restoreFocus());
+}
+
+/** `?login_error=` comes back from the Amazon redirect; show it once and clean the address. */
+function takeLoginError(): void {
+  const params = new URLSearchParams(location.search);
+  const code = params.get("login_error");
+  if (!code) return;
+  params.delete("login_error");
+  const rest = params.toString();
+  history.replaceState(null, "", `${location.pathname}${rest ? `?${rest}` : ""}${location.hash}`);
+  $("loginError").textContent = describeError(code);
+}
+
 async function ensureLogin(): Promise<void> {
-  const me = await fetch("/api/me", { credentials: "same-origin" });
+  const [me, options] = await Promise.all([
+    fetch("/api/me", { credentials: "same-origin" }),
+    fetch("/api/auth/options", { credentials: "same-origin" })
+      .then((r) => (r.ok ? (r.json() as Promise<{ amazon?: boolean }>) : null))
+      .catch(() => null),
+  ]);
+  amazonOnServer = options?.amazon === true;
   if (me.ok) {
     account = await readAccount(me);
     $("loginGate").hidden = true;
     renderHome();
     return;
   }
-  $("loginGate").hidden = false;
+  showLoginGate();
+  takeLoginError();
+  if (amazonOnServer && nativeAmazonReady()) amazonOnStick(false);
 }
+
+mountPhoneLink({ deliver, onChange: () => undefined });
+phoneLinkHost("home", $("homeQr"), $("homeQrHint"), {
+  idle: "Scan with your phone: it becomes your controller, with your sheet and your dice.",
+  linked: "Log out to unlink it.",
+});
+phoneLinkHost("lobby", $("lobbyQr"), $("lobbyQrHint"), {
+  idle: "Scan with your phone to play from it.",
+  linked: "Log out or go back to the title to unlink it.",
+});
+mountPointer({ boardPoint: (x, y) => page === "combat" && combat.pointAt(x, y) });
 
 void ensureLogin().then(() => {
   requestAnimationFrame(() => restoreFocus());

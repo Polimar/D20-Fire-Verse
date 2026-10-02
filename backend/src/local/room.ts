@@ -14,6 +14,7 @@ import {
 import type { CombatToken } from "./combat.js";
 import {
   applyDisconnectDodge,
+  buildPcSheet,
   endTurn,
   hydrateCombat,
   performAttack,
@@ -58,6 +59,7 @@ import { recordArenaResult } from "./auth.js";
 import { initSheet } from "./srd-sheet.js";
 import type { Player } from "./types.js";
 import type { ArenaConfig } from "./arena.js";
+import { scalePregenToLevel } from "./arena-maps.js";
 import {
   assertCanStart,
   beginArenaFight,
@@ -1379,6 +1381,72 @@ function eachHero(room: Room, apply: (tokenId: string, pregen: NonNullable<Retur
   }
 }
 
+type HeroPregen = NonNullable<ReturnType<typeof getPregen>>;
+
+/** A hero between fights: wounds and spent resources carried over, nobody on a grid. */
+function restingToken(room: Room, playerId: string, pregen: HeroPregen, opts: { fullHp?: boolean } = {}): CombatToken {
+  const missing = opts.fullHp ? 0 : (room.wounds?.[playerId] ?? 0);
+  const token = {
+    hp: Math.max(0, pregen.hp - missing),
+    maxHp: pregen.hp,
+    kind: "pc" as const,
+    id: playerId,
+    playerId,
+    characterId: pregen.id,
+    name: pregen.name,
+    level: pregen.level,
+    x: 0,
+    y: 0,
+    ac: pregen.ac,
+    speedCells: pregen.speedCells ?? 6,
+    movementLeft: 0,
+    hasAction: false,
+    hasBonusAction: false,
+    initiative: 0,
+    actionIds: [...(pregen.actions ?? [])],
+    bonusActionIds: [] as string[],
+    inventory: [...(pregen.inventory ?? [])],
+    dead: false,
+    dodging: false,
+    disengaging: false,
+    hidden: false,
+    secondWindUsed: false,
+  } as CombatToken;
+  initSheet(token, pregen, room.vitals?.[playerId]);
+  return token;
+}
+
+/**
+ * The full sheet of one seated hero, for that player's phone. In a fight it is the live combat
+ * sheet; between fights it carries the wounds and spent slots the party walked out with.
+ */
+export function heroSheet(room: Room, playerId: string): ReturnType<typeof buildPcSheet> | null {
+  const leave = bindFrame({ campaignId: room.campaignId, campaignVersion: room.campaignVersion });
+  try {
+    if (room.combat) return publicCombat(room.combat, playerId).sheet;
+    const player = room.players.find((p) => p.playerId === playerId);
+    const raw = player?.characterId ? getPregen(player.characterId) : undefined;
+    if (!raw) return null;
+    if (room.arena) {
+      const pregen = scalePregenToLevel(raw, room.arena.level);
+      return buildPcSheet(restingToken(room, playerId, pregen, { fullHp: true }), null);
+    }
+    return buildPcSheet(restingToken(room, playerId, raw), null);
+  } finally {
+    leave();
+  }
+}
+
+/** The room mood the table publishes (and the Alexa demo hook listens for). */
+export function roomScene(room: Room): string {
+  const leave = bindFrame({ campaignId: room.campaignId, campaignVersion: room.campaignVersion });
+  try {
+    return publishedScene(room, room.mode === "arena" ? undefined : getNode(room.nodeId));
+  } finally {
+    leave();
+  }
+}
+
 export function shortRest(roomCode: string): Room {
   const room = requireRoom(roomCode);
   if (room.mode === "arena") throw new Error("NOT_ARENA");
@@ -1392,31 +1460,7 @@ export function shortRest(roomCode: string): Room {
   if (!room.wounds) room.wounds = {};
   const notes: string[] = [];
   eachHero(room, (playerId, pregen) => {
-    const missing = room.wounds?.[playerId] ?? 0;
-    const token = {
-      hp: Math.max(0, pregen.hp - missing),
-      maxHp: pregen.hp,
-      kind: "pc" as const,
-      id: playerId,
-      name: pregen.name,
-      x: 0,
-      y: 0,
-      ac: pregen.ac,
-      speedCells: 6,
-      movementLeft: 0,
-      hasAction: false,
-      hasBonusAction: false,
-      initiative: 0,
-      actionIds: [],
-      bonusActionIds: [],
-      inventory: [],
-      dead: false,
-      dodging: false,
-      disengaging: false,
-      hidden: false,
-      secondWindUsed: false,
-    } as CombatToken;
-    initSheet(token, pregen, room.vitals?.[playerId]);
+    const token = restingToken(room, playerId, pregen);
     if ((token.hitDice ?? 0) > 0 && token.hp > 0 && token.hp < token.maxHp) {
       const die = rollNotation(`1d${token.hitDie ?? 8}`);
       const gain = Math.max(0, die.total + Math.floor(((pregen.abilities.con ?? 10) - 10) / 2));
@@ -1448,30 +1492,7 @@ export function longRest(roomCode: string): Room {
   if (!room.vitals) room.vitals = {};
   if (!room.wounds) room.wounds = {};
   eachHero(room, (playerId, pregen) => {
-    const token = {
-      hp: pregen.hp,
-      maxHp: pregen.hp,
-      kind: "pc" as const,
-      id: playerId,
-      name: pregen.name,
-      x: 0,
-      y: 0,
-      ac: pregen.ac,
-      speedCells: 6,
-      movementLeft: 0,
-      hasAction: false,
-      hasBonusAction: false,
-      initiative: 0,
-      actionIds: [] as string[],
-      bonusActionIds: [] as string[],
-      inventory: [] as string[],
-      dead: false,
-      dodging: false,
-      disengaging: false,
-      hidden: false,
-      secondWindUsed: false,
-    } as CombatToken;
-    initSheet(token, pregen, room.vitals?.[playerId]);
+    const token = restingToken(room, playerId, pregen, { fullHp: true });
     longRestResources(token, pregen);
     room.wounds![playerId] = 0;
     room.vitals![playerId] = exportVitals(token);

@@ -1,4 +1,5 @@
 import type { Express, Request, Response } from "express";
+import { randomBytes } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -19,11 +20,13 @@ import {
   readSessionCookie,
   requestFriend,
   sessionCookie,
+  signInWithAmazon,
   updateUser,
   userFromToken,
   type Role,
   type SessionUser,
 } from "./auth.js";
+import { amazonEnabled, authorizeUrl, exchangeCode, verifyAccessToken } from "./amazon.js";
 import {
   artDirFor,
   draftSnapshot,
@@ -53,6 +56,28 @@ function secure(req: Request): boolean {
 export function requestUser(req: { headers: { cookie?: string | string[] | undefined } }): SessionUser | null {
   const cookie = Array.isArray(req.headers.cookie) ? req.headers.cookie.join(";") : req.headers.cookie;
   return userFromToken(readSessionCookie(cookie));
+}
+
+const LWA_STATE_COOKIE = "fv_lwa_state";
+const PUBLIC_AMAZON_CALLBACK = "https://www.d20fireverse.it/api/login/amazon/callback";
+
+/** Must match an Allowed Return URL of the Amazon security profile exactly. */
+function amazonRedirectUri(): string {
+  return process.env.AMAZON_REDIRECT_URI?.trim() || PUBLIC_AMAZON_CALLBACK;
+}
+
+function lwaStateCookie(value: string, secureCookie: boolean, maxAge = 600): string {
+  const bits = [`${LWA_STATE_COOKIE}=${value}`, "HttpOnly", "Path=/api/login/amazon", "SameSite=Lax", `Max-Age=${maxAge}`];
+  if (secureCookie) bits.push("Secure");
+  return bits.join("; ");
+}
+
+function readCookie(header: string | undefined, name: string): string | null {
+  for (const part of (header ?? "").split(";")) {
+    const [k, ...rest] = part.trim().split("=");
+    if (k === name) return decodeURIComponent(rest.join("="));
+  }
+  return null;
 }
 
 function fail(res: Response, err: unknown): void {
@@ -114,8 +139,52 @@ export function mountAccountRoutes(app: Express): void {
       return;
     }
     res.setHeader("Set-Cookie", sessionCookie(confirmed.session, secure(req)));
-    const room = confirmed.roomCode ? `?room=${encodeURIComponent(confirmed.roomCode)}` : "";
-    res.redirect(302, `/companion/${room}`);
+    res.redirect(302, "/");
+  });
+
+  app.get("/api/auth/options", (_req, res) => {
+    res.json({ amazon: amazonEnabled() });
+  });
+
+  /** The Fire TV app signs in with the LWA SDK and hands the access token to the page, which posts it here. */
+  app.post("/api/login/amazon", async (req, res) => {
+    try {
+      const profile = await verifyAccessToken(req.body?.accessToken);
+      const found = signInWithAmazon(profile);
+      res.setHeader("Set-Cookie", sessionCookie(found.token, secure(req)));
+      res.json({ user: found.user });
+    } catch (err) {
+      fail(res, err);
+    }
+  });
+
+  app.get("/api/login/amazon/start", (req, res) => {
+    try {
+      const state = randomBytes(18).toString("base64url");
+      const url = authorizeUrl(amazonRedirectUri(), state);
+      res.setHeader("Set-Cookie", lwaStateCookie(state, secure(req)));
+      res.redirect(302, url);
+    } catch (err) {
+      res.redirect(302, `/?login_error=${encodeURIComponent(err instanceof Error ? err.message : "AMAZON_FAILED")}`);
+    }
+  });
+
+  app.get("/api/login/amazon/callback", async (req, res) => {
+    const expected = readCookie(req.headers.cookie, LWA_STATE_COOKIE);
+    const state = String(req.query.state ?? "");
+    const code = String(req.query.code ?? "");
+    const clearState = lwaStateCookie("", secure(req), 0);
+    try {
+      if (req.query.error) throw new Error("AMAZON_CANCELLED");
+      if (!expected || !state || state !== expected || !code) throw new Error("AMAZON_FAILED");
+      const accessToken = await exchangeCode(code, amazonRedirectUri());
+      const found = signInWithAmazon(await verifyAccessToken(accessToken));
+      res.setHeader("Set-Cookie", [clearState, sessionCookie(found.token, secure(req))]);
+      res.redirect(302, "/");
+    } catch (err) {
+      res.setHeader("Set-Cookie", clearState);
+      res.redirect(302, `/?login_error=${encodeURIComponent(err instanceof Error ? err.message : "AMAZON_FAILED")}`);
+    }
   });
 
   app.post("/api/logout", (req, res) => {

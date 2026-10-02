@@ -78,6 +78,7 @@ export class CombatUi {
     log: HTMLElement;
   };
   private appReady: Promise<void> | null = null;
+  private app: Application | null = null;
   private board: Board | null = null;
   private director: Director | null = null;
   private combat: CombatPublic | null = null;
@@ -132,12 +133,9 @@ export class CombatUi {
           onEnd: (outcome) => this.onEnd(outcome),
           onSettled: () => this.onSettled(),
         });
+        this.app = app;
         app.canvas.addEventListener("pointerdown", (ev) => {
-          const rect = app.canvas.getBoundingClientRect();
-          const cell = this.board?.cellAt(
-            ((ev.clientX - rect.left) * app.screen.width) / rect.width,
-            ((ev.clientY - rect.top) * app.screen.height) / rect.height,
-          );
+          const cell = this.cellAtClient(ev.clientX, ev.clientY);
           if (!cell) return;
           this.el.board.focus();
           this.cursor = cell;
@@ -149,6 +147,29 @@ export class CombatUi {
     }
     await this.appReady;
     return this.board!;
+  }
+
+  private cellAtClient(clientX: number, clientY: number): Cell | null {
+    const app = this.app;
+    if (!app || !this.board) return null;
+    const rect = app.canvas.getBoundingClientRect();
+    if (!rect.width || !rect.height) return null;
+    return (
+      this.board.cellAt(((clientX - rect.left) * app.screen.width) / rect.width, ((clientY - rect.top) * app.screen.height) / rect.height) ??
+      null
+    );
+  }
+
+  /** The phone trackpad hovering the board: the grid cursor follows it, nothing is confirmed. */
+  pointAt(clientX: number, clientY: number): boolean {
+    const cell = this.cellAtClient(clientX, clientY);
+    if (!cell) return false;
+    if (cell.x !== this.cursor.x || cell.y !== this.cursor.y) {
+      this.cursor = cell;
+      if (document.activeElement !== this.el.board) this.el.board.focus({ preventScroll: true });
+      this.paintOverlay();
+    }
+    return true;
   }
 
   // ------------------------------------------------------------------ state

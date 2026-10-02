@@ -1599,6 +1599,73 @@ html[data-motion="reduced"] button:focus-visible { transform: none; }
 .login-card label { display: block; margin: 0.55rem 0; }
 .login-card input { width: 100%; box-sizing: border-box; margin-top: 0.25rem; }
 .login-card .err { color: #ffb4a2; min-height: 1.2rem; }
+.login-gate:not(.on-stick) .login-card { width: min(44rem, calc(100vw - 2rem)); }
+.login-ways { display: grid; gap: 1rem 1.6rem; }
+.login-gate:not(.on-stick) .login-ways { grid-template-columns: 1fr 1fr; align-items: start; }
+.login-amazon { display: grid; gap: 0.4rem; align-content: start; }
+.amazon-btn { width: 100%; justify-content: center; font-size: 1.05rem; padding: 0.9rem 1rem; }
+.amazon-btn:disabled { opacity: 0.45; }
+.login-test summary { cursor: pointer; color: var(--ink-mute); font-size: 0.9rem; padding: 0.35rem 0; border-radius: var(--radius-s); }
+.login-test summary:focus-visible { outline: 3px solid var(--focus, #ffd08a); outline-offset: 2px; }
+.login-gate:not(.on-stick) .login-test summary { pointer-events: none; list-style: none; font-family: Cinzel, serif; color: var(--ink); }
+.login-gate:not(.on-stick) .login-test summary::-webkit-details-marker { display: none; }
+.login-test form { display: grid; gap: 0.2rem; }
+.login-gate.on-stick .login-test { font-size: 0.9rem; }
+
+/* ------------------------------------------------------------------ the phone beside the TV */
+
+.phone-linked {
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 0.35rem;
+  height: 100%;
+  min-height: 10rem;
+  padding: 0.6rem;
+  color: #2a1d14;
+  text-align: center;
+}
+.phone-linked strong { font-family: Cinzel, serif; font-size: 1.05rem; }
+.phone-linked em { font-style: normal; font-size: 0.8rem; line-height: 1.35; color: #5b4636; }
+.phone-glyph {
+  position: relative;
+  width: 2.1rem;
+  height: 3.4rem;
+  border: 3px solid #5b4636;
+  border-radius: 0.5rem;
+}
+.phone-glyph::after {
+  content: "";
+  position: absolute;
+  right: -0.5rem;
+  top: -0.5rem;
+  width: 0.8rem;
+  height: 0.8rem;
+  border-radius: 50%;
+  background: #9a8a7a;
+  box-shadow: 0 0 0 3px #f6ead6;
+}
+.phone-linked.awake .phone-glyph::after { background: #4f8a3e; }
+.phone-linked.waiting em { color: #5b4636; }
+
+.tv-pointer {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 90;
+  width: 1.6rem;
+  height: 1.6rem;
+  margin: -0.8rem 0 0 -0.8rem;
+  border-radius: 50%;
+  border: 3px solid #ffd08a;
+  background: rgba(255, 208, 138, 0.22);
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.55), 0 0 18px rgba(255, 208, 138, 0.55);
+  pointer-events: none;
+  will-change: transform;
+}
+.tv-pointer.press { animation: pointer-press 0.28s ease-out; }
+@keyframes pointer-press { 40% { box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.55), 0 0 0 12px rgba(255, 208, 138, 0.35); } }
+@media (prefers-reduced-motion: reduce) { .tv-pointer.press { animation: none; } }
 
 @media (max-width: 720px) {
   .story-dialogue { grid-template-columns: 1fr; }

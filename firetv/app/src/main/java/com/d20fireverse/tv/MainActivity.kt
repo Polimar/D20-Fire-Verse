@@ -52,6 +52,7 @@ class MainActivity : Activity() {
     private lateinit var connectButton: Button
     private lateinit var prefs: SharedPreferences
     private lateinit var finder: TableFinder
+    private lateinit var amazon: AmazonSignIn
     private var web: WebView? = null
 
     private val io: ExecutorService = Executors.newSingleThreadExecutor()
@@ -92,6 +93,7 @@ class MainActivity : Activity() {
 
         prefs = getSharedPreferences("table", MODE_PRIVATE)
         finder = TableFinder(this, ::onTableFound)
+        amazon = AmazonSignIn(this, ::onAmazon)
 
         address.showSoftInputOnFocus = false
         address.setOnClickListener {
@@ -296,6 +298,30 @@ class MainActivity : Activity() {
 
     private fun effectivePort(uri: Uri) = if (uri.port > 0) uri.port else if (uri.scheme == "https") 443 else 80
 
+    // ------------------------------------------------------------------ Login with Amazon
+
+    val amazonAvailable: Boolean
+        get() = amazon.available
+
+    fun amazonSignIn(interactive: Boolean) {
+        amazon.signIn(interactive)
+    }
+
+    fun amazonSignOut() {
+        amazon.signOut()
+    }
+
+    /** The token goes to the page, which trades it with the table server for a session. */
+    private fun onAmazon(result: AmazonResult) {
+        val view = web ?: return
+        if (tableUrl == null) return
+        val call = when (result) {
+            is AmazonResult.Token -> "amazonToken(${JSONObject.quote(result.accessToken)})"
+            is AmazonResult.Failed -> "amazonError(${JSONObject.quote(result.code)})"
+        }
+        view.evaluateJavascript("(function(){var n=window.fireverseNative;if(n){n.$call;}})()", null)
+    }
+
     // ------------------------------------------------------------------ the remote
 
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
@@ -370,6 +396,7 @@ class MainActivity : Activity() {
 
     override fun onResume() {
         super.onResume()
+        amazon.onResume()
         web?.onResume()
         if (tableUrl == null && connect.visibility == View.VISIBLE) finder.start()
     }

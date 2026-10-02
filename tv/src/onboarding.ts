@@ -38,20 +38,18 @@ export function companionBase(): Promise<string> {
   return tableInfo.then((info) => info?.companionUrl ?? sameOriginCompanion());
 }
 
-export async function companionUrl(roomCode?: string, seat?: string): Promise<string> {
+/** The phone link: the companion with this TV's one-time pair token. */
+export async function companionUrl(pairToken: string): Promise<string> {
   const base = await companionBase();
   const u = new URL(base);
-  if (roomCode) u.searchParams.set("room", roomCode);
-  if (seat) u.searchParams.set("seat", seat);
+  u.searchParams.set("pair", pairToken);
   return u.toString();
 }
 
-/** Paint a scannable QR that is also a real link, with the URL shown for typing. */
-export function paintCompanionQr(host: HTMLElement, url: string, hint?: HTMLElement | null, hintText?: string): void {
+/** Paint a scannable QR that is also a real link (handy when testing the table in a desktop browser). */
+export function paintCompanionQr(host: HTMLElement, url: string): void {
   const escAttr = (s: string) => s.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
-  const label = url.replace(/^https?:\/\//, "").replace(/\/$/, "");
   host.innerHTML = `<a class="qr-link" href="${escAttr(url)}" target="_blank" rel="noopener">${qrSvg(url)}</a>`;
-  if (hint) hint.textContent = hintText ?? `Scan or open ${label}`;
 }
 
 export const REMOTE_LEGEND = `
