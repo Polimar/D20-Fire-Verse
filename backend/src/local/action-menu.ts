@@ -5,6 +5,7 @@ import { inferActionFolder, type ActionFolder } from "@d20-fireverse/protocol";
 export type ActionCategory = Exclude<ActionFolder, "bonus">;
 
 export const FOLDER_LABELS: Record<ActionCategory | "bonus", string> = {
+  move: "Move",
   attack: "Attack",
   spell: "Spell",
   tactics: "Tactics",

@@ -13,7 +13,7 @@ import { coach, hideCoach } from "./onboarding";
 import { renderPcSheet, SHEET_TABS, type SheetTab } from "./pc-sheet";
 import { reducedMotion, onSettings, settings } from "./settings";
 import { sfx } from "./sfx";
-import { actionFolderOf, type ActionFolder } from "@d20-fireverse/protocol";
+import { folderActionLists, UI_MOVE_ID, type ActionFolder } from "@d20-fireverse/protocol";
 import type { Cell, CombatPublic, MenuAction, RoomState, Token } from "./types";
 
 export type CombatHost = {
@@ -27,8 +27,9 @@ export type CombatHost = {
 
 type Aim = { action: MenuAction };
 
-const FOLDER_ORDER: ActionFolder[] = ["attack", "spell", "tactics", "item", "feature", "bonus"];
+const FOLDER_ORDER: ActionFolder[] = ["move", "attack", "spell", "tactics", "item", "feature", "bonus"];
 const FOLDER_LABEL: Record<ActionFolder, string> = {
+  move: "Move",
   attack: "Attack",
   spell: "Spell",
   tactics: "Tactics",
@@ -340,10 +341,6 @@ export class CombatUi {
     return m ? [...m.actions, ...m.bonusActions] : [];
   }
 
-  private folderOf(a: MenuAction): ActionFolder {
-    return actionFolderOf(a);
-  }
-
   private lists(): { actions: MenuAction[]; bonus: MenuAction[] } {
     const c = this.combat;
     const menu = c?.actionMenu;
@@ -352,10 +349,27 @@ export class CombatUi {
     return { actions, bonus };
   }
 
+  private moveRow(): MenuAction {
+    const me = this.me();
+    const left = me?.movementLeft ?? 0;
+    return {
+      id: UI_MOVE_ID,
+      name: "Move",
+      actionType: "action",
+      economy: "action",
+      needsTarget: false,
+      targetKind: "none",
+      range: 0,
+      guided: false,
+      available: this.canAct() && left > 0,
+      category: "move",
+      summary: left > 0 ? `Walk up to ${left * 5} ft on the board` : "No movement left this turn",
+    };
+  }
+
   private folderActions(folder: ActionFolder): MenuAction[] {
     const { actions, bonus } = this.lists();
-    if (folder === "bonus") return bonus;
-    return actions.filter((a) => this.folderOf(a) === folder);
+    return folderActionLists(actions, bonus, folder, this.myTurn() ? this.moveRow() : null);
   }
 
   private populatedFolders(): ActionFolder[] {
@@ -654,7 +668,7 @@ export class CombatUi {
     const openActs = open ? this.folderActions(open) : [];
     const focused =
       openActs.find((a) => this.aim?.action.id === a.id) ??
-      this.pickDefaultIn(open ?? "attack");
+      this.pickDefaultIn(open ?? "move");
     const chip = (id: ActionFolder) => {
       const list = this.folderActions(id);
       const guided = list.some((a) => a.guided);
@@ -664,10 +678,12 @@ export class CombatUi {
       </button>`;
     };
     const btn = (a: MenuAction) => {
-      const kind = this.folderOf(a) === "bonus" ? "bonus" : "action";
+      const bonus = a.economy === "bonus_action" || a.economy === "bonus";
+      const kind = a.id === UI_MOVE_ID ? "action" : bonus ? "bonus" : "action";
       const disabled = !can || !a.available;
+      const tag = a.id === UI_MOVE_ID ? "Board" : bonus ? "Bonus" : "Action";
       return `<button type="button" class="act ${kind} ${a.guided ? "guided" : ""} ${this.aim?.action.id === a.id ? "aiming" : ""}" data-act="${a.id}" ${disabled ? "disabled" : ""}>
-        <strong>${esc(a.name)}${a.guided ? " ★" : ""}</strong><em>${kind === "bonus" ? "Bonus" : "Action"}</em>
+        <strong>${esc(a.name)}${a.guided ? " ★" : ""}</strong><em>${tag}</em>
       </button>`;
     };
     const summary = open && focused ? focused.summary ?? "" : "";
@@ -678,7 +694,7 @@ export class CombatUi {
     this.el.actions.innerHTML = `
       ${inner}
       <button type="button" class="act end" id="actEnd" ${can ? "" : "disabled"}><strong>End turn</strong><em>⏯</em></button>
-      <p class="act-summary" id="actSummary">${esc(summary || (open ? "" : "Open a folder. Move stays on the board."))}</p>`;
+      <p class="act-summary" id="actSummary">${esc(summary || (open ? "" : "Open a folder."))}</p>`;
     this.el.actions.querySelectorAll<HTMLElement>("[data-folder]").forEach((b) =>
       b.addEventListener("click", () => {
         const id = b.getAttribute("data-folder") as ActionFolder | null;
@@ -695,14 +711,15 @@ export class CombatUi {
     );
     this.el.actions.querySelector("#actFolderBack")?.addEventListener("click", () => this.closeActionFolder());
     this.el.actions.querySelectorAll<HTMLElement>("[data-act]").forEach((b) => {
+      const listed = open ? openActs : this.menu();
       const sync = () => {
-        const a = this.menu().find((m) => m.id === b.dataset.act);
+        const a = listed.find((m) => m.id === b.dataset.act) ?? this.menu().find((m) => m.id === b.dataset.act);
         const strip = this.el.actions.querySelector("#actSummary");
         if (strip && a) strip.textContent = a.summary ?? "";
       };
       b.addEventListener("focus", sync);
       b.addEventListener("click", () => {
-        const a = this.menu().find((m) => m.id === b.dataset.act);
+        const a = listed.find((m) => m.id === b.dataset.act) ?? this.menu().find((m) => m.id === b.dataset.act);
         if (a) this.useAction(a);
       });
     });
@@ -800,6 +817,20 @@ export class CombatUi {
   }
 
   private useAction(a: MenuAction) {
+    if (a.id === UI_MOVE_ID) {
+      if (!this.canAct() || !a.available) {
+        sfx("uiError");
+        this.host.toast("No movement left this turn.", "bad");
+        return;
+      }
+      this.aim = null;
+      this.actionFolder = null;
+      sfx("uiConfirm");
+      this.paintActions();
+      this.el.board.focus();
+      this.paintOverlay();
+      return;
+    }
     if (!this.canAct()) return;
     if (!a.available) {
       sfx("uiError");

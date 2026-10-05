@@ -1,7 +1,7 @@
 import "@fontsource/cinzel/700.css";
 import "@fontsource-variable/literata/opsz.css";
 import "./styles.css";
-import { describeError, plainNarration, srdLabel, actionFolderOf, type ActionFolder } from "@d20-fireverse/protocol";
+import { describeError, plainNarration, srdLabel, folderActionLists, UI_MOVE_ID, type ActionFolder } from "@d20-fireverse/protocol";
 import { isSheetTab, pcSheetHtml, type PcSheet, type SheetTab } from "@d20-fireverse/protocol/sheet";
 import { pairTokenFrom, startScanner, type ScannerHandle, type ScanProblem } from "./scanner";
 import { mountInstall } from "./install";
@@ -88,7 +88,7 @@ type TableState = {
     currentTokenId?: string;
     currentName?: string;
     tokens: Token[];
-    actionMenu: { actions: MenuAction[]; bonusActions?: MenuAction[] } | null;
+    actionMenu: { actions: MenuAction[]; bonusActions?: MenuAction[]; movement?: { left: number } } | null;
     awaiting?: Array<{ id: string; playerId: string; label: string; step: string }>;
     damagePreview?: Array<{ sides: number; damageType: string }>;
     pendingReaction?: { playerId: string; prompt: string; acceptLabel: string; declineLabel: string } | null;
@@ -511,8 +511,9 @@ $("sheetPanel").addEventListener("click", (ev) => {
 
 const needsAim = (target: string | undefined) => target === "enemy" || target === "ally" || target === "cell";
 
-const FOLDER_ORDER: ActionFolder[] = ["attack", "spell", "tactics", "item", "feature", "bonus"];
+const FOLDER_ORDER: ActionFolder[] = ["move", "attack", "spell", "tactics", "item", "feature", "bonus"];
 const FOLDER_LABEL: Record<ActionFolder, string> = {
+  move: "Move",
   attack: "Attack",
   spell: "Spell",
   tactics: "Tactics",
@@ -522,13 +523,8 @@ const FOLDER_LABEL: Record<ActionFolder, string> = {
 };
 let combatFolder: ActionFolder | null = null;
 
-function folderOf(a: MenuAction): ActionFolder {
-  return actionFolderOf(a);
-}
-
-function folderActions(actions: MenuAction[], bonus: MenuAction[], folder: ActionFolder): MenuAction[] {
-  if (folder === "bonus") return bonus;
-  return actions.filter((a) => folderOf(a) === folder);
+function folderActions(actions: MenuAction[], bonus: MenuAction[], folder: ActionFolder, moveRow?: MenuAction | null): MenuAction[] {
+  return folderActionLists(actions, bonus, folder, moveRow);
 }
 
 function throwPad(
@@ -575,8 +571,19 @@ function renderControls(room: TableState | null, seat: Seat | undefined): void {
     const pending = combat.pendingReaction;
     const actions = combat.actionMenu?.actions ?? [];
     const bonus = combat.actionMenu?.bonusActions ?? [];
+    const left = combat.actionMenu?.movement?.left ?? 0;
+    const moveRow: MenuAction = {
+      id: UI_MOVE_ID,
+      name: "Move",
+      available: left > 0,
+      targetKind: "none",
+      category: "move",
+      summary: left > 0 ? `Pick a square on the TV · ${left * 5} ft` : "No movement left this turn",
+    };
     const button = (a: MenuAction) =>
-      `<button type="button" class="act-line" data-ability="${esc(a.id)}" data-target="${esc(a.targetKind)}" ${a.available ? "" : "disabled"}><strong>${esc(a.name)}${a.guided ? " ★" : ""}</strong><span class="meta">${esc(a.summary ?? "")}</span></button>`;
+      a.id === UI_MOVE_ID
+        ? `<button type="button" class="act-line" data-move-board="1" ${a.available ? "" : "disabled"}><strong>${esc(a.name)}</strong><span class="meta">${esc(a.summary ?? "")}</span></button>`
+        : `<button type="button" class="act-line" data-ability="${esc(a.id)}" data-target="${esc(a.targetKind)}" ${a.available ? "" : "disabled"}><strong>${esc(a.name)}${a.guided ? " ★" : ""}</strong><span class="meta">${esc(a.summary ?? "")}</span></button>`;
     if (waiting) {
       combatFolder = null;
       const preview = waiting.step === "damage" ? combat.damagePreview : undefined;
@@ -588,15 +595,14 @@ function renderControls(room: TableState | null, seat: Seat | undefined): void {
          <button type="button" class="primary" data-react="yes">${esc(pending.acceptLabel)}</button>
          <button type="button" data-react="no">${esc(pending.declineLabel)}</button>`;
     } else if (mine) {
-      const folders = FOLDER_ORDER.filter((id) => folderActions(actions, bonus, id).length);
+      const folders = FOLDER_ORDER.filter((id) => folderActions(actions, bonus, id, moveRow).length);
       if (combatFolder && !folders.includes(combatFolder)) combatFolder = null;
       const open = combatFolder;
-      const openActs = open ? folderActions(actions, bonus, open) : [];
-      const throwSrc =
-        (open ? openActs : [...actions, ...bonus]).find((a) => a.guided && a.available) ??
-        (open ? openActs : [...actions, ...bonus]).find((a) => a.available);
+      const openActs = open ? folderActions(actions, bonus, open, moveRow) : [];
+      const throwPool = (open ? openActs : [...actions, ...bonus]).filter((a) => a.id !== UI_MOVE_ID);
+      const throwSrc = throwPool.find((a) => a.guided && a.available) ?? throwPool.find((a) => a.available);
       const folderBtn = (id: ActionFolder) => {
-        const list = folderActions(actions, bonus, id);
+        const list = folderActions(actions, bonus, id, moveRow);
         const star = list.some((a) => a.guided) ? " ★" : "";
         return `<button type="button" data-folder="${id}"><strong>${esc(FOLDER_LABEL[id])}${star}</strong><span class="meta">${list.length}</span></button>`;
       };
@@ -605,11 +611,11 @@ function renderControls(room: TableState | null, seat: Seat | undefined): void {
         <button type="button" class="ghost" data-folder-back="1">← Actions</button>
         ${openActs.map(button).join("")}
         <button type="button" class="primary" data-intent="end_turn">End turn</button>
-        <p class="meta">A targeted action is aimed on the TV, with the remote or the mouse.</p>`
+        <p class="meta">${open === "move" ? "Pick a square on the TV." : "A targeted action is aimed on the TV, with the remote or the mouse."}</p>`
         : `${throwSrc ? throwPad(throwSrc.id, throwSrc.targetKind, throwSrc.name) : ""}
         ${folders.map(folderBtn).join("")}
         <button type="button" class="primary" data-intent="end_turn">End turn</button>
-        <p class="meta">Open a folder. Move stays on the TV.</p>`;
+        <p class="meta">Open a folder.</p>`;
     } else {
       combatFolder = null;
       controls.innerHTML = "";
@@ -705,6 +711,12 @@ function act(el: HTMLElement): void {
   if (!room) return;
   const d = el.dataset;
   if (d.folderBack) {
+    combatFolder = null;
+    const room = view?.room ?? null;
+    renderControls(room, me(room));
+    return;
+  }
+  if (d.moveBoard) {
     combatFolder = null;
     const room = view?.room ?? null;
     renderControls(room, me(room));

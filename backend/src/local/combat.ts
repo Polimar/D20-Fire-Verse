@@ -96,6 +96,8 @@ export type CombatToken = {
   reckless?: boolean;
   actionSurge?: boolean;
   extraAction?: boolean;
+  /** Dash this turn, still reversible if you have not walked since. */
+  dashUndo?: { abilityId: string; granted: number; movementLeft: number; bonus: boolean; extra: boolean; attacked: boolean };
   ki?: number;
   kiMax?: number;
   layOnHands?: number;
@@ -931,6 +933,7 @@ function beginTurn(combat: CombatState): void {
   if (hasCondition(t, "slowed")) t.movementLeft = Math.max(0, t.movementLeft - 2);
   t.hasAction = true;
   t.hasBonusAction = t.kind === "pc";
+  t.dashUndo = undefined;
   t.dodging = false;
   t.disengaging = false;
   t.helpingTargetId = undefined;
@@ -1875,9 +1878,10 @@ export function performPcAction(
   if (!ability) throw new Error("BAD_ABILITY");
 
   if (gate?.phase !== "damage") {
+    const undoingDash = dashStillUndoable(t, abilityId);
     if (isBonus) {
-      if (!t.hasBonusAction) throw new Error("NO_BONUS");
-    } else if (!t.hasAction && !t.extraAction) {
+      if (!t.hasBonusAction && !undoingDash) throw new Error("NO_BONUS");
+    } else if (!t.hasAction && !t.extraAction && !undoingDash) {
       throw new Error("NO_ACTION");
     }
   }
@@ -1909,8 +1913,23 @@ export function performPcAction(
   if (special) return special;
 
   if (effect.type === "dash") {
-    t.movementLeft += t.speedCells;
+    if (dashStillUndoable(t, abilityId)) {
+      undoDash(combat, t);
+      return { rolls: [] };
+    }
+    const granted = t.speedCells;
+    const extra = !isBonus && !t.hasAction && Boolean(t.extraAction);
+    const attacked = Boolean(t.attackedThisTurn);
+    t.movementLeft += granted;
     spendEconomy(t, isBonus);
+    t.dashUndo = {
+      abilityId,
+      granted,
+      movementLeft: t.movementLeft,
+      bonus: isBonus,
+      extra,
+      attacked,
+    };
     statusEvent(combat, t, ability.name, `${t.name} dashes — ${t.movementLeft * 5} ft of movement left.`);
     refreshReachable(combat);
     return { rolls: [] };
@@ -2465,6 +2484,24 @@ export function commitAreaSave(combat: CombatState, playerId: string): void {
   if (!(combat.awaiting ?? []).some((a) => a.step === "save")) checkEnd(combat);
 }
 
+function dashStillUndoable(t: CombatToken, abilityId: string): boolean {
+  const u = t.dashUndo;
+  return Boolean(u && u.abilityId === abilityId && t.movementLeft === u.movementLeft);
+}
+
+function undoDash(combat: CombatState, t: CombatToken): void {
+  const u = t.dashUndo;
+  if (!u || t.movementLeft !== u.movementLeft) throw new Error("NO_ACTION");
+  t.movementLeft = Math.max(0, t.movementLeft - u.granted);
+  if (u.bonus) t.hasBonusAction = true;
+  else if (u.extra) t.extraAction = true;
+  else t.hasAction = true;
+  t.attackedThisTurn = u.attacked;
+  t.dashUndo = undefined;
+  statusEvent(combat, t, "Dash", `${t.name} takes back the Dash.`);
+  refreshReachable(combat);
+}
+
 function spendEconomy(t: CombatToken, bonus: boolean): void {
   if (bonus) t.hasBonusAction = false;
   else if (t.hasAction) t.hasAction = false;
@@ -2718,6 +2755,7 @@ function finishMove(combat: CombatState, mover: CombatToken, path: Cell[], cost:
   mover.x = end.x;
   mover.y = end.y;
   mover.movementLeft = Math.max(0, mover.movementLeft - cost);
+  if (cost > 0) mover.dashUndo = undefined;
   emit(combat, {
     kind: "move",
     tokenId: mover.id,
@@ -2966,9 +3004,11 @@ function describeAction(id: string, economy: "action" | "bonus_action", owner: C
   let available = economy === "bonus_action" ? owner.hasBonusAction : owner.hasAction;
   if (id === "second_wind" && owner.secondWindUsed) available = false;
   if (effect?.consume && !owner.inventory.includes(String(effect.consume))) available = false;
+  const undoDash = type === "dash" && dashStillUndoable(owner, id);
+  if (undoDash) available = true;
   return {
     id,
-    name: quicken ? `Quicken: ${a?.name ?? realId}` : (a?.name ?? id),
+    name: undoDash ? "Cancel Dash" : quicken ? `Quicken: ${a?.name ?? realId}` : (a?.name ?? id),
     actionType: economy,
     economy,
     needsTarget: targetKind === "enemy" || type === "help",
@@ -2977,7 +3017,7 @@ function describeAction(id: string, economy: "action" | "bonus_action", owner: C
     guided: id === guidedId,
     available,
     category: actionCategory(realId, a),
-    summary: actionSummary(id, a),
+    summary: undoDash ? "Take it back — you have not moved yet" : actionSummary(id, a),
   };
 }
 

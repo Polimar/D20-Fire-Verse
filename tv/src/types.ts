@@ -74,7 +74,7 @@ export type Token = {
   marked: boolean;
 };
 
-export type ActionCategory = "attack" | "spell" | "tactics" | "item" | "feature";
+export type ActionCategory = "move" | "attack" | "spell" | "tactics" | "item" | "feature";
 
 export type MenuAction = {
   id: string;

@@ -302,4 +302,10 @@ export function scriptRuns(paragraph: string): ScriptLine[] {
   return out;
 }
 
-export { actionFolderOf, inferActionFolder, type ActionFolder } from "./action-folder.js";
+export {
+  actionFolderOf,
+  folderActionLists,
+  inferActionFolder,
+  UI_MOVE_ID,
+  type ActionFolder,
+} from "./action-folder.js";

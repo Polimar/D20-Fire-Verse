@@ -12,6 +12,7 @@ import {
   startArenaCombat,
   applyDamage,
   clearShot,
+  publicCombat,
   type CombatState,
   type CombatToken,
 } from "../src/local/combat.js";
@@ -293,6 +294,30 @@ test("spent actions are refused, not silently ignored", () => {
   performPcAction(c, "P1", "std_dodge");
   assert.throws(() => performPcAction(c, "P1", "longsword_attack", "en-1"), /NO_ACTION/);
   assert.throws(() => performPcAction(c, "P2", "std_dash"), /NOT_YOUR_TURN/);
+});
+
+test("dash can be taken back before you walk", () => {
+  const c = arena(8, 8, [brenna(0, 0), rat("en-1", 7, 7)]);
+  const hero = c.tokens[0]!;
+  const start = hero.movementLeft;
+  performPcAction(c, "P1", "std_dash");
+  assert.equal(hero.hasAction, false);
+  assert.equal(hero.movementLeft, start + hero.speedCells);
+  const row = publicCombat(c, "P1").actionMenu?.actions.find((a) => a.id === "std_dash");
+  assert.equal(row?.available, true);
+  assert.equal(row?.name, "Cancel Dash");
+  performPcAction(c, "P1", "std_dash");
+  assert.equal(hero.hasAction, true);
+  assert.equal(hero.movementLeft, start);
+  performPcAction(c, "P1", "std_dodge");
+  assert.equal(hero.hasAction, false);
+});
+
+test("dash cannot be taken back after you walk", () => {
+  const c = arena(8, 8, [brenna(0, 0), rat("en-1", 7, 7)]);
+  performPcAction(c, "P1", "std_dash");
+  proposeMove(c, "P1", 1, 0);
+  assert.throws(() => performPcAction(c, "P1", "std_dash"), /NO_ACTION/);
 });
 
 test("a dropped hero dodges, so the next bite rolls with disadvantage", () => {

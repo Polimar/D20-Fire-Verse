@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { before, test } from "node:test";
-import { actionFolderOf } from "@d20-fireverse/protocol";
+import { actionFolderOf, folderActionLists } from "@d20-fireverse/protocol";
 import { actionCategory, actionSummary } from "../src/local/action-menu.js";
 import { getAbility } from "../src/local/campaign.js";
 import { publicCombat, resolveReaction, startCombat } from "../src/local/combat.js";
@@ -53,16 +53,22 @@ test("dodge is a tactics sentence", () => {
   assert.match(summary, /disadvantage/i);
 });
 
+test("dash is a move sentence", () => {
+  const { category, summary } = check("std_dash");
+  assert.equal(category, "move");
+  assert.match(summary, /move again/i);
+});
+
 test("healing potion is an item", () => {
   const { category, summary } = check("use_potion_healing");
   assert.equal(category, "item");
   assert.match(summary, /heal 2d4\+2/);
 });
 
-test("second wind and cunning action are features", () => {
+test("second wind is a feature; cunning dash is move", () => {
   assert.equal(check("second_wind").category, "feature");
   assert.match(check("second_wind").summary, /1d10/);
-  assert.equal(check("cunning_dash").category, "feature");
+  assert.equal(check("cunning_dash").category, "move");
   assert.match(check("cunning_dash").summary, /Bonus/);
 });
 
@@ -72,6 +78,8 @@ test("client folders ignore a wrong feature category and split by id", () => {
     { id: "spell_magic_missile", name: "Magic Missile", want: "spell" },
     { id: "fire_bolt", name: "Fire Bolt", want: "spell" },
     { id: "std_dodge", name: "Dodge", want: "tactics" },
+    { id: "std_dash", name: "Dash", want: "move" },
+    { id: "cunning_dash", name: "Cunning Dash", economy: "bonus_action", want: "move" },
     { id: "use_potion_healing", name: "Potion of Healing", want: "item" },
     { id: "second_wind", name: "Second Wind", economy: "bonus_action", want: "bonus" },
   ];
@@ -80,11 +88,28 @@ test("client folders ignore a wrong feature category and split by id", () => {
   }
 });
 
+test("dash sits in Move, not Bonus", () => {
+  const bonus = [
+    { id: "cunning_dash", name: "Dash", economy: "bonus_action" },
+    { id: "second_wind", name: "Second Wind", economy: "bonus_action" },
+  ];
+  const actions = [{ id: "std_dash", name: "Dash", economy: "action" }];
+  assert.deepEqual(
+    folderActionLists(actions, bonus, "bonus").map((a) => a.id),
+    ["second_wind"],
+  );
+  assert.deepEqual(
+    folderActionLists(actions, bonus, "move").map((a) => a.id),
+    ["std_dash", "cunning_dash"],
+  );
+  assert.equal(folderActionLists(actions, bonus, "tactics").length, 0);
+});
+
 test("live menus group Quill, Brenna, and Mira into folders with summaries", () => {
   const cases: Array<{ id: string; name: string; attack: string; extra: string; extraCat: string }> = [
     { id: "quill_ashmere", name: "Quill Ashmere", attack: "quarterstaff_attack", extra: "spell_magic_missile", extraCat: "spell" },
     { id: "brenna_ironveal", name: "Brenna Ironveal", attack: "longsword_attack", extra: "second_wind", extraCat: "feature" },
-    { id: "mira_softstep", name: "Mira Softstep", attack: "shortbow_attack", extra: "cunning_dash", extraCat: "feature" },
+    { id: "mira_softstep", name: "Mira Softstep", attack: "shortbow_attack", extra: "cunning_dash", extraCat: "move" },
   ];
   for (const pc of cases) {
     const c = startCombat("cellar_rats", [{ playerId: "P1", displayName: "H", characterId: pc.id, characterName: pc.name }]);
@@ -102,5 +127,6 @@ test("live menus group Quill, Brenna, and Mira into folders with summaries", () 
     const extra = all.find((a) => a.id === pc.extra);
     assert.ok(extra && extra.category === pc.extraCat, pc.extra);
     assert.ok(acts.some((a) => a.id === "std_dodge" && a.category === "tactics"));
+    assert.ok(acts.some((a) => a.id === "std_dash" && a.category === "move"));
   }
 });
