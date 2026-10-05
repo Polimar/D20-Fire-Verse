@@ -13,6 +13,7 @@ import { coach, hideCoach } from "./onboarding";
 import { renderPcSheet, SHEET_TABS, type SheetTab } from "./pc-sheet";
 import { reducedMotion, onSettings, settings } from "./settings";
 import { sfx } from "./sfx";
+import { actionFolderOf, type ActionFolder } from "@d20-fireverse/protocol";
 import type { Cell, CombatPublic, MenuAction, RoomState, Token } from "./types";
 
 export type CombatHost = {
@@ -25,6 +26,16 @@ export type CombatHost = {
 };
 
 type Aim = { action: MenuAction };
+
+const FOLDER_ORDER: ActionFolder[] = ["attack", "spell", "tactics", "item", "feature", "bonus"];
+const FOLDER_LABEL: Record<ActionFolder, string> = {
+  attack: "Attack",
+  spell: "Spell",
+  tactics: "Tactics",
+  item: "Items",
+  feature: "Features",
+  bonus: "Bonus",
+};
 
 const cheb = (a: Cell, b: Cell) => Math.max(Math.abs(a.x - b.x), Math.abs(a.y - b.y));
 const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]!);
@@ -101,6 +112,7 @@ export class CombatUi {
   private endConfirmUntil = 0;
   private outroPlayed = new Set<string>();
   private defeated = false;
+  private actionFolder: ActionFolder | null = null;
 
   constructor(host: CombatHost, el: CombatUi["el"]) {
     this.host = host;
@@ -326,6 +338,33 @@ export class CombatUi {
   private menu(): MenuAction[] {
     const m = this.combat?.actionMenu;
     return m ? [...m.actions, ...m.bonusActions] : [];
+  }
+
+  private folderOf(a: MenuAction): ActionFolder {
+    return actionFolderOf(a);
+  }
+
+  private lists(): { actions: MenuAction[]; bonus: MenuAction[] } {
+    const c = this.combat;
+    const menu = c?.actionMenu;
+    const actions = menu?.actions ?? (c?.sheet?.actions as MenuAction[] | undefined) ?? [];
+    const bonus = menu?.bonusActions ?? (c?.sheet?.bonusActions as MenuAction[] | undefined) ?? [];
+    return { actions, bonus };
+  }
+
+  private folderActions(folder: ActionFolder): MenuAction[] {
+    const { actions, bonus } = this.lists();
+    if (folder === "bonus") return bonus;
+    return actions.filter((a) => this.folderOf(a) === folder);
+  }
+
+  private populatedFolders(): ActionFolder[] {
+    return FOLDER_ORDER.filter((id) => this.folderActions(id).length > 0);
+  }
+
+  private pickDefaultIn(folder: ActionFolder): MenuAction | undefined {
+    const list = this.folderActions(folder);
+    return list.find((a) => a.guided && a.available) ?? list.find((a) => a.available) ?? list[0];
   }
 
   /** The ★ attack: guided default, else the first action that hits a foe. */
@@ -600,6 +639,7 @@ export class CombatUi {
     if (!c) return;
     const pending = c.pendingReaction;
     if (pending && pending.playerId === this.playerId) {
+      this.actionFolder = null;
       this.el.actions.innerHTML = `<p class="meta">${esc(pending.prompt)}</p>
         <button type="button" class="act action" id="reactYes"><strong>${esc(pending.acceptLabel)}</strong></button>
         <button type="button" class="act end" id="reactNo"><strong>${esc(pending.declineLabel)}</strong></button>`;
@@ -608,26 +648,76 @@ export class CombatUi {
       return;
     }
     const can = this.canAct();
-    const menu = c.actionMenu;
-    const acts = menu && can ? menu.actions : (c.sheet?.actions as MenuAction[] | undefined) ?? [];
-    const bonus = menu && can ? menu.bonusActions : (c.sheet?.bonusActions as MenuAction[] | undefined) ?? [];
-    const btn = (a: MenuAction, kind: "action" | "bonus") => {
-      const disabled = !can || !a.available;
-      return `<button type="button" class="act ${kind} ${a.guided ? "guided" : ""} ${this.aim?.action.id === a.id ? "aiming" : ""}" data-act="${a.id}" ${disabled ? "disabled" : ""}>
-        <strong>${esc(a.name)}${a.guided ? " ★" : ""}</strong><em>${kind === "bonus" ? "Bonus" : "Action"}${a.range > 1 ? ` · ${a.range * 5} ft` : ""}</em>
+    const folders = this.populatedFolders();
+    if (this.actionFolder && !folders.includes(this.actionFolder)) this.actionFolder = null;
+    const open = this.actionFolder;
+    const openActs = open ? this.folderActions(open) : [];
+    const focused =
+      openActs.find((a) => this.aim?.action.id === a.id) ??
+      this.pickDefaultIn(open ?? "attack");
+    const chip = (id: ActionFolder) => {
+      const list = this.folderActions(id);
+      const guided = list.some((a) => a.guided);
+      const openNow = open === id;
+      return `<button type="button" class="act folder ${guided ? "guided" : ""} ${openNow ? "open" : ""}" data-folder="${id}">
+        <strong>${esc(FOLDER_LABEL[id])}${guided ? " ★" : ""}</strong><em>${list.length}</em>
       </button>`;
     };
+    const btn = (a: MenuAction) => {
+      const kind = this.folderOf(a) === "bonus" ? "bonus" : "action";
+      const disabled = !can || !a.available;
+      return `<button type="button" class="act ${kind} ${a.guided ? "guided" : ""} ${this.aim?.action.id === a.id ? "aiming" : ""}" data-act="${a.id}" ${disabled ? "disabled" : ""}>
+        <strong>${esc(a.name)}${a.guided ? " ★" : ""}</strong><em>${kind === "bonus" ? "Bonus" : "Action"}</em>
+      </button>`;
+    };
+    const summary = open && focused ? focused.summary ?? "" : "";
+    const inner = open
+      ? `<button type="button" class="act folder" data-folder-back="1" id="actFolderBack"><strong>Back</strong><em>↩</em></button>
+         <div class="act-group">${openActs.map(btn).join("")}</div>`
+      : `<div class="act-group">${folders.map(chip).join("")}</div>`;
     this.el.actions.innerHTML = `
-      <div class="act-group">${acts.map((a) => btn(a, "action")).join("")}</div>
-      ${bonus.length ? `<div class="act-group bonus">${bonus.map((a) => btn(a, "bonus")).join("")}</div>` : ""}
-      <button type="button" class="act end" id="actEnd" ${can ? "" : "disabled"}><strong>End turn</strong><em>⏯</em></button>`;
-    this.el.actions.querySelectorAll<HTMLElement>("[data-act]").forEach((b) =>
+      ${inner}
+      <button type="button" class="act end" id="actEnd" ${can ? "" : "disabled"}><strong>End turn</strong><em>⏯</em></button>
+      <p class="act-summary" id="actSummary">${esc(summary || (open ? "" : "Open a folder. Move stays on the board."))}</p>`;
+    this.el.actions.querySelectorAll<HTMLElement>("[data-folder]").forEach((b) =>
+      b.addEventListener("click", () => {
+        const id = b.getAttribute("data-folder") as ActionFolder | null;
+        if (!id || !FOLDER_ORDER.includes(id)) return;
+        this.actionFolder = id;
+        sfx("uiConfirm");
+        this.paintActions();
+        const pick = this.pickDefaultIn(this.actionFolder);
+        const el = pick
+          ? this.el.actions.querySelector<HTMLElement>(`[data-act="${pick.id}"]`)
+          : this.el.actions.querySelector<HTMLElement>("[data-act]");
+        el?.focus();
+      }),
+    );
+    this.el.actions.querySelector("#actFolderBack")?.addEventListener("click", () => this.closeActionFolder());
+    this.el.actions.querySelectorAll<HTMLElement>("[data-act]").forEach((b) => {
+      const sync = () => {
+        const a = this.menu().find((m) => m.id === b.dataset.act);
+        const strip = this.el.actions.querySelector("#actSummary");
+        if (strip && a) strip.textContent = a.summary ?? "";
+      };
+      b.addEventListener("focus", sync);
       b.addEventListener("click", () => {
         const a = this.menu().find((m) => m.id === b.dataset.act);
         if (a) this.useAction(a);
-      }),
-    );
+      });
+    });
     this.el.actions.querySelector("#actEnd")?.addEventListener("click", () => this.endTurn(true));
+  }
+
+  private closeActionFolder() {
+    const was = this.actionFolder;
+    this.actionFolder = null;
+    sfx("uiBack");
+    this.paintActions();
+    const chip = was
+      ? this.el.actions.querySelector<HTMLElement>(`[data-folder="${was}"]`)
+      : this.el.actions.querySelector<HTMLElement>("[data-folder]");
+    chip?.focus();
   }
 
   // ------------------------------------------------------------------ timeline hooks
@@ -640,6 +730,7 @@ export class CombatUi {
 
   private async onTimelineTurn(t: Token, mine: boolean, round: number) {
     this.displayTurnId = t.id;
+    this.actionFolder = null;
     this.paintRibbon();
     this.paintOverlay();
     if (mine) {
@@ -905,8 +996,25 @@ export class CombatUi {
         this.paintOverlay();
         return true;
       }
+      if (this.actionFolder && this.el.actions.contains(document.activeElement)) {
+        this.closeActionFolder();
+        this.paintOverlay();
+        return true;
+      }
       if (onBoard) {
-        this.el.actions.querySelector<HTMLElement>("button:not([disabled])")?.focus();
+        if (this.actionFolder) {
+          const pick = this.pickDefaultIn(this.actionFolder);
+          const el = pick
+            ? this.el.actions.querySelector<HTMLElement>(`[data-act="${pick.id}"]`)
+            : this.el.actions.querySelector<HTMLElement>("#actFolderBack");
+          el?.focus();
+        } else {
+          const guided = this.populatedFolders().find((id) => this.folderActions(id).some((a) => a.guided));
+          const chip = guided
+            ? this.el.actions.querySelector<HTMLElement>(`[data-folder="${guided}"]`)
+            : this.el.actions.querySelector<HTMLElement>("button:not([disabled])");
+          chip?.focus();
+        }
         sfx("uiBack");
       } else {
         this.el.board.focus();

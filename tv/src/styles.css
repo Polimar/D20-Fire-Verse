@@ -873,7 +873,7 @@ html[data-contrast="high"] .board { background: #050302; border-color: rgba(255,
   50% { box-shadow: 0 0 0 6px rgba(241, 196, 107, 0.2); }
 }
 
-.action-bar { display: flex; gap: 0.45rem; align-items: stretch; }
+.action-bar { display: flex; flex-wrap: wrap; gap: 0.45rem; align-items: stretch; }
 .act-group { display: flex; flex-wrap: wrap; gap: 0.4rem; align-content: flex-start; }
 .act-group:first-child { flex: 1 1 auto; }
 .act-group.bonus { flex: 0 1 auto; padding-left: 0.55rem; border-left: 1px solid var(--line); }
@@ -885,7 +885,17 @@ html[data-contrast="high"] .board { background: #050302; border-color: rgba(255,
 .act.guided { border-color: rgba(241, 196, 107, 0.6); }
 .act.aiming { border-color: var(--gold); background: linear-gradient(180deg, rgba(120, 76, 26, 0.95), rgba(70, 40, 14, 0.95)); animation: aiming 1.2s ease-in-out infinite; }
 @keyframes aiming { 50% { box-shadow: 0 0 0 4px rgba(241, 196, 107, 0.25), 0 0 20px rgba(241, 196, 107, 0.3); } }
-.act.end { flex: none; align-self: stretch; align-content: center; min-width: 7rem; background: linear-gradient(180deg, rgba(60, 40, 26, 0.95), rgba(34, 22, 14, 0.95)); border-color: var(--line-strong); }
+.act.folder.open { border-color: var(--gold); }
+.act-summary {
+  flex: 1 1 100%;
+  margin: 0.15rem 0 0;
+  min-height: 2.2em;
+  max-height: 2.6em;
+  overflow: hidden;
+  font-size: 0.78rem;
+  line-height: 1.3;
+  color: var(--ink-mute);
+}
 .act.end em { color: var(--gold); font-size: 0.9rem; }
 
 .sheet-rail { display: flex; flex-direction: column; gap: 0.7rem; min-height: 0; overflow: auto; }

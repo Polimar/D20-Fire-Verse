@@ -1,7 +1,7 @@
 import "@fontsource/cinzel/700.css";
 import "@fontsource-variable/literata/opsz.css";
 import "./styles.css";
-import { describeError, plainNarration, srdLabel } from "@d20-fireverse/protocol";
+import { describeError, plainNarration, srdLabel, actionFolderOf, type ActionFolder } from "@d20-fireverse/protocol";
 import { isSheetTab, pcSheetHtml, type PcSheet, type SheetTab } from "@d20-fireverse/protocol/sheet";
 import { pairTokenFrom, startScanner, type ScannerHandle, type ScanProblem } from "./scanner";
 import { mountInstall } from "./install";
@@ -44,7 +44,16 @@ type Seat = { playerId: string; characterId: string; characterName: string; port
 type DiceFace = { notation: string; values: number[]; total: number; label?: string };
 type CombatEvent = { seq: number; kind: string; line: string; tokenId?: string; rolls?: DiceFace[] };
 type Token = { id: string; playerId?: string; name: string; hp: number; maxHp: number; ac: number; dead: boolean; kind: string };
-type MenuAction = { id: string; name: string; available: boolean; targetKind: string };
+type MenuAction = {
+  id: string;
+  name: string;
+  available: boolean;
+  targetKind: string;
+  category?: string;
+  summary?: string;
+  guided?: boolean;
+  economy?: string;
+};
 type PuzzleState = {
   kind: string;
   holderId?: string | null;
@@ -502,6 +511,26 @@ $("sheetPanel").addEventListener("click", (ev) => {
 
 const needsAim = (target: string | undefined) => target === "enemy" || target === "ally" || target === "cell";
 
+const FOLDER_ORDER: ActionFolder[] = ["attack", "spell", "tactics", "item", "feature", "bonus"];
+const FOLDER_LABEL: Record<ActionFolder, string> = {
+  attack: "Attack",
+  spell: "Spell",
+  tactics: "Tactics",
+  item: "Items",
+  feature: "Features",
+  bonus: "Bonus",
+};
+let combatFolder: ActionFolder | null = null;
+
+function folderOf(a: MenuAction): ActionFolder {
+  return actionFolderOf(a);
+}
+
+function folderActions(actions: MenuAction[], bonus: MenuAction[], folder: ActionFolder): MenuAction[] {
+  if (folder === "bonus") return bonus;
+  return actions.filter((a) => folderOf(a) === folder);
+}
+
 function throwPad(
   id: string,
   targetKind: string,
@@ -547,22 +576,42 @@ function renderControls(room: TableState | null, seat: Seat | undefined): void {
     const actions = combat.actionMenu?.actions ?? [];
     const bonus = combat.actionMenu?.bonusActions ?? [];
     const button = (a: MenuAction) =>
-      `<button type="button" data-ability="${esc(a.id)}" data-target="${esc(a.targetKind)}" ${a.available ? "" : "disabled"}>${esc(a.name)}</button>`;
+      `<button type="button" class="act-line" data-ability="${esc(a.id)}" data-target="${esc(a.targetKind)}" ${a.available ? "" : "disabled"}><strong>${esc(a.name)}${a.guided ? " ★" : ""}</strong><span class="meta">${esc(a.summary ?? "")}</span></button>`;
     if (waiting) {
+      combatFolder = null;
       const preview = waiting.step === "damage" ? combat.damagePreview : undefined;
       controls.innerHTML = `${throwPad("commit", "none", waiting.label, preview)}
         <p class="meta">Swipe to throw. The ${preview?.length ? "dice land" : "die lands"} on the TV.</p>`;
     } else if (pending && pending.playerId === seat.playerId) {
+      combatFolder = null;
       controls.innerHTML = `<p class="meta">${esc(pending.prompt)}</p>
          <button type="button" class="primary" data-react="yes">${esc(pending.acceptLabel)}</button>
          <button type="button" data-react="no">${esc(pending.declineLabel)}</button>`;
     } else if (mine) {
-      const first = actions.find((a) => a.available) ?? bonus.find((a) => a.available);
-      controls.innerHTML = `${first ? throwPad(first.id, first.targetKind, first.name) : ""}
-        ${actions.map(button).join("")}${bonus.map(button).join("")}
+      const folders = FOLDER_ORDER.filter((id) => folderActions(actions, bonus, id).length);
+      if (combatFolder && !folders.includes(combatFolder)) combatFolder = null;
+      const open = combatFolder;
+      const openActs = open ? folderActions(actions, bonus, open) : [];
+      const throwSrc =
+        (open ? openActs : [...actions, ...bonus]).find((a) => a.guided && a.available) ??
+        (open ? openActs : [...actions, ...bonus]).find((a) => a.available);
+      const folderBtn = (id: ActionFolder) => {
+        const list = folderActions(actions, bonus, id);
+        const star = list.some((a) => a.guided) ? " ★" : "";
+        return `<button type="button" data-folder="${id}"><strong>${esc(FOLDER_LABEL[id])}${star}</strong><span class="meta">${list.length}</span></button>`;
+      };
+      controls.innerHTML = open
+        ? `${throwSrc ? throwPad(throwSrc.id, throwSrc.targetKind, throwSrc.name) : ""}
+        <button type="button" class="ghost" data-folder-back="1">← Actions</button>
+        ${openActs.map(button).join("")}
         <button type="button" class="primary" data-intent="end_turn">End turn</button>
-        <p class="meta">A targeted action is aimed on the TV, with the remote or the mouse.</p>`;
+        <p class="meta">A targeted action is aimed on the TV, with the remote or the mouse.</p>`
+        : `${throwSrc ? throwPad(throwSrc.id, throwSrc.targetKind, throwSrc.name) : ""}
+        ${folders.map(folderBtn).join("")}
+        <button type="button" class="primary" data-intent="end_turn">End turn</button>
+        <p class="meta">Open a folder. Move stays on the TV.</p>`;
     } else {
+      combatFolder = null;
       controls.innerHTML = "";
     }
   } else if (room.mode === "arena") {
@@ -655,6 +704,18 @@ function act(el: HTMLElement): void {
   const room = view?.room;
   if (!room) return;
   const d = el.dataset;
+  if (d.folderBack) {
+    combatFolder = null;
+    const room = view?.room ?? null;
+    renderControls(room, me(room));
+    return;
+  }
+  if (d.folder) {
+    combatFolder = d.folder as ActionFolder;
+    const room = view?.room ?? null;
+    renderControls(room, me(room));
+    return;
+  }
   if (d.ability) {
     buzz();
     send({ action: needsAim(d.target) ? "AIM_ACTION" : "PERFORM_ACTION", abilityId: d.ability });

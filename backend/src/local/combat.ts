@@ -33,6 +33,7 @@ import {
   spendSlot,
   type Vitals,
 } from "./srd-sheet.js";
+import { actionCategory, actionSummary, type ActionCategory } from "./action-menu.js";
 import type { Player } from "./types.js";
 
 export type Cell = { x: number; y: number };
@@ -2889,6 +2890,8 @@ type MenuAction = {
   range: number;
   guided: boolean;
   available: boolean;
+  category: ActionCategory;
+  summary: string;
 };
 
 export function buildPcSheet(
@@ -2973,6 +2976,8 @@ function describeAction(id: string, economy: "action" | "bonus_action", owner: C
     range,
     guided: id === guidedId,
     available,
+    category: actionCategory(realId, a),
+    summary: actionSummary(id, a),
   };
 }
 

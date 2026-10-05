@@ -301,3 +301,5 @@ export function scriptRuns(paragraph: string): ScriptLine[] {
   if (at < paragraph.length) out.push({ speaker: null, text: paragraph.slice(at) });
   return out;
 }
+
+export { actionFolderOf, inferActionFolder, type ActionFolder } from "./action-folder.js";

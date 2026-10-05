@@ -74,6 +74,8 @@ export type Token = {
   marked: boolean;
 };
 
+export type ActionCategory = "attack" | "spell" | "tactics" | "item" | "feature";
+
 export type MenuAction = {
   id: string;
   name: string;
@@ -84,6 +86,8 @@ export type MenuAction = {
   range: number;
   guided: boolean;
   available: boolean;
+  category?: ActionCategory;
+  summary?: string;
 };
 
 export type CombatPublic = {
