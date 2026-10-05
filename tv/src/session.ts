@@ -22,17 +22,60 @@ function stillLive(s: Session | undefined): Session | undefined {
   return s;
 }
 
+/** Arena leftovers used campaign scene titles like "ARENA LOBBY". */
+export function sessionLooksLikeArena(s: Session): boolean {
+  if (s.mode === "arena") return true;
+  return /\barena\b/i.test(s.place ?? "");
+}
+
+function withMode(s: Session, mode: SessionMode): Session {
+  return s.mode === mode ? s : { ...s, mode };
+}
+
+function parseRaw(raw: string): Slots {
+  const data = JSON.parse(raw) as Session | Slots;
+  if (data && typeof data === "object" && "roomCode" in data && (data as Session).roomCode) {
+    const one = stillLive(data as Session);
+    if (!one) return {};
+    return sessionLooksLikeArena(one) ? { arena: withMode(one, "arena") } : { campaign: withMode(one, "campaign") };
+  }
+  const slots = data as Slots;
+  return { campaign: stillLive(slots.campaign), arena: stillLive(slots.arena) };
+}
+
+function splitMisfiled(slots: Slots): { slots: Slots; dirty: boolean } {
+  let { campaign, arena } = slots;
+  let dirty = false;
+  if (campaign && sessionLooksLikeArena(campaign)) {
+    const moved = withMode(campaign, "arena");
+    if (!arena) arena = moved;
+    campaign = undefined;
+    dirty = true;
+  }
+  if (arena && arena.mode !== "arena") {
+    arena = withMode(arena, "arena");
+    dirty = true;
+  }
+  if (campaign && campaign.mode !== "campaign") {
+    campaign = withMode(campaign, "campaign");
+    dirty = true;
+  }
+  return { slots: { campaign, arena }, dirty };
+}
+
+function isLegacyFlat(raw: string): boolean {
+  const data = JSON.parse(raw) as Session | Slots;
+  return Boolean(data && typeof data === "object" && "roomCode" in data && (data as Session).roomCode);
+}
+
 function readSlots(): Slots {
   try {
     const raw = localStorage.getItem(KEY);
     if (!raw) return {};
-    const data = JSON.parse(raw) as Session | Slots;
-    if (data && typeof data === "object" && "roomCode" in data && (data as Session).roomCode) {
-      const campaign = stillLive(data as Session);
-      return campaign ? { campaign } : {};
-    }
-    const slots = data as Slots;
-    return { campaign: stillLive(slots.campaign), arena: stillLive(slots.arena) };
+    const legacy = isLegacyFlat(raw);
+    const { slots, dirty } = splitMisfiled(parseRaw(raw));
+    if (dirty || legacy) writeSlots(slots);
+    return slots;
   } catch {
     return {};
   }

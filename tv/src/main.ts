@@ -1365,7 +1365,7 @@ function onRoomState(next: RoomState) {
   pendingRejoin = null;
   const me = next.players.find((p) => p.playerId === playerId);
   if (me || next.players.length === 0 || spectating) {
-    const mode: SessionMode = next.mode === "arena" ? "arena" : "campaign";
+    const mode: SessionMode = next.mode === "arena" || next.arena ? "arena" : "campaign";
     saveSession(mode, {
       roomCode: next.roomCode,
       playerId,
