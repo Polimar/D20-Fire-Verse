@@ -27,7 +27,7 @@ import { mountPointer, onPointer, type TrackpadEvent } from "./pointer";
 import { puzzleBack, puzzleKindForNode, renderInteractivePuzzle } from "./puzzles";
 import { chapterCard, mountScenes, setScene } from "./scenefx";
 import { ART, sceneForNode } from "./scenes";
-import { clearSession, loadSession, saveSession, type Session } from "./session";
+import { clearSession, loadSession, saveSession, type Session, type SessionMode } from "./session";
 import { adminOpen, closeAdmin, handleAdminKey, openAdmin } from "./admin-ui";
 import { closeSettings, openSettings, settingsOpen } from "./settings-ui";
 import { onSettings, settings } from "./settings";
@@ -604,8 +604,15 @@ function filteredArenaMonsters() {
   return arenaMonsters.filter((m) => (!q || m.name.toLowerCase().includes(q)) && (!cr || m.cr === cr));
 }
 
+function continueMarkup(session: Session): string {
+  return `<button type="button" class="primary continue" id="btnContinue" data-autofocus>
+        <strong>Continue</strong><span>${esc(session.hero ?? "Your party")}${session.place ? ` · ${esc(session.place)}` : ""}</span>
+      </button>`;
+}
+
 function renderHome() {
-  const session = loadSession();
+  const campaign = loadSession("campaign");
+  const arena = loadSession("arena");
   const welcome = $("homeWelcome");
   if (account?.username) {
     welcome.hidden = false;
@@ -616,11 +623,6 @@ function renderHome() {
     welcome.textContent = "";
   }
   const cta = $("homeCta");
-  const cont = session
-    ? `<button type="button" class="primary continue" id="btnContinue" data-autofocus>
-        <strong>Continue</strong><span>${esc(session.hero ?? "Your party")}${session.place ? ` · ${esc(session.place)}` : ""}</span>
-      </button>`
-    : "";
   const camp =
     campaigns.length > 1
       ? `<label class="meta">Campaign <select id="campPick">${campaigns
@@ -642,17 +644,17 @@ function renderHome() {
       renderHome();
     });
   } else if (homeView === "campaign") {
-    cta.innerHTML = `${cont}
+    cta.innerHTML = `${campaign ? continueMarkup(campaign) : ""}
     ${camp}
-    <button type="button" class="${session ? "" : "primary"}" id="btnNew" ${session ? "" : "data-autofocus"}>Begin a new tale</button>
+    <button type="button" class="${campaign ? "" : "primary"}" id="btnNew" ${campaign ? "" : "data-autofocus"}>Begin a new tale</button>
     <button type="button" class="ghost" id="btnLoad">Load a save code</button>
     <button type="button" class="ghost" id="btnHomeBack">↩ Modes</button>
     <button type="button" class="ghost" id="btnSettings">Settings</button>
     ${account?.role === "admin" ? `<button type="button" class="ghost" id="btnAdmin">Manage the table</button>` : ""}`;
-    $("btnContinue")?.addEventListener("click", () => continueSession());
+    $("btnContinue")?.addEventListener("click", () => continueSession("campaign"));
     $("btnNew").addEventListener("click", () => {
       sfx("uiConfirm");
-      clearSession();
+      clearSession("campaign");
       playerId = null;
       state = null;
       spectating = false;
@@ -670,10 +672,12 @@ function renderHome() {
     });
   } else if (homeView === "arena") {
     cta.innerHTML = `
-      <button type="button" class="primary" id="btnArenaCreate" data-autofocus>Create arena</button>
+      ${arena ? continueMarkup(arena) : ""}
+      <button type="button" class="${arena ? "" : "primary"}" id="btnArenaCreate" ${arena ? "" : "data-autofocus"}>Create arena</button>
       <button type="button" id="btnArenaJoin">Join an arena</button>
       <button type="button" class="ghost" id="btnHomeBack">↩ Modes</button>
       <button type="button" class="ghost" id="btnSettings">Settings</button>`;
+    $("btnContinue")?.addEventListener("click", () => continueSession("arena"));
     $("btnArenaCreate").addEventListener("click", () => {
       homeView = "create";
       renderHome();
@@ -736,7 +740,7 @@ function renderHome() {
         monsterCr: ($("arenaMonsterCr") as HTMLSelectElement | null)?.value ?? "",
       };
       sfx("uiConfirm");
-      clearSession();
+      clearSession("arena");
       playerId = null;
       state = null;
       spectating = true;
@@ -800,11 +804,11 @@ function renderHome() {
   reportView();
 }
 
-function continueSession() {
-  const session = loadSession();
+function continueSession(mode: SessionMode) {
+  const session = loadSession(mode);
   if (!session) return;
   sfx("uiConfirm");
-  pendingRejoin = session;
+  pendingRejoin = { ...session, mode };
   resumedFirstState = true;
   spectating = !session.playerId;
   const msg = { action: "REJOIN", roomCode: session.roomCode, playerId: session.playerId ?? undefined };
@@ -1156,7 +1160,7 @@ function renderChoices(s: RoomState) {
     box.innerHTML = `<button type="button" class="choice primary" id="btnHome" data-autofocus><span class="choice-n">↩</span><span>${s.nodeId === "END_WIN" ? "Return to the title" : "Rest here — return to the title"}</span></button>`;
     $("btnHome").addEventListener("click", () => {
       sfx("uiConfirm");
-      if (s.nodeId === "END_WIN") clearSession();
+      if (s.nodeId === "END_WIN") clearSession("campaign");
       state = null;
       showPage("home");
     });
@@ -1361,11 +1365,15 @@ function onRoomState(next: RoomState) {
   pendingRejoin = null;
   const me = next.players.find((p) => p.playerId === playerId);
   if (me || next.players.length === 0 || spectating) {
-    saveSession({
+    const mode: SessionMode = next.mode === "arena" ? "arena" : "campaign";
+    saveSession(mode, {
       roomCode: next.roomCode,
       playerId,
       hero: me?.characterName,
-      place: sceneForNode(next.nodeId).title,
+      place:
+        mode === "arena"
+          ? next.arena?.name || next.arena?.formatLabel || next.roomCode
+          : sceneForNode(next.nodeId).title,
       autosaveId: next.autosaveId,
     });
   }
@@ -1398,16 +1406,22 @@ function onError(code: string, action?: string) {
   }
   if (action === "CREATE_CHARACTER" || action === "ROLL_ABILITIES") chargenApi?.failed();
   if (action === "REJOIN" || (code === "ROOM_NOT_FOUND" && pendingRejoin)) {
-    const session = pendingRejoin ?? loadSession();
+    const session = pendingRejoin;
+    const mode: SessionMode = session?.mode === "arena" ? "arena" : "campaign";
     pendingRejoin = null;
-    if (session?.autosaveId) {
+    if (session?.autosaveId && mode === "campaign") {
       toast("The table was closed — picking up from the last autosave.", "info");
       resumedFirstState = true;
       send({ action: "RESUME_SAVE", saveId: session.autosaveId });
       return;
     }
-    clearSession();
-    toast("That table is gone and there's no save to return to. Begin a new tale.", "bad");
+    clearSession(mode);
+    toast(
+      mode === "arena"
+        ? "That arena is gone. Create a new one, or join with a code."
+        : "That table is gone and there's no save to return to. Begin a new tale.",
+      "bad",
+    );
     showPage("home");
     return;
   }
@@ -1460,12 +1474,11 @@ function connect() {
         } else if (catalog) chargenApi?.refresh(catalog);
         if (page === "lobby") renderLobby();
         reportView(true);
-        const session = loadSession();
         if (!state?.roomCode) flushPendingTable();
         if (state?.roomCode) {
           resumedFirstState = true;
           send({ action: "REJOIN", roomCode: state.roomCode, playerId: playerId ?? undefined });
-        } else if (session && page === "home") {
+        } else if (page === "home" && (loadSession("campaign") || loadSession("arena"))) {
           renderHome();
         }
         break;
