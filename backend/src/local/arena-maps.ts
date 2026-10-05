@@ -183,11 +183,12 @@ export function saveArenaMapFile(
   id: string,
   walls: Array<{ x: number; y: number; w: number; h: number }>,
   hazards: Array<{ x: number; y: number; w: number; h: number }>,
+  spawn?: ArenaMapDef["spawn"],
 ): ArenaMapDef {
   const file = path.join(ARENAS_DIR, `${id}.json`);
   if (!fs.existsSync(file)) throw new Error("BAD_MAP");
   const cur = JSON.parse(fs.readFileSync(file, "utf8")) as ArenaMapDef;
-  const next = { ...cur, walls, hazards };
+  const next = { ...cur, walls, hazards, ...(spawn ? { spawn } : {}) };
   fs.writeFileSync(file, `${JSON.stringify(next, null, 2)}\n`);
   return next;
 }

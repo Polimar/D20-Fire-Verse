@@ -1,5 +1,4 @@
 import type { Express, Request, Response } from "express";
-import { randomBytes } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -20,13 +19,11 @@ import {
   readSessionCookie,
   requestFriend,
   sessionCookie,
-  signInWithAmazon,
   updateUser,
   userFromToken,
   type Role,
   type SessionUser,
 } from "./auth.js";
-import { amazonEnabled, amazonStatus, authorizeUrl, clearAmazon, exchangeCode, probeAmazon, readAmazon, verifyAccessToken, writeAmazon } from "./amazon.js";
 import {
   artDirFor,
   draftSnapshot,
@@ -43,7 +40,7 @@ import {
 } from "./catalog.js";
 import type { EncounterDef, StoryNode } from "./campaign.js";
 import { getArenaMap, listArenaMapFiles, saveArenaMapFile } from "./arena-maps.js";
-import { compactRects, parseCellGrid } from "./map-grid.js";
+import { compactRects, parseCellGrid, parseCellPoints } from "./map-grid.js";
 import { brevoStatus, readBrevo, sendMail, writeBrevo } from "./mail.js";
 import { closeRoom, getRoom, listRooms, listSaves } from "./room.js";
 
@@ -58,44 +55,68 @@ export function requestUser(req: { headers: { cookie?: string | string[] | undef
   return userFromToken(readSessionCookie(cookie));
 }
 
-const LWA_STATE_COOKIE = "fv_lwa_state";
-const PUBLIC_AMAZON_CALLBACK = "https://www.d20fireverse.it/api/login/amazon/callback";
-
-/** Must match an Allowed Return URL of the Amazon security profile exactly. */
-function amazonRedirectUri(): string {
-  return process.env.AMAZON_REDIRECT_URI?.trim() || PUBLIC_AMAZON_CALLBACK;
-}
-
-function safeNext(raw: unknown): string {
-  const s = String(raw ?? "");
-  if (s.startsWith("/companion") && !s.includes("//") && !s.includes("\\")) return s.slice(0, 200);
-  return "/";
-}
-
-function lwaNextCookie(value: string, secureCookie: boolean, maxAge = 600): string {
-  const bits = [`fv_lwa_next=${encodeURIComponent(value)}`, "HttpOnly", "Path=/api/login/amazon", "SameSite=Lax", `Max-Age=${maxAge}`];
-  if (secureCookie) bits.push("Secure");
-  return bits.join("; ");
-}
-
-function lwaStateCookie(value: string, secureCookie: boolean, maxAge = 600): string {
-  const bits = [`${LWA_STATE_COOKIE}=${value}`, "HttpOnly", "Path=/api/login/amazon", "SameSite=Lax", `Max-Age=${maxAge}`];
-  if (secureCookie) bits.push("Secure");
-  return bits.join("; ");
-}
-
-function readCookie(header: string | undefined, name: string): string | null {
-  for (const part of (header ?? "").split(";")) {
-    const [k, ...rest] = part.trim().split("=");
-    if (k === name) return decodeURIComponent(rest.join("="));
-  }
-  return null;
-}
-
 function fail(res: Response, err: unknown): void {
   const code = err instanceof Error ? err.message : "ERROR";
   const status = code === "AUTH_REQUIRED" ? 401 : code === "FORBIDDEN" ? 403 : 400;
   res.status(status).json({ error: code });
+}
+
+function parseCampaignSpawn(
+  raw: unknown,
+  width: number,
+  height: number,
+  current: { pcs: Array<{ x: number; y: number }>; enemies: Array<{ x: number; y: number }> },
+) {
+  if (raw == null || typeof raw !== "object") return current;
+  const body = raw as Record<string, unknown>;
+  const pcs = parseCellPoints(body.pcs, width, height);
+  const enemies = parseCellPoints(body.enemies, width, height);
+  if (!pcs || !enemies || pcs.length !== current.pcs.length || enemies.length !== current.enemies.length) {
+    throw new Error("BAD_MAP");
+  }
+  return { pcs, enemies };
+}
+
+function parseArenaSpawn(
+  raw: unknown,
+  width: number,
+  height: number,
+  current: { ffa: Array<{ x: number; y: number }>; teamA: Array<{ x: number; y: number }>; teamB: Array<{ x: number; y: number }> },
+) {
+  if (raw == null || typeof raw !== "object") return current;
+  const body = raw as Record<string, unknown>;
+  const ffa = parseCellPoints(body.ffa, width, height);
+  const teamA = parseCellPoints(body.teamA, width, height);
+  const teamB = parseCellPoints(body.teamB, width, height);
+  if (
+    !ffa ||
+    !teamA ||
+    !teamB ||
+    ffa.length !== current.ffa.length ||
+    teamA.length !== current.teamA.length ||
+    teamB.length !== current.teamB.length
+  ) {
+    throw new Error("BAD_MAP");
+  }
+  return { ffa, teamA, teamB };
+}
+
+function parseLabels(
+  raw: unknown,
+  width: number,
+  height: number,
+  current: Record<string, { x: number; y: number }> | undefined,
+): Record<string, { x: number; y: number }> | undefined {
+  if (raw == null || !current) return current;
+  if (typeof raw !== "object" || Array.isArray(raw)) throw new Error("BAD_MAP");
+  const body = raw as Record<string, unknown>;
+  const out: Record<string, { x: number; y: number }> = {};
+  for (const key of Object.keys(current)) {
+    const pts = parseCellPoints([body[key] ?? current[key]], width, height);
+    if (!pts?.[0]) throw new Error("BAD_MAP");
+    out[key] = pts[0]!;
+  }
+  return out;
 }
 
 export function mountAccountRoutes(app: Express): void {
@@ -151,54 +172,8 @@ export function mountAccountRoutes(app: Express): void {
       return;
     }
     res.setHeader("Set-Cookie", sessionCookie(confirmed.session, secure(req)));
-    res.redirect(302, "/");
-  });
-
-  app.get("/api/auth/options", (_req, res) => {
-    res.json({ amazon: amazonEnabled() });
-  });
-
-  /** The Fire TV app signs in with the LWA SDK and hands the access token to the page, which posts it here. */
-  app.post("/api/login/amazon", async (req, res) => {
-    try {
-      const profile = await verifyAccessToken(req.body?.accessToken);
-      const found = signInWithAmazon(profile);
-      res.setHeader("Set-Cookie", sessionCookie(found.token, secure(req)));
-      res.json({ user: found.user });
-    } catch (err) {
-      fail(res, err);
-    }
-  });
-
-  app.get("/api/login/amazon/start", (req, res) => {
-    try {
-      const state = randomBytes(18).toString("base64url");
-      const url = authorizeUrl(amazonRedirectUri(), state);
-      const next = safeNext(req.query.next);
-      res.setHeader("Set-Cookie", [lwaStateCookie(state, secure(req)), lwaNextCookie(next, secure(req))]);
-      res.redirect(302, url);
-    } catch (err) {
-      res.redirect(302, `/?login_error=${encodeURIComponent(err instanceof Error ? err.message : "AMAZON_FAILED")}`);
-    }
-  });
-
-  app.get("/api/login/amazon/callback", async (req, res) => {
-    const expected = readCookie(req.headers.cookie, LWA_STATE_COOKIE);
-    const state = String(req.query.state ?? "");
-    const code = String(req.query.code ?? "");
-    const clearState = lwaStateCookie("", secure(req), 0);
-    try {
-      if (req.query.error) throw new Error("AMAZON_CANCELLED");
-      if (!expected || !state || state !== expected || !code) throw new Error("AMAZON_FAILED");
-      const accessToken = await exchangeCode(code, amazonRedirectUri());
-      const found = signInWithAmazon(await verifyAccessToken(accessToken));
-      const next = safeNext(readCookie(req.headers.cookie, "fv_lwa_next"));
-      res.setHeader("Set-Cookie", [clearState, lwaNextCookie("", secure(req), 0), sessionCookie(found.token, secure(req))]);
-      res.redirect(302, next);
-    } catch (err) {
-      res.setHeader("Set-Cookie", clearState);
-      res.redirect(302, `/?login_error=${encodeURIComponent(err instanceof Error ? err.message : "AMAZON_FAILED")}`);
-    }
+    const room = confirmed.roomCode ? `?room=${encodeURIComponent(confirmed.roomCode)}` : "";
+    res.redirect(302, `/companion/${room}`);
   });
 
   app.post("/api/logout", (req, res) => {
@@ -318,46 +293,6 @@ export function mountAdminRoutes(app: Express): void {
         senderName: String(req.body?.senderName ?? ""),
       });
       res.json(brevoStatus());
-    } catch (err) {
-      fail(res, err);
-    }
-  });
-
-  app.get("/api/admin/amazon", (req, res) => {
-    try {
-      assertAdmin(requestUser(req));
-      res.json(amazonStatus());
-    } catch (err) {
-      fail(res, err);
-    }
-  });
-
-  app.post("/api/admin/amazon/test", async (req, res) => {
-    try {
-      assertAdmin(requestUser(req));
-      const typedSecret = String(req.body?.clientSecret ?? "").trim();
-      const report = await probeAmazon({
-        clientId: String(req.body?.clientId ?? ""),
-        clientSecret: typedSecret || readAmazon()?.clientSecret || "",
-        redirectUri: amazonRedirectUri(),
-      });
-      res.json(report);
-    } catch (err) {
-      fail(res, err);
-    }
-  });
-
-  app.post("/api/admin/amazon", (req, res) => {
-    try {
-      assertAdmin(requestUser(req));
-      if (req.body?.off === true) clearAmazon();
-      else {
-        writeAmazon({
-          clientId: String(req.body?.clientId ?? ""),
-          clientSecret: String(req.body?.clientSecret ?? ""),
-        });
-      }
-      res.json(amazonStatus());
     } catch (err) {
       fail(res, err);
     }
@@ -549,7 +484,7 @@ export function mountAdminRoutes(app: Express): void {
           walls: map.walls,
           hazards: map.hazards ?? [],
           spawn: map.spawn,
-          labels: (map as { labels?: Record<string, { x: number; y: number }> }).labels ?? null,
+          labels: map.labels ?? null,
           art: null,
         });
         return;
@@ -557,6 +492,7 @@ export function mountAdminRoutes(app: Express): void {
       if (source === "arena") {
         const map = getArenaMap(id);
         if (!map) throw new Error("BAD_MAP");
+        const art = map.art?.startsWith("/") ? map.art : `/art/arena/${map.theme}-${map.size}.png`;
         res.json({
           source,
           id: map.id,
@@ -566,7 +502,7 @@ export function mountAdminRoutes(app: Express): void {
           walls: map.walls,
           hazards: map.hazards ?? [],
           spawn: map.spawn,
-          art: map.art?.startsWith("/") ? map.art : `/art/arena/${map.theme}-${map.size}.png`,
+          art,
         });
         return;
       }
@@ -596,8 +532,31 @@ export function mountAdminRoutes(app: Express): void {
       const hazards = compactRects(hazardGrid);
       const saved =
         source === "campaign"
-          ? saveBuiltinCampaignMap(id, walls, hazards)
-          : saveArenaMapFile(id, walls, hazards);
+          ? (() => {
+              const camp = getBuiltinMap(id)!;
+              return saveBuiltinCampaignMap(
+                id,
+                walls,
+                hazards,
+                parseCampaignSpawn(req.body?.spawn, camp.width, camp.height, camp.spawn),
+                parseLabels(req.body?.labels, camp.width, camp.height, camp.labels),
+              );
+            })()
+          : saveArenaMapFile(
+              id,
+              walls,
+              hazards,
+              parseArenaSpawn(
+                req.body?.spawn,
+                current.width,
+                current.height,
+                current.spawn as {
+                  ffa: Array<{ x: number; y: number }>;
+                  teamA: Array<{ x: number; y: number }>;
+                  teamB: Array<{ x: number; y: number }>;
+                },
+              ),
+            );
       res.json({
         source,
         id: saved.id,
@@ -606,6 +565,8 @@ export function mountAdminRoutes(app: Express): void {
         height: saved.height,
         walls: saved.walls,
         hazards: saved.hazards ?? [],
+        spawn: saved.spawn,
+        labels: "labels" in saved ? ((saved as { labels?: Record<string, { x: number; y: number }> }).labels ?? null) : null,
       });
     } catch (err) {
       fail(res, err);

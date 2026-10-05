@@ -3,6 +3,7 @@
  * Mouse drags paint; the D-pad moves a cell cursor and OK stamps.
  */
 
+import { cropStyle, DUNGEON_ROOMS, roomForMapId } from "./dungeon-map";
 import type { RemoteKey } from "./nav";
 import { sfx } from "./sfx";
 
@@ -36,16 +37,29 @@ export type MapPaint = {
   art?: string | null;
 };
 
+type SpawnGroup = "pcs" | "enemies" | "ffa" | "teamA" | "teamB";
+type SpawnBag = Record<SpawnGroup, Array<{ x: number; y: number }>>;
+type Held = { kind: "spawn"; group: SpawnGroup; index: number } | { kind: "label"; name: string };
+type Pin = Held & { x: number; y: number; letter: string; title: string; cls: string; key: string };
+
 export type MapPaintSession = {
   spec: MapPaint;
   walls: boolean[][];
   hazards: boolean[][];
+  spawn: SpawnBag;
+  labels: Record<string, { x: number; y: number }>;
+  held: Held | null;
   brush: Brush;
   cx: number;
   cy: number;
   dirty: boolean;
   painting: boolean;
+  zoomI: number;
+  drag: { x: number; y: number } | null;
 };
+
+const ZOOM = [0.5, 0.75, 1, 1.25, 1.5, 2, 2.5, 3, 4];
+const ZOOM_DEFAULT = ZOOM.indexOf(1);
 
 const esc = (s: unknown) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]!);
 
@@ -65,9 +79,102 @@ function stampRects(g: boolean[][], rects: Array<{ x: number; y: number; w: numb
   }
 }
 
+function clonePts(list: Array<{ x: number; y: number }> | undefined) {
+  return (list ?? []).map((p) => ({ x: p.x, y: p.y }));
+}
+
+function spawnBag(spec: MapPaint): SpawnBag {
+  return {
+    pcs: clonePts(spec.spawn?.pcs),
+    enemies: clonePts(spec.spawn?.enemies),
+    ffa: clonePts(spec.spawn?.ffa),
+    teamA: clonePts(spec.spawn?.teamA),
+    teamB: clonePts(spec.spawn?.teamB),
+  };
+}
+
+function prettyName(name: string) {
+  return name.replace(/_/g, " ").replace(/\b[a-z]/g, (c) => c.toUpperCase());
+}
+
+function heldKey(h: Held) {
+  return h.kind === "spawn" ? `spawn:${h.group}:${h.index}` : `label:${h.name}`;
+}
+
+function pins(s: MapPaintSession): Pin[] {
+  const out: Pin[] = [];
+  const add = (group: SpawnGroup, letter: string, title: string, cls: string) => {
+    const list = s.spawn[group];
+    list.forEach((p, index) => {
+      const numbered = list.length > 1;
+      out.push({
+        kind: "spawn",
+        group,
+        index,
+        x: p.x,
+        y: p.y,
+        letter: numbered ? `${letter}${index + 1}` : letter,
+        title,
+        cls,
+        key: `spawn:${group}:${index}`,
+      });
+    });
+  };
+  add("pcs", "H", "PvE hero", "spawn-pve-h");
+  add("enemies", "E", "PvE enemy", "spawn-pve-e");
+  add("ffa", "F", "PvP free-for-all", "spawn-ffa");
+  add("teamA", "A", "Team A", "spawn-team-a");
+  add("teamB", "B", "Team B", "spawn-team-b");
+  for (const [name, p] of Object.entries(s.labels)) {
+    out.push({
+      kind: "label",
+      name,
+      x: p.x,
+      y: p.y,
+      letter: name.slice(0, 1).toUpperCase(),
+      title: prettyName(name),
+      cls: "lab",
+      key: `label:${name}`,
+    });
+  }
+  return out;
+}
+
+function pinPos(s: MapPaintSession, h: Held): { x: number; y: number } {
+  if (h.kind === "spawn") return s.spawn[h.group][h.index]!;
+  return s.labels[h.name]!;
+}
+
+function setPinPos(s: MapPaintSession, h: Held, x: number, y: number) {
+  if (h.kind === "spawn") s.spawn[h.group][h.index] = { x, y };
+  else s.labels[h.name] = { x, y };
+  s.dirty = true;
+}
+
+function artVars(spec: MapPaint): { cls: string; style: string } {
+  if (spec.source === "campaign") {
+    const room = roomForMapId(spec.id);
+    if (room) {
+      const crop = cropStyle(DUNGEON_ROOMS[room]);
+      return {
+        cls: "has-art",
+        style: `;--map-art:url('/art/dungeon-map.jpg');--map-art-size:${crop.size};--map-art-pos:${crop.position}`,
+      };
+    }
+  }
+  if (spec.art?.startsWith("/")) {
+    return { cls: "has-art", style: `;--map-art:url('${esc(spec.art)}')` };
+  }
+  return { cls: "", style: "" };
+}
+
 let session: MapPaintSession | null = null;
 let onBackToList: (() => void) | null = null;
+let persistSession: (() => Promise<void>) | null = null;
 let cellObserver: ResizeObserver | null = null;
+let bumpZoom: ((delta: number, pivot?: { clientX: number; clientY: number }) => void) | null = null;
+let applyPick: ((h: Held | null) => void) | null = null;
+let applyDrop: ((x: number, y: number) => boolean) | null = null;
 
 export function mapEditorOpen(): boolean {
   return !!session && !!document.getElementById("mapPaint");
@@ -76,8 +183,24 @@ export function mapEditorOpen(): boolean {
 export function closeMapEditor() {
   cellObserver?.disconnect();
   cellObserver = null;
+  bumpZoom = null;
+  applyPick = null;
+  applyDrop = null;
+  persistSession = null;
   session = null;
   onBackToList = null;
+}
+
+/** Write dirty terrain / spawn / labels before leaving the painter. */
+export async function flushMapEditor(): Promise<boolean> {
+  if (!session?.dirty || !persistSession) return true;
+  try {
+    await persistSession();
+    session.dirty = false;
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 function kindAt(s: MapPaintSession, x: number, y: number): Brush {
@@ -110,6 +233,13 @@ function paintCellDom(s: MapPaintSession, x: number, y: number) {
   if (!el) return;
   el.dataset.k = kindAt(s, x, y);
   el.classList.toggle("on", s.cx === x && s.cy === y);
+  const here = pins(s).filter((p) => p.x === x && p.y === y);
+  const hold = s.held ? heldKey(s.held) : "";
+  el.querySelectorAll("i").forEach((n) => n.remove());
+  el.insertAdjacentHTML(
+    "beforeend",
+    here.map((m) => `<i class="${m.cls}${m.key === hold ? " held" : ""}">${esc(m.letter)}</i>`).join(""),
+  );
 }
 
 function setCursor(s: MapPaintSession, x: number, y: number) {
@@ -122,77 +252,41 @@ function setCursor(s: MapPaintSession, x: number, y: number) {
   el?.scrollIntoView({ block: "nearest", inline: "nearest" });
 }
 
-function markers(spec: MapPaint): Array<{ x: number; y: number; label: string; cls: string }> {
-  const out: Array<{ x: number; y: number; label: string; cls: string }> = [];
-  for (const p of spec.spawn?.pcs ?? []) out.push({ x: p.x, y: p.y, label: "P", cls: "pc" });
-  for (const p of spec.spawn?.enemies ?? []) out.push({ x: p.x, y: p.y, label: "E", cls: "foe" });
-  for (const p of spec.spawn?.ffa ?? []) out.push({ x: p.x, y: p.y, label: "S", cls: "pc" });
-  for (const p of spec.spawn?.teamA ?? []) out.push({ x: p.x, y: p.y, label: "A", cls: "pc" });
-  for (const p of spec.spawn?.teamB ?? []) out.push({ x: p.x, y: p.y, label: "B", cls: "foe" });
-  if (spec.labels) {
-    for (const [name, p] of Object.entries(spec.labels)) {
-      out.push({ x: p.x, y: p.y, label: name.slice(0, 1).toUpperCase(), cls: "lab" });
-    }
-  }
-  return out;
-}
-
-function markAt(marks: ReturnType<typeof markers>, x: number, y: number) {
-  return marks.filter((m) => m.x === x && m.y === y);
-}
-
-function prettyName(name: string) {
-  return name.replace(/_/g, " ").replace(/\b[a-z]/g, (c) => c.toUpperCase());
-}
-
-function legendHtml(spec: MapPaint) {
-  const terrain = [
-    { cls: "floor", title: "Floor", note: "Walkable" },
-    { cls: "wall", title: "Wall", note: "Blocks walk and shots" },
-    { cls: "hazard", title: "Hazard", note: "Blocks walk; shots pass" },
-  ];
-  const letterRows: Array<{ letter: string; cls: string; title: string }> = [];
-  const seen = new Set<string>();
-  const pushLetter = (letter: string, cls: string, title: string) => {
-    const key = `${letter}:${cls}:${title}`;
-    if (seen.has(key)) return;
-    seen.add(key);
-    letterRows.push({ letter, cls, title });
+function legendHtml(s: MapPaintSession) {
+  const list = pins(s);
+  const hold = s.held ? heldKey(s.held) : "";
+  const terrain = `<ul class="map-legend map-legend-terrain">
+      <li><span class="map-swatch floor" aria-hidden="true"></span><span><strong>Floor</strong> · Walkable</span></li>
+      <li><span class="map-swatch wall" aria-hidden="true"></span><span><strong>Wall</strong> · Blocks walk and shots</span></li>
+      <li><span class="map-swatch hazard" aria-hidden="true"></span><span><strong>Hazard</strong> · Blocks walk; shots pass</span></li>
+    </ul>`;
+  const section = (title: string, rows: Pin[]) => {
+    if (!rows.length) return "";
+    return `<div class="map-legend-section"><h5>${esc(title)}</h5><ul class="map-legend">${rows
+      .map(
+        (m) =>
+          `<li><button type="button" class="ghost${m.key === hold ? " on" : ""}" data-mark="${esc(m.key)}" data-nav-key="mark-${esc(m.key)}"><strong class="${esc(m.cls)}">${esc(m.letter)}</strong> ${esc(m.title)}</button></li>`,
+      )
+      .join("")}</ul></div>`;
   };
-  if (spec.spawn?.pcs?.length) pushLetter("P", "pc", "Hero spawn");
-  if (spec.spawn?.enemies?.length) pushLetter("E", "foe", "Enemy spawn");
-  if (spec.spawn?.ffa?.length) pushLetter("S", "pc", "FFA spawn");
-  if (spec.spawn?.teamA?.length) pushLetter("A", "pc", "Team A spawn");
-  if (spec.spawn?.teamB?.length) pushLetter("B", "foe", "Team B spawn");
-  if (spec.labels) {
-    for (const name of Object.keys(spec.labels)) {
-      pushLetter(name.slice(0, 1).toUpperCase(), "lab", prettyName(name));
-    }
-  }
-  return `<div class="map-legend-wrap" id="mapLegend">
-    <h4>Legend</h4>
-    <ul class="map-legend">
-      ${terrain
-        .map(
-          (t) =>
-            `<li><span class="map-swatch ${t.cls}" aria-hidden="true"></span><span><strong>${esc(t.title)}</strong> · ${esc(t.note)}</span></li>`,
-        )
-        .join("")}
-      ${letterRows
-        .map(
-          (r) =>
-            `<li><strong class="map-mark ${r.cls}">${esc(r.letter)}</strong><span>${esc(r.title)}</span></li>`,
-        )
-        .join("")}
-      ${letterRows.length ? "" : `<li class="meta">No spawn or POI letters on this map.</li>`}
-    </ul>
-  </div>`;
+  const pve = list.filter((m) => m.kind === "spawn" && (m.group === "pcs" || m.group === "enemies"));
+  const ffa = list.filter((m) => m.kind === "spawn" && m.group === "ffa");
+  const teams = list.filter((m) => m.kind === "spawn" && (m.group === "teamA" || m.group === "teamB"));
+  const poi = list.filter((m) => m.kind === "label");
+  return `${terrain}
+    ${section("PvE", pve)}
+    ${section("PvP free-for-all", ffa)}
+    ${section("Teams", teams)}
+    ${section("Points of interest", poi)}
+    ${list.length ? "" : `<p class="admin-note">No spawn or POI markers on this map.</p>`}`;
 }
 
-/** At least 75% of the painter width; height follows map aspect (view scrolls). */
-function fitForPainter(pageW: number, spec: { width: number; height: number }) {
-  const minMapW = Math.max(1, pageW * 0.75);
-  return Math.max(14, Math.ceil(minMapW / spec.width));
+function parseMark(raw: string | undefined): Held | null {
+  if (!raw) return null;
+  if (raw.startsWith("label:")) return { kind: "label", name: raw.slice(6) };
+  const m = /^spawn:(pcs|enemies|ffa|teamA|teamB):(\d+)$/.exec(raw);
+  if (!m) return null;
+  return { kind: "spawn", group: m[1] as SpawnGroup, index: Number(m[2]) };
 }
 
 export function renderMapPainter(
@@ -208,23 +302,26 @@ export function renderMapPainter(
     spec,
     walls,
     hazards,
+    spawn: spawnBag(spec),
+    labels: Object.fromEntries(Object.entries(spec.labels ?? {}).map(([k, p]) => [k, { x: p.x, y: p.y }])),
+    held: null,
     brush: "wall",
     cx: 0,
     cy: 0,
     dirty: false,
     painting: false,
+    zoomI: ZOOM_DEFAULT,
+    drag: null,
   };
   onBackToList = opts.onBack;
   const s = session;
-  const marks = markers(spec);
-  const artUrl = spec.art && spec.art.startsWith("/") ? spec.art : "";
-  const styleBits = [`--cols:${spec.width}`, `--rows:${spec.height}`, `--cell:18px`];
-  if (artUrl) styleBits.push(`--map-art:url('${esc(artUrl)}')`);
+  const art = artVars(spec);
   let cells = "";
+  const startPins = pins(s);
   for (let y = 0; y < spec.height; y += 1) {
     for (let x = 0; x < spec.width; x += 1) {
-      const ms = markAt(marks, x, y);
-      const badge = ms.map((m) => `<i class="${m.cls}">${esc(m.label)}</i>`).join("");
+      const here = startPins.filter((m) => m.x === x && m.y === y);
+      const badge = here.map((m) => `<i class="${m.cls}">${esc(m.letter)}</i>`).join("");
       cells += `<div class="map-cell" data-cell="${x},${y}" data-k="${kindAt(s, x, y)}">${badge}</div>`;
     }
   }
@@ -234,29 +331,107 @@ export function renderMapPainter(
         <button type="button" class="ghost" data-brush="floor" data-nav-key="brush-floor">Floor</button>
         <button type="button" class="ghost on" data-brush="wall" data-nav-key="brush-wall" data-autofocus>Wall</button>
         <button type="button" class="ghost" data-brush="hazard" data-nav-key="brush-hazard">Hazard</button>
-        <span class="meta" id="mapHint">D-pad aim · OK paint · drag on a pointer · Back leaves the grid</span>
+        <span class="meta" id="mapHint">Paint terrain, or pick a letter to move it</span>
         <button type="button" class="primary" id="mapSave" data-nav-key="map-save">Save</button>
         <button type="button" class="ghost" id="mapBack" data-nav-key="map-back">Back to maps</button>
       </div>
+      <div class="map-stage">
       <div class="map-paint-view" id="mapPaintView">
-        <div class="map-paint ${artUrl ? "has-art" : ""}" id="mapPaint" tabindex="0" data-arrows="all" data-nav-key="map-grid" data-no-scroll="1"
-          style="${styleBits.join(";")}">${cells}</div>
+      <div class="map-paint ${art.cls}" id="mapPaint" tabindex="0" data-arrows="all" data-nav-key="map-grid" data-no-scroll="1"
+        style="--cols:${spec.width};--rows:${spec.height}${art.style}">${cells}</div>
       </div>
-      ${legendHtml(spec)}
+      <div class="zoom-rail" id="mapZoomRail" aria-label="Map zoom">
+        <span class="zoom-pct" id="mapZoomPct">100%</span>
+        <button type="button" id="mapZoomIn" data-nav-key="map-zoom-in" aria-label="Zoom in">+</button>
+        <button type="button" class="zoom-track" id="mapZoomTrack" data-nav-key="map-zoom-track" data-arrows="all" role="slider" aria-label="Zoom" aria-orientation="vertical" aria-valuemin="50" aria-valuemax="400" aria-valuenow="100"></button>
+      </div>
+      </div>
+      <div class="map-legend-wrap">
+        <h4>Legend</h4>
+        <div id="mapLegendHost">${legendHtml(s)}</div>
+        <p class="admin-note">Pick a letter, then a walkable cell. Slot count stays the same.</p>
+      </div>
     </div>`;
   const grid = host.querySelector<HTMLElement>("#mapPaint")!;
   const view = host.querySelector<HTMLElement>("#mapPaintView")!;
-  const layoutCells = () => {
-    const pageW = Math.max(1, view.clientWidth - 2);
-    const fit = fitForPainter(pageW, spec);
-    grid.style.setProperty("--cell", `${fit}px`);
+  const track = host.querySelector<HTMLElement>("#mapZoomTrack")!;
+  const hint = () => host.querySelector("#mapHint");
+  const paintZoom = () => {
+    const t = s.zoomI / (ZOOM.length - 1);
+    track.style.setProperty("--t", String(t));
+    const pct = host.querySelector("#mapZoomPct");
+    if (pct) pct.textContent = `${Math.round(ZOOM[s.zoomI]! * 100)}%`;
+    track.setAttribute("aria-valuenow", String(Math.round(ZOOM[s.zoomI]! * 100)));
+    host.querySelector<HTMLButtonElement>("#mapZoomIn")!.disabled = s.zoomI >= ZOOM.length - 1;
   };
+  const layoutCells = () => {
+    const aw = Math.max(1, view.clientWidth - 2);
+    const base = Math.max(14, Math.ceil((aw * 0.75) / spec.width));
+    const cell = Math.round(base * ZOOM[s.zoomI]!);
+    grid.style.setProperty("--cell", `${cell}px`);
+    paintZoom();
+  };
+  const setZoom = (next: number, pivot?: { clientX: number; clientY: number }) => {
+    const i = Math.max(0, Math.min(ZOOM.length - 1, next));
+    if (i === s.zoomI) return;
+    const oldZ = ZOOM[s.zoomI]!;
+    const rect = view.getBoundingClientRect();
+    const px = (pivot ? pivot.clientX - rect.left : view.clientWidth / 2) + view.scrollLeft;
+    const py = (pivot ? pivot.clientY - rect.top : view.clientHeight / 2) + view.scrollTop;
+    s.zoomI = i;
+    layoutCells();
+    const scale = ZOOM[i]! / oldZ;
+    const vx = pivot ? pivot.clientX - rect.left : view.clientWidth / 2;
+    const vy = pivot ? pivot.clientY - rect.top : view.clientHeight / 2;
+    view.scrollLeft = px * scale - vx;
+    view.scrollTop = py * scale - vy;
+  };
+  bumpZoom = (delta, pivot) => setZoom(s.zoomI + delta, pivot);
   cellObserver?.disconnect();
   cellObserver = new ResizeObserver(() => layoutCells());
   cellObserver.observe(view);
   layoutCells();
+
+  const paintLegend = () => {
+    const box = host.querySelector("#mapLegendHost");
+    if (box) box.innerHTML = legendHtml(s);
+    box?.querySelectorAll<HTMLButtonElement>("[data-mark]").forEach((b) => {
+      b.addEventListener("click", () => pick(parseMark(b.dataset.mark)));
+    });
+  };
+  const pick = (h: Held | null) => {
+    s.held = h;
+    paintLegend();
+    pins(s).forEach((p) => paintCellDom(s, p.x, p.y));
+    const live = hint();
+    if (live && h) {
+      const pin = pins(s).find((p) => p.key === heldKey(h));
+      live.textContent = pin ? `Moving ${pin.letter} · ${pin.title}. Click a walkable cell.` : "Moving a marker.";
+    } else if (live) live.textContent = "Paint terrain, or pick a letter to move it";
+    if (h) sfx("uiMove");
+  };
+  const drop = (x: number, y: number) => {
+    if (!s.held) return false;
+    if (kindAt(s, x, y) === "wall") {
+      sfx("uiError");
+      const live = hint();
+      if (live) live.textContent = "Markers need a walkable cell.";
+      return true;
+    }
+    const from = pinPos(s, s.held);
+    setPinPos(s, s.held, x, y);
+    paintCellDom(s, from.x, from.y);
+    paintCellDom(s, x, y);
+    pick(null);
+    void persist("Marker saved.");
+    return true;
+  };
+  applyPick = pick;
+  applyDrop = drop;
+
   const setBrush = (b: Brush) => {
     s.brush = b;
+    if (s.held) pick(null);
     host.querySelectorAll<HTMLElement>("[data-brush]").forEach((el) => el.classList.toggle("on", el.dataset.brush === b));
   };
   host.querySelectorAll<HTMLButtonElement>("[data-brush]").forEach((b) => {
@@ -265,47 +440,117 @@ export function renderMapPainter(
       sfx("uiMove");
     });
   });
-  host.querySelector("#mapBack")!.addEventListener("click", () => opts.onBack());
-  host.querySelector("#mapSave")!.addEventListener("click", async () => {
+  const persist = async (msg?: string) => {
     try {
       await opts.onSave(s);
       s.dirty = false;
       sfx("uiConfirm");
-      const hint = host.querySelector("#mapHint");
-      if (hint) hint.textContent = "Saved. The next fight uses this layout.";
+      const live = hint();
+      if (live) live.textContent = msg ?? "Saved. The next fight uses this layout.";
+      return true;
     } catch (err) {
       sfx("uiError");
-      const hint = host.querySelector("#mapHint");
-      if (hint) hint.textContent = err instanceof Error ? err.message : "Save failed";
+      const live = hint();
+      if (live) live.textContent = err instanceof Error ? err.message : "Save failed";
+      return false;
     }
-  });
+  };
+  persistSession = async () => {
+    if (!(await persist())) throw new Error("SAVE_FAILED");
+  };
+  const leave = async () => {
+    if (s.dirty && !(await persist("Saved. Back to maps."))) return;
+    opts.onBack();
+  };
+  onBackToList = () => {
+    void leave();
+  };
+  paintLegend();
+  host.querySelector("#mapBack")!.addEventListener("click", () => void leave());
+  host.querySelector("#mapSave")!.addEventListener("click", () => void persist());
 
-  const applyPtr = (ev: PointerEvent) => {
-    const t = ev.target instanceof HTMLElement ? ev.target.closest("[data-cell]") : null;
-    if (!(t instanceof HTMLElement) || !t.dataset.cell) return;
-    const [xs, ys] = t.dataset.cell.split(",");
-    const x = Number(xs);
-    const y = Number(ys);
-    if (!Number.isFinite(x) || !Number.isFinite(y)) return;
-    setCursor(s, x, y);
-    paintCell(s, x, y);
-    paintCellDom(s, x, y);
+  const cellAt = (ev: PointerEvent) => {
+    const r = grid.getBoundingClientRect();
+    const size = Number.parseFloat(getComputedStyle(grid).getPropertyValue("--cell")) || 18;
+    const x = Math.floor((ev.clientX - r.left) / size);
+    const y = Math.floor((ev.clientY - r.top) / size);
+    if (x < 0 || y < 0 || x >= spec.width || y >= spec.height) return null;
+    return { x, y };
+  };
+  const clearSel = () => {
+    grid.querySelectorAll(".sel").forEach((el) => el.classList.remove("sel"));
+  };
+  const markSel = (a: { x: number; y: number }, b: { x: number; y: number }) => {
+    clearSel();
+    const x0 = Math.min(a.x, b.x);
+    const x1 = Math.max(a.x, b.x);
+    const y0 = Math.min(a.y, b.y);
+    const y1 = Math.max(a.y, b.y);
+    for (let y = y0; y <= y1; y += 1) {
+      for (let x = x0; x <= x1; x += 1) cellEl(x, y)?.classList.add("sel");
+    }
+  };
+  const stampRect = (a: { x: number; y: number }, b: { x: number; y: number }) => {
+    const x0 = Math.min(a.x, b.x);
+    const x1 = Math.max(a.x, b.x);
+    const y0 = Math.min(a.y, b.y);
+    const y1 = Math.max(a.y, b.y);
+    for (let y = y0; y <= y1; y += 1) {
+      for (let x = x0; x <= x1; x += 1) {
+        paintCell(s, x, y);
+        paintCellDom(s, x, y);
+      }
+    }
+    setCursor(s, b.x, b.y);
   };
   grid.addEventListener("pointerdown", (ev) => {
+    if (ev.button !== 0) return;
+    const c = cellAt(ev);
+    if (!c) return;
     grid.focus({ preventScroll: true });
+    setCursor(s, c.x, c.y);
+    if (s.held) {
+      drop(c.x, c.y);
+      return;
+    }
+    const here = pins(s).filter((p) => p.x === c.x && p.y === c.y);
+    if (here[0]) {
+      pick(here[0].kind === "spawn" ? { kind: "spawn", group: here[0].group, index: here[0].index } : { kind: "label", name: here[0].name });
+      return;
+    }
     s.painting = true;
+    s.drag = c;
     grid.setPointerCapture?.(ev.pointerId);
-    applyPtr(ev);
+    markSel(c, c);
   });
   grid.addEventListener("pointermove", (ev) => {
-    if (!s.painting) return;
-    applyPtr(ev);
+    if (!s.painting || !s.drag) return;
+    const c = cellAt(ev);
+    if (!c) return;
+    markSel(s.drag, c);
+    setCursor(s, c.x, c.y);
   });
-  grid.addEventListener("pointerup", () => {
+  const endDrag = (ev: PointerEvent) => {
+    if (!s.painting || !s.drag) return;
+    const c = cellAt(ev) ?? { x: s.cx, y: s.cy };
+    stampRect(s.drag, c);
+    clearSel();
     s.painting = false;
-  });
+    s.drag = null;
+  };
+  grid.addEventListener("pointerup", endDrag);
   grid.addEventListener("pointercancel", () => {
+    clearSel();
     s.painting = false;
+    s.drag = null;
+  });
+  host.querySelector("#mapZoomIn")!.addEventListener("click", () => bumpZoom?.(1));
+  track.addEventListener("pointerdown", (ev) => {
+    ev.preventDefault();
+    const r = track.getBoundingClientRect();
+    const t = r.height < 2 ? 0 : 1 - Math.max(0, Math.min(1, (ev.clientY - r.top) / r.height));
+    bumpZoom?.(Math.round(t * (ZOOM.length - 1)) - s.zoomI);
+    track.focus();
   });
   setCursor(s, 0, 0);
 }
@@ -315,13 +560,66 @@ export function handleMapEditorKey(key: RemoteKey): boolean {
   if (!s) return false;
   const grid = document.getElementById("mapPaint");
   const onGrid = document.activeElement === grid;
+  const markBtn = (document.activeElement as HTMLElement | null)?.dataset.mark;
   if (key === "back") {
+    if (s.held) {
+      applyPick?.(null);
+      sfx("uiBack");
+      return true;
+    }
     if (onGrid) {
       document.querySelector<HTMLElement>("[data-brush].on")?.focus();
       sfx("uiBack");
       return true;
     }
     onBackToList?.();
+    return true;
+  }
+  if (markBtn) {
+    if (key === "ok") {
+      applyPick?.(parseMark(markBtn));
+      grid?.focus({ preventScroll: true });
+      sfx("uiConfirm");
+      return true;
+    }
+    if (key === "down" || key === "right") {
+      grid?.focus({ preventScroll: true });
+      sfx("uiMove");
+      return true;
+    }
+    return false;
+  }
+  const zoomId = (document.activeElement as HTMLElement | null)?.id;
+  if (zoomId === "mapZoomIn" || zoomId === "mapZoomTrack") {
+    if (key === "left") {
+      grid?.focus({ preventScroll: true });
+      sfx("uiMove");
+      return true;
+    }
+    if (zoomId === "mapZoomIn") {
+      if (key === "ok" || key === "up") {
+        bumpZoom?.(1);
+        sfx("uiConfirm");
+        return true;
+      }
+      if (key === "down") {
+        document.getElementById("mapZoomTrack")?.focus();
+        sfx("uiMove");
+        return true;
+      }
+      return true;
+    }
+    if (key === "up") {
+      bumpZoom?.(1);
+      sfx("uiMove");
+      return true;
+    }
+    if (key === "down") {
+      bumpZoom?.(-1);
+      sfx("uiMove");
+      return true;
+    }
+    if (key === "ok") return true;
     return true;
   }
   if (!onGrid) {
@@ -333,6 +631,17 @@ export function handleMapEditorKey(key: RemoteKey): boolean {
     return false;
   }
   if (key === "ok") {
+    if (s.held) {
+      applyDrop?.(s.cx, s.cy);
+      return true;
+    }
+    const here = pins(s).filter((p) => p.x === s.cx && p.y === s.cy);
+    if (here[0]) {
+      applyPick?.(
+        here[0].kind === "spawn" ? { kind: "spawn", group: here[0].group, index: here[0].index } : { kind: "label", name: here[0].name },
+      );
+      return true;
+    }
     paintCell(s, s.cx, s.cy);
     paintCellDom(s, s.cx, s.cy);
     sfx("uiConfirm");
@@ -348,7 +657,14 @@ export function handleMapEditorKey(key: RemoteKey): boolean {
   if (!d) return false;
   const nx = s.cx + d[0];
   const ny = s.cy + d[1];
-  if (nx < 0 || ny < 0 || nx >= s.spec.width || ny >= s.spec.height) {
+  if (nx >= s.spec.width) {
+    if (key === "right") {
+      document.getElementById("mapZoomIn")?.focus();
+      sfx("uiMove");
+    }
+    return true;
+  }
+  if (nx < 0 || ny < 0 || ny >= s.spec.height) {
     if (key === "up") {
       document.querySelector<HTMLElement>("[data-brush].on")?.focus();
       sfx("uiMove");
@@ -359,3 +675,4 @@ export function handleMapEditorKey(key: RemoteKey): boolean {
   sfx("uiMove");
   return true;
 }
+

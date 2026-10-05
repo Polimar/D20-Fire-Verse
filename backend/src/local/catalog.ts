@@ -333,13 +333,25 @@ export function updateDraftEncounter(id: string, encounter: EncounterDef): Snaps
   return draft;
 }
 
-export function saveBuiltinCampaignMap(mapId: string, walls: CellRect[], hazards: CellRect[]): MapDef {
+export function saveBuiltinCampaignMap(
+  mapId: string,
+  walls: CellRect[],
+  hazards: CellRect[],
+  spawn?: MapDef["spawn"],
+  labels?: MapDef["labels"],
+): MapDef {
   initCatalog();
   const file = path.join(CAMPAIGN_DIR, "maps", "maps.json");
   const maps = readJson<Record<string, MapDef>>(file);
   const cur = maps[mapId];
   if (!cur) throw new Error("BAD_MAP");
-  const next = { ...cur, walls, hazards };
+  const next: MapDef = {
+    ...cur,
+    walls,
+    hazards,
+    ...(spawn ? { spawn } : {}),
+    ...(labels !== undefined ? { labels } : {}),
+  };
   maps[mapId] = next;
   fs.writeFileSync(file, `${JSON.stringify(maps, null, 2)}\n`);
   const version = published.get(BUILTIN);

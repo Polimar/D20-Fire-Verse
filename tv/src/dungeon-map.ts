@@ -25,6 +25,15 @@ export const DUNGEON_ROOMS: Record<DungeonRoomId, Region> = {
   store: { id: "store", label: "Store", left: 67.5, top: 60, width: 27.3, height: 19.7 },
 };
 
+export function roomForMapId(mapId: string): DungeonRoomId | null {
+  if (mapId.includes("cellar")) return "cellar";
+  if (mapId.includes("well")) return "well";
+  if (mapId.includes("lab")) return "lab";
+  if (mapId.includes("store")) return "store";
+  if (mapId.includes("corridor") || mapId.includes("mosaic")) return "mosaic";
+  return null;
+}
+
 export function roomForNode(nodeId: string): DungeonRoomId | null {
   if (nodeId === "descend") return "stairs";
   if (

@@ -79,3 +79,19 @@ export function parseCellGrid(
   }
   return null;
 }
+
+export type CellPt = { x: number; y: number };
+
+export function parseCellPoints(raw: unknown, width: number, height: number): CellPt[] | null {
+  if (!Array.isArray(raw)) return null;
+  const out: CellPt[] = [];
+  for (const item of raw) {
+    if (!item || typeof item !== "object") return null;
+    const r = item as Record<string, unknown>;
+    const x = Number(r.x);
+    const y = Number(r.y);
+    if (!Number.isInteger(x) || !Number.isInteger(y) || x < 0 || y < 0 || x >= width || y >= height) return null;
+    out.push({ x, y });
+  }
+  return out;
+}

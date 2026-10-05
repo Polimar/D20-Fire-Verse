@@ -3,6 +3,7 @@
 import { describeError } from "@d20-fireverse/protocol";
 import {
   closeMapEditor,
+  flushMapEditor,
   handleMapEditorKey,
   mapEditorOpen,
   renderMapPainter,
@@ -122,12 +123,15 @@ export function openAdmin() {
       b.addEventListener("click", () => {
         const next = b.dataset.tab;
         if (next !== "users" && next !== "rooms" && next !== "saves" && next !== "camps" && next !== "maps" && next !== "mail" && next !== "amazon") return;
-        tab = next;
-        resetUserId = null;
-        closeMapEditor();
-        overlay?.classList.remove("map-wide");
-        sfx("uiMove");
-        void refresh();
+        void (async () => {
+          if (mapEditorOpen() && !(await flushMapEditor())) return;
+          tab = next;
+          resetUserId = null;
+          closeMapEditor();
+          overlay?.classList.remove("map-wide");
+          sfx("uiMove");
+          void refresh();
+        })();
       });
     });
   }
@@ -138,13 +142,16 @@ export function openAdmin() {
 
 export function closeAdmin() {
   if (!overlay || overlay.hidden) return;
-  closeMapEditor();
-  overlay.classList.remove("map-wide");
-  overlay.hidden = true;
-  paintGen += 1;
-  sfx("uiBack");
-  if (opener?.isConnected && opener.offsetParent) opener.focus({ preventScroll: true });
-  opener = null;
+  void (async () => {
+    if (!(await flushMapEditor())) return;
+    closeMapEditor();
+    overlay!.classList.remove("map-wide");
+    overlay!.hidden = true;
+    paintGen += 1;
+    sfx("uiBack");
+    if (opener?.isConnected && opener.offsetParent) opener.focus({ preventScroll: true });
+    opener = null;
+  })();
 }
 
 export function handleAdminKey(key: RemoteKey): boolean {
@@ -244,9 +251,18 @@ async function openMapPainter(source: MapListItem["source"], id: string) {
         void refresh();
       },
       onSave: async (s) => {
+        const spawn =
+          source === "campaign"
+            ? { pcs: s.spawn.pcs, enemies: s.spawn.enemies }
+            : { ffa: s.spawn.ffa, teamA: s.spawn.teamA, teamB: s.spawn.teamB };
         await api(`/api/admin/maps/${source}/${id}`, {
           method: "PUT",
-          body: JSON.stringify({ walls: s.walls, hazards: s.hazards }),
+          body: JSON.stringify({
+            walls: s.walls,
+            hazards: s.hazards,
+            spawn,
+            labels: s.labels,
+          }),
         });
       },
     });

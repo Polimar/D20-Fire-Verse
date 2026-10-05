@@ -1867,43 +1867,122 @@ html[data-motion="reduced"] .sp-wave i { transform: scaleY(0.6); }
 }
 
 .admin-modal.map-wide .modal-card { width: min(96rem, 100%); max-height: 96vh; overflow: auto; }
+.admin-modal.map-wide .modal-kicker,
+.admin-modal.map-wide .modal-card > h2,
+.admin-modal.map-wide .admin-tabs { display: none; }
 .map-editor { display: grid; gap: 0.7rem; }
 .map-toolbar { display: flex; flex-wrap: wrap; gap: 0.4rem; align-items: center; }
 .map-toolbar .meta { flex: 1 1 12rem; }
 .map-toolbar [data-brush].on { border-color: var(--gold); color: var(--gold); }
+.map-stage { position: relative; }
 .map-paint-view {
+  position: relative;
+  max-width: 100%;
   max-height: min(82vh, 60rem);
   overflow: auto;
   border: 1px solid var(--line);
   border-radius: var(--radius-s);
   background: #120c09;
 }
+.map-stage .zoom-rail {
+  position: absolute;
+  top: 0.7rem;
+  right: 0.55rem;
+  bottom: 0.7rem;
+  z-index: 3;
+  width: 2.35rem;
+  flex: none;
+  padding: 0.45rem 0.28rem 0.4rem;
+  border-radius: 999px;
+  background: rgba(12, 8, 6, 0.82);
+  border: 1px solid var(--line);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+}
+.map-stage .zoom-pct {
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+.map-stage .zoom-rail button {
+  flex: 0 0 auto;
+  width: 1.7rem;
+  height: 1.7rem;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--ink);
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 1;
+}
+.map-stage .zoom-rail button:focus-visible {
+  outline: none;
+  border-color: var(--gold);
+  box-shadow: 0 0 0 2px var(--gold);
+  transform: none;
+}
+.map-stage .zoom-rail #mapZoomIn { color: var(--gold); width: 1.7rem; height: 1.7rem; border-radius: 50%; }
+.map-stage .zoom-rail .zoom-track {
+  flex: 1 1 auto;
+  width: 0.42rem;
+  height: auto;
+  min-height: 4rem;
+  align-self: center;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #7a4ad4 0%, #4a2e8a 55%, #2a1c44 100%);
+  border: 1px solid rgba(180, 140, 255, 0.35);
+  position: relative;
+  cursor: pointer;
+}
+.map-stage .zoom-track::after {
+  width: 0.95rem;
+  height: 0.95rem;
+  background: #f4f0ea;
+  border: 2px solid #1a1210;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.45);
+  bottom: calc(var(--t, 0) * (100% - 0.95rem));
+  transform: translateX(-50%);
+}
 .map-paint {
   display: grid;
-  grid-template-columns: repeat(var(--cols), var(--cell));
-  grid-auto-rows: var(--cell);
-  width: calc(var(--cols) * var(--cell));
-  height: calc(var(--rows) * var(--cell));
+  grid-template-columns: repeat(var(--cols), var(--cell, 18px));
+  grid-template-rows: repeat(var(--rows), var(--cell, 18px));
+  width: calc(var(--cols) * var(--cell, 18px));
+  height: calc(var(--rows) * var(--cell, 18px));
+  margin: 0 auto;
+  border: none;
+  overflow: visible;
+  background: #120c09;
   outline: none;
-  --cell: 18px;
 }
 .map-paint.has-art {
   background-image: var(--map-art);
-  background-size: 100% 100%;
+  background-size: var(--map-art-size, 100% 100%);
+  background-position: var(--map-art-pos, 0 0);
+  background-repeat: no-repeat;
 }
-.map-paint:focus-visible { box-shadow: inset 0 0 0 2px var(--gold); }
+.map-paint:focus-visible { box-shadow: 0 0 0 2px var(--gold); }
 .map-cell {
   position: relative;
-  width: var(--cell);
-  height: var(--cell);
+  min-width: 0;
+  min-height: 0;
+  border: 1px solid rgba(255, 255, 255, 0.45);
   box-sizing: border-box;
-  border: 1px solid rgba(0, 0, 0, 0.35);
 }
 .map-cell[data-k="wall"] { background: rgba(8, 6, 4, 0.82); }
 .map-cell[data-k="hazard"] { background: rgba(70, 120, 200, 0.42); }
-.map-cell[data-k="floor"] { background: transparent; }
+.map-cell[data-k="floor"] { background: rgba(255, 255, 255, 0.28); }
+.map-paint.has-art .map-cell[data-k="floor"] { background: transparent; }
 .map-paint:not(.has-art) .map-cell[data-k="floor"] { background: rgba(80, 62, 42, 0.45); }
 .map-cell.on { outline: 2px solid var(--gold); outline-offset: -2px; z-index: 1; }
+.map-cell.sel {
+  box-shadow: inset 0 0 0 999px rgba(255, 255, 255, 0.22);
+  outline: 2px solid #fff;
+  outline-offset: -2px;
+}
 .map-cell i {
   position: absolute;
   inset: auto 1px 1px auto;
@@ -1915,10 +1994,16 @@ html[data-motion="reduced"] .sp-wave i { transform: scaleY(0.6); }
   text-shadow: 0 1px 2px #000;
   pointer-events: none;
 }
-.map-cell i.foe { color: var(--danger); }
+.map-cell i.spawn-pve-h { color: #7ec8ff; }
+.map-cell i.spawn-pve-e { color: var(--danger); }
+.map-cell i.spawn-ffa { color: #f1c46b; }
+.map-cell i.spawn-team-a { color: #6bcf8e; }
+.map-cell i.spawn-team-b { color: #cf6bb8; }
 .map-cell i.lab { color: var(--frost); }
+.map-cell i.held { outline: 2px solid var(--gold); outline-offset: 1px; }
 html[data-contrast="high"] .map-cell[data-k="wall"] { background: #000; }
 html[data-contrast="high"] .map-cell[data-k="hazard"] { background: #2450c8; }
+html[data-contrast="high"] .map-cell[data-k="floor"] { background: rgba(255, 255, 255, 0.45); }
 
 .map-legend-wrap {
   display: grid;
@@ -1935,6 +2020,14 @@ html[data-contrast="high"] .map-cell[data-k="hazard"] { background: #2450c8; }
   letter-spacing: 0.06em;
   color: var(--gold);
 }
+.map-legend-section h5 {
+  margin: 0.35rem 0 0.25rem;
+  font-family: var(--font-display);
+  font-size: 0.8rem;
+  letter-spacing: 0.05em;
+  color: var(--ink-dim);
+  text-transform: uppercase;
+}
 .map-legend {
   list-style: none;
   margin: 0;
@@ -1950,7 +2043,19 @@ html[data-contrast="high"] .map-cell[data-k="hazard"] { background: #2450c8; }
   font-size: 0.9rem;
   color: var(--ink-dim);
 }
+.map-legend button { display: flex; gap: 0.4rem; align-items: center; width: 100%; text-align: left; }
+.map-legend button strong {
+  min-width: 1.6rem;
+  font-family: var(--font-display);
+}
+.map-legend button.on { border-color: var(--gold); color: var(--gold); }
 .map-legend strong { color: var(--ink); }
+.map-legend .spawn-pve-h { color: #7ec8ff; }
+.map-legend .spawn-pve-e { color: var(--danger); }
+.map-legend .spawn-ffa { color: #f1c46b; }
+.map-legend .spawn-team-a { color: #6bcf8e; }
+.map-legend .spawn-team-b { color: #cf6bb8; }
+.map-legend .lab { color: var(--frost); }
 .map-swatch {
   width: 1.1rem;
   height: 1.1rem;
@@ -1962,15 +2067,6 @@ html[data-contrast="high"] .map-cell[data-k="hazard"] { background: #2450c8; }
 .map-swatch.floor { background: rgba(255, 255, 255, 0.35); }
 .map-swatch.wall { background: #2a221c; border-color: rgba(241, 196, 107, 0.55); }
 .map-swatch.hazard { background: rgba(70, 120, 200, 0.75); }
-.map-mark {
-  display: inline-grid;
-  place-items: center;
-  min-width: 1.15rem;
-  font-size: 0.85rem;
-  color: var(--gold);
-}
-.map-mark.foe { color: var(--danger); }
-.map-mark.lab { color: var(--frost); }
 
 .admin-modal .modal-card { width: min(72rem, 100%); }
 .admin-tabs { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 0.2rem 0 1rem; }
