@@ -113,7 +113,7 @@ const ERROR_TEXT: Record<string, string> = {
   MAIL_FAILED: "The confirmation mail didn't send. Check the Brevo key and that the sender is verified.",
   UNCONFIRMED: "Confirm the email we sent before you sign in.",
   BAD_CONFIRM: "That confirmation link is no longer valid.",
-  AMAZON_NOT_CONFIGURED: "Sign-in with Amazon isn't set up on this table yet. Use the test account.",
+  AMAZON_NOT_CONFIGURED: "Sign-in with Amazon isn't set up on this table yet. An admin adds the Client ID and secret under Manage the table → Amazon. Use the test account until then.",
   AMAZON_FAILED: "Amazon didn't confirm the sign-in. Try again.",
   AMAZON_CANCELLED: "Sign-in with Amazon was cancelled.",
   BAD_CONSOLE: "Reload the table and sign in again.",

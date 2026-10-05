@@ -4,7 +4,9 @@ import "./styles.css";
 import { describeError, plainNarration, srdLabel } from "@d20-fireverse/protocol";
 import { isSheetTab, pcSheetHtml, type PcSheet, type SheetTab } from "@d20-fireverse/protocol/sheet";
 import { pairTokenFrom, startScanner, type ScannerHandle, type ScanProblem } from "./scanner";
-import { mountTrackpad } from "./trackpad";
+import { mountInstall } from "./install";
+import { mountPocket } from "./pocket";
+import { mountScrollWheel, mountTrackpad } from "./trackpad";
 
 interface SpeechAlt {
   readonly transcript: string;
@@ -78,9 +80,11 @@ type TableState = {
     currentName?: string;
     tokens: Token[];
     actionMenu: { actions: MenuAction[]; bonusActions?: MenuAction[] } | null;
+    awaiting?: Array<{ id: string; playerId: string; label: string; step: string }>;
     pendingReaction?: { playerId: string; prompt: string; acceptLabel: string; declineLabel: string } | null;
     events?: CombatEvent[];
   } | null;
+  heldCheck?: { playerId: string; label: string } | null;
   localPlayerId: string | null;
   rest?: { offer: boolean; budget: number; canShort: boolean; canLong: boolean };
 };
@@ -120,6 +124,7 @@ const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&l
 const app = document.querySelector<HTMLElement>("#app")!;
 app.innerHTML = `
   <section class="scan" id="scanView" hidden>
+    <img class="scan-emblem" src="/companion/icons/icon-192.png" alt="" width="72" height="72" />
     <p class="kicker">D20 FireVerse</p>
     <h1>Scan your TV</h1>
     <div class="scan-frame" id="scanFrame">
@@ -127,6 +132,7 @@ app.innerHTML = `
       <span class="scan-reticle" aria-hidden="true"></span>
     </div>
     <p class="meta" id="scanHint">Point the camera at the code on your TV.</p>
+    <div id="pocketHost"></div>
     <div class="scan-problem" id="scanProblem" hidden>
       <p id="scanProblemText"></p>
       <button type="button" class="primary" id="btnCamera">Allow the camera</button>
@@ -164,7 +170,10 @@ app.innerHTML = `
     </section>
     <section class="pad-dock" id="padDock" hidden>
       <div class="trackpad" id="trackpad" role="application" aria-label="Trackpad for the TV pointer">
-        <span>Drag to move the pointer · tap to press</span>
+        <span>One finger moves the pointer · two fingers zoom and drag the map · tap to press</span>
+      </div>
+      <div class="pad-wheel" id="padWheel" role="application" aria-label="Scroll the TV page">
+        <span>Scroll</span>
       </div>
       <div class="pad-keys">
         <button type="button" id="padBack">Back</button>
@@ -420,6 +429,20 @@ const WHERE: Record<ConsoleView, string> = {
   combat: "",
 };
 
+let rollCue = "";
+
+function nudgeRoll(room: TableState | null, seat: Seat | undefined): void {
+  const waiting = room?.combat?.awaiting?.find((a) => a.playerId === seat?.playerId);
+  const check = room?.heldCheck && room.heldCheck.playerId === seat?.playerId ? room.heldCheck.label : "";
+  const id = waiting?.id ?? (check ? `check:${check}` : "");
+  document.body.classList.toggle("roll-wait", !!id);
+  if (id && id !== rollCue) {
+    rollCue = id;
+    if (navigator.vibrate) navigator.vibrate([40, 50, 40, 50, 90]);
+  }
+  if (!id) rollCue = "";
+}
+
 function render(): void {
   if (mode !== "paired") return;
   if (swiping) {
@@ -438,6 +461,7 @@ function render(): void {
   $("where").textContent =
     room && !seat ? `Table ${room.roomCode}. Choose your hero on the TV${mouseOn ? " with the trackpad below." : ". Turn on the mouse to point at it from here."}` : where;
   $("where").hidden = !$("where").textContent;
+  nudgeRoll(room, seat);
   renderControls(room, seat);
   renderSheet(room, seat, s?.sheet ?? null);
   $("micPanel").hidden = !seat;
@@ -478,8 +502,9 @@ $("sheetPanel").addEventListener("click", (ev) => {
 const needsAim = (target: string | undefined) => target === "enemy" || target === "ally" || target === "cell";
 
 function throwPad(id: string, targetKind: string, label = "d20"): string {
-  const note = needsAim(targetKind) ? "Then pick the target on the TV." : "The die lands on your TV.";
-  return `<div class="throw" data-throw="${esc(id)}" data-target="${esc(targetKind)}" role="button" tabindex="0" aria-label="Swipe to throw: ${esc(label)}">
+  const note = id === "commit" ? "The table is waiting. Swipe now." : needsAim(targetKind) ? "Then pick the target on the TV." : "The die lands on your TV.";
+  const flash = id === "commit" ? " flash" : "";
+  return `<div class="throw${flash}" data-throw="${esc(id)}" data-target="${esc(targetKind)}" role="button" tabindex="0" aria-label="Swipe to throw: ${esc(label)}">
     <span class="die" aria-hidden="true">20</span>
     <span><span class="throw-kicker">Swipe to throw</span><strong>${esc(label)}</strong><span class="meta">${note}</span></span>
   </div>`;
@@ -505,12 +530,16 @@ function renderControls(room: TableState | null, seat: Seat | undefined): void {
       : mine
         ? "Your turn"
         : `Round ${combat.round} · ${combat.currentName ?? "…"} is acting`;
+    const waiting = combat.awaiting?.find((a) => a.playerId === seat.playerId);
     const pending = combat.pendingReaction;
     const actions = combat.actionMenu?.actions ?? [];
     const bonus = combat.actionMenu?.bonusActions ?? [];
     const button = (a: MenuAction) =>
       `<button type="button" data-ability="${esc(a.id)}" data-target="${esc(a.targetKind)}" ${a.available ? "" : "disabled"}>${esc(a.name)}</button>`;
-    if (pending && pending.playerId === seat.playerId) {
+    if (waiting) {
+      controls.innerHTML = `${throwPad("commit", "none", waiting.label)}
+        <p class="meta">Swipe to throw. The die lands on the TV.</p>`;
+    } else if (pending && pending.playerId === seat.playerId) {
       controls.innerHTML = `<p class="meta">${esc(pending.prompt)}</p>
          <button type="button" class="primary" data-react="yes">${esc(pending.acceptLabel)}</button>
          <button type="button" data-react="no">${esc(pending.declineLabel)}</button>`;
@@ -533,6 +562,9 @@ function renderControls(room: TableState | null, seat: Seat | undefined): void {
       ${teams ? `<div class="row2"><button type="button" data-team="a" class="${seatArena?.teamId === "a" ? "voted" : ""}">Team A</button><button type="button" data-team="b" class="${seatArena?.teamId === "b" ? "voted" : ""}">Team B</button></div>` : ""}
       <button type="button" class="primary" data-ready="${seatArena?.ready ? "0" : "1"}">${seatArena?.ready ? "Unready" : "Ready"}</button>
       <p class="meta">${seatArena?.teamId ? `Team ${String(seatArena.teamId).toUpperCase()}` : teams ? "Pick a team" : "Free-for-all"}</p>`;
+  } else if (room.heldCheck?.playerId === seat.playerId) {
+    controls.innerHTML = `${throwPad("commit", "none", room.heldCheck.label)}
+      <p class="meta">Swipe to throw the check.</p>`;
   } else if (room.skillCheck && room.nodeType === "skill_check") {
     const skill = srdLabel(room.skillCheck.skill ?? room.skillCheck.ability);
     const roster = room.checkOffer?.roster ?? [];
@@ -649,6 +681,7 @@ function throwDie(pad: HTMLElement): void {
   buzz(24);
   const id = pad.dataset.throw;
   if (id === "volunteer") send({ action: "VOLUNTEER_CHECK" });
+  else if (id === "commit") send({ action: "COMMIT_ROLL" });
   else if (id === "begin") send({ action: "BEGIN_COMBAT" });
   else if (id) send({ action: needsAim(pad.dataset.target) ? "AIM_ACTION" : "PERFORM_ACTION", abilityId: id });
 }
@@ -722,6 +755,17 @@ $("btnMouse").addEventListener("click", () => {
 });
 
 mountTrackpad($("trackpad"), sendQuiet);
+mountScrollWheel($("padWheel"), sendQuiet);
+mountInstall();
+mountPocket(
+  $("pocketHost"),
+  (key) => {
+    phoneKey = key;
+    writeKey(key);
+    connect();
+  },
+  () => mode === "scan",
+);
 $("padOk").addEventListener("click", () => {
   buzz(10);
   sendQuiet({ action: "POINTER_TAP" });

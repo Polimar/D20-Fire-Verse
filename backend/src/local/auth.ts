@@ -212,9 +212,15 @@ function freeUsername(name: string | undefined): string {
   return `adventurer.${randomBytes(4).toString("hex")}`;
 }
 
+/** True for the name we invent when Amazon has not sent one yet ("adventurer", "adventurer2"). */
+function isPlaceholderName(username: string): boolean {
+  return /^adventurer(\d+|\.[0-9a-f]{8})?$/.test(username);
+}
+
 /**
  * Sign in with a verified Amazon profile. The first visit creates a player account bound to the
- * Amazon user id; later visits find it again even if the profile name changed.
+ * Amazon user id; later visits find it again even if the profile name changed. A placeholder name
+ * from a sign-in that had no profile is replaced the first time Amazon sends the real name.
  */
 export function signInWithAmazon(profile: { amazonUserId: string; name?: string }): { token: string; user: SessionUser } {
   const amazonId = profile.amazonUserId.trim();
@@ -224,7 +230,15 @@ export function signInWithAmazon(profile: { amazonUserId: string; name?: string 
     .get(amazonId) as { id: string; username: string; role: Role; disabled: number } | undefined;
   if (row) {
     if (row.disabled) throw new Error("FORBIDDEN");
-    return { token: openSession(row.id), user: { id: row.id, username: row.username, role: row.role, disabled: false } };
+    let username = row.username;
+    if (profile.name?.trim() && isPlaceholderName(username)) {
+      const next = freeUsername(profile.name);
+      if (next !== username) {
+        database().prepare("UPDATE users SET username = ? WHERE id = ?").run(next, row.id);
+        username = next;
+      }
+    }
+    return { token: openSession(row.id), user: { id: row.id, username, role: row.role, disabled: false } };
   }
   const id = `user_${randomBytes(8).toString("hex")}`;
   const username = freeUsername(profile.name);

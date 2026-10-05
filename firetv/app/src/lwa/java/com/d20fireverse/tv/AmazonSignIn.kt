@@ -72,7 +72,7 @@ class AmazonSignIn(private val activity: Activity, private val deliver: (AmazonR
     }
 
     private companion object {
-        fun scopes() = arrayOf(ProfileScope.profile(), ProfileScope.userId())
+        fun scopes() = arrayOf(ProfileScope.profile())
 
         fun hasApiKey(activity: Activity): Boolean = try {
             activity.assets.open("api_key.txt").bufferedReader().use { it.readText().isNotBlank() }

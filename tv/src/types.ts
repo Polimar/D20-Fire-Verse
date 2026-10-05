@@ -103,6 +103,7 @@ export type CombatPublic = {
   log: string[];
   events: CombatEvent[];
   status: "active" | "victory" | "defeat" | "draw";
+  awaiting?: Array<{ id: string; playerId: string; label: string; step: string }>;
   pendingReaction?: { playerId: string; prompt: string; acceptLabel: string; declineLabel: string } | null;
   aimRequest?: { playerId: string; abilityId: string } | null;
   actions: MenuAction[];
@@ -146,6 +147,7 @@ export type RoomState = {
   speaker?: { id: string; name: string; portrait: string } | null;
   choices: Array<{ id: string; label: string }>;
   skillCheck?: { ability: string; skill?: string; dc: number };
+  heldCheck?: { playerId: string; label: string } | null;
   vote?: {
     nodeId: string;
     votes: Array<{ playerId: string; choiceId: string; name: string; portrait: string | null }>;

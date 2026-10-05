@@ -728,8 +728,6 @@ def cue_tavern() -> np.ndarray:
 
     drone = circular(lambda n: strings(["D3", "A3"], n / SR, 0.7, 0.01, 0.01, 0.3)[:n], mix.loop_n)
     mix.bed(drone, 0.0, 0.3, 0.3)
-    mix.bed(circular(murmur, mix.loop_n), 0.0, 0.55, 0.35)
-    mix.bed(circular(crackle, mix.loop_n), 0.4, 0.35, 0.1)
     for _ in range(7):
         mix.add(R.uniform(0, g.length), bell(int(R.integers(96, 104)), 0.5, "glock"), R.uniform(-0.7, 0.7), 0.06, 0.4)
     return mix.render(1.2, 0.25, -18.0)

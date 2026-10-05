@@ -14,7 +14,11 @@ import {
 import type { CombatToken } from "./combat.js";
 import {
   applyDisconnectDodge,
+  actionNeedsThrow,
   buildPcSheet,
+  commitAreaSave,
+  commitDeathSave,
+  commitInitiative,
   endTurn,
   hydrateCombat,
   performAttack,
@@ -118,6 +122,8 @@ export type Room = {
   puzzleCoop?: PuzzleCoop;
   vote?: VoteState;
   checkOffer?: CheckOffer;
+  /** A skill check waiting for this player's phone. */
+  heldCheck?: { playerId: string; forceFail: boolean; advantage: boolean };
   /** Rooms the party has physically entered — fog lifts only for these. */
   visitedRooms: DungeonRoomId[];
   mapTokens: Array<{
@@ -203,6 +209,24 @@ function armVoteTimer(room: Room): void {
 }
 
 const rooms = new Map<string, Room>();
+
+/** Player ids whose phone is awake. The socket layer sets this before each table action. */
+let awakePhones: string[] = [];
+
+export function setRollPhones(ids: string[]): void {
+  awakePhones = ids;
+}
+
+function phoneHolds(playerId: string | undefined): boolean {
+  return !!playerId && awakePhones.includes(playerId);
+}
+
+export function characterIsSeated(characterId: string): boolean {
+  for (const room of rooms.values()) {
+    if (room.players.some((p) => p.characterId === characterId)) return true;
+  }
+  return false;
+}
 
 function code(): string {
   const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -718,6 +742,7 @@ function publicStateBody(room: Room, viewerPlayerId?: string, viewerUserId?: str
     visitedRooms: room.visitedRooms ?? [],
     currentRoom: roomForNode(room.nodeId),
     mapTokens: room.mapTokens ?? [],
+    heldCheck: room.heldCheck ? { playerId: room.heldCheck.playerId, label: "Skill check" } : null,
     lastDice: room.lastDice ?? null,
     diceQueue: room.diceQueue ?? [],
     fx: room.fx ?? null,
@@ -1187,6 +1212,12 @@ function resolveSkillCheck(
     room.players[0];
   if (!actor) throw new Error("NO_PLAYERS");
   const bonus = playerCheckBonus(actor, node.check.ability, node.check.skill);
+  if (!forceFail && phoneHolds(actor.playerId) && !room.heldCheck) {
+    room.heldCheck = { playerId: actor.playerId, forceFail, advantage };
+    touch(room);
+    return room;
+  }
+  room.heldCheck = undefined;
   const roll = rollCheck({
     roller: actor.characterName,
     label: `${node.check.skill ?? node.check.ability.toUpperCase()} check`,
@@ -1270,7 +1301,8 @@ export function beginCombat(roomCode: string): Room {
   if (node?.type !== "encounter" || !node.encounterId) throw new Error("NO_COMBAT");
   if (room.combat?.status === "active") throw new Error("COMBAT_ACTIVE");
   if (room.players.length < 1) throw new Error("NEED_PLAYER");
-  room.combat = startCombat(node.encounterId, room.players, room.wounds, room.vitals);
+  const hold = room.players.map((p) => p.playerId).filter((id) => phoneHolds(id));
+  room.combat = startCombat(node.encounterId, room.players, room.wounds, room.vitals, hold);
   touch(room);
   autosave(room);
   return room;
@@ -1289,7 +1321,8 @@ export function retryCombat(roomCode: string): Room {
   // Skip the approach beat on a retry — the table already knows what waits here.
   room.combat = undefined;
   if (!node.encounterId) throw new Error("NO_COMBAT");
-  room.combat = startCombat(node.encounterId, room.players, room.wounds, room.vitals);
+  const hold = room.players.map((p) => p.playerId).filter((id) => phoneHolds(id));
+  room.combat = startCombat(node.encounterId, room.players, room.wounds, room.vitals, hold);
   narrate(room, "Breath returns. Steel is lifted again. The fight begins anew.");
   touch(room);
   autosave(room);
@@ -1355,9 +1388,115 @@ export function combatAttack(
   dest?: { x: number; y: number },
 ): Room {
   const room = requireRoom(roomCode);
-  performAttack(requireCombat(room), playerId, abilityId, targetId, dest);
+  const combat = requireCombat(room);
+  combat.phoneIds = awakePhones;
+  if (combat.awaiting?.some((a) => a.playerId === playerId)) return commitHeld(room, playerId);
+  const shape = actionNeedsThrow(abilityId);
+  if (phoneHolds(playerId) && shape !== "none" && !combat.gathering) {
+    const label = shape === "attack" ? "Attack" : "Roll";
+    combat.awaiting = [
+      ...(combat.awaiting ?? []).filter((a) => a.playerId !== playerId),
+      {
+        id: `${shape}-${playerId}-${combat.seq}`,
+        playerId,
+        label,
+        step: "d20",
+        abilityId,
+        targetId,
+        x: dest?.x,
+        y: dest?.y,
+        once: shape === "once",
+      },
+    ];
+    touch(room);
+    return room;
+  }
+  performAttack(combat, playerId, abilityId, targetId, dest);
   afterCombatAction(room);
   return room;
+}
+
+/** The phone swipe, or a second OK on that hero's TV. */
+export function commitHeld(room: Room, playerId: string): Room {
+  if (room.heldCheck?.playerId === playerId) {
+    const held = room.heldCheck;
+    const node = getNode(room.nodeId);
+    if (!node) throw new Error("NO_NODE");
+    room.heldCheck = undefined;
+    const keep = awakePhones;
+    awakePhones = awakePhones.filter((id) => id !== playerId);
+    try {
+      return resolveSkillCheck(room, node, playerId, held.forceFail, held.advantage);
+    } finally {
+      awakePhones = keep;
+    }
+  }
+  const combat = requireCombat(room);
+  combat.phoneIds = awakePhones.filter((id) => id !== playerId);
+  const mine = combat.awaiting?.find((a) => a.playerId === playerId);
+  if (!mine) throw new Error("NO_ROLL");
+  if (mine.step === "initiative") {
+    commitInitiative(combat, playerId);
+    afterCombatAction(room);
+    return room;
+  }
+  if (mine.step === "death") {
+    commitDeathSave(combat, playerId);
+    afterCombatAction(room);
+    return room;
+  }
+  if (mine.step === "save") {
+    commitAreaSave(combat, playerId);
+    afterCombatAction(room);
+    return room;
+  }
+  if (mine.step === "d20" && mine.once && mine.abilityId) {
+    combat.awaiting = (combat.awaiting ?? []).filter((a) => a.id !== mine.id);
+    performAttack(combat, playerId, mine.abilityId, mine.targetId, mine.x !== undefined && mine.y !== undefined ? { x: mine.x, y: mine.y } : undefined);
+    afterCombatAction(room);
+    return room;
+  }
+  if (mine.step === "d20" && mine.abilityId) {
+    const result = performAttack(
+      combat,
+      playerId,
+      mine.abilityId,
+      mine.targetId,
+      mine.x !== undefined && mine.y !== undefined ? { x: mine.x, y: mine.y } : undefined,
+      { phase: "d20" },
+    );
+    combat.awaiting = (combat.awaiting ?? []).filter((a) => a.id !== mine.id);
+    if (result.strike) {
+      combat.strikeHold = result.strike;
+      combat.awaiting = [
+        ...(combat.awaiting ?? []),
+        { id: `dmg-${playerId}-${combat.seq}`, playerId, label: "Damage", step: "damage" },
+      ];
+    }
+    afterCombatAction(room);
+    return room;
+  }
+  if (mine.step === "damage" && combat.strikeHold) {
+    const strike = combat.strikeHold;
+    combat.strikeHold = undefined;
+    combat.awaiting = (combat.awaiting ?? []).filter((a) => a.id !== mine.id);
+    performAttack(combat, playerId, strike.abilityId, strike.targetId, undefined, { phase: "damage", strike });
+    afterCombatAction(room);
+    return room;
+  }
+  throw new Error("NO_ROLL");
+}
+
+/** The phone went away: throw whatever it was holding so the TV can keep playing. */
+export function flushHeldRolls(roomCode: string, playerId: string): Room | undefined {
+  const room = getRoom(roomCode);
+  if (!room) return undefined;
+  awakePhones = awakePhones.filter((id) => id !== playerId);
+  if (room.combat) room.combat.phoneIds = awakePhones;
+  const pending =
+    room.heldCheck?.playerId === playerId || room.combat?.awaiting?.some((a) => a.playerId === playerId);
+  if (!pending) return room;
+  return commitHeld(room, playerId);
 }
 
 export function combatAim(roomCode: string, playerId: string, abilityId: string): Room {
@@ -1420,6 +1559,40 @@ function restingToken(room: Room, playerId: string, pregen: HeroPregen, opts: { 
  * The full sheet of one seated hero, for that player's phone. In a fight it is the live combat
  * sheet; between fights it carries the wounds and spent slots the party walked out with.
  */
+/** A forged hero at full health, for the phone's library. Not a seat at a table. */
+export function librarySheet(characterId: string): ReturnType<typeof buildPcSheet> | null {
+  const pregen = getPregen(characterId);
+  if (!pregen) return null;
+  const token = {
+    hp: pregen.hp,
+    maxHp: pregen.hp,
+    kind: "pc" as const,
+    id: pregen.id,
+    playerId: pregen.id,
+    characterId: pregen.id,
+    name: pregen.name,
+    level: pregen.level,
+    x: 0,
+    y: 0,
+    ac: pregen.ac,
+    speedCells: pregen.speedCells ?? 6,
+    movementLeft: 0,
+    hasAction: false,
+    hasBonusAction: false,
+    initiative: 0,
+    actionIds: [...(pregen.actions ?? [])],
+    bonusActionIds: [] as string[],
+    inventory: [...(pregen.inventory ?? [])],
+    dead: false,
+    dodging: false,
+    disengaging: false,
+    hidden: false,
+    secondWindUsed: false,
+  } as CombatToken;
+  initSheet(token, pregen);
+  return buildPcSheet(token, null);
+}
+
 export function heroSheet(room: Room, playerId: string): ReturnType<typeof buildPcSheet> | null {
   const leave = bindFrame({ campaignId: room.campaignId, campaignVersion: room.campaignVersion });
   try {
@@ -1526,7 +1699,7 @@ export function arenaPickHero(roomCode: string, playerId: string, characterId: s
 export function arenaStart(roomCode: string, actorUserId?: string): Room {
   const room = requireRoom(roomCode);
   assertCanStart(room, actorUserId);
-  beginArenaFight(room);
+  beginArenaFight(room, room.players.map((p) => p.playerId).filter((id) => phoneHolds(id)));
   narrate(room, "Steel out. The arena will have a winner.");
   touch(room);
   autosave(room);

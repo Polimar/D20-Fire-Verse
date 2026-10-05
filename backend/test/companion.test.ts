@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { afterEach, before, test } from "node:test";
 import { announceScene } from "../src/local/alexa.js";
-import { verifyAccessToken } from "../src/local/amazon.js";
+import { amazonEnabled, clearAmazon, probeAmazon, readAmazon, verifyAccessToken, writeAmazon } from "../src/local/amazon.js";
 import { openAuth, signInWithAmazon, userFromToken } from "../src/local/auth.js";
 import {
   claimConsole,
@@ -22,6 +22,7 @@ before(() => {
 
 const savedEnv = { ...process.env };
 afterEach(() => {
+  clearAmazon();
   for (const key of ["ALEXA_DEMO_WEBHOOK", "AMAZON_CLIENT_ID", "AMAZON_CLIENT_SECRET"]) {
     if (savedEnv[key] === undefined) delete process.env[key];
     else process.env[key] = savedEnv[key];
@@ -140,6 +141,87 @@ test("an Amazon account is created once and found again by its user id", () => {
   const nameless = signInWithAmazon({ amazonUserId: "amzn1.account.AAAATESTTHREE" });
   assert.equal(nameless.user.username, "adventurer");
   assert.throws(() => signInWithAmazon({ amazonUserId: "someone-else" }), /AMAZON_FAILED/);
+});
+
+test("an Amazon sign-in without a name takes the real name on the next visit and then keeps it", () => {
+  const id = "amzn1.account.RENAMEONCE";
+  const first = signInWithAmazon({ amazonUserId: id });
+  assert.match(first.user.username, /^adventurer(\d+)?$/);
+  const named = signInWithAmazon({ amazonUserId: id, name: "Valerio Canulli" });
+  assert.equal(named.user.id, first.user.id);
+  assert.equal(named.user.username, "Valerio.Canulli");
+  const kept = signInWithAmazon({ amazonUserId: id, name: "Someone Else" });
+  assert.equal(kept.user.username, "Valerio.Canulli");
+});
+
+test("an admin can turn Login with Amazon on without a restart, and a blank secret keeps the saved one", () => {
+  delete process.env.AMAZON_CLIENT_ID;
+  delete process.env.AMAZON_CLIENT_SECRET;
+  assert.equal(amazonEnabled(), false);
+  assert.throws(() => writeAmazon({ clientId: "amzn1.application-oa2-client.test", clientSecret: "" }), /AMAZON_NOT_CONFIGURED/);
+  writeAmazon({ clientId: "amzn1.application-oa2-client.test", clientSecret: "secret-one" });
+  assert.equal(amazonEnabled(), true);
+  assert.equal(readAmazon()?.clientSecret, "secret-one");
+  writeAmazon({ clientId: "amzn1.application-oa2-client.next", clientSecret: "" });
+  assert.equal(readAmazon()?.clientId, "amzn1.application-oa2-client.next");
+  assert.equal(readAmazon()?.clientSecret, "secret-one");
+  clearAmazon();
+  assert.equal(amazonEnabled(), false);
+  process.env.AMAZON_CLIENT_ID = "amzn1.application-oa2-client.env";
+  process.env.AMAZON_CLIENT_SECRET = "from-env";
+  assert.equal(readAmazon(), null);
+  assert.equal(amazonEnabled(), true);
+});
+
+test("the Amazon probe reports a rejected scope and a bad secret without saving anything", async () => {
+  const redirectUri = "https://www.d20fireverse.it/api/login/amazon/callback";
+  const clientId = "amzn1.application-oa2-client.probe";
+  const realFetch = globalThis.fetch;
+  globalThis.fetch = (async (input: string | URL | Request) => {
+    const url = String(input);
+    if (url.includes("/ap/oa")) {
+      const scope = new URL(url).searchParams.get("scope");
+      if (scope === "profile") {
+        return new Response("<p>An unknown scope was requested</p> errorMsg=lwa-invalid-parameter-bad-scope", { status: 400 });
+      }
+      return new Response(null, { status: 302, headers: { location: "https://www.amazon.com/ap/signin" } });
+    }
+    if (url.includes("/auth/o2/token")) return Response.json({ error: "invalid_client", error_description: "Client authentication failed" }, { status: 401 });
+    return new Response(null, { status: 404 });
+  }) as typeof fetch;
+  try {
+    const report = await probeAmazon({ clientId, clientSecret: "secret-value", redirectUri });
+    assert.equal(report.ok, false);
+    assert.equal(readAmazon(), null);
+    const log = report.lines.join("\n");
+    assert.match(log, /Consent Privacy Notice URL/);
+    assert.match(log, /invalid_client/);
+    assert.doesNotMatch(log, /secret-value/);
+    assert.match(log, /RESULT: not ok/);
+  } finally {
+    globalThis.fetch = realFetch;
+  }
+});
+
+test("the Amazon probe passes when the sign-in page opens and the secret is accepted", async () => {
+  const realFetch = globalThis.fetch;
+  globalThis.fetch = (async (input: string | URL | Request) => {
+    const url = String(input);
+    if (url.includes("/ap/oa")) return new Response(null, { status: 302, headers: { location: "https://www.amazon.com/ap/signin?openid=1" } });
+    if (url.includes("/auth/o2/token")) return Response.json({ error: "invalid_grant", error_description: "The authorization code is invalid" }, { status: 400 });
+    return new Response(null, { status: 404 });
+  }) as typeof fetch;
+  try {
+    const report = await probeAmazon({
+      clientId: "amzn1.application-oa2-client.probe",
+      clientSecret: "secret-value",
+      redirectUri: "https://www.d20fireverse.it/api/login/amazon/callback",
+    });
+    assert.equal(report.ok, true);
+    assert.match(report.lines.join("\n"), /RESULT: ok/);
+  } finally {
+    globalThis.fetch = realFetch;
+  }
 });
 
 test("an access token must belong to our security profile", async () => {

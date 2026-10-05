@@ -12,7 +12,7 @@ import {
 import type { RemoteKey } from "./nav";
 import { sfx } from "./sfx";
 
-type Tab = "users" | "rooms" | "saves" | "camps" | "maps" | "mail";
+type Tab = "users" | "rooms" | "saves" | "camps" | "maps" | "mail" | "amazon";
 
 type AdminUser = { id: string; username: string; role: "admin" | "player"; disabled: boolean };
 type RoomRow = {
@@ -109,6 +109,7 @@ export function openAdmin() {
           <button type="button" class="ghost" data-tab="camps">Campaigns</button>
           <button type="button" class="ghost" data-tab="maps">Maps</button>
           <button type="button" class="ghost" data-tab="mail">Mail</button>
+          <button type="button" class="ghost" data-tab="amazon">Amazon</button>
         </nav>
         <div id="adminBody"></div>
         <div class="row modal-actions">
@@ -120,7 +121,7 @@ export function openAdmin() {
     overlay.querySelectorAll<HTMLButtonElement>("[data-tab]").forEach((b) => {
       b.addEventListener("click", () => {
         const next = b.dataset.tab;
-        if (next !== "users" && next !== "rooms" && next !== "saves" && next !== "camps" && next !== "maps" && next !== "mail") return;
+        if (next !== "users" && next !== "rooms" && next !== "saves" && next !== "camps" && next !== "maps" && next !== "mail" && next !== "amazon") return;
         tab = next;
         resetUserId = null;
         closeMapEditor();
@@ -177,7 +178,8 @@ async function refresh() {
     else if (tab === "saves") await renderSaves(gen);
     else if (tab === "camps") await renderCamps(gen);
     else if (tab === "maps") await renderMaps(gen);
-    else await renderMail(gen);
+    else if (tab === "mail") await renderMail(gen);
+    else await renderAmazon(gen);
   } catch (err) {
     if (gen !== paintGen) return;
     const live = body();
@@ -297,6 +299,94 @@ async function renderMail(gen: number) {
       await api("/api/admin/brevo/test", { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" });
       if (err) err.textContent = "Test sent.";
       sfx("uiConfirm");
+    } catch (e) {
+      if (err) err.textContent = describeError(e instanceof Error ? e.message : "");
+    }
+  });
+}
+
+async function renderAmazon(gen: number) {
+  const status = await api<{ configured: boolean; clientId: string; secretHint: string }>("/api/admin/amazon");
+  const host = still(gen);
+  if (!host) return;
+  host.innerHTML = `<form id="adminAmazon" class="admin-block">
+      <h3>Login with Amazon</h3>
+      <p class="meta">${status.configured ? "Continue with Amazon is on." : "Continue with Amazon is off."} Paste the Client ID and Client Secret from the security profile's Web Settings. Saving applies on the next sign-in, with no restart. Leave the secret blank to keep the one already saved.</p>
+      <div class="admin-grid">
+        ${field("Client ID", `<input id="amzId" autocomplete="off" value="${esc(status.clientId)}" placeholder="amzn1.application-oa2-client…" />`)}
+        ${field("Client Secret", `<input id="amzSecret" type="password" autocomplete="off" placeholder="${status.secretHint ? esc(status.secretHint) : "Show Secret in the console, then paste"}" />`)}
+      </div>
+      <button type="submit" class="primary">Save</button>
+      <button type="button" class="ghost" id="amzTest">Test</button>
+      ${status.configured ? `<button type="button" class="ghost" id="amzOff">Turn off</button>` : ""}
+      <p class="admin-err" id="amzErr"></p>
+      <label class="admin-field"><span>Probe log</span>
+        <textarea id="amzLog" class="admin-log" readonly spellcheck="false" placeholder="Test writes the Amazon answers here. Nothing is saved."></textarea>
+      </label>
+      <button type="button" class="ghost" id="amzCopy">Copy log</button>
+    </form>`;
+  host.querySelector("#adminAmazon")!.addEventListener("submit", async (ev) => {
+    ev.preventDefault();
+    const err = host.querySelector("#amzErr");
+    if (err) err.textContent = "";
+    try {
+      await api("/api/admin/amazon", {
+        method: "POST",
+        body: JSON.stringify({
+          clientId: (host.querySelector("#amzId") as HTMLInputElement).value,
+          clientSecret: (host.querySelector("#amzSecret") as HTMLInputElement).value,
+        }),
+      });
+      sfx("uiConfirm");
+      void refresh();
+    } catch (e) {
+      if (err) err.textContent = describeError(e instanceof Error ? e.message : "");
+    }
+  });
+  host.querySelector("#amzTest")!.addEventListener("click", async () => {
+    const err = host.querySelector("#amzErr");
+    const log = host.querySelector("#amzLog") as HTMLTextAreaElement | null;
+    if (err) err.textContent = "";
+    if (log) log.value = "Asking Amazon…";
+    try {
+      const report = await api<{ ok: boolean; lines: string[] }>("/api/admin/amazon/test", {
+        method: "POST",
+        body: JSON.stringify({
+          clientId: (host.querySelector("#amzId") as HTMLInputElement).value,
+          clientSecret: (host.querySelector("#amzSecret") as HTMLInputElement).value,
+        }),
+      });
+      if (log) log.value = report.lines.join("\n");
+      if (err) err.textContent = report.ok ? "Amazon accepted the id, the secret, and the profile scope. Save to turn the button on." : "Amazon refused the check. Copy the log.";
+      sfx(report.ok ? "uiConfirm" : "uiBack");
+    } catch (e) {
+      if (err) err.textContent = describeError(e instanceof Error ? e.message : "");
+    }
+  });
+  host.querySelector("#amzCopy")!.addEventListener("click", async () => {
+    const log = host.querySelector("#amzLog") as HTMLTextAreaElement | null;
+    const err = host.querySelector("#amzErr");
+    const text = log?.value ?? "";
+    if (!text) {
+      if (err) err.textContent = "Run Test first.";
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(text);
+      if (err) err.textContent = "Log copied.";
+    } catch {
+      log?.focus();
+      log?.select();
+      if (err) err.textContent = "Clipboard blocked. The log is selected: copy it from the box.";
+    }
+  });
+  host.querySelector("#amzOff")?.addEventListener("click", async () => {
+    const err = host.querySelector("#amzErr");
+    if (err) err.textContent = "";
+    try {
+      await api("/api/admin/amazon", { method: "POST", body: JSON.stringify({ off: true }) });
+      sfx("uiConfirm");
+      void refresh();
     } catch (e) {
       if (err) err.textContent = describeError(e instanceof Error ? e.message : "");
     }

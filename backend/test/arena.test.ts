@@ -32,6 +32,7 @@ test("arena create, public list, duplicate pregen, ready and start 1v1", () => {
   const a = joinRoom(room.roomCode, "One", "brenna_ironveal", "user_a");
   const b = joinRoom(room.roomCode, "Two", "brenna_ironveal", "user_b");
   assert.equal(a.room.players.length, 2);
+  arenaReady(room.roomCode, a.playerId, false);
   assert.throws(() => arenaStart(room.roomCode), /ARENA_NOT_READY/);
   arenaReady(room.roomCode, a.playerId);
   arenaReady(room.roomCode, b.playerId);
@@ -106,8 +107,11 @@ test("arena PvE 1v1 seats one hero against a catalog monster", () => {
   assert.equal(room.arena?.format, "pve_1v1");
   const a = joinRoom(room.roomCode, "One", "brenna_ironveal", "user_pve");
   assert.throws(() => joinRoom(room.roomCode, "Two", "quill_ashmere", "user_pve2"), /ARENA_FULL/);
+  const seated = room.players.find((p) => p.playerId === a.playerId) as { ready?: boolean };
+  assert.equal(seated.ready, true);
+  arenaReady(room.roomCode, a.playerId, false);
   assert.throws(() => arenaStart(room.roomCode), /ARENA_NOT_READY/);
-  arenaReady(room.roomCode, a.playerId);
+  arenaReady(room.roomCode, a.playerId, true);
   arenaStart(room.roomCode);
   const c = room.combat!;
   assert.equal(c.pvp, undefined);

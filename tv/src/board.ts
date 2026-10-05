@@ -72,9 +72,20 @@ export class Board {
   private boardKey = "";
   private shakeAmp = 0;
   private cam = { x: 0, y: 0, zoom: 1 };
+  /** Unsnapped pinch, so a small finger move can still reach the next step. */
+  private zoomWant = 1;
+  /** Point on the board (0–1) kept under the middle of the screen while zoomed. */
+  private focusU = 0.5;
+  private focusV = 0.5;
+  /** The painted map at its file resolution. Zoomed copies are thrown away. */
+  private mapSource: Texture | null = null;
+  private sharpKey = "";
+  private zoomI = 0;
   private pulse = 0;
   private overlay: Overlay | null = null;
   private pcIndex = new Map<string, number>();
+
+  static readonly ZOOM_STEPS = [1, 1.25, 1.5, 2, 2.5, 3, 4] as const;
 
   constructor(app: Application) {
     this.app = app;
@@ -83,11 +94,69 @@ export class Board {
     app.ticker.add(() => this.tick());
     app.renderer.on("resize", () => this.layout());
     let contrast = settings().highContrast;
+    let mapZoom = settings().mapZoom;
     onSettings((s) => {
-      if (s.highContrast === contrast) return;
-      contrast = s.highContrast;
-      this.layout();
+      let dirty = false;
+      if (s.highContrast !== contrast) {
+        contrast = s.highContrast;
+        dirty = true;
+      }
+      if (s.mapZoom !== mapZoom) {
+        mapZoom = s.mapZoom;
+        if (!mapZoom) this.setZoomIndex(0);
+      }
+      if (dirty) this.layout();
     });
+  }
+
+  zoom(): number {
+    return this.cam.zoom;
+  }
+
+  zoomIndex(): number {
+    return this.zoomI;
+  }
+
+  /** Discrete zoom steps for the combat rail. Index 0 is the full map. */
+  setZoomIndex(index: number, keepWant = false) {
+    const steps = Board.ZOOM_STEPS;
+    const i = Math.max(0, Math.min(steps.length - 1, index));
+    const z = steps[i]!;
+    if (!keepWant) this.zoomWant = z;
+    if (i === this.zoomI && Math.abs(this.cam.zoom - z) < 0.001) return;
+    this.zoomI = i;
+    this.cam.zoom = z;
+    this.layout();
+  }
+
+  bumpZoom(delta: number) {
+    this.setZoomIndex(this.zoomI + delta);
+  }
+
+  /** Phone pinch. Snaps to the rail so the picture is redrawn, not stretched. */
+  zoomBy(factor: number) {
+    this.zoomWant = Math.max(1, Math.min(4, this.zoomWant * factor));
+    let nearest = 0;
+    let best = Infinity;
+    Board.ZOOM_STEPS.forEach((step, i) => {
+      const d = Math.abs(step - this.zoomWant);
+      if (d < best) {
+        best = d;
+        nearest = i;
+      }
+    });
+    this.setZoomIndex(nearest, true);
+  }
+
+  /** Drag the zoomed map. Returns false when the board is still showing everything. */
+  panBy(dx: number, dy: number): boolean {
+    if (this.cam.zoom <= 1.02) return false;
+    const bw = Math.max(1, this.cols * this.cell);
+    const bh = Math.max(1, this.rows * this.cell);
+    this.focusU -= dx / bw;
+    this.focusV -= dy / bh;
+    this.applyCamera();
+    return true;
   }
 
   // ------------------------------------------------------------------ layout
@@ -96,12 +165,18 @@ export class Board {
     const w = this.app.screen.width;
     const h = this.app.screen.height;
     const pad = 12;
-    this.cell = Math.max(
+    const fit = Math.max(
       1,
       Math.min(Math.floor((w - pad) / this.cols), Math.floor((h - pad) / this.rows), CELL_MAX),
     );
-    this.ox = Math.floor((w - this.cols * this.cell) / 2);
-    this.oy = Math.floor((h - this.rows * this.cell) / 2);
+    this.cell = Math.max(1, Math.round(fit * this.cam.zoom));
+    if (this.cam.zoom <= 1.001) {
+      this.ox = Math.floor((w - this.cols * this.cell) / 2);
+      this.oy = Math.floor((h - this.rows * this.cell) / 2);
+    } else {
+      this.ox = 0;
+      this.oy = 0;
+    }
     this.drawFloor();
     this.layoutMap();
     for (const p of this.pawns.values()) {
@@ -191,15 +266,76 @@ export class Board {
     }
   }
 
+  private dropMapSprite() {
+    if (!this.mapSprite) return;
+    if (this.mapSource && this.mapSprite.texture !== this.mapSource) this.mapSprite.texture.destroy(true);
+    this.world.removeChild(this.mapSprite);
+    this.mapSprite.destroy();
+    this.mapSprite = null;
+    this.mapSource = null;
+    this.sharpKey = "";
+  }
+
   private layoutMap() {
     const sprite = this.mapSprite;
     if (!sprite) return;
     const w = this.cols * this.cell;
     const h = this.rows * this.cell;
     sprite.position.set(this.ox, this.oy);
+    this.sharpenMap(sprite, w, h);
     sprite.width = w;
     sprite.height = h;
     sprite.visible = true;
+  }
+
+  /**
+   * The camera used to scale a picture that was already fitted to the screen, so zoom turned it to mush.
+   * Past the file's own pixels, rebuild the floor in a couple of careful steps instead of one stretch.
+   */
+  private sharpenMap(sprite: Sprite, w: number, h: number) {
+    const source = this.mapSource;
+    const img = source?.source.resource;
+    if (!source || (!(img instanceof HTMLImageElement) && !(img instanceof HTMLCanvasElement))) return;
+    const nativeW = img instanceof HTMLImageElement ? img.naturalWidth : img.width;
+    const nativeH = img instanceof HTMLImageElement ? img.naturalHeight : img.height;
+    const key = `${this.mapArt}:${Math.ceil(w)}x${Math.ceil(h)}`;
+    if (w <= nativeW + 1 && h <= nativeH + 1) {
+      if (sprite.texture !== source) {
+        const blown = sprite.texture;
+        sprite.texture = source;
+        blown.destroy(true);
+      }
+      this.sharpKey = "";
+      return;
+    }
+    if (key === this.sharpKey) return;
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.ceil(w);
+    canvas.height = Math.ceil(h);
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    let current: CanvasImageSource = img;
+    let sw = nativeW;
+    let sh = nativeH;
+    while (sw * 2 <= canvas.width && sh * 2 <= canvas.height) {
+      sw *= 2;
+      sh *= 2;
+      const step = document.createElement("canvas");
+      step.width = sw;
+      step.height = sh;
+      const stepCtx = step.getContext("2d");
+      if (!stepCtx) break;
+      stepCtx.imageSmoothingEnabled = true;
+      stepCtx.imageSmoothingQuality = "high";
+      stepCtx.drawImage(current, 0, 0, sw, sh);
+      current = step;
+    }
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = "high";
+    ctx.drawImage(current, 0, 0, canvas.width, canvas.height);
+    if (sprite.texture !== source) sprite.texture.destroy(true);
+    sprite.texture = Texture.from(canvas);
+    this.sharpKey = key;
   }
 
   /** Painted VTT floor, sized to the cell lattice. Empty url clears it. */
@@ -211,22 +347,17 @@ export class Board {
       return;
     }
     this.mapArt = next;
-    if (this.mapSprite) {
-      this.world.removeChild(this.mapSprite);
-      this.mapSprite.destroy();
-      this.mapSprite = null;
-    }
+    this.dropMapSprite();
     if (!next) {
       this.drawFloor();
       return;
     }
     void Assets.load<Texture>(next).then((tex) => {
       if (this.mapArt !== next) return;
-      if (this.mapSprite) {
-        this.world.removeChild(this.mapSprite);
-        this.mapSprite.destroy();
-      }
+      this.dropMapSprite();
       const sprite = new Sprite(tex);
+      this.mapSource = tex;
+      this.sharpKey = "";
       this.mapSprite = sprite;
       this.world.addChildAt(sprite, 0);
       this.layoutMap();
@@ -247,6 +378,10 @@ export class Board {
       this.tweens = [];
       for (const child of this.fx.removeChildren()) child.destroy();
       this.cam = { x: 0, y: 0, zoom: 1 };
+      this.zoomWant = 1;
+      this.focusU = 0.5;
+      this.focusV = 0.5;
+      this.zoomI = 0;
     }
     this.cols = cols;
     this.rows = rows;
@@ -491,36 +626,36 @@ export class Board {
   private applyCamera() {
     const w = this.app.screen.width;
     const h = this.app.screen.height;
-    const z = this.cam.zoom;
-    let x = w / 2 - this.cam.x * z;
-    let y = h / 2 - this.cam.y * z;
-    if (z <= 1.001) {
-      x = 0;
-      y = 0;
-    } else {
-      x = Math.min(0, Math.max(w - w * z, x));
-      y = Math.min(0, Math.max(h - h * z, y));
+    const bw = this.cols * this.cell;
+    const bh = this.rows * this.cell;
+    this.world.scale.set(1);
+    if (this.cam.zoom <= 1.001 || bw <= w + 1) {
+      this.world.position.set(0, 0);
+      return;
     }
-    this.world.scale.set(z);
+    let x = w / 2 - this.focusU * bw;
+    let y = h / 2 - this.focusV * bh;
+    x = Math.min(0, Math.max(w - bw, x));
+    y = Math.min(0, Math.max(h - bh, y));
     this.world.position.set(x, y);
+    this.focusU = bw > 0 ? (w / 2 - x) / bw : 0.5;
+    this.focusV = bh > 0 ? (h / 2 - y) / bh : 0.5;
   }
 
-  /** Keep the whole board in view (zoom stays 1 so maps are never cropped). Shake still applies. */
+  /**
+   * Camera nudge for fight beats. With Map zoom Off, always return to the full board.
+   * With Map zoom On, leave the player's zoom alone (shake still works elsewhere).
+   */
   focus(cells: Cell[] | null, _zoom = 1, ms = 520): Promise<void> {
     void cells;
     void _zoom;
-    const from = { ...this.cam };
-    const to = { x: this.app.screen.width / 2, y: this.app.screen.height / 2, zoom: 1 };
-    if (from.zoom <= 1.001) {
-      from.x = to.x;
-      from.y = to.y;
-    }
+    if (settings().mapZoom) return Promise.resolve();
+    if (this.cam.zoom <= 1.001) return Promise.resolve();
+    const from = this.cam.zoom;
     return this.tween(reducedMotion() ? 1 : ms, (t) => {
-      const e = easeInOut(t);
-      this.cam.x = from.x + (to.x - from.x) * e;
-      this.cam.y = from.y + (to.y - from.y) * e;
-      this.cam.zoom = from.zoom + (to.zoom - from.zoom) * e;
-      this.applyCamera();
+      this.cam.zoom = from + (1 - from) * easeInOut(t);
+      this.zoomI = 0;
+      this.layout();
     });
   }
 

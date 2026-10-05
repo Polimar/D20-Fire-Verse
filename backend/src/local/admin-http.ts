@@ -26,7 +26,7 @@ import {
   type Role,
   type SessionUser,
 } from "./auth.js";
-import { amazonEnabled, authorizeUrl, exchangeCode, verifyAccessToken } from "./amazon.js";
+import { amazonEnabled, amazonStatus, authorizeUrl, clearAmazon, exchangeCode, probeAmazon, readAmazon, verifyAccessToken, writeAmazon } from "./amazon.js";
 import {
   artDirFor,
   draftSnapshot,
@@ -64,6 +64,18 @@ const PUBLIC_AMAZON_CALLBACK = "https://www.d20fireverse.it/api/login/amazon/cal
 /** Must match an Allowed Return URL of the Amazon security profile exactly. */
 function amazonRedirectUri(): string {
   return process.env.AMAZON_REDIRECT_URI?.trim() || PUBLIC_AMAZON_CALLBACK;
+}
+
+function safeNext(raw: unknown): string {
+  const s = String(raw ?? "");
+  if (s.startsWith("/companion") && !s.includes("//") && !s.includes("\\")) return s.slice(0, 200);
+  return "/";
+}
+
+function lwaNextCookie(value: string, secureCookie: boolean, maxAge = 600): string {
+  const bits = [`fv_lwa_next=${encodeURIComponent(value)}`, "HttpOnly", "Path=/api/login/amazon", "SameSite=Lax", `Max-Age=${maxAge}`];
+  if (secureCookie) bits.push("Secure");
+  return bits.join("; ");
 }
 
 function lwaStateCookie(value: string, secureCookie: boolean, maxAge = 600): string {
@@ -162,7 +174,8 @@ export function mountAccountRoutes(app: Express): void {
     try {
       const state = randomBytes(18).toString("base64url");
       const url = authorizeUrl(amazonRedirectUri(), state);
-      res.setHeader("Set-Cookie", lwaStateCookie(state, secure(req)));
+      const next = safeNext(req.query.next);
+      res.setHeader("Set-Cookie", [lwaStateCookie(state, secure(req)), lwaNextCookie(next, secure(req))]);
       res.redirect(302, url);
     } catch (err) {
       res.redirect(302, `/?login_error=${encodeURIComponent(err instanceof Error ? err.message : "AMAZON_FAILED")}`);
@@ -179,8 +192,9 @@ export function mountAccountRoutes(app: Express): void {
       if (!expected || !state || state !== expected || !code) throw new Error("AMAZON_FAILED");
       const accessToken = await exchangeCode(code, amazonRedirectUri());
       const found = signInWithAmazon(await verifyAccessToken(accessToken));
-      res.setHeader("Set-Cookie", [clearState, sessionCookie(found.token, secure(req))]);
-      res.redirect(302, "/");
+      const next = safeNext(readCookie(req.headers.cookie, "fv_lwa_next"));
+      res.setHeader("Set-Cookie", [clearState, lwaNextCookie("", secure(req), 0), sessionCookie(found.token, secure(req))]);
+      res.redirect(302, next);
     } catch (err) {
       res.setHeader("Set-Cookie", clearState);
       res.redirect(302, `/?login_error=${encodeURIComponent(err instanceof Error ? err.message : "AMAZON_FAILED")}`);
@@ -304,6 +318,46 @@ export function mountAdminRoutes(app: Express): void {
         senderName: String(req.body?.senderName ?? ""),
       });
       res.json(brevoStatus());
+    } catch (err) {
+      fail(res, err);
+    }
+  });
+
+  app.get("/api/admin/amazon", (req, res) => {
+    try {
+      assertAdmin(requestUser(req));
+      res.json(amazonStatus());
+    } catch (err) {
+      fail(res, err);
+    }
+  });
+
+  app.post("/api/admin/amazon/test", async (req, res) => {
+    try {
+      assertAdmin(requestUser(req));
+      const typedSecret = String(req.body?.clientSecret ?? "").trim();
+      const report = await probeAmazon({
+        clientId: String(req.body?.clientId ?? ""),
+        clientSecret: typedSecret || readAmazon()?.clientSecret || "",
+        redirectUri: amazonRedirectUri(),
+      });
+      res.json(report);
+    } catch (err) {
+      fail(res, err);
+    }
+  });
+
+  app.post("/api/admin/amazon", (req, res) => {
+    try {
+      assertAdmin(requestUser(req));
+      if (req.body?.off === true) clearAmazon();
+      else {
+        writeAmazon({
+          clientId: String(req.body?.clientId ?? ""),
+          clientSecret: String(req.body?.clientSecret ?? ""),
+        });
+      }
+      res.json(amazonStatus());
     } catch (err) {
       fail(res, err);
     }

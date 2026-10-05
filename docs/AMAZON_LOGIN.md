@@ -3,6 +3,10 @@
 Both are **off until configured**. Without them the table works exactly the same: the sign-in screen
 offers the test account, and scene changes stay on the table.
 
+**TVs and Other Devices** on the security profile is for code-based linking on a TV that does not
+run our app. This table does not use it. The website uses **Web Settings**. The Fire TV Stick app
+uses **Android/Kindle Settings** (the API key), and only when you rebuild the APK.
+
 ## 1. Security profile (once)
 
 1. Sign in to the [Amazon Developer Console](https://developer.amazon.com/) → **Login with Amazon** →
@@ -21,13 +25,21 @@ offers the test account, and scene changes stay on the table.
 
    - Copy the generated **API key** (a long JWT-like string).
 
-Scopes requested: `profile profile:user_id` (name and the stable `amzn1.account…` id). The table
-stores `amazon_user_id` on the account and does not check Prime.
+Scope requested: `profile` (the stable `amzn1.account…` id, plus the customer's name). Amazon
+refuses that scope until the Login with Amazon consent screen has a Consent Privacy Notice URL.
+The table stores `amazon_user_id` and does not check Prime. A sign-in that arrived before the name
+was available is called `adventurer` until the next Amazon sign-in, which replaces that placeholder.
 
 ## 2. Table server
 
-Put the secrets in `~/.config/d20-fireverse/env` (outside git; the boot script
-`~/.local/bin/fireverse-table.sh` loads it, and `npm run dev:backend` also reads a root `.env`):
+Sign in as an admin → **Manage the table** → **Amazon** (the tab after Mail). Paste the Client ID
+and Client Secret from Web Settings and press Save. They are stored in `backend/data/amazon.json`
+(gitignored, same place as the Brevo key) and the next sign-in uses them. No restart.
+
+`GET /api/auth/options` answers `{"amazon":true}` and the site shows **Continue with Amazon**.
+Log out of the table to see the button; a reload is not required after that.
+
+Environment variables still work when nothing is saved:
 
 ```bash
 AMAZON_CLIENT_ID=amzn1.application-oa2-client.xxxxxxxx
@@ -35,9 +47,6 @@ AMAZON_CLIENT_SECRET=xxxxxxxx
 # Only when the public address differs:
 # AMAZON_REDIRECT_URI=https://www.d20fireverse.it/api/login/amazon/callback
 ```
-
-Restart the table. `GET /api/auth/options` answers `{"amazon":true}` and the site shows
-**Continue with Amazon** next to the username form.
 
 | Route | Use |
 |-------|-----|

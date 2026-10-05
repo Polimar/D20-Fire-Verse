@@ -150,16 +150,16 @@ pip install -r tools/sfx/requirements.txt   && python3 tools/sfx/render.py
 [`firetv/`](firetv/) is the living-room app: a Kotlin WebView shell for Fire TV and Android TV
 (Fire OS 5 / Android 5.1 and later) that puts the table full screen with autoplaying narration.
 
-**Install** the signed build from [`releases/firetv/`](releases/firetv/) (≈ 570 KB):
+**Install** the signed build from [`releases/firetv/`](releases/firetv/) (≈ 640 KB):
 
 - *Downloader app* — on the Fire TV enable *Settings → My Fire TV → Developer options → Install unknown
   apps* for Downloader, then open the raw GitHub URL of the APK.
 - *adb* — enable *ADB debugging* in the same menu, then
-  `adb connect <fire-tv-ip>:5555 && adb install -r releases/firetv/d20-fireverse-firetv-1.0.1.apk`.
+  `adb connect <fire-tv-ip>:5555 && adb install -r releases/firetv/d20-fireverse-firetv-1.0.2.apk`.
 
 Signing certificate SHA-256 `C4:F4:D8:23:62:4C:6C:5B:F1:84:E6:74:5F:43:54:45:52:80:70:88:F7:81:FC:67:2B:A5:89:65:18:DB:CA:E7`
 (`apksigner verify --print-certs`). Updates install over it only when signed with the same key. 1.0.0
-was signed with a throwaway CI key: uninstall it once before installing 1.0.1.
+was signed with a throwaway CI key: uninstall it once before installing 1.0.2.
 
 **Login with Amazon** is the main sign-in on the Stick once the SDK, an API key and the server keys are
 in place; until then the test account is offered. Setup: [`docs/AMAZON_LOGIN.md`](docs/AMAZON_LOGIN.md).

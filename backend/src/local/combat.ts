@@ -212,6 +212,17 @@ function actionIdsFor(pregen: Pregen): string[] {
   return base;
 }
 
+export type StrikeHold = {
+  abilityId: string;
+  targetId: string;
+  attackRoll: DiceRoll;
+  style: "melee" | "ranged" | "spell";
+  ranged: boolean;
+  mode: D20Mode;
+  crit: boolean;
+  rolls: DiceRoll[];
+};
+
 export type CombatState = {
   encounterId: string;
   mapId: string;
@@ -231,6 +242,27 @@ export type CombatState = {
   seq: number;
   pending?: PendingReaction;
   aimRequest?: { playerId: string; abilityId: string };
+  /** Player ids whose dice wait for a phone swipe. Set by the table for this action, not saved as authority. */
+  phoneIds?: string[];
+  awaiting?: Array<{
+    id: string;
+    playerId: string;
+    label: string;
+    step: "d20" | "damage" | "initiative" | "death" | "save";
+    abilityId?: string;
+    targetId?: string;
+    x?: number;
+    y?: number;
+    once?: boolean;
+    saveAbility?: string;
+    saveDc?: number;
+    saveDamage?: number;
+    saveHalf?: boolean;
+    saveFail?: string;
+  }>;
+  /** Initiative is still being thrown; the fight has not taken its first turn. */
+  gathering?: boolean;
+  strikeHold?: StrikeHold;
   pvp?: "ffa" | "teams";
   pvpWinner?: string;
   pve?: boolean;
@@ -457,6 +489,7 @@ export function startCombat(
   players: Player[],
   wounds?: Record<string, number>,
   carry?: Record<string, Vitals>,
+  holdPcIds: string[] = [],
 ): CombatState {
   const encounter = getEncounter(encounterId);
   if (!encounter) throw new Error("BAD_ENCOUNTER");
@@ -472,7 +505,7 @@ export function startCombat(
     const pregen = getPregen(p.characterId);
     if (!pregen) throw new Error("BAD_CHARACTER");
     const spot = map.spawn.pcs[i] || map.spawn.pcs[0];
-    const initRoll = rollD20() + abilityMod(pregen.abilities.dex);
+    const initRoll = (holdPcIds.includes(p.playerId) ? 0 : rollD20()) + abilityMod(pregen.abilities.dex);
       const maxHp = pregen.hp;
       const missing = wounds?.[p.playerId] ?? 0;
       const hp = Math.max(0, maxHp - missing);
@@ -601,6 +634,24 @@ export function startCombat(
     events: [],
     seq: 0,
   };
+  if (holdPcIds.length) {
+    combat.gathering = true;
+    combat.phoneIds = holdPcIds;
+    combat.awaiting = holdPcIds.map((id) => ({
+      id: `init-${id}`,
+      playerId: id,
+      label: "Initiative",
+      step: "initiative" as const,
+    }));
+    emit(combat, {
+      kind: "status",
+      tokenId: tokens.find((t) => t.playerId === holdPcIds[0])?.id ?? tokens[0]!.id,
+      ability: "Initiative",
+      rolls: [],
+      line: "Throw initiative on your phone.",
+    });
+    return combat;
+  }
   emit(combat, {
     kind: "start",
     order: turnOrder,
@@ -672,6 +723,7 @@ export function startArenaCombat(opts: {
   teams: boolean;
   pve?: boolean;
   monsterId?: string;
+  holdPcIds?: string[];
 }): CombatState {
   const map = opts.map;
   const walls = wallGrid(map as unknown as MapDef);
@@ -685,7 +737,7 @@ export function startArenaCombat(opts: {
       ? (p.teamId === "b" ? map.spawn.teamB : map.spawn.teamA)[opts.players.filter((x, j) => j < i && (x.teamId ?? "a") === (p.teamId ?? "a")).length] ??
         map.spawn.teamA[0]
       : map.spawn.ffa[i] ?? map.spawn.ffa[0];
-    const initRoll = rollD20() + abilityMod(pregen.abilities.dex);
+    const initRoll = (opts.holdPcIds?.includes(p.playerId) ? 0 : rollD20()) + abilityMod(pregen.abilities.dex);
     tokens.push({
       id: `pc-${p.playerId}`,
       kind: "pc",
@@ -753,6 +805,25 @@ export function startArenaCombat(opts: {
     pvp: opts.pve ? undefined : opts.teams ? "teams" : "ffa",
     pve: opts.pve || undefined,
   };
+  const holdIds = opts.holdPcIds ?? [];
+  if (holdIds.length) {
+    combat.gathering = true;
+    combat.phoneIds = holdIds;
+    combat.awaiting = holdIds.map((id) => ({
+      id: `init-${id}`,
+      playerId: id,
+      label: "Initiative",
+      step: "initiative" as const,
+    }));
+    emit(combat, {
+      kind: "status",
+      tokenId: tokens.find((t) => t.playerId === holdIds[0])?.id ?? tokens[0]!.id,
+      ability: "Initiative",
+      rolls: [],
+      line: "Throw initiative on your phone.",
+    });
+    return combat;
+  }
   emit(combat, {
     kind: "start",
     order: turnOrder,
@@ -802,7 +873,14 @@ function beginTurn(combat: CombatState): void {
       continue;
     }
     if (t.kind === "pc" && (t.dying || t.stable)) {
-      if (t.dying && !t.stable) resolveDeathSave(combat, t);
+      if (t.dying && !t.stable) {
+        if (t.playerId && combat.phoneIds?.includes(t.playerId)) {
+          const id = `death-${t.playerId}`;
+          if (!combat.awaiting?.some((a) => a.id === id)) {
+            combat.awaiting = [...(combat.awaiting ?? []), { id, playerId: t.playerId, label: "Death save", step: "death" }];
+          }
+        } else resolveDeathSave(combat, t);
+      }
       if (combat.status !== "active") return;
       if (t.dead) {
         stepIndex(combat);
@@ -1423,14 +1501,24 @@ export function proposeMove(
   refreshReachable(combat);
 }
 
+/** Attack, heal, and save spells are dice. Dash and the like are not. */
+export function actionNeedsThrow(abilityId: string): "attack" | "once" | "none" {
+  const id = abilityId.startsWith("quicken:") ? abilityId.slice("quicken:".length) : abilityId;
+  const type = getAbility(id)?.effects[0]?.type;
+  if (type === "attack") return "attack";
+  if (type === "auto_hit" || type === "save" || type === "heal") return "once";
+  return "none";
+}
+
 export function performAttack(
   combat: CombatState,
   playerId: string,
   abilityId: string,
   targetId?: string,
   dest?: Cell,
-): { rolls: DiceRoll[] } {
-  return performPcAction(combat, playerId, abilityId, targetId, dest);
+  gate?: { phase: "d20" } | { phase: "damage"; strike: StrikeHold },
+): { rolls: DiceRoll[]; strike?: StrikeHold } {
+  return performPcAction(combat, playerId, abilityId, targetId, dest, gate);
 }
 
 function pcSpellDc(pregen: Pregen | undefined, ability: string): number {
@@ -1708,7 +1796,8 @@ export function performPcAction(
   abilityId: string,
   targetId?: string,
   dest?: Cell,
-): { rolls: DiceRoll[] } {
+  gate?: { phase: "d20" } | { phase: "damage"; strike: StrikeHold },
+): { rolls: DiceRoll[]; strike?: StrikeHold } {
   if (combat.status !== "active") throw new Error("COMBAT_OVER");
   if (combat.pending) throw new Error("REACTION_PENDING");
   combat.aimRequest = undefined;
@@ -1731,10 +1820,12 @@ export function performPcAction(
   const ability = getAbility(castId);
   if (!ability) throw new Error("BAD_ABILITY");
 
-  if (isBonus) {
-    if (!t.hasBonusAction) throw new Error("NO_BONUS");
-  } else if (!t.hasAction && !t.extraAction) {
-    throw new Error("NO_ACTION");
+  if (gate?.phase !== "damage") {
+    if (isBonus) {
+      if (!t.hasBonusAction) throw new Error("NO_BONUS");
+    } else if (!t.hasAction && !t.extraAction) {
+      throw new Error("NO_ACTION");
+    }
   }
 
   const effect = { ...(ability.effects[0] ?? {}) };
@@ -2008,25 +2099,30 @@ export function performPcAction(
     (hasCondition(target, "prone") && ranged);
   const mode: D20Mode = advantage === disadvantage ? "normal" : advantage ? "advantage" : "disadvantage";
   let blessBonus = 0;
-  if (t.blessed) blessBonus = rollNotation("1d4").total;
+  if (gate?.phase !== "damage" && t.blessed) blessBonus = rollNotation("1d4").total;
 
-  const attackRoll = rollAttack({
-    roller: t.name,
-    label: `${ability.name} vs ${target.name}${blessBonus ? " · Bless" : ""}`,
-    bonus: attackBonus + blessBonus,
-    ac: effectiveAc(target),
-    mode,
-  });
-  const rolls: DiceRoll[] = [attackRoll];
-  t.hidden = false;
-  t.helpingTargetId = undefined;
-  target.marked = false;
-  spendEconomy(t, isBonus);
+  const resumed = gate?.phase === "damage" ? gate.strike : null;
+  const attackRoll = resumed
+    ? resumed.attackRoll
+    : rollAttack({
+        roller: t.name,
+        label: `${ability.name} vs ${target.name}${blessBonus ? " · Bless" : ""}`,
+        bonus: attackBonus + blessBonus,
+        ac: effectiveAc(target),
+        mode,
+      });
+  const rolls: DiceRoll[] = resumed ? [...resumed.rolls] : [attackRoll];
+  if (!resumed) {
+    t.hidden = false;
+    t.helpingTargetId = undefined;
+    target.marked = false;
+    spendEconomy(t, isBonus);
+  }
 
-  const crit = attackRoll.outcome === "crit";
+  const crit = resumed ? resumed.crit : attackRoll.outcome === "crit";
   const landed = crit || attackRoll.outcome === "hit";
-  const style = atkEffect.spellAttack ? "spell" : ranged ? "ranged" : "melee";
-  if (!landed) {
+  const style = resumed ? resumed.style : atkEffect.spellAttack ? "spell" : ranged ? "ranged" : "melee";
+  if (!resumed && !landed) {
     const fumble = attackRoll.outcome === "fumble";
     emit(combat, {
       kind: "strike",
@@ -2041,6 +2137,12 @@ export function performPcAction(
     });
     refreshReachable(combat);
     return { rolls };
+  }
+  if (!resumed && gate?.phase === "d20" && landed) {
+    return {
+      rolls,
+      strike: { abilityId: castId, targetId: target.id, attackRoll, style, ranged, mode, crit, rolls },
+    };
   }
 
   let dmgTotal = 0;
@@ -2239,6 +2341,24 @@ function castSaveArea(
   ];
   const hits: StrikeHit[] = [];
   for (const e of caught) {
+    if (e.kind === "pc" && e.playerId && combat.phoneIds?.includes(e.playerId)) {
+      combat.awaiting = [
+        ...(combat.awaiting ?? []),
+        {
+          id: `save-${e.playerId}-${combat.seq}`,
+          playerId: e.playerId,
+          label: `${saveKey.toUpperCase()} save`,
+          step: "save",
+          targetId: e.id,
+          saveAbility: saveKey,
+          saveDc: dc,
+          saveDamage: rolled.total,
+          saveHalf: Boolean(effect.halfOnSuccess),
+          saveFail: effect.onFail ? String(effect.onFail) : undefined,
+        },
+      ];
+      continue;
+    }
     const { roll: save, ok: saved } = creatureSave(e, saveKey, dc, true);
     rolls.push(save);
     const dmg = saved ? (effect.halfOnSuccess ? Math.floor(rolled.total / 2) : 0) : rolled.total;
@@ -2274,9 +2394,29 @@ function castSaveArea(
     const e = combat.tokens.find((x) => x.id === h.targetId)!;
     if (h.damage > 0) applyDamage(combat, e, h.damage);
   }
-  checkEnd(combat);
+  if (!(combat.awaiting ?? []).some((a) => a.step === "save")) checkEnd(combat);
   refreshReachable(combat);
   return { rolls };
+}
+
+export function commitAreaSave(combat: CombatState, playerId: string): void {
+  const mine = (combat.awaiting ?? []).find((a) => a.playerId === playerId && a.step === "save");
+  if (!mine || !mine.targetId || mine.saveDc == null || mine.saveDamage == null) throw new Error("NO_ROLL");
+  const token = combat.tokens.find((t) => t.id === mine.targetId);
+  if (!token) throw new Error("BAD_TARGET");
+  combat.awaiting = (combat.awaiting ?? []).filter((a) => a.id !== mine.id);
+  const { roll, ok } = creatureSave(token, mine.saveAbility ?? "dex", mine.saveDc, true);
+  const damage = ok ? (mine.saveHalf ? Math.floor(mine.saveDamage / 2) : 0) : mine.saveDamage;
+  if (!ok && mine.saveFail) addCondition(token, mine.saveFail);
+  statusEvent(
+    combat,
+    token,
+    mine.label,
+    ok ? `${token.name} saves (${roll.total} vs DC ${mine.saveDc}).` : `${token.name} fails and takes ${damage}.`,
+    [roll],
+  );
+  if (damage > 0) applyDamage(combat, token, damage);
+  if (!(combat.awaiting ?? []).some((a) => a.step === "save")) checkEnd(combat);
 }
 
 function spendEconomy(t: CombatToken, bonus: boolean): void {
@@ -2449,6 +2589,59 @@ function resolveDeathSave(combat: CombatState, token: CombatToken): void {
     `${token.name} death save ${face}. ${token.deathSuccesses ?? 0} successes, ${token.deathFailures ?? 0} failures.`,
     [roll],
   );
+}
+
+function dexOfToken(t: CombatToken): number {
+  return t.kind === "pc"
+    ? (getPregen(t.characterId!)?.abilities.dex ?? 10)
+    : (getMonster(t.monsterId!)?.abilities.dex ?? 10);
+}
+
+/** One hero's initiative, then the fight starts once every held die has landed. */
+export function commitInitiative(combat: CombatState, playerId: string): void {
+  const t = combat.tokens.find((token) => token.kind === "pc" && token.playerId === playerId);
+  if (!t) throw new Error("NO_PLAYER");
+  const pregen = t.characterId ? getPregen(t.characterId) : undefined;
+  const face = rollD20();
+  const bonus = abilityMod(pregen?.abilities.dex ?? 10);
+  t.initiative = face + bonus;
+  const roll = makeDiceRoll({
+    roller: t.name,
+    notation: bonus === 0 ? "1d20" : `1d20${bonus >= 0 ? "+" : ""}${bonus}`,
+    values: [face],
+    sides: [20],
+    modifier: bonus,
+    total: t.initiative,
+    purpose: "check",
+    label: "Initiative",
+  });
+  combat.awaiting = (combat.awaiting ?? []).filter((a) => !(a.playerId === playerId && a.step === "initiative"));
+  statusEvent(combat, t, "Initiative", `${t.name} rolls initiative ${t.initiative}.`, [roll]);
+  if ((combat.awaiting ?? []).some((a) => a.step === "initiative")) return;
+  combat.turnOrder = [...combat.tokens]
+    .sort(
+      (a, b) =>
+        b.initiative - a.initiative ||
+        dexOfToken(b) - dexOfToken(a) ||
+        (a.kind === "pc" ? -1 : 1) - (b.kind === "pc" ? -1 : 1),
+    )
+    .map((token) => token.id);
+  combat.gathering = false;
+  combat.turnIndex = 0;
+  emit(combat, {
+    kind: "start",
+    order: combat.turnOrder,
+    line: `Initiative: ${combat.turnOrder.map((id) => combat.tokens.find((token) => token.id === id)!.name).join(", ")}.`,
+  });
+  beginTurn(combat);
+  settleEnemies(combat);
+}
+
+export function commitDeathSave(combat: CombatState, playerId: string): void {
+  const t = combat.tokens.find((token) => token.kind === "pc" && token.playerId === playerId);
+  if (!t) throw new Error("NO_PLAYER");
+  combat.awaiting = (combat.awaiting ?? []).filter((a) => a.id !== `death-${playerId}`);
+  resolveDeathSave(combat, t);
 }
 
 function meleeOf(token: CombatToken): string | undefined {
@@ -2822,6 +3015,7 @@ export function publicCombat(combat: CombatState, viewerPlayerId?: string) {
     log: combat.log.slice(-12),
     events: combat.events,
     status: combat.status,
+    awaiting: (combat.awaiting ?? []).map((a) => ({ id: a.id, playerId: a.playerId, label: a.label, step: a.step })),
     pendingReaction: combat.pending
       ? {
           playerId: combat.pending.playerId,

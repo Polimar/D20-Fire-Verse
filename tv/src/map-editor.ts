@@ -67,12 +67,15 @@ function stampRects(g: boolean[][], rects: Array<{ x: number; y: number; w: numb
 
 let session: MapPaintSession | null = null;
 let onBackToList: (() => void) | null = null;
+let cellObserver: ResizeObserver | null = null;
 
 export function mapEditorOpen(): boolean {
   return !!session && !!document.getElementById("mapPaint");
 }
 
 export function closeMapEditor() {
+  cellObserver?.disconnect();
+  cellObserver = null;
   session = null;
   onBackToList = null;
 }
@@ -114,7 +117,9 @@ function setCursor(s: MapPaintSession, x: number, y: number) {
   prev?.classList.remove("on");
   s.cx = x;
   s.cy = y;
-  cellEl(x, y)?.classList.add("on");
+  const el = cellEl(x, y);
+  el?.classList.add("on");
+  el?.scrollIntoView({ block: "nearest", inline: "nearest" });
 }
 
 function markers(spec: MapPaint): Array<{ x: number; y: number; label: string; cls: string }> {
@@ -134,6 +139,60 @@ function markers(spec: MapPaint): Array<{ x: number; y: number; label: string; c
 
 function markAt(marks: ReturnType<typeof markers>, x: number, y: number) {
   return marks.filter((m) => m.x === x && m.y === y);
+}
+
+function prettyName(name: string) {
+  return name.replace(/_/g, " ").replace(/\b[a-z]/g, (c) => c.toUpperCase());
+}
+
+function legendHtml(spec: MapPaint) {
+  const terrain = [
+    { cls: "floor", title: "Floor", note: "Walkable" },
+    { cls: "wall", title: "Wall", note: "Blocks walk and shots" },
+    { cls: "hazard", title: "Hazard", note: "Blocks walk; shots pass" },
+  ];
+  const letterRows: Array<{ letter: string; cls: string; title: string }> = [];
+  const seen = new Set<string>();
+  const pushLetter = (letter: string, cls: string, title: string) => {
+    const key = `${letter}:${cls}:${title}`;
+    if (seen.has(key)) return;
+    seen.add(key);
+    letterRows.push({ letter, cls, title });
+  };
+  if (spec.spawn?.pcs?.length) pushLetter("P", "pc", "Hero spawn");
+  if (spec.spawn?.enemies?.length) pushLetter("E", "foe", "Enemy spawn");
+  if (spec.spawn?.ffa?.length) pushLetter("S", "pc", "FFA spawn");
+  if (spec.spawn?.teamA?.length) pushLetter("A", "pc", "Team A spawn");
+  if (spec.spawn?.teamB?.length) pushLetter("B", "foe", "Team B spawn");
+  if (spec.labels) {
+    for (const name of Object.keys(spec.labels)) {
+      pushLetter(name.slice(0, 1).toUpperCase(), "lab", prettyName(name));
+    }
+  }
+  return `<div class="map-legend-wrap" id="mapLegend">
+    <h4>Legend</h4>
+    <ul class="map-legend">
+      ${terrain
+        .map(
+          (t) =>
+            `<li><span class="map-swatch ${t.cls}" aria-hidden="true"></span><span><strong>${esc(t.title)}</strong> · ${esc(t.note)}</span></li>`,
+        )
+        .join("")}
+      ${letterRows
+        .map(
+          (r) =>
+            `<li><strong class="map-mark ${r.cls}">${esc(r.letter)}</strong><span>${esc(r.title)}</span></li>`,
+        )
+        .join("")}
+      ${letterRows.length ? "" : `<li class="meta">No spawn or POI letters on this map.</li>`}
+    </ul>
+  </div>`;
+}
+
+/** At least 75% of the painter width; height follows map aspect (view scrolls). */
+function fitForPainter(pageW: number, spec: { width: number; height: number }) {
+  const minMapW = Math.max(1, pageW * 0.75);
+  return Math.max(14, Math.ceil(minMapW / spec.width));
 }
 
 export function renderMapPainter(
@@ -159,7 +218,8 @@ export function renderMapPainter(
   const s = session;
   const marks = markers(spec);
   const artUrl = spec.art && spec.art.startsWith("/") ? spec.art : "";
-  const art = artUrl ? `style="--map-art:url('${esc(artUrl)}')"` : "";
+  const styleBits = [`--cols:${spec.width}`, `--rows:${spec.height}`, `--cell:18px`];
+  if (artUrl) styleBits.push(`--map-art:url('${esc(artUrl)}')`);
   let cells = "";
   for (let y = 0; y < spec.height; y += 1) {
     for (let x = 0; x < spec.width; x += 1) {
@@ -178,11 +238,23 @@ export function renderMapPainter(
         <button type="button" class="primary" id="mapSave" data-nav-key="map-save">Save</button>
         <button type="button" class="ghost" id="mapBack" data-nav-key="map-back">Back to maps</button>
       </div>
-      <div class="map-paint ${artUrl ? "has-art" : ""}" id="mapPaint" tabindex="0" data-arrows="all" data-nav-key="map-grid" data-no-scroll="1" ${art}
-        style="--cols:${spec.width};--rows:${spec.height}">${cells}</div>
-      <p class="admin-note">Floor is walkable. Wall blocks walk and shots. Hazard blocks walk; shots pass through. Spawns are markers only.</p>
+      <div class="map-paint-view" id="mapPaintView">
+        <div class="map-paint ${artUrl ? "has-art" : ""}" id="mapPaint" tabindex="0" data-arrows="all" data-nav-key="map-grid" data-no-scroll="1"
+          style="${styleBits.join(";")}">${cells}</div>
+      </div>
+      ${legendHtml(spec)}
     </div>`;
   const grid = host.querySelector<HTMLElement>("#mapPaint")!;
+  const view = host.querySelector<HTMLElement>("#mapPaintView")!;
+  const layoutCells = () => {
+    const pageW = Math.max(1, view.clientWidth - 2);
+    const fit = fitForPainter(pageW, spec);
+    grid.style.setProperty("--cell", `${fit}px`);
+  };
+  cellObserver?.disconnect();
+  cellObserver = new ResizeObserver(() => layoutCells());
+  cellObserver.observe(view);
+  layoutCells();
   const setBrush = (b: Brush) => {
     s.brush = b;
     host.querySelectorAll<HTMLElement>("[data-brush]").forEach((el) => el.classList.toggle("on", el.dataset.brush === b));

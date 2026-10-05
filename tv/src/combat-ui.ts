@@ -11,7 +11,7 @@ import { warmDice } from "./dice3d";
 import { focusables, moveFocus, type RemoteKey } from "./nav";
 import { coach, hideCoach } from "./onboarding";
 import { renderPcSheet, SHEET_TABS, type SheetTab } from "./pc-sheet";
-import { reducedMotion } from "./settings";
+import { reducedMotion, onSettings, settings } from "./settings";
 import { sfx } from "./sfx";
 import type { Cell, CombatPublic, MenuAction, RoomState, Token } from "./types";
 
@@ -69,6 +69,10 @@ export class CombatUi {
   private host: CombatHost;
   private el: {
     board: HTMLElement;
+    zoomRail: HTMLElement;
+    zoomPct: HTMLElement;
+    zoomIn: HTMLButtonElement;
+    zoomTrack: HTMLButtonElement;
     ribbon: HTMLElement;
     sheet: HTMLElement;
     actions: HTMLElement;
@@ -103,6 +107,41 @@ export class CombatUi {
     this.el = el;
     el.board.addEventListener("focus", () => this.paintOverlay());
     el.board.addEventListener("blur", () => this.paintOverlay());
+    el.zoomIn.addEventListener("click", () => {
+      this.board?.bumpZoom(1);
+      this.paintZoomRail();
+      sfx("uiConfirm");
+    });
+    el.zoomTrack.addEventListener("pointerdown", (ev) => {
+      ev.preventDefault();
+      const r = el.zoomTrack.getBoundingClientRect();
+      const t = r.height < 2 ? 0 : 1 - Math.max(0, Math.min(1, (ev.clientY - r.top) / r.height));
+      const steps = Board.ZOOM_STEPS.length;
+      this.board?.setZoomIndex(Math.round(t * (steps - 1)));
+      this.paintZoomRail();
+      el.zoomTrack.focus();
+      sfx("uiMove");
+    });
+    onSettings(() => this.syncZoomRail());
+    this.syncZoomRail();
+  }
+
+  private syncZoomRail() {
+    const on = settings().mapZoom;
+    this.el.zoomRail.hidden = !on;
+    if (!on) this.board?.setZoomIndex(0);
+    this.paintZoomRail();
+  }
+
+  private paintZoomRail() {
+    const b = this.board;
+    const i = b?.zoomIndex() ?? 0;
+    const z = Board.ZOOM_STEPS[i] ?? 1;
+    const t = i / (Board.ZOOM_STEPS.length - 1);
+    this.el.zoomTrack.style.setProperty("--t", String(t));
+    this.el.zoomPct.textContent = `${Math.round(z * 100)}%`;
+    this.el.zoomTrack.setAttribute("aria-valuenow", String(Math.round(z * 100)));
+    this.el.zoomIn.disabled = i >= Board.ZOOM_STEPS.length - 1;
   }
 
   private async ensureApp(): Promise<Board> {
@@ -134,6 +173,7 @@ export class CombatUi {
           onSettled: () => this.onSettled(),
         });
         this.app = app;
+        this.syncZoomRail();
         app.canvas.addEventListener("pointerdown", (ev) => {
           const cell = this.cellAtClient(ev.clientX, ev.clientY);
           if (!cell) return;
@@ -158,6 +198,17 @@ export class CombatUi {
       this.board.cellAt(((clientX - rect.left) * app.screen.width) / rect.width, ((clientY - rect.top) * app.screen.height) / rect.height) ??
       null
     );
+  }
+
+  panBy(dx: number, dy: number): boolean {
+    return this.board?.panBy(dx, dy) ?? false;
+  }
+
+  zoomBy(factor: number): boolean {
+    if (!this.board || !this.isFighting()) return false;
+    this.board.zoomBy(factor);
+    this.paintZoomRail();
+    return true;
   }
 
   /** The phone trackpad hovering the board: the grid cursor follows it, nothing is confirmed. */
@@ -466,7 +517,12 @@ export class CombatUi {
     if (!c) return;
     const me = this.me();
     let hint: string;
-    if (this.busy) hint = "The table is resolving the turn…";
+    const roll = c.awaiting?.find((a) => a.playerId === this.playerId);
+    const hintEl = document.getElementById("combatHint");
+    hintEl?.classList.toggle("roll-wait", !!roll);
+    this.el.board.classList.toggle("roll-wait", !!roll);
+    if (roll) hint = `Throw ${roll.label} on your phone`;
+    else if (this.busy) hint = "The table is resolving the turn…";
     else if (c.status === "defeat") hint = "The party has fallen.";
     else if (!this.myTurn()) hint = `${c.currentName ?? "Someone"} is acting.`;
     else if (this.awaiting) hint = "…";
@@ -498,7 +554,6 @@ export class CombatUi {
       }
     }
     this.el.meta.dataset.hint = hint;
-    const hintEl = document.getElementById("combatHint");
     if (hintEl) hintEl.textContent = hint;
   }
 
@@ -513,6 +568,7 @@ export class CombatUi {
       this.paintChrome();
     });
     this.paintActions();
+    this.paintHint(this.cursorState());
     this.el.log.innerHTML = c.log
       .slice(-5)
       .map((l) => `<li>${esc(l)}</li>`)
@@ -646,8 +702,9 @@ export class CombatUi {
       if (this.awaiting) {
         this.awaiting = false;
         this.paintOverlay();
-        this.paintActions();
-      }
+    this.paintActions();
+    this.paintHint(this.cursorState());
+  }
     }, 4000);
   }
 
@@ -692,6 +749,12 @@ export class CombatUi {
   }
 
   private confirm() {
+    const waiting = this.combat?.awaiting?.find((a) => a.playerId === this.playerId);
+    if (waiting) {
+      sfx("uiConfirm");
+      this.send({ action: "COMMIT_ROLL" });
+      return;
+    }
     if (!this.canAct()) {
       if (this.busy) return;
       sfx("uiError");
@@ -815,6 +878,8 @@ export class CombatUi {
   handleKey(key: RemoteKey): boolean {
     if (!this.combat) return false;
     const onBoard = document.activeElement === this.el.board;
+    const zoomId = (document.activeElement as HTMLElement | null)?.id;
+    const onZoom = zoomId === "mapZoomIn" || zoomId === "mapZoomTrack";
     if (key === "play") {
       if (this.myTurn() && !this.busy) this.endTurn(false);
       return true;
@@ -834,6 +899,12 @@ export class CombatUi {
         this.paintOverlay();
         return true;
       }
+      if (onZoom) {
+        this.el.board.focus({ preventScroll: true });
+        sfx("uiBack");
+        this.paintOverlay();
+        return true;
+      }
       if (onBoard) {
         this.el.actions.querySelector<HTMLElement>("button:not([disabled])")?.focus();
         sfx("uiBack");
@@ -842,6 +913,42 @@ export class CombatUi {
         sfx("uiBack");
       }
       this.paintOverlay();
+      return true;
+    }
+    if (onZoom && settings().mapZoom) {
+      if (key === "left") {
+        this.el.board.focus({ preventScroll: true });
+        sfx("uiMove");
+        this.paintOverlay();
+        return true;
+      }
+      if (zoomId === "mapZoomIn") {
+        if (key === "ok" || key === "up") {
+          this.board?.bumpZoom(1);
+          this.paintZoomRail();
+          sfx("uiConfirm");
+          return true;
+        }
+        if (key === "down") {
+          this.el.zoomTrack.focus();
+          sfx("uiMove");
+          return true;
+        }
+        return true;
+      }
+      if (key === "up") {
+        this.board?.bumpZoom(1);
+        this.paintZoomRail();
+        sfx("uiMove");
+        return true;
+      }
+      if (key === "down") {
+        this.board?.bumpZoom(-1);
+        this.paintZoomRail();
+        sfx("uiMove");
+        return true;
+      }
+      if (key === "ok") return true;
       return true;
     }
     if (!onBoard) {
@@ -864,6 +971,14 @@ export class CombatUi {
       case "left":
       case "right":
         if (this.busy) return true;
+        if (key === "right" && settings().mapZoom && !this.el.zoomRail.hidden) {
+          const { cols } = this.board?.size() ?? { cols: 0 };
+          if (this.cursor.x >= cols - 1) {
+            this.el.zoomIn.focus();
+            sfx("uiMove");
+            return true;
+          }
+        }
         if (!this.canAct()) {
           if (key === "down" || key === "right") moveFocus(key);
           return true;

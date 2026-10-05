@@ -192,7 +192,7 @@ export function joinArenaSeat(
     characterId: raw.id,
     characterName: pregen.name,
     userId,
-    ready: false,
+    ready: true,
   };
   room.players.push(seat);
   return playerId;
@@ -227,7 +227,6 @@ export function pickArenaHero(room: Room, playerId: string, characterId: string,
   const scaled = scalePregenToLevel(raw, room.arena.level);
   p.characterId = raw.id;
   p.characterName = scaled.name;
-  p.ready = false;
 }
 
 export function assertCanStart(room: Room, actorId?: string): void {
@@ -243,7 +242,7 @@ export function assertCanStart(room: Room, actorId?: string): void {
   }
 }
 
-export function beginArenaFight(room: Room): CombatState {
+export function beginArenaFight(room: Room, holdPcIds: string[] = []): CombatState {
   if (!room.arena) throw new Error("NOT_ARENA");
   const map = getArenaMap(arenaMapId(room.arena.theme, room.arena.size));
   if (!map) throw new Error("BAD_MAP");
@@ -256,6 +255,7 @@ export function beginArenaFight(room: Room): CombatState {
     teams,
     pve,
     monsterId: room.arena.monsterId,
+    holdPcIds,
   });
   room.arena.phase = "active";
   room.arena.heroSwapEndsAt = undefined;

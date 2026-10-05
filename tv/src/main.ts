@@ -45,7 +45,7 @@ appRoot.innerHTML = `
   <div class="vignette" aria-hidden="true"></div>
   <div class="grain" aria-hidden="true"></div>
   <header class="topbar">
-    <div class="brand-mark">D20 FireVerse <span>Luppolandia</span></div>
+    <div class="brand-mark"><img src="/icons/icon-192.png" alt="" width="36" height="36" />D20 FireVerse <span>Luppolandia</span></div>
     <ol class="party-rail" id="partyRail" aria-label="The party"></ol>
     <div class="now-playing" id="nowPlaying" aria-live="off"><span class="music-bars" aria-hidden="true"><i></i><i></i><i></i></span><span><em id="musicKicker">Music</em><strong id="musicTitle">A Very Potent Brew</strong></span></div>
     <div class="conn" id="conn" role="status">Connecting…</div>
@@ -165,7 +165,14 @@ appRoot.innerHTML = `
       </div>
       <div class="combat-grid">
         <div class="board-col">
-          <div class="board" id="board" tabindex="0" data-arrows="all" data-nav-key="board" data-no-scroll="1" aria-label="Battle map"></div>
+          <div class="board-stage">
+            <div class="board" id="board" tabindex="0" data-arrows="all" data-nav-key="board" data-no-scroll="1" aria-label="Battle map"></div>
+            <div class="zoom-rail" id="mapZoomRail" hidden aria-label="Map zoom">
+              <span class="zoom-pct" id="mapZoomPct">100%</span>
+              <button type="button" id="mapZoomIn" data-nav-key="map-zoom-in" aria-label="Zoom in">+</button>
+              <button type="button" class="zoom-track" id="mapZoomTrack" data-nav-key="map-zoom-track" data-arrows="all" role="slider" aria-label="Zoom" aria-orientation="vertical" aria-valuemin="100" aria-valuemax="400" aria-valuenow="100"></button>
+            </div>
+          </div>
           <p class="combat-hint" id="combatHint" aria-live="polite"></p>
           <div class="action-bar" id="actionBar" role="toolbar" aria-label="Actions"></div>
         </div>
@@ -327,7 +334,6 @@ function showPage(next: PageId) {
   if (page === next && document.querySelector(`.page.active`)) {
     return;
   }
-  if (next === "home" && page !== "home") unlinkPhone("title");
   page = next;
   document.body.dataset.page = next;
   document.body.classList.toggle("in-combat", next === "combat");
@@ -500,6 +506,10 @@ const combat = new CombatUi(
   { send, toast, caption, turnBanner, victory, onDefeatChange: setDefeat },
   {
     board: $("board"),
+    zoomRail: $("mapZoomRail"),
+    zoomPct: $("mapZoomPct"),
+    zoomIn: $("mapZoomIn") as HTMLButtonElement,
+    zoomTrack: $("mapZoomTrack") as HTMLButtonElement,
     ribbon: $("initiative"),
     sheet: $("pcSheet"),
     actions: $("actionBar"),
@@ -951,13 +961,17 @@ function seatHero(id: string): void {
   sfx("uiConfirm");
   const hero = pregens.find((p) => p.id === id);
   const arena = state.mode === "arena";
-  const swapping = state.arena?.phase === "hero_swap";
-  if (arena && playerId && swapping) {
-    send({ action: "ARENA_PICK_HERO", roomCode: state.roomCode, characterId: id, playerId });
-  } else {
-    send({ action: "JOIN_ROOM", roomCode: state.roomCode, characterId: id, displayName: hero?.name ?? "Hero" });
+  const phase = state.arena?.phase;
+  const seated = !!playerId && state.players.some((p) => p.playerId === playerId);
+  const swap = arena && seated && (phase === "lobby" || phase === "hero_swap");
+  const msg = swap
+    ? { action: "ARENA_PICK_HERO", roomCode: state.roomCode, characterId: id, playerId }
+    : { action: "JOIN_ROOM", roomCode: state.roomCode, characterId: id, displayName: hero?.name ?? "Hero" };
+  if (!deliver(msg)) {
+    joining = false;
+    sfx("uiError");
+    toast("The table is reconnecting. Try again in a moment.", "info");
   }
-  window.setTimeout(() => (joining = false), 3000);
 }
 
 $("btnLobbyWatch").addEventListener("click", () => {
@@ -1102,6 +1116,10 @@ function renderChoices(s: RoomState) {
     return;
   }
 
+  if (s.heldCheck?.playerId === playerId) {
+    box.innerHTML = `<p class="roll-call">Throw ${esc(s.heldCheck.label)} on your phone</p>`;
+    return;
+  }
   if (s.nodeType === "skill_check" && s.skillCheck) {
     const c = s.skillCheck;
     const skill = (c.skill ?? c.ability).replace(/_/g, " ").replace(/\b\w/g, (m) => m.toUpperCase());
@@ -1462,6 +1480,10 @@ function connect() {
       case "ROOM_STATE":
         onRoomState(msg.payload as RoomState);
         break;
+      case "PREGENS":
+        pregens = msg.payload.pregens ?? pregens;
+        if (page === "lobby") renderLobby();
+        break;
       case "CHARACTER_CREATED": {
         pregens = msg.payload.pregens ?? pregens;
         const hero = msg.payload.character;
@@ -1546,7 +1568,12 @@ window.addEventListener("keydown", (e) => {
   unlockAudio();
   const key = remoteKey(e);
   const target = e.target as HTMLElement;
-  const typing = target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement;
+  const typing =
+    target instanceof HTMLInputElement ||
+    target instanceof HTMLTextAreaElement ||
+    target instanceof HTMLSelectElement ||
+    target.isContentEditable;
+  if (typing && e.key !== "Escape") return;
   if (!key) {
     if (!typing && (e.key === "m" || e.key === "M")) toggleMusic();
     if (!typing && page === "story" && /^[1-9]$/.test(e.key)) {
@@ -1556,7 +1583,6 @@ window.addEventListener("keydown", (e) => {
     if (!typing && (e.key === "s" || e.key === "S")) openTableSettings();
     return;
   }
-  if (typing && key === "back" && e.key === "Backspace") return;
   if (key === "menu") {
     e.preventDefault();
     if (adminOpen()) closeAdmin();
@@ -1635,6 +1661,10 @@ async function logOut(): Promise<void> {
   account = null;
   reportedView = "";
   resetPhoneLink();
+  const options = await fetch("/api/auth/options", { credentials: "same-origin" })
+    .then((r) => (r.ok ? (r.json() as Promise<{ amazon?: boolean }>) : null))
+    .catch(() => null);
+  amazonOnServer = options?.amazon === true;
   showLoginGate();
   renderHome();
   ws?.close();
@@ -1791,7 +1821,11 @@ phoneLinkHost("lobby", $("lobbyQr"), $("lobbyQrHint"), {
   idle: "Scan with your phone to play from it.",
   linked: "Log out or go back to the title to unlink it.",
 });
-mountPointer({ boardPoint: (x, y) => page === "combat" && combat.pointAt(x, y) });
+mountPointer({
+  boardPoint: (x, y) => page === "combat" && combat.pointAt(x, y),
+  boardPan: (dx, dy) => page === "combat" && combat.panBy(dx, dy),
+  boardZoom: (factor) => page === "combat" && combat.zoomBy(factor),
+});
 
 void ensureLogin().then(() => {
   requestAnimationFrame(() => restoreFocus());

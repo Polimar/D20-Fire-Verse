@@ -22,6 +22,7 @@ type Console = {
   view: ConsoleView;
   /** sha256 of the phone's key; null while no phone is linked. */
   phoneKeyHash: string | null;
+  seenAt?: number;
 };
 
 type PairOffer = { consoleId: string; expiresAt: number };
@@ -47,6 +48,7 @@ function load(): void {
           userId: row.userId,
           view: isConsoleView(row.view) ? row.view : "title",
           phoneKeyHash: row.phoneKeyHash ?? null,
+          seenAt: row.seenAt ?? 0,
         });
       }
     }
@@ -72,6 +74,35 @@ export function isConsoleId(id: unknown): id is string {
   return typeof id === "string" && /^[A-Za-z0-9_-]{16,64}$/.test(id);
 }
 
+export function touchConsole(consoleId: string): void {
+  load();
+  const c = consoles.get(consoleId);
+  if (!c) return;
+  c.seenAt = Date.now();
+  persist();
+}
+
+/** The television this account is signed in on, most recently seen. */
+export function consoleForUser(userId: string): Console | null {
+  load();
+  const list = [...consoles.values()].filter((c) => c.userId === userId);
+  list.sort((a, b) => (b.seenAt ?? 0) - (a.seenAt ?? 0));
+  return list[0] ?? null;
+}
+
+/** Give a logged-in phone a key. Replaces a key whose phone is no longer connected. */
+export function adoptPhone(consoleId: string, replace: boolean): string | null {
+  load();
+  const c = consoles.get(consoleId);
+  if (!c) return null;
+  if (c.phoneKeyHash && !replace) return null;
+  const key = randomBytes(24).toString("base64url");
+  c.phoneKeyHash = digest(key);
+  c.seenAt = Date.now();
+  persist();
+  return key;
+}
+
 export function getConsole(consoleId: string): Console | null {
   load();
   return consoles.get(consoleId) ?? null;
@@ -94,14 +125,19 @@ export function claimConsole(consoleId: string, userId: string): boolean {
   if (known && known.userId === userId) return false;
   const dropped = Boolean(known?.phoneKeyHash);
   forgetOffers(consoleId);
-  consoles.set(consoleId, { id: consoleId, userId, view: known?.view ?? "title", phoneKeyHash: null });
+  consoles.set(consoleId, { id: consoleId, userId, view: known?.view ?? "title", phoneKeyHash: null, seenAt: Date.now() });
   persist();
   return dropped;
 }
 
 export function setConsoleView(consoleId: string, view: ConsoleView): void {
   const c = getConsole(consoleId);
-  if (!c || c.view === view) return;
+  if (!c) return;
+  c.seenAt = Date.now();
+  if (c.view === view) {
+    persist();
+    return;
+  }
   c.view = view;
   persist();
 }

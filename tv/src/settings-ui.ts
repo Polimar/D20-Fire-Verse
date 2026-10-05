@@ -8,7 +8,7 @@ import { replayNarration } from "./voice";
 
 type Row =
   | { id: string; label: string; kind: "volume"; key: "music" | "voice" | "sfx" }
-  | { id: string; label: string; kind: "toggle"; key: "narration" | "subtitles" | "highContrast"; on: string; off: string }
+  | { id: string; label: string; kind: "toggle"; key: "narration" | "subtitles" | "highContrast" | "mapZoom"; on: string; off: string }
   | { id: string; label: string; kind: "choice"; key: "subtitleSize" | "motion"; options: Array<{ value: string; label: string }> };
 
 export type SettingsGameActions = {
@@ -44,6 +44,7 @@ const ROWS: Row[] = [
     ],
   },
   { id: "highContrast", label: "Board contrast", kind: "toggle", key: "highContrast", on: "High", off: "Standard" },
+  { id: "mapZoom", label: "Map zoom", kind: "toggle", key: "mapZoom", on: "On", off: "Off" },
 ];
 
 let overlay: HTMLElement | null = null;
@@ -129,7 +130,7 @@ export function openSettings(onClose?: (() => void) | null, actions?: SettingsGa
           ${ROWS.map(
             (r) => `<button type="button" class="setting-row" data-setting="${r.id}">
               <span class="setting-label">${r.label}</span>
-              <span class="setting-control"><span class="chev" aria-hidden="true">◀</span><span class="setting-value"></span><span class="chev" aria-hidden="true">▶</span></span>
+              <span class="setting-control"><span class="chev" data-dir="-1" aria-label="Lower ${r.label}">◀</span><span class="setting-value"></span><span class="chev" data-dir="1" aria-label="Raise ${r.label}">▶</span></span>
             </button>`,
           ).join("")}
         </div>
@@ -148,7 +149,10 @@ export function openSettings(onClose?: (() => void) | null, actions?: SettingsGa
     document.body.appendChild(overlay);
     overlay.querySelectorAll<HTMLElement>("[data-setting]").forEach((el) => {
       const row = ROWS.find((r) => r.id === el.dataset.setting)!;
-      el.addEventListener("click", () => change(row, 1));
+      el.addEventListener("click", (e) => {
+        const dir = (e.target as HTMLElement).closest<HTMLElement>("[data-dir]")?.dataset.dir;
+        change(row, dir === "-1" ? -1 : 1);
+      });
       el.addEventListener("keydown", (e) => {
         if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
           e.preventDefault();

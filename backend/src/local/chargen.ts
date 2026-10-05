@@ -580,6 +580,37 @@ export function getCustomCharacter(id: string): Pregen | undefined {
   return customChars.get(id);
 }
 
+export function renameCustomCharacter(id: string, ownerUserId: string, name: string): Pregen {
+  const cur = customChars.get(id);
+  if (!cur || cur.ownerUserId !== ownerUserId) throw new Error("BAD_CHARACTER");
+  const next = name.trim().slice(0, 40);
+  if (next.length < 1) throw new Error("NEED_NAME");
+  cur.name = next;
+  return registerCustomCharacter(cur);
+}
+
+export function deleteCustomCharacter(id: string, ownerUserId: string, seated: boolean): void {
+  const cur = customChars.get(id);
+  if (!cur || cur.ownerUserId !== ownerUserId) throw new Error("BAD_CHARACTER");
+  if (seated) throw new Error("CHARACTER_SEATED");
+  customChars.delete(id);
+  fs.rmSync(path.join(CUSTOM_DIR, `${id}.json`), { force: true });
+}
+
+export function reforgeCustomCharacter(
+  id: string,
+  ownerUserId: string,
+  draft: ChargenDraft,
+  rolledPool: number[] | undefined,
+  seated: boolean,
+): Pregen {
+  const cur = customChars.get(id);
+  if (!cur || cur.ownerUserId !== ownerUserId) throw new Error("BAD_CHARACTER");
+  if (seated) throw new Error("CHARACTER_SEATED");
+  const built = buildCharacter(draft, rolledPool);
+  return registerCustomCharacter({ ...built, id, ownerUserId });
+}
+
 export function rollAbilityScores(): number[] {
   const scores: number[] = [];
   for (let i = 0; i < 6; i += 1) {

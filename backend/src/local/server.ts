@@ -11,6 +11,8 @@ import {
   claimConsole,
   consoleForKey,
   forgetConsole,
+  adoptPhone,
+  consoleForUser,
   getConsole,
   isConsoleId,
   isConsoleView,
@@ -27,8 +29,11 @@ import { WebSocketServer, type WebSocket } from "ws";
 import { loadCampaign, listPregens, getManifest, portraitForCharacter, PORTRAITS, portraitUrl } from "./campaign.js";
 import {
   createCustomCharacter,
+  deleteCustomCharacter,
   getChargenCatalog,
   loadChargen,
+  reforgeCustomCharacter,
+  renameCustomCharacter,
   rollAbilityScores,
   type ChargenDraft,
 } from "./chargen.js";
@@ -57,6 +62,9 @@ import {
   combatMove,
   withdraw,
   beginCombat,
+  commitHeld,
+  flushHeldRolls,
+  setRollPhones,
   createArena,
   arenasPublic,
   arenaSetTeam,
@@ -65,8 +73,10 @@ import {
   arenaStart,
   arenaKick,
   createRoom,
+  characterIsSeated,
   getRoom,
   heroSheet,
+  librarySheet,
   joinRoom,
   loadPersistedRooms,
   playerDisconnect,
@@ -129,6 +139,7 @@ type ClientMsg = {
   dx?: number;
   dy?: number;
   on?: boolean;
+  factor?: number;
 };
 
 /** What a paired phone may do at the table, always as the hero its TV sat with. */
@@ -149,6 +160,7 @@ const PHONE_ACTIONS = new Set([
   "VOICE_INTENT",
   "ARENA_READY",
   "SET_ARENA_TEAM",
+  "COMMIT_ROLL",
 ]);
 
 const TABLE_VIEWS: ReadonlySet<ConsoleView> = new Set(["lobby", "story", "combat"]);
@@ -285,6 +297,7 @@ app.post("/api/chargen", (req, res) => {
       return;
     }
     const built = createCustomCharacter(req.body as ChargenDraft, undefined, user.id);
+    pushLibrary(user.id);
     res.json(built);
   } catch (err) {
     res.status(400).json({
@@ -295,6 +308,97 @@ app.post("/api/chargen", (req, res) => {
 
 app.post("/api/chargen/roll", (_req, res) => {
   res.json({ scores: rollAbilityScores() });
+});
+
+function pushLibrary(userId: string): void {
+  const list = pregenList(userId);
+  for (const s of openSockets()) {
+    if (!s.consoleId) continue;
+    if (getConsole(s.consoleId)?.userId !== userId) continue;
+    send(s, { eventType: "PREGENS", payload: { pregens: list } });
+  }
+}
+
+app.get("/api/me/characters/:id", (req, res) => {
+  const user = requestUser(req);
+  if (!user) {
+    res.status(401).json({ error: "AUTH_REQUIRED" });
+    return;
+  }
+  const sheet = librarySheet(req.params.id);
+  if (!sheet || !String(req.params.id).startsWith("custom_")) {
+    res.status(404).json({ error: "BAD_CHARACTER" });
+    return;
+  }
+  const owned = pregenList(user.id).some((p) => p.id === req.params.id);
+  if (!owned) {
+    res.status(404).json({ error: "BAD_CHARACTER" });
+    return;
+  }
+  res.json({ sheet, seated: characterIsSeated(req.params.id) });
+});
+
+app.post("/api/characters/:id/rename", (req, res) => {
+  const user = requestUser(req);
+  if (!user) {
+    res.status(401).json({ error: "AUTH_REQUIRED" });
+    return;
+  }
+  try {
+    renameCustomCharacter(req.params.id, user.id, String(req.body?.name ?? ""));
+    pushLibrary(user.id);
+    res.json({ ok: true, pregens: pregenList(user.id) });
+  } catch (err) {
+    res.status(400).json({ error: err instanceof Error ? err.message : "ERROR" });
+  }
+});
+
+app.post("/api/characters/:id/reforge", (req, res) => {
+  const user = requestUser(req);
+  if (!user) {
+    res.status(401).json({ error: "AUTH_REQUIRED" });
+    return;
+  }
+  try {
+    reforgeCustomCharacter(req.params.id, user.id, req.body as ChargenDraft, undefined, characterIsSeated(req.params.id));
+    pushLibrary(user.id);
+    res.json({ ok: true, pregens: pregenList(user.id) });
+  } catch (err) {
+    res.status(400).json({ error: err instanceof Error ? err.message : "ERROR" });
+  }
+});
+
+app.delete("/api/characters/:id", (req, res) => {
+  const user = requestUser(req);
+  if (!user) {
+    res.status(401).json({ error: "AUTH_REQUIRED" });
+    return;
+  }
+  try {
+    deleteCustomCharacter(req.params.id, user.id, characterIsSeated(req.params.id));
+    pushLibrary(user.id);
+    res.json({ ok: true, pregens: pregenList(user.id) });
+  } catch (err) {
+    res.status(400).json({ error: err instanceof Error ? err.message : "ERROR" });
+  }
+});
+
+app.post("/api/me/align", (req, res) => {
+  const user = requestUser(req);
+  if (!user) {
+    res.status(401).json({ error: "AUTH_REQUIRED" });
+    return;
+  }
+  const console = consoleForUser(user.id);
+  if (!console) {
+    res.json({ console: null });
+    return;
+  }
+  const key = adoptPhone(console.id, consolePhones(console.id).length === 0);
+  res.json({
+    console: { id: console.id, view: console.view, linked: phoneLinked(console.id) },
+    key,
+  });
 });
 
 app.get("/api/room/:code", (req, res) => {
@@ -500,6 +604,21 @@ function handlePhone(sock: Sock, msg: ClientMsg): boolean {
     case "POINTER_TAP":
       if (tv) send(tv, { eventType: "POINTER", payload: { kind: "tap" } });
       return true;
+    case "POINTER_PAN": {
+      const clamp = (v: unknown) => Math.max(-600, Math.min(600, Number(v) || 0));
+      if (tv) send(tv, { eventType: "POINTER", payload: { kind: "pan", dx: clamp(msg.dx), dy: clamp(msg.dy) } });
+      return true;
+    }
+    case "POINTER_ZOOM": {
+      const factor = Math.max(0.5, Math.min(2, Number(msg.factor) || 1));
+      if (factor !== 1 && tv) send(tv, { eventType: "POINTER", payload: { kind: "zoom", factor } });
+      return true;
+    }
+    case "POINTER_SCROLL": {
+      const dy = Math.max(-800, Math.min(800, Number(msg.dy) || 0));
+      if (dy && tv) send(tv, { eventType: "POINTER", payload: { kind: "scroll", dy } });
+      return true;
+    }
     case "POINTER_BACK":
       if (tv) send(tv, { eventType: "POINTER", payload: { kind: "back" } });
       return true;
@@ -650,7 +769,14 @@ wss.on("connection", (ws, req) => {
       pushCompanion(tvConsole);
       armGrace(tvConsole, () => consoleGone(tvConsole));
     }
-    if (companionOf) tellTvLink(companionOf);
+    if (companionOf) {
+      tellTvLink(companionOf);
+      const tv = consoleTv(companionOf);
+      if (tv?.roomCode && tv.playerId) {
+        const next = flushHeldRolls(tv.roomCode, tv.playerId);
+        if (next) broadcast(next.roomCode);
+      }
+    }
     if (!roomCode || !playerId) return;
     armDropTimer(roomCode, playerId);
   });
@@ -682,7 +808,19 @@ wss.on("connection", (ws, req) => {
   });
 });
 
+function awakeIn(roomCode: string): string[] {
+  const ids: string[] = [];
+  for (const s of openSockets()) {
+    if (!s.consoleId || s.roomCode !== roomCode || !s.playerId) continue;
+    if (consolePhones(s.consoleId).some((p) => p.readyState === 1)) ids.push(s.playerId);
+  }
+  return ids;
+}
+
 function handle(sock: Sock, msg: ClientMsg): void {
+  if (!msg.roomCode && sock.roomCode) msg.roomCode = sock.roomCode;
+  if (!msg.playerId && sock.playerId) msg.playerId = sock.playerId;
+  if (msg.roomCode) setRollPhones(awakeIn(msg.roomCode));
   if (actionNeedsAuth(msg.action) && !sock.user) throw new Error("AUTH_REQUIRED");
   const pid = () => {
     const id = msg.playerId || sock.playerId;
@@ -865,6 +1003,13 @@ function handle(sock: Sock, msg: ClientMsg): void {
       if (!msg.roomCode || !msg.abilityId) throw new Error("MISSING_FIELDS");
       const dest = msg.x !== undefined && msg.y !== undefined ? { x: msg.x, y: msg.y } : undefined;
       broadcast(combatAttack(msg.roomCode, pid(), msg.abilityId, msg.targetId, dest).roomCode);
+      return;
+    }
+    case "COMMIT_ROLL": {
+      if (!msg.roomCode) throw new Error("MISSING_FIELDS");
+      const room = getRoom(msg.roomCode);
+      if (!room) throw new Error("ROOM_NOT_FOUND");
+      broadcast(commitHeld(room, pid()).roomCode);
       return;
     }
     case "AIM_ACTION": {

@@ -12,6 +12,8 @@ export type Settings = {
   subtitleSize: SubtitleSize;
   motion: MotionPref;
   highContrast: boolean;
+  /** Show the combat map zoom rail (campaign + arena). */
+  mapZoom: boolean;
 };
 
 const KEY = "fireverse.settings.v1";
@@ -25,6 +27,7 @@ const DEFAULTS: Settings = {
   subtitleSize: "medium",
   motion: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "reduced" : "full",
   highContrast: false,
+  mapZoom: false,
 };
 
 function load(): Settings {

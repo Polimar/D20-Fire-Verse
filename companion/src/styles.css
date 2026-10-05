@@ -58,6 +58,7 @@ button:active:not(:disabled) { transform: scale(0.98); }
 button:disabled { opacity: 0.4; }
 button[aria-busy="true"] { opacity: 0.6; pointer-events: none; }
 button.primary { background: linear-gradient(180deg, #c06a36, #7a3517); border-color: #e59a5f; font-weight: 600; }
+button.ghost { background: transparent; border-color: rgba(246, 234, 214, 0.18); }
 button.big { font-size: 1.15rem; padding: 1.1rem 1rem; text-align: center; }
 button:focus-visible { outline: 3px solid #ffd08a; outline-offset: 2px; }
 
@@ -66,7 +67,19 @@ button:focus-visible { outline: 3px solid #ffd08a; outline-offset: 2px; }
 /* ------------------------------------------------------------------ scan */
 
 .scan { display: grid; gap: 0.7rem; justify-items: center; text-align: center; padding-top: 1rem; }
+.pocket { width: min(32rem, 100%); text-align: left; display: grid; gap: 0.6rem; margin-top: 0.4rem; }
+.pocket h2 { margin: 0; }
+.pocket-head, .pocket .row2 { display: flex; gap: 0.5rem; align-items: center; justify-content: space-between; }
+.pocket-login { display: block; text-align: center; text-decoration: none; padding: 0.8rem 1rem; border-radius: 12px; }
+.pocket-hero { display: flex; gap: 0.7rem; align-items: center; width: 100%; }
+.pocket-hero img { width: 3rem; height: 3rem; object-fit: cover; border-radius: 8px; }
+.pocket-list { margin: 0; padding-left: 1.1rem; display: grid; gap: 0.3rem; }
+.forge { display: grid; gap: 0.45rem; }
+.forge label, .skill-picks { display: grid; gap: 0.2rem; }
+.skill-picks { grid-template-columns: 1fr 1fr; }
+.pocket-sheet { text-align: left; }
 .scan h1 { margin-bottom: 0.4rem; }
+.scan-emblem { width: 4.5rem; height: 4.5rem; border-radius: 1rem; box-shadow: 0 0 28px rgba(201, 106, 46, 0.35); }
 .scan-frame {
   position: relative;
   width: min(100%, 24rem);
@@ -157,6 +170,16 @@ button:focus-visible { outline: 3px solid #ffd08a; outline-offset: 2px; }
   user-select: none;
   -webkit-user-select: none;
 }
+.throw.flash {
+  animation: die-flash 0.7s ease-in-out infinite;
+  border-style: solid;
+  border-color: var(--gold);
+  background: rgba(241, 196, 107, 0.16);
+}
+body.roll-wait .throw.flash { box-shadow: 0 0 0 4px rgba(241, 196, 107, 0.45); }
+@keyframes die-flash {
+  50% { transform: scale(1.03); box-shadow: 0 0 0 8px rgba(241, 196, 107, 0.28); background: rgba(241, 196, 107, 0.28); }
+}
 .throw > span:last-child { display: grid; gap: 0.1rem; }
 .throw strong { font-family: Cinzel, serif; font-size: 1.6rem; }
 .throw-kicker { font-size: 0.75rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--copper-bright); }
@@ -239,6 +262,7 @@ button:focus-visible { outline: 3px solid #ffd08a; outline-offset: 2px; }
   bottom: 0;
   z-index: 20;
   display: grid;
+  grid-template-columns: 1fr auto;
   grid-template-rows: 1fr auto;
   gap: 0.5rem;
   height: calc(var(--pad-height) + 1rem + env(safe-area-inset-bottom));
@@ -265,8 +289,52 @@ button:focus-visible { outline: 3px solid #ffd08a; outline-offset: 2px; }
   transition: border-color 0.15s, box-shadow 0.15s;
 }
 .trackpad.touching { border-color: var(--gold); box-shadow: inset 0 0 30px rgba(241, 196, 107, 0.12); }
-.pad-keys { display: grid; grid-template-columns: 1fr 2fr; gap: 0.5rem; }
+.pad-wheel {
+  width: 3.1rem;
+  display: grid;
+  place-items: center;
+  border-radius: 14px;
+  border: 1px solid rgba(241, 196, 107, 0.35);
+  background:
+    repeating-linear-gradient(180deg, transparent 0 7px, rgba(241, 196, 107, 0.28) 7px 8px),
+    #140e0a;
+  color: rgba(241, 196, 107, 0.8);
+  font-size: 0.68rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  writing-mode: vertical-rl;
+  touch-action: none;
+  user-select: none;
+  overflow: hidden;
+}
+.pad-wheel.touching { border-color: var(--gold); }
+.pad-keys { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr 2fr; gap: 0.5rem; }
 .pad-keys button { text-align: center; padding: 0.7rem; }
+
+.install {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: grid;
+  place-items: end center;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.55);
+}
+.install-card {
+  width: min(26rem, 100%);
+  display: grid;
+  justify-items: center;
+  gap: 0.7rem;
+  text-align: center;
+  padding: 1.2rem 1rem 1rem;
+  border-radius: var(--radius);
+  background: #1a120c;
+  border: 1px solid var(--line-strong);
+}
+.install-card img { width: 4.5rem; height: 4.5rem; border-radius: 1rem; }
+.install-card h2 { margin: 0; }
+.install-card p { margin: 0; color: var(--ink-dim); }
+.install-card button { width: 100%; text-align: center; }
 
 .toast {
   position: fixed;
