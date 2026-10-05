@@ -191,7 +191,11 @@ if (companionBuilt) {
   app.use("/companion", express.static(companionDist));
 }
 if (fs.existsSync(path.join(tvDist, "index.html"))) {
-  app.use(express.static(tvDist));
+  app.use(express.static(tvDist, {
+    setHeaders: (res, filePath) => {
+      if (filePath.endsWith(".html")) res.setHeader("Cache-Control", "no-store");
+    },
+  }));
 } else {
   app.use(express.static(tvLocal));
 }

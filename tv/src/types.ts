@@ -15,6 +15,7 @@ export type DiceRoll = {
   total: number;
   purpose: string;
   label?: string;
+  damageType?: string;
   isCrit?: boolean;
   isFumble?: boolean;
   vs?: { kind: "AC" | "DC"; value: number };
@@ -39,6 +40,7 @@ export type CombatEvent = { seq: number; line: string } & (
       rolls: DiceRoll[];
       hits: StrikeHit[];
     }
+  | { kind: "dice"; tokenId: string; rolls: DiceRoll[] }
   | { kind: "heal"; tokenId: string; targetId: string; ability: string; amount: number; hp: number; rolls: DiceRoll[] }
   | { kind: "status"; tokenId: string; ability: string; rolls: DiceRoll[] }
   | { kind: "down"; tokenId: string }
@@ -103,6 +105,7 @@ export type CombatPublic = {
   log: string[];
   events: CombatEvent[];
   status: "active" | "victory" | "defeat" | "draw";
+  damagePreview?: Array<{ sides: number; damageType: string }>;
   awaiting?: Array<{ id: string; playerId: string; label: string; step: string }>;
   pendingReaction?: { playerId: string; prompt: string; acceptLabel: string; declineLabel: string } | null;
   aimRequest?: { playerId: string; abilityId: string } | null;

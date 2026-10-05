@@ -81,6 +81,7 @@ type TableState = {
     tokens: Token[];
     actionMenu: { actions: MenuAction[]; bonusActions?: MenuAction[] } | null;
     awaiting?: Array<{ id: string; playerId: string; label: string; step: string }>;
+    damagePreview?: Array<{ sides: number; damageType: string }>;
     pendingReaction?: { playerId: string; prompt: string; acceptLabel: string; declineLabel: string } | null;
     events?: CombatEvent[];
   } | null;
@@ -501,11 +502,22 @@ $("sheetPanel").addEventListener("click", (ev) => {
 
 const needsAim = (target: string | undefined) => target === "enemy" || target === "ally" || target === "cell";
 
-function throwPad(id: string, targetKind: string, label = "d20"): string {
+function throwPad(
+  id: string,
+  targetKind: string,
+  label = "d20",
+  preview?: Array<{ sides: number; damageType: string }>,
+): string {
   const note = id === "commit" ? "The table is waiting. Swipe now." : needsAim(targetKind) ? "Then pick the target on the TV." : "The die lands on your TV.";
   const flash = id === "commit" ? " flash" : "";
+  const faces =
+    preview && preview.length
+      ? `<span class="die-row">${preview
+          .map((d) => `<span class="die d${d.sides}" aria-hidden="true">d${d.sides}</span>`)
+          .join("")}</span>`
+      : `<span class="die" aria-hidden="true">20</span>`;
   return `<div class="throw${flash}" data-throw="${esc(id)}" data-target="${esc(targetKind)}" role="button" tabindex="0" aria-label="Swipe to throw: ${esc(label)}">
-    <span class="die" aria-hidden="true">20</span>
+    ${faces}
     <span><span class="throw-kicker">Swipe to throw</span><strong>${esc(label)}</strong><span class="meta">${note}</span></span>
   </div>`;
 }
@@ -537,8 +549,9 @@ function renderControls(room: TableState | null, seat: Seat | undefined): void {
     const button = (a: MenuAction) =>
       `<button type="button" data-ability="${esc(a.id)}" data-target="${esc(a.targetKind)}" ${a.available ? "" : "disabled"}>${esc(a.name)}</button>`;
     if (waiting) {
-      controls.innerHTML = `${throwPad("commit", "none", waiting.label)}
-        <p class="meta">Swipe to throw. The die lands on the TV.</p>`;
+      const preview = waiting.step === "damage" ? combat.damagePreview : undefined;
+      controls.innerHTML = `${throwPad("commit", "none", waiting.label, preview)}
+        <p class="meta">Swipe to throw. The ${preview?.length ? "dice land" : "die lands"} on the TV.</p>`;
     } else if (pending && pending.playerId === seat.playerId) {
       controls.innerHTML = `<p class="meta">${esc(pending.prompt)}</p>
          <button type="button" class="primary" data-react="yes">${esc(pending.acceptLabel)}</button>

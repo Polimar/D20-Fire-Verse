@@ -14,6 +14,7 @@ import { scalePregenToLevel, type ArenaMapDef } from "./arena-maps.js";
 import {
   critNotation,
   makeDiceRoll,
+  parseNotation,
   rollAttack,
   rollCheck,
   rollD20,
@@ -145,6 +146,7 @@ export type CombatEvent = { seq: number; line: string } & (
       rolls: DiceRoll[];
       hits: StrikeHit[];
     }
+  | { kind: "dice"; tokenId: string; rolls: DiceRoll[] }
   | { kind: "heal"; tokenId: string; targetId: string; ability: string; amount: number; hp: number; rolls: DiceRoll[] }
   | { kind: "status"; tokenId: string; ability: string; rolls: DiceRoll[] }
   | { kind: "down"; tokenId: string }
@@ -212,6 +214,8 @@ function actionIdsFor(pregen: Pregen): string[] {
   return base;
 }
 
+export type DamageDiePreview = { sides: number; damageType: string };
+
 export type StrikeHold = {
   abilityId: string;
   targetId: string;
@@ -221,6 +225,7 @@ export type StrikeHold = {
   mode: D20Mode;
   crit: boolean;
   rolls: DiceRoll[];
+  preview: DamageDiePreview[];
 };
 
 export type CombatState = {
@@ -263,6 +268,8 @@ export type CombatState = {
   /** Initiative is still being thrown; the fight has not taken its first turn. */
   gathering?: boolean;
   strikeHold?: StrikeHold;
+  /** Physical damage dice waiting for the Damage swipe (no faces yet). */
+  damagePreview?: DamageDiePreview[];
   pvp?: "ffa" | "teams";
   pvpWinner?: string;
   pve?: boolean;
@@ -1013,6 +1020,48 @@ type AttackSpec = {
   fireOnHit?: string;
 };
 
+type DamagePart = { dice: string; damageType: string; ability?: string };
+
+function weaponNotation(part: DamagePart, pregen: Pregen | undefined): string {
+  if (part.ability && /^\d+d\d+$/i.test(part.dice)) {
+    const mod = abilityMod(pregen?.abilities[part.ability] ?? 10);
+    return `${part.dice}${mod >= 0 ? "+" : ""}${mod}`;
+  }
+  return part.dice;
+}
+
+function previewFromNotation(notation: string, damageType: string, crit: boolean): DamageDiePreview[] {
+  const p = parseNotation(notation);
+  if (!p) return [];
+  const count = crit ? p.count * 2 : p.count;
+  return Array.from({ length: count }, () => ({ sides: p.sides, damageType }));
+}
+
+function pushPartDamage(
+  rolls: DiceRoll[],
+  roller: string,
+  notation: string,
+  damageType: string,
+  label: string,
+  crit: boolean,
+): number {
+  const r = rollNotation(notation, { crit });
+  rolls.push(
+    makeDiceRoll({
+      roller,
+      notation: crit ? critNotation(notation) : notation,
+      values: r.values,
+      sides: r.sides,
+      modifier: r.modifier,
+      total: r.total,
+      purpose: "damage",
+      label,
+      damageType,
+    }),
+  );
+  return r.total;
+}
+
 function resolvedEffect(id: string): Record<string, unknown> | undefined {
   const ability = getAbility(id);
   const effect = ability?.effects[0];
@@ -1256,6 +1305,7 @@ function enemySaveCast(combat: CombatState, enemy: CombatToken, target: CombatTo
         total: r.total,
         purpose: "damage",
         label: `${part.damageType} damage`,
+        damageType: part.damageType,
       }),
     );
   }
@@ -1337,6 +1387,7 @@ function enemyStrike(combat: CombatState, enemy: CombatToken, target: CombatToke
           total: r.total,
           purpose: "damage",
           label: `${part.damageType} damage`,
+          damageType: part.damageType,
         }),
       );
     }
@@ -1354,6 +1405,7 @@ function enemyStrike(combat: CombatState, enemy: CombatToken, target: CombatToke
           total: r.total,
           purpose: "damage",
           label: "burning silk",
+          damageType: "fire",
         }),
       );
     }
@@ -1386,6 +1438,7 @@ function enemyStrike(combat: CombatState, enemy: CombatToken, target: CombatToke
             total: r.total,
             purpose: "damage",
             label: `${part.damageType} damage`,
+            damageType: part.damageType,
           }),
         );
       }
@@ -2037,6 +2090,7 @@ export function performPcAction(
       total: totalDmg,
       purpose: "damage",
       label: `${ability.name} · ${missiles} darts`,
+      damageType: dmgSpec.damageType ?? "force",
     });
     if (
       holdForShield(combat, t, target, {
@@ -2139,58 +2193,61 @@ export function performPcAction(
     return { rolls };
   }
   if (!resumed && gate?.phase === "d20" && landed) {
-    return {
-      rolls,
-      strike: { abilityId: castId, targetId: target.id, attackRoll, style, ranged, mode, crit, rolls },
-    };
-  }
-
-  let dmgTotal = 0;
-  const dmgValues: number[] = [];
-  const dmgSides: number[] = [];
-  let dmgMod = 0;
-  const dmgNotationParts: string[] = [];
-  const dmgParts = (atkEffect.damage as Array<{ dice: string; damageType: string; ability?: string }>) ?? [];
-  for (const part of dmgParts) {
-    let notation = part.dice;
-    if (part.ability && /^\d+d\d+$/i.test(part.dice)) {
-      const mod = abilityMod(pregen?.abilities[part.ability] ?? 10);
-      notation = `${part.dice}${mod >= 0 ? "+" : ""}${mod}`;
-    }
-    const r = rollNotation(notation, { crit });
-    dmgTotal += r.total;
-    dmgValues.push(...r.values);
-    dmgSides.push(...r.sides);
-    dmgMod += r.modifier;
-    dmgNotationParts.push(crit ? critNotation(notation) : notation);
-  }
-  const rogue = pregen?.traits?.includes("sneak_attack_2d6") || pregen?.class === "rogue";
-  const finesse = Boolean(atkEffect.sneakAttackEligible) || ranged;
-  if (rogue && finesse && !t.sneakUsed) {
+    const dmgParts = (atkEffect.damage as DamagePart[]) ?? [];
+    const weaponType = dmgParts[0]?.damageType ?? "slashing";
+    const rogue = pregen?.traits?.includes("sneak_attack_2d6") || pregen?.class === "rogue";
+    const finesse = Boolean(atkEffect.sneakAttackEligible) || ranged;
     const allyNear = combat.tokens.some(
       (a) => a.kind === "pc" && !a.dead && a.id !== t.id && chebyshev(a.x, a.y, target.x, target.y) <= 1,
     );
-    if ((mode === "advantage" || allyNear) && mode !== "disadvantage") {
-      const sneak = rollNotation("2d6", { crit });
-      t.sneakUsed = true;
-      dmgTotal += sneak.total;
-      dmgValues.push(...sneak.values);
-      dmgSides.push(...sneak.sides);
-      dmgNotationParts.push(`${crit ? "4d6" : "2d6"} sneak`);
+    const sneakOk = rogue && finesse && !t.sneakUsed && (mode === "advantage" || allyNear) && mode !== "disadvantage";
+    const preview: DamageDiePreview[] = [];
+    for (const part of dmgParts) {
+      preview.push(...previewFromNotation(weaponNotation(part, pregen), part.damageType, crit));
     }
+    if (sneakOk) preview.push(...previewFromNotation("2d6", weaponType, crit));
+    if (target.brand?.by === t.id) preview.push(...previewFromNotation(target.brand.dice, weaponType, crit));
+    combat.damagePreview = preview;
+    emit(combat, {
+      kind: "status",
+      tokenId: t.id,
+      ability: ability.name,
+      rolls: [attackRoll],
+      line: crit
+        ? `Natural 20! ${t.name}'s ${ability.name} vs ${target.name}. Roll damage.`
+        : `${t.name} hits ${target.name} with ${ability.name}: ${attackRoll.total} vs AC ${effectiveAc(target)}. Roll damage.`,
+    });
+    return {
+      rolls,
+      strike: { abilityId: castId, targetId: target.id, attackRoll, style, ranged, mode, crit, rolls, preview },
+    };
   }
-  rolls.push(
-    makeDiceRoll({
-      roller: t.name,
-      notation: dmgNotationParts.join(" + "),
-      values: dmgValues,
-      sides: dmgSides,
-      modifier: dmgMod,
-      total: dmgTotal,
-      purpose: "damage",
-      label: `${crit ? "Critical damage" : "Damage"} · ${ability.name}`,
-    }),
+
+  combat.damagePreview = undefined;
+  let dmgTotal = 0;
+  const dmgParts = (atkEffect.damage as DamagePart[]) ?? [];
+  const weaponType = dmgParts[0]?.damageType ?? "slashing";
+  const sneakMode = resumed?.mode ?? mode;
+  const rogue = pregen?.traits?.includes("sneak_attack_2d6") || pregen?.class === "rogue";
+  const finesse = Boolean(atkEffect.sneakAttackEligible) || ranged;
+  const allyNear = combat.tokens.some(
+    (a) => a.kind === "pc" && !a.dead && a.id !== t.id && chebyshev(a.x, a.y, target.x, target.y) <= 1,
   );
+  const sneakOk = rogue && finesse && !t.sneakUsed && (sneakMode === "advantage" || allyNear) && sneakMode !== "disadvantage";
+  for (const part of dmgParts) {
+    dmgTotal += pushPartDamage(
+      rolls,
+      t.name,
+      weaponNotation(part, pregen),
+      part.damageType,
+      `${part.damageType} damage`,
+      crit,
+    );
+  }
+  if (sneakOk) {
+    t.sneakUsed = true;
+    dmgTotal += pushPartDamage(rolls, t.name, "2d6", weaponType, "sneak attack", crit);
+  }
 
   const onHit = (atkEffect.onHit as Array<{ condition?: string }> | undefined) ?? [];
   if (onHit.some((h) => h.condition === "attack_advantage_next")) target.marked = true;
@@ -2204,30 +2261,16 @@ export function performPcAction(
     const { roll: saveRoll, ok } = creatureSave(target, save.ability, save.dc, false);
     rolls.push(saveRoll);
     if (!ok && save.damage?.length) {
-      const extra = rollNotation(save.damage[0].dice);
-      dmgTotal += extra.total;
-      rolls.push(
-        makeDiceRoll({
-          roller: t.name,
-          notation: save.damage[0].dice,
-          values: extra.values,
-          sides: extra.sides,
-          modifier: extra.modifier,
-          total: extra.total,
-          purpose: "damage",
-          label: save.damage[0].damageType,
-        }),
-      );
+      const extraPart = save.damage[0];
+      dmgTotal += pushPartDamage(rolls, t.name, extraPart.dice, extraPart.damageType, `${extraPart.damageType} damage`, false);
     }
   }
 
   if (target.brand?.by === t.id) {
-    const extra = rollNotation(target.brand.dice, { crit });
-    dmgTotal += extra.total;
-    dmgNotationParts.push(target.brand.dice);
+    dmgTotal += pushPartDamage(rolls, t.name, target.brand.dice, weaponType, "brand", crit);
   }
   if (t.raging && !ranged) dmgTotal += 2;
-  const dtype = dmgParts[0]?.damageType ?? "slashing";
+  const dtype = weaponType;
   if (
     !ranged &&
     t.playerId &&
@@ -2270,12 +2313,13 @@ export function performPcAction(
     return { rolls };
   }
   const hpAfter = Math.max(0, target.hp - dmgTotal);
+  const shown = resumed ? rolls.filter((r) => r.purpose !== "attack") : rolls;
   emit(combat, {
     kind: "strike",
     tokenId: t.id,
     ability: ability.name,
     style,
-    rolls,
+    rolls: shown,
     hits: [{ targetId: target.id, outcome: attackRoll.outcome!, damage: dmgTotal, hp: hpAfter }],
     line: crit
       ? `Natural 20! ${t.name}'s ${ability.name} tears into ${target.name} for ${dmgTotal}.`
@@ -2337,6 +2381,7 @@ function castSaveArea(
       total: rolled.total,
       purpose: "damage",
       label: `${name} · ${dmgSpec.damageType}`,
+      damageType: dmgSpec.damageType,
     }),
   ];
   const hits: StrikeHit[] = [];
@@ -2785,6 +2830,7 @@ function resolveSpellAttack(
           total: rolled.total,
           purpose: "damage",
           label: part.damageType,
+          damageType: part.damageType,
         }),
       );
     }
@@ -3015,6 +3061,7 @@ export function publicCombat(combat: CombatState, viewerPlayerId?: string) {
     log: combat.log.slice(-12),
     events: combat.events,
     status: combat.status,
+    damagePreview: combat.damagePreview ?? combat.strikeHold?.preview ?? [],
     awaiting: (combat.awaiting ?? []).map((a) => ({ id: a.id, playerId: a.playerId, label: a.label, step: a.step })),
     pendingReaction: combat.pending
       ? {

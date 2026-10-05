@@ -5,7 +5,7 @@
  */
 
 import type { Board } from "./board";
-import { isD20, rollD20 } from "./dice3d";
+import { isD20, rollD20, showDamagePreview, throwDamage } from "./dice3d";
 import { reducedMotion } from "./settings";
 import { panForColumn, sfx, type Sfx } from "./sfx";
 import type { CombatEvent, CombatPublic, DiceRoll, Token } from "./types";
@@ -49,6 +49,7 @@ export class Director {
   private tokens = new Map<string, Token>();
   private playerId: string | null = null;
   private idleWaiters: Array<() => void> = [];
+  private playedRolls = new Set<string>();
 
   constructor(board: Board, hooks: DirectorHooks) {
     this.board = board;
@@ -60,6 +61,7 @@ export class Director {
     this.queue = [];
     this.lastQueued = combat.seq;
     this.latest = combat;
+    this.playedRolls.clear();
     this.indexTokens(combat);
   }
 
@@ -159,10 +161,27 @@ export class Director {
       case "strike":
         await this.playStrike(e);
         return;
+      case "dice": {
+        this.hooks.onLine(e.line, e.kind);
+        const attackRoll = e.rolls.find((r) => isD20(r) && (r.purpose === "attack" || r.vs?.kind === "AC")) ?? e.rolls.find(isD20);
+        if (attackRoll) {
+          sfx("swing", { gain: 0.5, pan: this.pan(e.tokenId) });
+          const preview = this.latest?.damagePreview ?? [];
+          await rollD20(attackRoll, { fast: this.mine(e.tokenId), hold: preview.length > 0 });
+          this.playedRolls.add(attackRoll.id);
+          if (preview.length) await showDamagePreview(preview);
+        }
+        return;
+      }
       case "heal": {
         this.hooks.onLine(e.line, e.kind);
         const check = e.rolls.find(isD20);
-        if (check) await rollD20(check, { extra: e.rolls.filter((r) => r !== check), fast: true });
+        const extra = e.rolls.filter((r) => r !== check);
+        if (check) {
+          await rollD20(check, { fast: true, hold: extra.length > 0 });
+          this.playedRolls.add(check.id);
+        }
+        if (extra.length) await throwDamage(extra, { fast: true });
         sfx("heal", { pan: this.pan(e.targetId) });
         this.board.sparkle(e.targetId);
         this.board.float(e.targetId, `+${e.amount}`, "heal");
@@ -173,7 +192,12 @@ export class Director {
       case "status": {
         this.hooks.onLine(e.line, e.kind);
         const check = e.rolls.find(isD20);
-        if (check) await rollD20(check, { fast: this.mine(e.tokenId) });
+        const preview = this.latest?.damagePreview ?? [];
+        if (check) {
+          await rollD20(check, { fast: this.mine(e.tokenId), hold: preview.length > 0 });
+          this.playedRolls.add(check.id);
+        }
+        if (preview.length) await showDamagePreview(preview);
         const label = e.ability.replace(/^std_|^cunning_/, "").replace(/_/g, " ");
         if (label && !/wait|hiss/.test(e.line.toLowerCase())) this.board.float(e.tokenId, label.replace(/\b\w/g, (c) => c.toUpperCase()), "info");
         if (/bless|guid|spell|shield/i.test(e.ability)) {
@@ -210,18 +234,24 @@ export class Director {
     const self = this.board.pawnCell(e.tokenId);
     if (self) void this.board.focus([self, ...targets], 1, 380);
 
-    const attackRoll = e.rolls.find((r) => isD20(r) && (r.purpose === "attack" || r.vs?.kind === "AC"));
-    const saves = e.rolls.filter((r) => isD20(r) && r !== attackRoll);
-    const damage = e.rolls.filter((r) => !isD20(r));
+    const d20s = e.rolls.filter(isD20);
+    const attackRoll = d20s.find((r) => (r.purpose === "attack" || r.vs?.kind === "AC") && !this.playedRolls.has(r.id));
+    const saves = d20s.filter((r) => r.id !== attackRoll?.id && r.purpose !== "attack");
+    const damage = e.rolls.filter((r) => r.purpose === "damage" || r.purpose === "heal");
+    const landed = e.hits.some((h) => h.outcome === "hit" || h.outcome === "crit" || (h.outcome === "fail" && h.damage > 0) || (h.outcome === "success" && h.damage > 0));
     if (attackRoll) {
       sfx("swing", { gain: 0.5, pan: this.pan(e.tokenId) });
-      await rollD20(attackRoll, { extra: damage, fast: mine });
+      await rollD20(attackRoll, { fast: mine, hold: landed && damage.length > 0 });
+      this.playedRolls.add(attackRoll.id);
     } else if (saves.length) {
       sfx(strikeSound(e.ability, e.style), { pan: this.pan(e.tokenId) });
-      for (const [i, s] of saves.entries()) {
-        await rollD20(s, { extra: i === 0 ? damage : [], fast: true });
+      for (const s of saves) {
+        if (this.playedRolls.has(s.id)) continue;
+        await rollD20(s, { fast: true, hold: damage.length > 0 });
+        this.playedRolls.add(s.id);
       }
     }
+    if (damage.length && landed) await throwDamage(damage, { fast: mine });
 
     const sound = strikeSound(e.ability, e.style);
     const impact = () => {

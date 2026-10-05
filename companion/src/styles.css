@@ -200,6 +200,17 @@ body.roll-wait .throw.flash { box-shadow: 0 0 0 4px rgba(241, 196, 107, 0.45); }
 }
 .throw.thrown { opacity: 0.55; }
 .throw.thrown .die { animation: toss 0.5s ease-in forwards; }
+.die-row { display: flex; flex-wrap: wrap; gap: 0.35rem; flex: none; }
+.die.d4, .die.d6, .die.d8, .die.d10, .die.d12 {
+  width: 3.1rem;
+  height: 3.1rem;
+  font-size: 0.95rem;
+}
+.die.d6 { clip-path: none; border-radius: 0.45rem; }
+.die.d4 { clip-path: polygon(50% 6%, 94% 92%, 6% 92%); }
+.die.d8 { clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%); }
+.die.d10 { clip-path: polygon(50% 0, 90% 28%, 90% 72%, 50% 100%, 10% 72%, 10% 28%); }
+.die.d12 { clip-path: polygon(50% 0, 90% 20%, 100% 60%, 75% 100%, 25% 100%, 0 60%, 10% 20%); }
 @keyframes toss { to { transform: translateY(-14rem) rotate(260deg) scale(0.6); opacity: 0; } }
 .throw-result { font-variant-numeric: tabular-nums; }
 

@@ -1468,6 +1468,7 @@ export function commitHeld(room: Room, playerId: string): Room {
     combat.awaiting = (combat.awaiting ?? []).filter((a) => a.id !== mine.id);
     if (result.strike) {
       combat.strikeHold = result.strike;
+      combat.damagePreview = result.strike.preview;
       combat.awaiting = [
         ...(combat.awaiting ?? []),
         { id: `dmg-${playerId}-${combat.seq}`, playerId, label: "Damage", step: "damage" },
@@ -1479,6 +1480,7 @@ export function commitHeld(room: Room, playerId: string): Room {
   if (mine.step === "damage" && combat.strikeHold) {
     const strike = combat.strikeHold;
     combat.strikeHold = undefined;
+    combat.damagePreview = undefined;
     combat.awaiting = (combat.awaiting ?? []).filter((a) => a.id !== mine.id);
     performAttack(combat, playerId, strike.abilityId, strike.targetId, undefined, { phase: "damage", strike });
     afterCombatAction(room);

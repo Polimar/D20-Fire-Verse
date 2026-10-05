@@ -204,7 +204,69 @@ test("a natural 20 from the hero doubles the damage dice", () => {
   assert.ok(strike.kind === "strike");
   assert.equal(strike.hits[0].outcome, "crit");
   assert.deepEqual(strike.rolls[1].values, [4, 6]);
+  assert.equal(strike.rolls[1].damageType, "slashing");
   assert.equal(strike.hits[0].damage, 4 + 6 + 3);
+});
+
+test("a held attack shows damage dice after the d20, then the damage swipe resolves them", () => {
+  const c = arena(3, 1, [brenna(0, 0), rat("en-1", 1, 0, { hp: 30, maxHp: 30 })]);
+  const toHit = scriptDice([[20, 14]]);
+  let hold: ReturnType<typeof performPcAction> | undefined;
+  try {
+    hold = performPcAction(c, "P1", "longsword_attack", "en-1", undefined, { phase: "d20" });
+  } finally {
+    toHit();
+  }
+  assert.ok(hold?.strike);
+  assert.equal(c.events.at(-1)?.kind, "status");
+  assert.deepEqual(c.damagePreview, [{ sides: 8, damageType: "slashing" }]);
+  assert.equal(c.tokens[1]!.hp, 30);
+  const dmg = scriptDice([[8, 5]]);
+  try {
+    performPcAction(c, "P1", "longsword_attack", "en-1", undefined, { phase: "damage", strike: hold!.strike! });
+  } finally {
+    dmg();
+  }
+  const strike = c.events.at(-1)!;
+  assert.ok(strike.kind === "strike");
+  assert.equal(strike.rolls.filter((r) => r.purpose === "damage").length, 1);
+  assert.equal(strike.hits[0]!.damage, 5 + 3);
+  assert.equal(c.damagePreview, undefined);
+});
+
+test("a mixed-damage bite records a roll per damage type", () => {
+  const c = arena(3, 1, [
+    brenna(0, 0),
+    token({
+      id: "en-1",
+      kind: "enemy",
+      name: "Magma Rat",
+      x: 1,
+      y: 0,
+      hp: 32,
+      maxHp: 32,
+      ac: 14,
+      monsterId: "magma_rat",
+      actionIds: ["magma_rat_bite"],
+    }),
+  ]);
+  const restore = scriptDice([
+    [20, 15],
+    [6, 4],
+    [8, 5],
+  ]);
+  try {
+    endTurn(c, "P1");
+  } finally {
+    restore();
+  }
+  const strike = c.events.find((e) => e.kind === "strike");
+  assert.ok(strike && strike.kind === "strike");
+  const parts = strike.rolls.filter((r) => r.purpose === "damage");
+  assert.equal(parts.length, 2);
+  assert.equal(parts[0]!.damageType, "piercing");
+  assert.equal(parts[1]!.damageType, "fire");
+  assert.equal(strike.hits[0]!.damage, 6 + 5);
 });
 
 test("the last foe falling ends the fight with victory events", () => {

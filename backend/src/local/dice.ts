@@ -21,6 +21,8 @@ export type DiceRoll = {
   total: number;
   purpose: DicePurpose;
   label?: string;
+  /** SRD damage type when `purpose` is damage (slashing, fire, …). */
+  damageType?: string;
   isCrit?: boolean;
   isFumble?: boolean;
   /** What the total was measured against, so the table can say "18 vs AC 12". */
@@ -96,6 +98,7 @@ export function makeDiceRoll(opts: {
   total?: number;
   purpose: DicePurpose;
   label?: string;
+  damageType?: string;
   isCrit?: boolean;
   isFumble?: boolean;
   vs?: DiceRoll["vs"];
@@ -120,6 +123,7 @@ export function makeDiceRoll(opts: {
     total: opts.total ?? sumFaces + modifier,
     purpose: opts.purpose,
     label: opts.label,
+    damageType: opts.damageType,
     isCrit: opts.isCrit,
     isFumble: opts.isFumble,
     vs: opts.vs,
