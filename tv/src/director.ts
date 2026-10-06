@@ -5,7 +5,7 @@
  */
 
 import type { Board } from "./board";
-import { isD20, rollD20, showDamagePreview, throwDamage } from "./dice3d";
+import { isD20, rollD20, showDamagePreview, throwDamage } from "./dice";
 import { reducedMotion } from "./settings";
 import { panForColumn, sfx, type Sfx } from "./sfx";
 import type { CombatEvent, CombatPublic, DiceRoll, Token } from "./types";

@@ -28,11 +28,12 @@ import {
   Vector3,
   WebGLRenderer,
 } from "three";
+import { describeRoll, escapeHtml, keptFace } from "./dice-copy";
 import { reducedMotion } from "./settings";
 import { sfx } from "./sfx";
 import type { DiceRoll } from "./types";
 
-type Face = { number: number; normal: Vector3; up: Vector3 };
+export type Face = { number: number; normal: Vector3; up: Vector3 };
 
 type Stage = {
   renderer: WebGLRenderer;
@@ -168,6 +169,25 @@ function buildDie(): { geometry: IcosahedronGeometry; faces: Face[] } {
   }
   geometry.setAttribute("uv", new BufferAttribute(uv, 2));
   return { geometry, faces };
+}
+
+/** The table's resin d20 at radius 1. The Fire TV films are rendered from this same die. */
+export function makeD20(): { die: Group; body: Mesh; material: MeshPhysicalMaterial; faces: Face[] } {
+  const { geometry, faces } = buildDie();
+  const material = new MeshPhysicalMaterial({
+    map: faceAtlas(),
+    roughness: 0.32,
+    metalness: 0.05,
+    clearcoat: 0.8,
+    clearcoatRoughness: 0.18,
+    emissive: new Color(0x000000),
+    flatShading: true,
+  });
+  const body = new Mesh(geometry, material);
+  const edges = new LineSegments(new EdgesGeometry(geometry), new LineBasicMaterial({ color: 0xe6b36a, transparent: true, opacity: 0.55 }));
+  const die = new Group();
+  die.add(body, edges);
+  return { die, body, material, faces };
 }
 
 /** The orientation that shows `face` to the camera, number upright. */
@@ -472,7 +492,7 @@ function kitFromRings(rings: Vector3[][], key: number): Kit {
     ctx.fill();
     const label = key === 10 && num === 10 ? "0" : String(num);
     const fontPx = ir * (label.length > 1 ? 1.0 : 1.3);
-    ctx.font = `700 ${fontPx}px Georgia, serif`;
+    ctx.font = `700 ${fontPx}px Cinzel, Georgia, serif`;
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     ctx.lineWidth = Math.max(3, fontPx * 0.07);
@@ -524,6 +544,27 @@ function kitFor(sides: number): Kit {
   const kit = kitFromRings(rings, key);
   kits.set(key, kit);
   return kit;
+}
+
+/** The table's resin die for 4, 6, 8, 10, 12 or 20 faces. The Fire TV films are rendered from this. */
+export function makeDie(sides: number): { die: Group; body: Mesh; material: MeshPhysicalMaterial; faces: Face[] } {
+  const key = sides <= 4 ? 4 : sides <= 6 ? 6 : sides <= 8 ? 8 : sides <= 10 ? 10 : sides <= 12 ? 12 : 20;
+  if (key === 20) return makeD20();
+  const kit = kitFor(key);
+  const material = new MeshPhysicalMaterial({
+    map: kit.atlas,
+    roughness: 0.32,
+    metalness: 0.05,
+    clearcoat: 0.8,
+    clearcoatRoughness: 0.18,
+    emissive: new Color(0x000000),
+    flatShading: true,
+  });
+  const body = new Mesh(kit.geometry, material);
+  const edges = new LineSegments(new EdgesGeometry(kit.geometry), new LineBasicMaterial({ color: 0xe6b36a, transparent: true, opacity: 0.55 }));
+  const die = new Group();
+  die.add(body, edges);
+  return { die, body, material, faces: kit.faces };
 }
 
 function stopIdle() {
@@ -793,20 +834,7 @@ function ensureStage(): Stage | null {
     glow.position.set(0, 0, 3);
     scene.add(glow);
 
-    const { geometry, faces } = buildDie();
-    const material = new MeshPhysicalMaterial({
-      map: faceAtlas(),
-      roughness: 0.32,
-      metalness: 0.05,
-      clearcoat: 0.8,
-      clearcoatRoughness: 0.18,
-      emissive: new Color(0x000000),
-      flatShading: true,
-    });
-    const body = new Mesh(geometry, material);
-    const edges = new LineSegments(new EdgesGeometry(geometry), new LineBasicMaterial({ color: 0xe6b36a, transparent: true, opacity: 0.55 }));
-    const die = new Group();
-    die.add(body, edges);
+    const { die, body, material, faces } = makeD20();
     die.scale.setScalar(0.72);
     scene.add(die);
 
@@ -840,52 +868,6 @@ function animate(duration: number, step: (t: number) => void): Promise<void> {
     cancelAnimationFrame(raf);
     raf = requestAnimationFrame(frame);
   });
-}
-
-function keptFace(roll: DiceRoll): number {
-  if (roll.kept != null && roll.values[roll.kept] != null) return roll.values[roll.kept]!;
-  return roll.values[0] ?? 1;
-}
-
-function outcomeWord(roll: DiceRoll): string {
-  if (roll.purpose === "save") {
-    if (roll.outcome === "success") return "SAVED";
-    if (roll.outcome === "fail") return "FAILED";
-  }
-  switch (roll.outcome) {
-    case "crit":
-      return "CRITICAL HIT";
-    case "fumble":
-      return "FUMBLE";
-    case "hit":
-      return "HIT";
-    case "miss":
-      return "MISS";
-    case "success":
-      return "SUCCESS";
-    case "fail":
-      return "FAIL";
-    default:
-      return "";
-  }
-}
-
-function escapeHtml(s: string): string {
-  return s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]!);
-}
-
-export function describeRoll(roll: DiceRoll): { headline: string; detail: string } {
-  const natural = keptFace(roll);
-  const mod = roll.modifier ? `${roll.modifier > 0 ? "+" : "−"} ${Math.abs(roll.modifier)}` : "";
-  const vs = roll.vs ? ` vs ${roll.vs.kind} ${roll.vs.value}` : "";
-  const word = outcomeWord(roll);
-  const headline = `${roll.total}${vs}${word ? ` — ${word}` : ""}`;
-  const pair =
-    roll.values.length === 2 && roll.sides.every((s) => s === 20)
-      ? ` · rolled ${roll.values.join(" and ")}, kept ${natural}`
-      : "";
-  const detail = `d20 ${natural}${mod ? ` ${mod}` : ""}${pair}`;
-  return { headline, detail };
 }
 
 function showBanner(roll: DiceRoll, extra: DiceRoll[], tone: string) {
@@ -1007,10 +989,6 @@ export function rollD20(roll: DiceRoll, opts: { extra?: DiceRoll[]; fast?: boole
   const next = chain.then(() => play(roll, opts.extra ?? [], !!opts.fast, !!opts.hold));
   chain = next.catch(() => undefined);
   return next;
-}
-
-export function isD20(roll: DiceRoll | null | undefined): roll is DiceRoll {
-  return !!roll && roll.sides?.length > 0 && roll.sides.every((s) => s === 20) && roll.values.length <= 2;
 }
 
 /** Load three.js' shader programs before the first roll so the first throw never stutters. */

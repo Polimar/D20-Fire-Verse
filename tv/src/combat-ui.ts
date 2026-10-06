@@ -7,7 +7,8 @@ import { Application } from "pixi.js";
 import { Board, type Overlay } from "./board";
 import { Director } from "./director";
 import { cropStyle, DUNGEON_ROOMS, roomForNode } from "./dungeon-map";
-import { warmDice } from "./dice3d";
+import { warmDice } from "./dice";
+import { onFireTv } from "./native";
 import { focusables, moveFocus, type RemoteKey } from "./nav";
 import { coach, hideCoach } from "./onboarding";
 import { renderPcSheet, SHEET_TABS, type SheetTab } from "./pc-sheet";
@@ -165,8 +166,8 @@ export class CombatUi {
         await app.init({
           backgroundAlpha: 0,
           resizeTo: this.el.board,
-          antialias: true,
-          resolution: Math.min(window.devicePixelRatio, 1.5),
+          antialias: !onFireTv(),
+          resolution: onFireTv() ? 1 : Math.min(window.devicePixelRatio, 1.5),
           autoDensity: true,
         });
         this.el.board.appendChild(app.canvas);

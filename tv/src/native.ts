@@ -24,6 +24,12 @@ export function nativeApp(): AppBridge | null {
   return (window as unknown as { FireVerseApp?: AppBridge }).FireVerseApp ?? null;
 }
 
+/** The Fire TV shell appends this token to the WebView user agent. */
+export function onFireTv(): boolean {
+  if (typeof navigator !== "undefined" && /FireVerseTV\//.test(navigator.userAgent)) return true;
+  return nativeApp() !== null;
+}
+
 let amazonListener: { token(t: string): void; error(code: string): void } = {
   token: () => undefined,
   error: () => undefined,

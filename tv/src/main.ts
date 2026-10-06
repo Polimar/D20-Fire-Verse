@@ -8,7 +8,7 @@ import { normalizeScene, sceneLabel, unlockAudio, type RoomScene } from "./audio
 import { mountChargen, type ChargenCatalog } from "./chargen-ui";
 import { CombatUi } from "./combat-ui";
 import { ARENA_FORMATS, ARENA_THEMES, suggestedSize, type OpenArena } from "./arena-ui";
-import { isD20, rollD20 } from "./dice3d";
+import { isD20, rollD20 } from "./dice";
 import { DUNGEON_ROOMS, roomForNode, type DungeonRoomId } from "./dungeon-map";
 import { onMusicChange, setMusic, toggleMusic, type MusicTrack } from "./music";
 import { nativeAmazonReady, nativeAmazonSignIn, nativeAmazonSignOut, nativeApp, registerNativeBack } from "./native";
@@ -1586,7 +1586,13 @@ window.addEventListener("keydown", (e) => {
     target instanceof HTMLTextAreaElement ||
     target instanceof HTMLSelectElement ||
     target.isContentEditable;
-  if (typing && e.key !== "Escape") return;
+  if (typing && e.key !== "Escape") {
+    if (key === "up" || key === "down") {
+      e.preventDefault();
+      moveFocus(key);
+    }
+    return;
+  }
   if (!key) {
     if (!typing && (e.key === "m" || e.key === "M")) toggleMusic();
     if (!typing && page === "story" && /^[1-9]$/.test(e.key)) {

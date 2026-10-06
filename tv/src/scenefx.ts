@@ -1,5 +1,6 @@
 /** Living scenes: slow camera drift over the painted art, air that moves, and chapter cards between acts. */
 
+import { onFireTv } from "./native";
 import { reducedMotion } from "./settings";
 import { sfx } from "./sfx";
 
@@ -31,7 +32,7 @@ export function mountScenes(host: HTMLElement) {
   ctx2d = canvas.getContext("2d");
   const resize = () => {
     if (!canvas) return;
-    const scale = Math.min(window.devicePixelRatio, 1.25);
+    const scale = onFireTv() ? 1 : Math.min(window.devicePixelRatio, 1.25);
     canvas.width = Math.floor(window.innerWidth * scale);
     canvas.height = Math.floor(window.innerHeight * scale);
   };

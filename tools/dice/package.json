@@ -1,0 +1,13 @@
+{
+  "name": "d20-fireverse-dice-films",
+  "private": true,
+  "type": "module",
+  "description": "Renders the Fire TV dice films with the table's own three.js dice in headless Chromium.",
+  "scripts": {
+    "render": "node render.mjs"
+  },
+  "devDependencies": {
+    "cannon-es": "^0.20.0",
+    "playwright-core": "1.49.1"
+  }
+}

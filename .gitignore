@@ -47,5 +47,8 @@ backend/data/
 __pycache__/
 *.pyc
 
+# Dice film scratch renders. Published films live in tv/public/dice/.
+tools/dice/out/
+
 # Arena occupancy masks used only as image-gen references
 tv/public/art/arena/_mask-*.png
