@@ -500,6 +500,7 @@ export function startCombat(
   wounds?: Record<string, number>,
   carry?: Record<string, Vitals>,
   holdPcIds: string[] = [],
+  opts?: { surpriseEnemy?: boolean; extraInventory?: string[] },
 ): CombatState {
   const encounter = getEncounter(encounterId);
   if (!encounter) throw new Error("BAD_ENCOUNTER");
@@ -560,7 +561,9 @@ export function startCombat(
       enemySpot += 1;
       enemySeq += 1;
       const hp = group.hpOverride ?? mon.hp;
-      const initRoll = rollD20() + abilityMod(mon.abilities.dex ?? 10);
+      const initRoll = opts?.surpriseEnemy
+        ? 999
+        : rollD20() + abilityMod(mon.abilities.dex ?? 10);
       tokens.push({
         id: `en-${enemySeq}`,
         kind: "enemy",
@@ -587,6 +590,15 @@ export function startCombat(
         reactionReady: true,
       });
       stampMonster(tokens[tokens.length - 1]!, mon);
+    }
+  }
+
+  if (opts?.extraInventory?.length) {
+    const hero = tokens.find((t) => t.kind === "pc");
+    if (hero?.characterId) {
+      hero.inventory = [...(hero.inventory ?? []), ...opts.extraInventory];
+      const pregen = getPregen(hero.characterId);
+      if (pregen) refreshMenus(hero, pregen, getAbility);
     }
   }
 

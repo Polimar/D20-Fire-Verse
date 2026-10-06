@@ -109,6 +109,8 @@ export type Room = {
   vitals?: Record<string, Vitals>;
   /** State at the moment a fight began, restored if the party retries. */
   combatSnapshot?: { wounds?: Record<string, number>; vitals?: Record<string, Vitals> };
+  /** Extra potions (and like) that survive from fight to fight. */
+  lootInventory?: string[];
   combat?: CombatState;
   /** Adventuring-day rest budget: 2 points. A short rest costs 1, a long rest costs 2. */
   restBudget?: number;
@@ -507,7 +509,7 @@ function placeParty(room: Room): void {
   });
 }
 
-function partyArrowSaves(room: Room): { line: string; rolls: DiceRoll[] } {
+function partyArrowSaves(room: Room): { line: string; spoken: string; rolls: DiceRoll[] } {
   if (!room.wounds) room.wounds = {};
   const rolls: DiceRoll[] = [];
   const bits: string[] = [];
@@ -528,16 +530,22 @@ function partyArrowSaves(room: Room): { line: string; rolls: DiceRoll[] } {
       bits.push(`${p.characterName} takes ${dmg.total} piercing`);
     }
   }
-  return { line: `Arrows spit from slits in the stone. ${bits.join("; ")}.`, rolls };
+  return {
+    line: `Arrows spit from slits in the stone. ${bits.join("; ")}.`,
+    spoken: ARROWS_VOICE,
+    rolls,
+  };
 }
 
 function routeTravel(
   room: Room,
   fromId: string,
   nextId: string,
-): { id: string; prefix?: string; fx?: "arrows"; diceQueue?: DiceRoll[] } {
+): { id: string; prefix?: string; prefixSpoken?: string; fx?: "arrows"; diceQueue?: DiceRoll[] } {
+  if (nextId === "enter_lab") nextId = "enter_lab_threshold";
   if (nextId === "epilogue") nextId = payEpilogue(room);
   let prefix: string | undefined;
+  let prefixSpoken: string | undefined;
   let fx: "arrows" | undefined;
   let diceQueue: DiceRoll[] | undefined;
   const shoot =
@@ -547,18 +555,19 @@ function routeTravel(
     if (WING_ENTER.has(nextId)) dropFlag(room, "mosaic_spotted");
     const shot = partyArrowSaves(room);
     prefix = shot.line;
+    prefixSpoken = shot.spoken;
     fx = "arrows";
     diceQueue = shot.rolls;
   }
   if (nextId === "corridor_hub") {
     const hole = maybeHoleAmbush(room);
-    if (hole) return { id: hole, prefix, fx, diceQueue };
+    if (hole) return { id: hole, prefix, prefixSpoken, fx, diceQueue };
     if (!hasFlag(room, "tiles_done") && fromId !== "corridor_scan") {
       dropFlag(room, "mosaic_spotted");
-      return { id: "corridor_scan", prefix, fx, diceQueue };
+      return { id: "corridor_scan", prefix, prefixSpoken, fx, diceQueue };
     }
   }
-  return { id: nextId, prefix, fx, diceQueue };
+  return { id: nextId, prefix, prefixSpoken, fx, diceQueue };
 }
 
 function goTo(room: Room, nextId: string): void {
@@ -614,7 +623,8 @@ function goTo(room: Room, nextId: string): void {
   } else {
     applyNodeNarration(room);
   }
-  if (travel.prefix) prefixNarration(room, travel.prefix);
+  if (nextId === "spider_spotted") dropFlag(room, "spider_surprise");
+  if (travel.prefix) prefixNarration(room, travel.prefix, travel.prefixSpoken ?? travel.prefix);
   placeParty(room);
   touch(room);
   autosave(room);
@@ -890,9 +900,18 @@ function maybeHoleAmbush(room: Room): string | null {
   return null;
 }
 
+/** Display may include the puzzle poem; spoken feedback must not re-voice that blob. */
 function puzzleText(node: StoryNode, tail: string): string {
   return [node.narration?.text ?? "", tail].filter(Boolean).join("\n\n").trim();
 }
+
+/** Warmable narrator lines — names and dice stay on screen so Kokoro never falls to the browser voice. */
+export const ARROWS_VOICE =
+  "Arrows spit from slits in the stone. Heroes twist aside or take the hits.";
+const TRAP_HIT_VOICE = "A hero twists aside or takes the hit.";
+const PUZZLE_RESET_VOICE = "The mechanism resets. You can try again.";
+const WRONG_PUZZLE_VOICE = "Wrong. The mechanism grinds and resets.";
+const WRONG_PUZZLE_WARN_VOICE = "Wrong. The mechanism grinds and resets. One more mistake and it will bite.";
 
 function ensurePuzzleCoop(room: Room): PuzzleCoop {
   if (!room.puzzleCoop) room.puzzleCoop = emptyPuzzleCoop();
@@ -1007,7 +1026,7 @@ function resolvePuzzle(room: Room, node: StoryNode, optionId: string): Room {
       return finishPuzzleSuccess(room, node);
     }
     const line = `The tile sinks with a soft click. ${progress.length} of ${puzzle.solution.length}.`;
-    narrate(room, puzzleText(node, line), line);
+    narrate(room, puzzleText(node, line), "The tile sinks with a soft click.");
     armPuzzleIdle(room);
     touch(room);
     return room;
@@ -1052,7 +1071,8 @@ function notePuzzleMiss(room: Room, node: StoryNode, sequence?: string[]): Room 
   const warn = room.puzzleFails === maxFails - 1 ? " One more mistake and it will bite." : "";
   const line = `Wrong. The mechanism grinds and resets.${detail}${warn}${puzzle.nudge ? ` ${puzzle.nudge}` : ""}`;
   room.puzzleFeedback = line;
-  narrate(room, puzzleText(node, line), line);
+  const spoken = `${room.puzzleFails === maxFails - 1 ? WRONG_PUZZLE_WARN_VOICE : WRONG_PUZZLE_VOICE}${puzzle.nudge ? ` ${puzzle.nudge}` : ""}`;
+  narrate(room, puzzleText(node, line), spoken);
   touch(room);
   return room;
 }
@@ -1062,31 +1082,35 @@ function failPuzzle(room: Room, node: StoryNode, detail = ""): Room {
   const note = applyPenalty(room, branch?.effects);
   const base = branch?.narration?.text ?? "The mechanism lashes out, then falls quiet.";
   // Combat branch (well swarm) still leaves the puzzle; seals are never gifted on failure.
-  const leaves =
-    branch?.next &&
-    branch.next !== node.id &&
-    !branch.flagsSet?.some((f) => f.startsWith("seal_")) &&
-    getNode(branch.next)?.type === "encounter";
+  const nextFight = branch?.next;
+  const leaves = Boolean(
+    nextFight &&
+      nextFight !== node.id &&
+      !branch?.flagsSet?.some((f) => f.startsWith("seal_")) &&
+      getNode(nextFight)?.type === "encounter",
+  );
 
-  if (!leaves) {
+  if (!leaves || !nextFight) {
     room.puzzleProgress = [];
     room.puzzleFails = 0;
     ensurePuzzleCoop(room).draft = [];
-    room.puzzleFeedback = `${base}${detail}${note} The mechanism resets. You can try again.`;
-    narrate(room, puzzleText(node, room.puzzleFeedback), room.puzzleFeedback);
+    room.puzzleFeedback = `${base}${detail}${note.display} ${PUZZLE_RESET_VOICE}`;
+    const spoken = `${base} ${note.spoken} ${PUZZLE_RESET_VOICE}`.replace(/\s+/g, " ").trim();
+    narrate(room, puzzleText(node, room.puzzleFeedback), spoken);
     touch(room);
     return room;
   }
   const dice = room.lastDice;
-  goTo(room, branch!.next);
+  goTo(room, nextFight);
   room.lastDice = dice;
-  prefixNarration(room, `${base}${detail}${note}`);
+  prefixNarration(room, `${base}${detail}${note.display}`, `${base} ${note.spoken}`.replace(/\s+/g, " ").trim());
   return room;
 }
 
-function applyPenalty(room: Room, effects: unknown[] | undefined): string {
-  if (!effects?.length) return "";
-  const notes: string[] = [];
+function applyPenalty(room: Room, effects: unknown[] | undefined): { display: string; spoken: string } {
+  if (!effects?.length) return { display: "", spoken: "" };
+  const display: string[] = [];
+  const spoken: string[] = [];
   for (const raw of effects) {
     const effect = raw as {
       type?: string;
@@ -1100,7 +1124,8 @@ function applyPenalty(room: Room, effects: unknown[] | undefined): string {
       room.fx = "arrows";
       room.diceQueue = shot.rolls;
       room.lastDice = shot.rolls[shot.rolls.length - 1];
-      notes.push(` ${shot.line}`);
+      display.push(` ${shot.line}`);
+      spoken.push(shot.spoken);
       continue;
     }
     if (effect.type !== "saving_throw" || !effect.damage?.dice) continue;
@@ -1115,13 +1140,14 @@ function applyPenalty(room: Room, effects: unknown[] | undefined): string {
     const dmg = rollNotation(effect.damage.dice);
     const taken = save.outcome === "success" ? Math.floor(dmg.total / 2) : dmg.total;
     room.lastDice = save;
-    notes.push(
+    display.push(
       save.outcome === "success"
         ? ` ${victim?.name ?? "You"} twists aside and takes only ${taken} ${effect.damage.type}.`
         : ` ${victim?.name ?? "You"} takes ${taken} ${effect.damage.type}.`,
     );
+    spoken.push(TRAP_HIT_VOICE);
   }
-  return notes.join("");
+  return { display: display.join(""), spoken: spoken.join(" ") };
 }
 
 function finishPuzzleSuccess(room: Room, node: StoryNode): Room {
@@ -1134,9 +1160,9 @@ function finishPuzzleSuccess(room: Room, node: StoryNode): Room {
   return room;
 }
 
-function prefixNarration(room: Room, line: string): void {
+function prefixNarration(room: Room, line: string, spokenLine = line): void {
   const display = `${line}\n\n${room.lastNarration ?? ""}`.trim();
-  const spoken = `${line}\n\n${room.voiceText ?? ""}`.trim();
+  const spoken = `${spokenLine}\n\n${room.voiceText ?? ""}`.trim();
   narrate(room, display, spoken);
   persist(room);
 }
@@ -1242,6 +1268,7 @@ function resolveSkillCheck(
       }
     }
   }
+  if (!branch.next) throw new Error("NO_BRANCH");
   goTo(room, branch.next);
   room.lastDice = roll;
   if (line) prefixNarration(room, line);
@@ -1275,11 +1302,11 @@ export function mapMove(roomCode: string, playerId: string, x: number, y: number
 }
 
 const RETREAT: Record<string, string> = {
-  fight_well_centipedes: "well_lock",
+  fight_well_centipedes: "well_enter",
   fight_cellar_rats: "cellar_enter",
   hole_rats: "corridor_hub",
   hole_centipedes: "corridor_hub",
-  fight_spider: "enter_lab",
+  fight_spider: "enter_lab_threshold",
   fight_magma: "cliffhanger_magma",
 };
 
@@ -1302,7 +1329,12 @@ export function beginCombat(roomCode: string): Room {
   if (room.combat?.status === "active") throw new Error("COMBAT_ACTIVE");
   if (room.players.length < 1) throw new Error("NEED_PLAYER");
   const hold = room.players.map((p) => p.playerId).filter((id) => phoneHolds(id));
-  room.combat = startCombat(node.encounterId, room.players, room.wounds, room.vitals, hold);
+  const surprise = node.encounterId === "lab_infernal_spider" && hasFlag(room, "spider_surprise");
+  room.combat = startCombat(node.encounterId, room.players, room.wounds, room.vitals, hold, {
+    surpriseEnemy: surprise,
+    extraInventory: room.lootInventory,
+  });
+  if (surprise) dropFlag(room, "spider_surprise");
   touch(room);
   autosave(room);
   return room;
@@ -1322,7 +1354,9 @@ export function retryCombat(roomCode: string): Room {
   room.combat = undefined;
   if (!node.encounterId) throw new Error("NO_COMBAT");
   const hold = room.players.map((p) => p.playerId).filter((id) => phoneHolds(id));
-  room.combat = startCombat(node.encounterId, room.players, room.wounds, room.vitals, hold);
+  room.combat = startCombat(node.encounterId, room.players, room.wounds, room.vitals, hold, {
+    extraInventory: room.lootInventory,
+  });
   narrate(room, "Breath returns. Steel is lifted again. The fight begins anew.");
   touch(room);
   autosave(room);
@@ -1761,14 +1795,30 @@ function finishCombat(room: Room): void {
     room.wounds[token.playerId] = token.dead ? token.maxHp : Math.max(0, token.maxHp - token.hp);
     room.vitals[token.playerId] = exportVitals(token);
   }
+  room.lootInventory = leftoverLoot(combat);
   const node = getNode(room.nodeId);
-  if (node?.encounterId === "lab_infernal_spider") setFlags(room, ["spider_dead"]);
+  if (node?.encounterId === "lab_infernal_spider") {
+    setFlags(room, ["spider_dead", "lab_phial"]);
+    room.lootInventory = [...(room.lootInventory ?? []), "potion_healing"];
+  }
   if (node?.encounterId === "corridor_magma_rat") setFlags(room, ["magma_done"]);
   const encounter = node?.encounterId ? getEncounter(node.encounterId) : undefined;
   const next = node?.onVictory || "END_WIN";
   room.restOffer = (room.restBudget ?? 2) > 0;
   goTo(room, next);
   room.outro = { combat, text: encounter?.outro ?? "The last foe falls. Silence settles over the stones." };
+}
+
+function leftoverLoot(combat: CombatState): string[] {
+  const extras: string[] = [];
+  for (const token of combat.tokens) {
+    if (token.kind !== "pc" || !token.characterId) continue;
+    const pregen = getPregen(token.characterId);
+    const baseline = (pregen?.inventory ?? []).filter((id) => id === "potion_healing").length;
+    const have = (token.inventory ?? []).filter((id) => id === "potion_healing").length;
+    for (let i = 0; i < have - baseline; i += 1) extras.push("potion_healing");
+  }
+  return extras;
 }
 
 function bestPlayer(room: Room, ability: string, skill?: string): { player: Player; name: string; mod: number } | null {
@@ -1803,6 +1853,7 @@ export function loadPersistedRooms(): void {
     if (!name.startsWith("room-") || !name.endsWith(".json")) continue;
     try {
       const room = JSON.parse(fs.readFileSync(path.join(DATA_DIR, name), "utf8")) as Room;
+      if (room.nodeId === "enter_lab") room.nodeId = "enter_lab_threshold";
       if (room.combat) hydrateCombat(room.combat);
       room.outro = undefined;
       rooms.set(room.roomCode, room);
@@ -1982,11 +2033,27 @@ export function scriptedLines(): string[] {
     if (node.narration?.text) {
       lines.push(node.type === "puzzle" && node.puzzle?.hint ? puzzleText(node, "") : node.narration.text);
     }
+    if (node.type === "puzzle") {
+      lines.push(WRONG_PUZZLE_VOICE, WRONG_PUZZLE_WARN_VOICE);
+      if (node.puzzle?.nudge) {
+        lines.push(`${WRONG_PUZZLE_VOICE} ${node.puzzle.nudge}`);
+        lines.push(`${WRONG_PUZZLE_WARN_VOICE} ${node.puzzle.nudge}`);
+      }
+      if (node.onFailure?.narration?.text) {
+        lines.push(`${node.onFailure.narration.text} ${ARROWS_VOICE} ${PUZZLE_RESET_VOICE}`);
+        lines.push(`${node.onFailure.narration.text} ${TRAP_HIT_VOICE} ${PUZZLE_RESET_VOICE}`);
+      }
+    }
     if (node.encounterId) {
       const e = getEncounter(node.encounterId);
       if (e?.intro) lines.push(e.intro);
       if (e?.outro) lines.push(e.outro);
     }
+  }
+  lines.push(ARROWS_VOICE, TRAP_HIT_VOICE, PUZZLE_RESET_VOICE, "The tile sinks with a soft click.");
+  for (const id of ["cellar_enter", "well_enter", "store_enter"]) {
+    const wing = getNode(id);
+    if (wing?.narration?.text) lines.push(`${ARROWS_VOICE}\n\n${wing.narration.text}`);
   }
   return lines;
 }

@@ -85,6 +85,8 @@
     "corridor_hub",
     "cellar | well | store (free order)",
     "lab_vault",
+    "enter_lab_threshold",
+    "enter_lab_look (Perception DC 14)",
     "fight_spider",
     "cliffhanger_magma",
     "epilogue"

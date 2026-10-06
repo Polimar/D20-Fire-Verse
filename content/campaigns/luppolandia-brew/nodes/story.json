@@ -393,6 +393,11 @@
         "id": "fight",
         "label": "Draw steel — clear the pack",
         "next": "fight_cellar_rats"
+      },
+      {
+        "id": "leave",
+        "label": "Leave — back to the mosaic corridor",
+        "next": "corridor_hub"
       }
     ]
   },
@@ -480,6 +485,11 @@
         "id": "lock",
         "label": "Work the pulley lock (Console marks)",
         "next": "well_lock"
+      },
+      {
+        "id": "leave",
+        "label": "Leave — back to the mosaic corridor",
+        "next": "corridor_hub"
       }
     ]
   },
@@ -578,6 +588,11 @@
         "id": "vials",
         "label": "Solve the four vials (Phase A)",
         "next": "store_vials"
+      },
+      {
+        "id": "leave",
+        "label": "Leave — back to the mosaic corridor",
+        "next": "corridor_hub"
       }
     ]
   },
@@ -790,7 +805,7 @@
       {
         "id": "open",
         "label": "Push the laboratory open",
-        "next": "enter_lab",
+        "next": "enter_lab_threshold",
         "flagsSet": [
           "vault_unlocked"
         ]
@@ -802,18 +817,38 @@
     "type": "story",
     "alexaScene": "boss",
     "narration": {
-      "text": "Cracked glass. Scorched tables. Something large waits on the ceiling. Silk glints with embers. [[spider: Warm little morsels… come closer. Mother is so very hungry.]] The threshold hole behind you goes… listening."
+      "text": "The laboratory threshold still waits beyond the vault."
+    },
+    "choices": [
+      {
+        "id": "continue",
+        "label": "Step to the threshold",
+        "next": "enter_lab_threshold"
+      }
+    ]
+  },
+  "enter_lab_threshold": {
+    "id": "enter_lab_threshold",
+    "type": "story",
+    "alexaScene": "boss",
+    "narration": {
+      "text": "The Door of Three Seals stands open. Beyond a veil of silk, a crystal phial the color of hops sits on a lectern — the last of a pale that never reached the tap. Nothing speaks. The ceiling is a dark of threads. You can still step back."
     },
     "choices": [
       {
         "id": "rest",
-        "label": "Short rest before the boss (recommended)",
+        "label": "Short rest on the threshold",
         "next": "lab_rest"
       },
       {
-        "id": "enter",
-        "label": "Step in and face it now",
-        "next": "fight_spider"
+        "id": "cross",
+        "label": "Cross into the laboratory",
+        "next": "enter_lab_look"
+      },
+      {
+        "id": "leave",
+        "label": "Leave — back to the mosaic corridor",
+        "next": "corridor_hub"
       }
     ]
   },
@@ -822,13 +857,66 @@
     "type": "story",
     "alexaScene": "boss",
     "narration": {
-      "text": "You steal a short rest on the vault threshold. Potions from Glowkindle's stair cache still warm your packs. The silk above shifts impatiently."
+      "text": "You steal a short rest on the vault threshold. Packs loosen. The silk above does not move. The hops-bright phial still glints on the lectern."
     },
     "choices": [
       {
-        "id": "enter",
-        "label": "Enter the lab",
+        "id": "cross",
+        "label": "Look into the laboratory",
+        "next": "enter_lab_look"
+      }
+    ]
+  },
+  "enter_lab_look": {
+    "id": "enter_lab_look",
+    "type": "skill_check",
+    "alexaScene": "boss",
+    "narration": {
+      "text": "You look into the laboratory. Silk, scorched tables, that hops-bright phial. Who watches the dark above?"
+    },
+    "check": { "ability": "wis", "skill": "perception", "dc": 14 },
+    "onSuccess": {
+      "narration": {
+        "text": "Too many eyes in the silk. You see her before she drops."
+      },
+      "next": "spider_spotted"
+    },
+    "onFailure": {
+      "narration": {
+        "text": "The silk is only silk, until it is not."
+      },
+      "next": "spider_ambush",
+      "flagsSet": ["spider_surprise"]
+    }
+  },
+  "spider_spotted": {
+    "id": "spider_spotted",
+    "type": "story",
+    "alexaScene": "boss",
+    "narration": {
+      "text": "Silk shifts. Ember threads part. [[spider: Warm little morsels… you found me. Mother is so very hungry.]] The phial waits on the lectern. There is no leaving this now."
+    },
+    "choices": [
+      {
+        "id": "face",
+        "label": "Face it",
         "next": "fight_spider"
+      }
+    ]
+  },
+  "spider_ambush": {
+    "id": "spider_ambush",
+    "type": "story",
+    "alexaScene": "boss",
+    "narration": {
+      "text": "You never see the drop. Silk slams the light. [[spider: Closer. Closer. Mine.]] Mother is already on you."
+    },
+    "choices": [
+      {
+        "id": "steel",
+        "label": "Steel out",
+        "next": "fight_spider",
+        "flagsSet": ["spider_surprise"]
       }
     ]
   },
@@ -843,7 +931,7 @@
     "type": "story",
     "alexaScene": "explore",
     "narration": {
-      "text": "The Infernal Spider collapses. Through the hole by the iron door you glimpse a cuniculus leading back toward this lab — and it goes silent. The source is dead. Time to climb toward beer and gold…"
+      "text": "The Infernal Spider collapses. On the lectern, the hops-bright crystal is yours — a Phial of the Last Pale. Through the hole by the iron door a cuniculus goes silent. The source is dead. Time to climb toward beer and gold…"
     },
     "choices": [
       {

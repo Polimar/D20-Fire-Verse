@@ -60,7 +60,7 @@ export type StoryNode = {
   onSuccess?: { narration?: { text: string }; next: string; flagsSet?: string[] };
   onFailure?: {
     narration?: { text: string };
-    next: string;
+    next?: string;
     effects?: unknown[];
     flagsSet?: string[];
   };

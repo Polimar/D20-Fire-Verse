@@ -49,6 +49,10 @@ export function roomForNode(nodeId: string): DungeonRoomId | null {
     nodeId.includes("lab") ||
     nodeId === "fight_spider" ||
     nodeId === "enter_lab" ||
+    nodeId === "enter_lab_threshold" ||
+    nodeId === "enter_lab_look" ||
+    nodeId === "spider_spotted" ||
+    nodeId === "spider_ambush" ||
     nodeId === "post_spider"
   ) {
     return "lab";

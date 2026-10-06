@@ -85,7 +85,8 @@ test("cellar approach shoots an arrow at every hero; tiles_done does not", () =>
   assert.equal(room.diceQueue?.length, 2);
   assert.ok((room.wounds?.[playerId] ?? 0) >= 1);
   assert.ok((room.wounds?.[p2] ?? 0) >= 1);
-  assert.match(room.voiceText ?? "", /Arrows spit/);
+  assert.match(room.voiceText ?? "", /Arrows spit from slits in the stone\. Heroes twist aside or take the hits/);
+  assert.doesNotMatch(room.voiceText ?? "", /Brenna Ironveal|Quill Ashmere/);
   assert.ok(!room.flags.includes("mosaic_spotted"));
 
   room.flags.push("tiles_done");
@@ -124,4 +125,7 @@ test("a second mosaic fault stays on the puzzle and uses arrows, not blades", ()
   assert.match(room.puzzleFeedback ?? "", /Arrows spit/);
   assert.doesNotMatch(room.puzzleFeedback ?? "", /2d10|blades/i);
   assert.equal(room.fx, "arrows");
+  assert.equal(room.voiceText, "A second fault wakes the wall slits. Arrows hiss out of the stone. The mosaic still waits for the poem's true colors. Arrows spit from slits in the stone. Heroes twist aside or take the hits. The mechanism resets. You can try again.");
+  assert.doesNotMatch(room.voiceText ?? "", /\[\[/);
+  assert.match(room.lastNarration ?? "", /Quill Ashmere|Brenna Ironveal|twists aside|piercing/);
 });
