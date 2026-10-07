@@ -104,6 +104,7 @@ export class CombatUi {
   private cursor: Cell = { x: 0, y: 0 };
   private aim: Aim | null = null;
   private sheetTab: SheetTab = "overview";
+  private reactionFocus = "";
   private busy = false;
   private awaiting = false;
   private fightKey = "";
@@ -303,7 +304,7 @@ export class CombatUi {
 
   private paintBackdrop() {
     const art = this.combat?.art;
-    if (art?.endsWith(".png")) {
+    if (art?.endsWith(".png") || (onFireTv() && !art)) {
       this.el.board.style.backgroundImage = "none";
       this.el.board.style.backgroundColor = "#0a0705";
       return;
@@ -572,10 +573,12 @@ export class CombatUi {
     const me = this.me();
     let hint: string;
     const roll = c.awaiting?.find((a) => a.playerId === this.playerId);
+    const pending = c.pendingReaction;
     const hintEl = document.getElementById("combatHint");
-    hintEl?.classList.toggle("roll-wait", !!roll);
-    this.el.board.classList.toggle("roll-wait", !!roll);
-    if (roll) hint = `Throw ${roll.label} on your phone`;
+    hintEl?.classList.toggle("roll-wait", !!roll && !(pending && pending.playerId === this.playerId));
+    this.el.board.classList.toggle("roll-wait", !!roll && !(pending && pending.playerId === this.playerId));
+    if (pending && pending.playerId === this.playerId) hint = pending.prompt;
+    else if (roll) hint = `Throw ${roll.label} on your phone`;
     else if (this.busy) hint = "The table is resolving the turn…";
     else if (c.status === "defeat") hint = "The party has fallen.";
     else if (!this.myTurn()) hint = `${c.currentName ?? "Someone"} is acting.`;
@@ -654,14 +657,20 @@ export class CombatUi {
     if (!c) return;
     const pending = c.pendingReaction;
     if (pending && pending.playerId === this.playerId) {
+      if (this.reactionFocus === pending.prompt && this.el.actions.querySelector("#reactYes")) return;
       this.actionFolder = null;
       this.el.actions.innerHTML = `<p class="meta">${esc(pending.prompt)}</p>
         <button type="button" class="act action" id="reactYes"><strong>${esc(pending.acceptLabel)}</strong></button>
         <button type="button" class="act end" id="reactNo"><strong>${esc(pending.declineLabel)}</strong></button>`;
       this.el.actions.querySelector("#reactYes")?.addEventListener("click", () => this.send({ action: "REACT", accept: true }));
       this.el.actions.querySelector("#reactNo")?.addEventListener("click", () => this.send({ action: "REACT", accept: false }));
+      if (this.reactionFocus !== pending.prompt) {
+        this.reactionFocus = pending.prompt;
+        queueMicrotask(() => this.el.actions.querySelector<HTMLElement>("#reactYes")?.focus());
+      }
       return;
     }
+    this.reactionFocus = "";
     const can = this.canAct();
     const folders = this.populatedFolders();
     if (this.actionFolder && !folders.includes(this.actionFolder)) this.actionFolder = null;

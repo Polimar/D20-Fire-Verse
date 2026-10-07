@@ -244,6 +244,13 @@ test("an access token must belong to our security profile", async () => {
       amazonUserId: "amzn1.account.PROFILE",
       name: "Grace",
     });
+    process.env.AMAZON_ANDROID_CLIENT_ID = "amzn1.application-oa2-client.stick";
+    audience = "amzn1.application-oa2-client.stick";
+    assert.deepEqual(await verifyAccessToken("Atza|token-that-is-long-enough"), {
+      amazonUserId: "amzn1.account.PROFILE",
+      name: "Grace",
+    });
+    delete process.env.AMAZON_ANDROID_CLIENT_ID;
     audience = "amzn1.application-oa2-client.someone-else";
     await assert.rejects(verifyAccessToken("Atza|token-that-is-long-enough"), /AMAZON_FAILED/);
     await assert.rejects(verifyAccessToken("short"), /AMAZON_FAILED/);

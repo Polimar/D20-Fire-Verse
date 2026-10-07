@@ -22,14 +22,15 @@ const TIMEOUT_MS = 8000;
 
 export type AmazonProfile = { amazonUserId: string; name?: string };
 
-type AmazonConfig = { clientId: string; clientSecret: string };
+type AmazonConfig = { clientId: string; clientSecret: string; androidClientId?: string };
 
 const FILE = () => path.join(DATA_DIR, "amazon.json");
 
 function fromEnv(): AmazonConfig | null {
   const clientId = process.env.AMAZON_CLIENT_ID?.trim();
   const clientSecret = process.env.AMAZON_CLIENT_SECRET?.trim();
-  return clientId && clientSecret ? { clientId, clientSecret } : null;
+  const androidClientId = process.env.AMAZON_ANDROID_CLIENT_ID?.trim();
+  return clientId && clientSecret ? { clientId, clientSecret, androidClientId: androidClientId || undefined } : null;
 }
 
 /** What an admin saved. Missing or incomplete file means "not saved", never a thrown error. */
@@ -38,7 +39,8 @@ export function readAmazon(): AmazonConfig | null {
     const raw = JSON.parse(fs.readFileSync(FILE(), "utf8")) as Partial<AmazonConfig>;
     const clientId = String(raw.clientId ?? "").trim();
     const clientSecret = String(raw.clientSecret ?? "").trim();
-    return clientId && clientSecret ? { clientId, clientSecret } : null;
+    const androidClientId = String(raw.androidClientId ?? "").trim();
+    return clientId && clientSecret ? { clientId, clientSecret, androidClientId: androidClientId || undefined } : null;
   } catch {
     return null;
   }
@@ -50,8 +52,9 @@ export function writeAmazon(next: { clientId: string; clientSecret: string }): v
   const clientId = next.clientId.trim();
   const clientSecret = next.clientSecret.trim() || prev?.clientSecret || "";
   if (!clientId || !clientSecret) throw new Error("AMAZON_NOT_CONFIGURED");
+  const androidClientId = prev?.androidClientId;
   fs.mkdirSync(DATA_DIR, { recursive: true });
-  fs.writeFileSync(FILE(), JSON.stringify({ clientId, clientSecret }, null, 2), { mode: 0o600 });
+  fs.writeFileSync(FILE(), JSON.stringify({ clientId, clientSecret, ...(androidClientId ? { androidClientId } : {}) }, null, 2), { mode: 0o600 });
 }
 
 export function clearAmazon(): void {
@@ -324,16 +327,19 @@ export async function exchangeCode(code: string, redirectUri: string): Promise<s
 }
 
 /**
- * A token from anywhere must have been issued to our security profile, or another app could sign
- * players in to this table with its own tokens.
+ * A token from the website or the Fire TV app must have been issued to one of our clients.
+ * The Stick's API key is its own client id inside the same security profile; the web id alone
+ * rejects that token.
  */
 export async function verifyAccessToken(accessToken: unknown): Promise<AmazonProfile> {
-  const { clientId } = requireConfig();
+  const allowed = acceptedAudiences(requireConfig());
   if (typeof accessToken !== "string" || accessToken.length < 20 || accessToken.length > 4096) {
     throw new Error("AMAZON_FAILED");
   }
   const info = await amazonJson(`${API}/auth/o2/tokeninfo?access_token=${encodeURIComponent(accessToken)}`);
-  if (info.aud !== clientId) {
+  const aud = info.aud;
+  const audiences = Array.isArray(aud) ? aud.map(String) : [String(aud ?? "")];
+  if (!audiences.some((one) => allowed.has(one))) {
     console.error("Login with Amazon: token issued to another client");
     throw new Error("AMAZON_FAILED");
   }
@@ -343,4 +349,9 @@ export async function verifyAccessToken(accessToken: unknown): Promise<AmazonPro
   const amazonUserId = profile.user_id;
   if (typeof amazonUserId !== "string" || !amazonUserId) throw new Error("AMAZON_FAILED");
   return { amazonUserId, name: typeof profile.name === "string" ? profile.name : undefined };
+}
+
+function acceptedAudiences(config: AmazonConfig): Set<string> {
+  const extra = process.env.AMAZON_ANDROID_CLIENT_ID?.trim();
+  return new Set([config.clientId, config.androidClientId, extra].filter((id): id is string => !!id));
 }

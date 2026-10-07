@@ -500,6 +500,41 @@ test("the wizard menu comes from the sheet and a spell spends a slot", () => {
   assert.equal(hero.slots?.["1"], 3);
 });
 
+test("a Shield offer does not skip the next foe, and answering lets that foe act", () => {
+  const hero = quill(1, 1, {
+    reactionIds: ["spell_shield"],
+    reactionReady: true,
+    slots: { "1": 2 },
+    ac: 12,
+  });
+  const first = rat("en-1", 2, 1, { hp: 12, maxHp: 12 });
+  const second = rat("en-2", 1, 2, { hp: 12, maxHp: 12 });
+  const c = arena(6, 6, [hero, first, second]);
+  const restore = scriptDice([
+    [20, 18],
+    [4, 2],
+    [20, 16],
+    [4, 1],
+  ]);
+  try {
+    endTurn(c, "P1");
+    assert.equal(c.pending?.kind, "shield");
+    assert.equal(c.pending?.attackerId, "en-1");
+    assert.equal(c.turnOrder[c.turnIndex], "en-1");
+    assert.equal(second.hasAction, true);
+    resolveReaction(c, "P1", false);
+    assert.equal(c.pending?.attackerId, "en-2");
+    assert.equal(c.turnOrder[c.turnIndex], "en-2");
+    resolveReaction(c, "P1", false);
+    assert.equal(c.pending, undefined);
+    assert.equal(second.hasAction, false);
+    assert.equal(c.events.filter((e) => e.kind === "strike" && e.tokenId === "en-2").length, 1);
+    assert.equal(c.turnOrder[c.turnIndex], "pc-P1");
+  } finally {
+    restore();
+  }
+});
+
 test("leaving a foe's reach provokes one opportunity attack and the move still finishes", () => {
   const hero = brenna(0, 1, { movementLeft: 6 });
   const foe = rat("en-1", 0, 2, { reactionReady: true, hp: 30, maxHp: 30 });

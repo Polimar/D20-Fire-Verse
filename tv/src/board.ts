@@ -662,8 +662,27 @@ export class Board {
   // ------------------------------------------------------------------ animation
 
   private tween(dur: number, step: (t: number) => void): Promise<void> {
+    const ms = Math.max(1, dur);
     return new Promise((resolve) => {
-      this.tweens.push({ start: performance.now(), dur: Math.max(1, dur), step, done: resolve });
+      let settled = false;
+      const finish = () => {
+        if (settled) return;
+        settled = true;
+        step(1);
+        resolve();
+      };
+      const timer = window.setTimeout(finish, ms + 80);
+      this.tweens.push({
+        start: performance.now(),
+        dur: ms,
+        step: (t) => {
+          if (!settled) step(t);
+        },
+        done: () => {
+          window.clearTimeout(timer);
+          finish();
+        },
+      });
     });
   }
 

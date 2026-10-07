@@ -9,6 +9,8 @@ import type { DiceRoll } from "./types";
 
 let host: HTMLElement | null = null;
 let video: HTMLVideoElement | null = null;
+let canvas: HTMLCanvasElement | null = null;
+let ctx: CanvasRenderingContext2D | null = null;
 let banner: HTMLElement | null = null;
 let flash: HTMLElement | null = null;
 let chain: Promise<void> = Promise.resolve();
@@ -18,15 +20,19 @@ const wait = (ms: number) => new Promise<void>((r) => window.setTimeout(r, ms));
 function stage(): void {
   if (host) return;
   host = document.createElement("div");
-  host.className = "dice-stage";
+  host.className = "dice-stage dice-tv";
   host.hidden = true;
   video = document.createElement("video");
-  video.className = "dice-film";
+  video.className = "dice-src";
   video.muted = true;
   video.playsInline = true;
   video.setAttribute("playsinline", "");
-  video.preload = "none";
+  video.preload = "auto";
+  canvas = document.createElement("canvas");
+  canvas.className = "dice-film";
+  ctx = canvas.getContext("2d", { alpha: true });
   host.appendChild(video);
+  host.appendChild(canvas);
   banner = document.createElement("div");
   banner.className = "dice-banner";
   host.appendChild(banner);
@@ -64,27 +70,75 @@ function filmOf(sides: number, face: number): string {
   return `/dice/d${n}-${String(f).padStart(2, "0")}.webm`;
 }
 
-function playFilm(sides: number, face: number): Promise<void> {
-  stage();
-  const clip = video!;
-  clip.src = filmOf(sides, face);
-  if (reducedMotion()) clip.playbackRate = 4;
-  const ended = new Promise<void>((resolve) => {
+function signal(clip: HTMLVideoElement, event: "canplay" | "seeked" | "ended" | "error", ms: number): Promise<void> {
+  if (event === "canplay" && clip.readyState >= 3) return Promise.resolve();
+  return new Promise((resolve) => {
     let settled = false;
     const finish = () => {
       if (settled) return;
       settled = true;
-      clip.removeEventListener("ended", finish);
-      clip.removeEventListener("error", finish);
+      clip.removeEventListener(event, finish);
+      if (event !== "error") clip.removeEventListener("error", finish);
       resolve();
     };
-    clip.addEventListener("ended", finish);
-    clip.addEventListener("error", finish);
-    window.setTimeout(finish, 6500);
+    clip.addEventListener(event, finish);
+    if (event !== "error") clip.addEventListener("error", finish);
+    window.setTimeout(finish, ms);
   });
-  const started = clip.play();
-  if (started) started.catch(() => undefined);
-  return ended;
+}
+
+/**
+ * Fire OS paints a VP9 alpha film only at the end if play() starts before the first frame is ready.
+ * The picture is copied onto a canvas as each frame arrives, and the rattle starts with that frame.
+ */
+function playFilm(sides: number, face: number): Promise<void> {
+  stage();
+  const clip = video!;
+  const surface = canvas!;
+  const pen = ctx;
+  clip.pause();
+  clip.playbackRate = reducedMotion() ? 4 : 1;
+  clip.preload = "auto";
+  clip.src = filmOf(sides, face);
+  clip.load();
+  let stop = false;
+  const paint = () => {
+    if (stop || !pen || clip.readyState < 2 || !clip.videoWidth) return;
+    const w = Math.min(clip.videoWidth, 960);
+    const h = Math.max(2, Math.round((clip.videoHeight * w) / clip.videoWidth));
+    if (surface.width !== w || surface.height !== h) {
+      surface.width = w;
+      surface.height = h;
+    }
+    pen.clearRect(0, 0, w, h);
+    pen.drawImage(clip, 0, 0, w, h);
+  };
+  const follow = () => {
+    if (stop) return;
+    paint();
+    requestAnimationFrame(follow);
+  };
+  follow();
+  return (async () => {
+    try {
+      await signal(clip, "canplay", 2500);
+      if (clip.currentTime > 0.001) {
+        const back = signal(clip, "seeked", 800);
+        clip.currentTime = 0;
+        await back;
+      }
+      paint();
+      sfx("dice", { gain: 0.9 });
+      const ended = signal(clip, "ended", 4500);
+      const started = clip.play();
+      if (started) started.catch(() => undefined);
+      await ended;
+      paint();
+    } finally {
+      stop = true;
+      clip.pause();
+    }
+  })();
 }
 
 function flashScreen(kind: "crit" | "fumble"): void {
@@ -102,7 +156,6 @@ async function play(roll: DiceRoll, extra: DiceRoll[], fast: boolean, hold: bool
   host!.classList.remove("leaving");
   host!.classList.add("on");
   banner!.className = "dice-banner";
-  sfx("dice", { gain: 0.9 });
   await playFilm(20, face);
   show(attackBanner(roll, extra));
   if (tone === "crit") {
@@ -157,7 +210,6 @@ export function throwDamage(rolls: DiceRoll[], opts: { fast?: boolean } = {}): P
     host!.classList.remove("leaving");
     host!.classList.add("on");
     banner!.className = "dice-banner";
-    sfx("dice", { gain: 0.9 });
     for (const face of faces) await playFilm(face.sides, face.value);
     show(damageBanner(rolls));
     await wait(opts.fast ? 900 : 1400);

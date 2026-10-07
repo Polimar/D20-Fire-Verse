@@ -11,7 +11,7 @@ import { ARENA_FORMATS, ARENA_THEMES, suggestedSize, type OpenArena } from "./ar
 import { isD20, rollD20 } from "./dice";
 import { DUNGEON_ROOMS, roomForNode, type DungeonRoomId } from "./dungeon-map";
 import { onMusicChange, setMusic, toggleMusic, type MusicTrack } from "./music";
-import { nativeAmazonReady, nativeAmazonSignIn, nativeAmazonSignOut, nativeApp, registerNativeBack } from "./native";
+import { nativeAmazonReady, nativeAmazonSignIn, nativeAmazonSignOut, nativeApp, onFireTv, registerNativeBack } from "./native";
 import { moveFocus, ownsArrows, remoteKey, restoreFocus, setScopeProvider, type RemoteKey } from "./nav";
 import { REMOTE_LEGEND } from "./onboarding";
 import {
@@ -36,6 +36,8 @@ import type { Pregen, RoomState } from "./types";
 import { isNarrating, onSpokenCue, prefetchVoice, replayNarration, setCast, speak, stopNarration } from "./voice";
 
 type PageId = "home" | "lobby" | "story" | "combat";
+
+if (onFireTv()) document.documentElement.dataset.tv = "1";
 
 const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]!);
 

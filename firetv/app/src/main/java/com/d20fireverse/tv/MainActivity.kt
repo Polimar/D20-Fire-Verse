@@ -246,8 +246,8 @@ class MainActivity : Activity() {
             javaScriptEnabled = true
             domStorageEnabled = true
             mediaPlaybackRequiresUserGesture = false
-            loadWithOverviewMode = true
             useWideViewPort = true
+            loadWithOverviewMode = false
             cacheMode = WebSettings.LOAD_DEFAULT
             mixedContentMode = WebSettings.MIXED_CONTENT_COMPATIBILITY_MODE
             userAgentString = "$userAgentString FireVerseTV/${BuildConfig.VERSION_NAME}"

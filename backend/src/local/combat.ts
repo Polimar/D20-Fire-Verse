@@ -1012,7 +1012,7 @@ function settleEnemies(combat: CombatState): void {
       return;
     }
     runEnemyTurn(combat, cur);
-    if (combat.status !== "active") return;
+    if (combat.status !== "active" || combat.pending) return;
     stepIndex(combat);
     beginTurn(combat);
   }
@@ -1240,6 +1240,7 @@ function runEnemyTurn(combat: CombatState, enemy: CombatToken): void {
         if (spec) {
           spendMonsterAbility(enemy, id);
           enemyStrike(combat, enemy, target, spec);
+          if (combat.pending) break;
         } else if (resolvedEffect(id)?.type === "save") {
           enemySaveCast(combat, enemy, target, id);
         }
@@ -3208,6 +3209,7 @@ export function resolveReaction(combat: CombatState, playerId: string, accept: b
       statusEvent(combat, target, "Shield", `${target.name} snaps a shield of force into place.`);
     }
     deliverBlow(combat, pending, damage);
+    continueAfterReaction(combat);
     return;
   }
   if (pending.kind === "smite") {
@@ -3222,6 +3224,7 @@ export function resolveReaction(combat: CombatState, playerId: string, accept: b
     const target = combat.tokens.find((token) => token.id === pending.targetId);
     if (target && attacker && holdForShield(combat, attacker, target, { ...pending, damage })) return;
     deliverBlow(combat, pending, damage);
+    continueAfterReaction(combat);
     return;
   }
   const reactor = combat.tokens.find((token) => token.id === pending.tokenId);
@@ -3239,7 +3242,30 @@ export function resolveReaction(combat: CombatState, playerId: string, accept: b
     }
   }
   if (!combat.pending && mover && pending.path) continueAfterThreat(combat, mover, pending.path);
-  refreshReachable(combat);
+  continueAfterReaction(combat);
+}
+
+/**
+ * A reaction pauses the enemy phase on the creature that provoked it.
+ * Answering must walk the rest of that phase, or the next foe's turn is announced and never played.
+ */
+function continueAfterReaction(combat: CombatState): void {
+  if (combat.status !== "active" || combat.pending) {
+    refreshReachable(combat);
+    return;
+  }
+  const cur = currentToken(combat);
+  if (!cur || cur.dead) {
+    checkEnd(combat);
+    return;
+  }
+  if (cur.kind === "pc") {
+    refreshReachable(combat);
+    return;
+  }
+  stepIndex(combat);
+  beginTurn(combat);
+  settleEnemies(combat);
 }
 
 export { exportVitals, longRestResources, shortRestResources, type Vitals };
