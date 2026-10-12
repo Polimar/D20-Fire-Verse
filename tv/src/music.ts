@@ -23,7 +23,7 @@ export type MusicState = {
 export function trackTitle(track: MusicTrack): string {
   switch (track) {
     case "title":
-      return "A Very Potent Brew";
+      return "D20 FireVerse";
     case "tavern":
       return "Jig at the Wizard's Tower";
     case "descent":

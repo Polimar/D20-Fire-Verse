@@ -21,7 +21,7 @@
     "actionType": "action",
     "level": 0,
     "combat": true,
-    "effects": [{ "type": "save", "shape": "one", "ability": "dex", "dcFrom": "spell", "rangeCells": 12, "damage": [{ "dice": "1d8", "damageType": "radiant" }] }]
+    "effects": [{ "type": "save", "shape": "one", "ability": "dex", "dcFrom": "spell", "rangeCells": 12, "damage": [{ "dice": "1d8", "damageType": "radiant" }], "halfOnSuccess": false }]
   },
   "produce_flame": {
     "id": "produce_flame",
@@ -37,7 +37,7 @@
     "actionType": "action",
     "level": 0,
     "combat": true,
-    "effects": [{ "type": "save", "shape": "one", "ability": "wis", "dcFrom": "spell", "rangeCells": 12, "damage": [{ "dice": "1d4", "damageType": "psychic" }], "onFail": "mocked" }]
+    "effects": [{ "type": "save", "shape": "one", "ability": "wis", "dcFrom": "spell", "rangeCells": 12, "damage": [{ "dice": "1d4", "damageType": "psychic" }], "onFail": "mocked", "halfOnSuccess": false }]
   },
   "eldritch_blast": {
     "id": "eldritch_blast",

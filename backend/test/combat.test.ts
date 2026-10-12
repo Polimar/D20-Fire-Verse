@@ -1,4 +1,6 @@
 import assert from "node:assert/strict";
+import fs from "node:fs";
+import path from "node:path";
 import { before, test } from "node:test";
 import {
   applyDisconnectDodge,
@@ -13,11 +15,13 @@ import {
   applyDamage,
   clearShot,
   publicCombat,
+  commitDeathSave,
   type CombatState,
   type CombatToken,
 } from "../src/local/combat.js";
 import { boot, scriptDice } from "./helpers.js";
 import { getArenaMap } from "../src/local/arena-maps.js";
+import { CONTENT_ROOT } from "../src/local/paths.js";
 
 before(boot);
 
@@ -395,6 +399,58 @@ test("burning hands is a 15-foot cone, not every nearby foe", () => {
   }
 });
 
+test("a successful Dex save against sacred flame takes no damage", () => {
+  const c = arena(4, 1, [
+    token({
+      id: "pc-P1",
+      kind: "pc",
+      name: "Torin Emberhand",
+      x: 0,
+      y: 0,
+      ac: 18,
+      hp: 27,
+      maxHp: 27,
+      playerId: "P1",
+      characterId: "torin_emberhand",
+      actionIds: ["sacred_flame"],
+    }),
+    rat("en-1", 2, 0, { hp: 30, maxHp: 30 }),
+  ]);
+  const restore = scriptDice([
+    [8, 8],
+    [20, 20],
+  ]);
+  try {
+    performPcAction(c, "P1", "sacred_flame", "en-1");
+  } finally {
+    restore();
+  }
+  const blow = c.events.at(-1);
+  assert.ok(blow?.kind === "strike");
+  assert.equal(blow.hits[0].outcome, "success");
+  assert.equal(blow.hits[0].damage, 0);
+  assert.equal(c.tokens[1]!.hp, 30);
+});
+
+test("save spells with real damage declare halfOnSuccess", () => {
+  const roots = [
+    path.join(CONTENT_ROOT, "rules/srd51_combat.json"),
+    path.join(CONTENT_ROOT, "abilities/oneshot_v1.json"),
+  ];
+  for (const file of roots) {
+    const pack = JSON.parse(fs.readFileSync(file, "utf8")) as Record<string, { effects?: Array<Record<string, unknown>> }>;
+    for (const [id, ability] of Object.entries(pack)) {
+      for (const effect of ability.effects ?? []) {
+        if (effect.type !== "save") continue;
+        const dmg = effect.damage as Array<{ dice?: string }> | undefined;
+        const dice = dmg?.[0]?.dice ?? "";
+        if (!dice || dice === "0") continue;
+        assert.equal(typeof effect.halfOnSuccess, "boolean", `${file} ${id} save damage missing halfOnSuccess`);
+      }
+    }
+  }
+});
+
 test("a successful Dex save against burning hands takes half and is not a miss", () => {
   const saved = arena(4, 1, [quill(0, 0), rat("en-1", 2, 0, { hp: 30, maxHp: 30 })]);
   const save = scriptDice([
@@ -450,7 +506,7 @@ test("a hero reduced to 0 hit points is dying and the fight continues", () => {
   const restore = scriptDice([
     [20, 15],
     [4, 3],
-    [20, 12],
+    [20, 7],
   ]);
   try {
     endTurn(c, "P1");
@@ -461,7 +517,168 @@ test("a hero reduced to 0 hit points is dying and the fight continues", () => {
   assert.equal(hero.dead, false);
   assert.equal(hero.hp, 0);
   assert.equal(hero.dying, true);
+  assert.equal(hero.deathFailures, 1);
   assert.equal(c.status, "active");
+});
+
+function ally(x: number, y: number): CombatToken {
+  return token({
+    id: "pc-P2",
+    kind: "pc",
+    name: "Ally",
+    x,
+    y,
+    playerId: "P2",
+    characterId: "mira_softstep",
+    hasBonusAction: true,
+  });
+}
+
+test("one failed death save stays down and the next hero acts", () => {
+  const hero = brenna(0, 0, { hp: 0, dying: true, deathFailures: 0, deathSuccesses: 0, hasAction: false, movementLeft: 0 });
+  const pal = ally(0, 1);
+  const foe = rat("en-1", 2, 0);
+  const c = arena(4, 2, [hero, pal, foe]);
+  c.turnOrder = [hero.id, pal.id, foe.id];
+  c.turnIndex = 1;
+  pal.hasAction = true;
+  const restore = scriptDice([[20, 7]]);
+  try {
+    endTurn(c, "P2");
+  } finally {
+    restore();
+  }
+  assert.equal(hero.dying, true);
+  assert.equal(hero.hp, 0);
+  assert.equal(hero.deathFailures, 1);
+  assert.equal(hero.dead, false);
+  assert.equal(c.turnOrder[c.turnIndex], pal.id);
+});
+
+test("three failed death saves kill the hero", () => {
+  const hero = brenna(0, 0, { hp: 0, dying: true, deathFailures: 2, hasAction: false, movementLeft: 0 });
+  const pal = ally(0, 1);
+  const c = arena(3, 2, [hero, pal, rat("en-1", 2, 0)]);
+  c.turnOrder = [hero.id, pal.id];
+  c.turnIndex = 1;
+  pal.hasAction = true;
+  const restore = scriptDice([[20, 4]]);
+  try {
+    endTurn(c, "P2");
+  } finally {
+    restore();
+  }
+  assert.equal(hero.dead, true);
+  assert.equal(hero.dying, false);
+});
+
+test("three death save successes stabilize at 0 hit points", () => {
+  const hero = brenna(0, 0, { hp: 0, dying: true, deathSuccesses: 2, hasAction: false, movementLeft: 0 });
+  const pal = ally(0, 1);
+  const c = arena(3, 2, [hero, pal, rat("en-1", 2, 0)]);
+  c.turnOrder = [hero.id, pal.id];
+  c.turnIndex = 1;
+  pal.hasAction = true;
+  const restore = scriptDice([[20, 12]]);
+  try {
+    endTurn(c, "P2");
+  } finally {
+    restore();
+  }
+  assert.equal(hero.stable, true);
+  assert.equal(hero.dying, false);
+  assert.equal(hero.hp, 0);
+  assert.equal(hero.dead, false);
+});
+
+test("a natural 20 on a death save stands the hero up with 1 hit point", () => {
+  const hero = brenna(0, 0, { hp: 0, dying: true, hasAction: false, movementLeft: 0 });
+  const pal = ally(0, 1);
+  const c = arena(3, 2, [hero, pal, rat("en-1", 2, 0)]);
+  c.turnOrder = [hero.id, pal.id];
+  c.turnIndex = 1;
+  pal.hasAction = true;
+  const restore = scriptDice([[20, 20]]);
+  try {
+    endTurn(c, "P2");
+  } finally {
+    restore();
+  }
+  assert.equal(hero.hp, 1);
+  assert.equal(hero.dying, false);
+  assert.equal(hero.hasAction, true);
+  assert.equal(c.turnOrder[c.turnIndex], hero.id);
+});
+
+test("a natural 1 on a death save is two failures", () => {
+  const hero = brenna(0, 0, { hp: 0, dying: true, deathFailures: 0, hasAction: false, movementLeft: 0 });
+  const pal = ally(0, 1);
+  const c = arena(3, 2, [hero, pal, rat("en-1", 2, 0)]);
+  c.turnOrder = [hero.id, pal.id];
+  c.turnIndex = 1;
+  pal.hasAction = true;
+  const restore = scriptDice([[20, 1]]);
+  try {
+    endTurn(c, "P2");
+  } finally {
+    restore();
+  }
+  assert.equal(hero.deathFailures, 2);
+  assert.equal(hero.dying, true);
+});
+
+test("dropping mid-turn strips the rest of the action", () => {
+  const hero = brenna(0, 0, { hp: 5, maxHp: 20 });
+  const pal = ally(0, 1);
+  const c = arena(3, 2, [hero, pal, rat("en-1", 2, 0)]);
+  c.turnOrder = [hero.id, pal.id];
+  c.turnIndex = 0;
+  applyDamage(c, hero, 10, false, "slashing");
+  assert.equal(hero.dying, true);
+  assert.equal(hero.hasAction, false);
+  assert.throws(() => performPcAction(c, "P1", "second_wind"), /DYING|BAD_ABILITY|NOT_YOUR_TURN/);
+  assert.equal(c.turnOrder[c.turnIndex], pal.id);
+});
+
+test("aid on a dying ally clears dying", () => {
+  const cleric = token({
+    id: "pc-P1",
+    kind: "pc",
+    name: "Torin",
+    x: 0,
+    y: 0,
+    playerId: "P1",
+    characterId: "torin_emberhand",
+    actionIds: ["spell_aid"],
+  });
+  const down = brenna(1, 0, { id: "pc-P2", playerId: "P2", hp: 0, maxHp: 20, dying: true });
+  down.id = "pc-P2";
+  down.playerId = "P2";
+  const c = arena(3, 1, [cleric, down, rat("en-1", 2, 0)]);
+  c.turnIndex = 0;
+  performPcAction(c, "P1", "spell_aid");
+  assert.equal(down.hp > 0, true);
+  assert.equal(down.dying, false);
+});
+
+test("a phone death save that still fails then passes the turn", () => {
+  const hero = brenna(0, 0, { hp: 0, dying: true, hasAction: false, movementLeft: 0 });
+  const pal = ally(0, 1);
+  const c = arena(3, 2, [hero, pal, rat("en-1", 2, 0)]);
+  c.turnOrder = [hero.id, pal.id];
+  c.turnIndex = 1;
+  pal.hasAction = true;
+  c.phoneIds = ["P1"];
+  endTurn(c, "P2");
+  assert.ok(c.awaiting?.some((a) => a.step === "death"));
+  const restore = scriptDice([[20, 6]]);
+  try {
+    commitDeathSave(c, "P1");
+  } finally {
+    restore();
+  }
+  assert.equal(hero.deathFailures, 1);
+  assert.equal(c.turnOrder[c.turnIndex], pal.id);
 });
 
 test("the wizard menu comes from the sheet and a spell spends a slot", () => {

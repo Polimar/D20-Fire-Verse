@@ -138,6 +138,13 @@ const BY_NODE: Record<string, SceneArt> = {
     art: ART.well,
     tone: "ember",
   },
+  well_after_centipedes: {
+    id: "well_after_centipedes",
+    title: "The Lock Still Waits",
+    chapter: "Puzzle · Well",
+    art: ART.well,
+    tone: "cool",
+  },
   well_bucket: {
     id: "well_bucket",
     title: "Seal of the Well",

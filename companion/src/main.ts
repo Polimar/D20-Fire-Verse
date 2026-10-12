@@ -43,7 +43,18 @@ function speechCtor(): SpeechSessionCtor | null {
 type Seat = { playerId: string; characterId: string; characterName: string; portrait: string };
 type DiceFace = { notation: string; values: number[]; total: number; label?: string };
 type CombatEvent = { seq: number; kind: string; line: string; tokenId?: string; rolls?: DiceFace[] };
-type Token = { id: string; playerId?: string; name: string; hp: number; maxHp: number; ac: number; dead: boolean; kind: string };
+type Token = {
+  id: string;
+  playerId?: string;
+  name: string;
+  hp: number;
+  maxHp: number;
+  ac: number;
+  dead: boolean;
+  dying?: boolean;
+  stable?: boolean;
+  kind: string;
+};
 type MenuAction = {
   id: string;
   name: string;
@@ -564,6 +575,10 @@ function renderControls(room: TableState | null, seat: Seat | undefined): void {
     turn.className = `turn ${mine ? "mine" : ""}`;
     turn.textContent = token?.dead
       ? "You are down. Your allies can still turn this."
+      : token?.dying || token?.stable
+        ? token.stable
+          ? "You are stable, still unconscious."
+          : "You are dying. Throw the death save when it is your turn."
       : mine
         ? "Your turn"
         : `Round ${combat.round} · ${combat.currentName ?? "…"} is acting`;
@@ -594,7 +609,7 @@ function renderControls(room: TableState | null, seat: Seat | undefined): void {
       controls.innerHTML = `<p class="meta">${esc(pending.prompt)}</p>
          <button type="button" class="primary" data-react="yes">${esc(pending.acceptLabel)}</button>
          <button type="button" data-react="no">${esc(pending.declineLabel)}</button>`;
-    } else if (mine) {
+    } else if (mine && !token?.dying && !token?.stable) {
       const folders = FOLDER_ORDER.filter((id) => folderActions(actions, bonus, id, moveRow).length);
       if (combatFolder && !folders.includes(combatFolder)) combatFolder = null;
       const open = combatFolder;
@@ -645,8 +660,7 @@ function renderControls(room: TableState | null, seat: Seat | undefined): void {
       ${roster.some((r) => r.playerId !== seat.playerId) ? `<button type="button" data-help="1">Pledge Help (advantage)</button>` : ""}`;
   } else if (room.nodeType === "encounter" && !room.combat) {
     controls.innerHTML = `${throwPad("begin", "none", "Initiative")}
-      <button type="button" class="primary big" data-begin-fight="1">Roll initiative</button>
-      <button type="button" data-withdraw="1">Step back</button>`;
+      <button type="button" class="primary big" data-begin-fight="1">Roll initiative</button>`;
   } else if (room.puzzle) {
     const holder = room.puzzle.holderId;
     const multi = room.players.length > 1;

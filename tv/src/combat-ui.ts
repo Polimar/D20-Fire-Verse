@@ -6,7 +6,7 @@
 import { Application } from "pixi.js";
 import { Board, type Overlay } from "./board";
 import { Director } from "./director";
-import { cropStyle, DUNGEON_ROOMS, roomForNode } from "./dungeon-map";
+import { DUNGEON_ROOMS, roomForMapId } from "./dungeon-map";
 import { warmDice } from "./dice";
 import { onFireTv } from "./native";
 import { focusables, moveFocus, type RemoteKey } from "./nav";
@@ -283,7 +283,9 @@ export class CombatUi {
       this.awaiting = false;
       this.displayTurnId = c.currentTokenId;
       board.setBoard(this.fightKey, c.width, c.height, c.walls, c.tokens, c.hazards);
-      board.setMapArt(c.art && c.art.endsWith(".png") ? c.art : null);
+      const png = c.art && c.art.endsWith(".png") ? c.art : null;
+      const room = !png ? roomForMapId(c.mapId) : null;
+      board.setMapArt(png ?? (room ? "/art/dungeon-map.jpg" : null), room ? DUNGEON_ROOMS[room] : null);
       if (opts.resumed || !c.events.some((e) => e.kind === "start")) this.director!.skipTo(c);
       else this.director!.skipTo({ ...c, seq: Math.min(...c.events.map((e) => e.seq)) - 1 });
       this.paintBackdrop();
@@ -303,23 +305,8 @@ export class CombatUi {
   }
 
   private paintBackdrop() {
-    const art = this.combat?.art;
-    if (art?.endsWith(".png") || (onFireTv() && !art)) {
-      this.el.board.style.backgroundImage = "none";
-      this.el.board.style.backgroundColor = "#0a0705";
-      return;
-    }
-    if (art) {
-      this.el.board.style.backgroundImage = `linear-gradient(rgba(12,8,6,.28), rgba(12,8,6,.45)), url(${art})`;
-      this.el.board.style.backgroundSize = "100% 100%, 100% 100%";
-      this.el.board.style.backgroundPosition = "0 0, 0 0";
-      return;
-    }
-    const area = roomForNode(this.lastNode) ?? "mosaic";
-    const crop = cropStyle(DUNGEON_ROOMS[area]);
-    this.el.board.style.backgroundImage = "linear-gradient(rgba(12,8,6,.55), rgba(12,8,6,.78)), url(/art/dungeon-map.jpg)";
-    this.el.board.style.backgroundSize = `100% 100%, ${crop.size}`;
-    this.el.board.style.backgroundPosition = `0 0, ${crop.position}`;
+    this.el.board.style.backgroundImage = "none";
+    this.el.board.style.backgroundColor = "#0a0705";
   }
 
   // ------------------------------------------------------------------ who's who
@@ -331,7 +318,7 @@ export class CombatUi {
   private myTurn(): boolean {
     const c = this.combat;
     const me = this.me();
-    return !!c && !!me && c.status === "active" && c.currentTokenId === me.id && !me.dead;
+    return !!c && !!me && c.status === "active" && c.currentTokenId === me.id && !me.dead && !me.dying && !me.stable;
   }
 
   private canAct(): boolean {

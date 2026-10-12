@@ -11,7 +11,7 @@ import {
   publicState,
   solvePuzzleSequence,
 } from "../src/local/room.js";
-import { boot } from "./helpers.js";
+import { boot, scriptDice } from "./helpers.js";
 
 before(boot);
 
@@ -73,6 +73,31 @@ test("well miss reports mastermind pearls and stays until the swarm", () => {
   assert.match(room.puzzleFeedback ?? "", /●|○/);
   solvePuzzleSequence(room.roomCode, ["sun", "skull", "tooth", "spark"], playerId);
   assert.equal(room.nodeId, "fight_well_centipedes");
+});
+
+test("vessel trap fire writes wounds for the whole party", () => {
+  const created = createRoom();
+  const { room, playerId: p1 } = joinRoom(created.roomCode, "A", "brenna_ironveal");
+  const { playerId: p2 } = joinRoom(created.roomCode, "B", "mira_softstep");
+  room.nodeId = "cellar_vessels";
+  claimPuzzle(room.roomCode, p1);
+  solvePuzzleSequence(room.roomCode, ["x", "eye", "wave", "spiral"], p1);
+  const restore = scriptDice([
+    [20, 1],
+    [8, 8],
+    [8, 8],
+    [20, 20],
+    [8, 8],
+    [8, 8],
+  ]);
+  try {
+    solvePuzzleSequence(room.roomCode, ["spiral", "wave", "x", "eye"], p1);
+  } finally {
+    restore();
+  }
+  assert.equal(room.nodeId, "cellar_vessels");
+  assert.equal(room.wounds?.[p1], 16);
+  assert.equal(room.wounds?.[p2], 8);
 });
 
 test("vessel failure does not gift the seal", () => {

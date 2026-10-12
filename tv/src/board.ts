@@ -27,6 +27,9 @@ type Pawn = {
 
 type Tween = { start: number; dur: number; step: (t: number) => void; done: () => void };
 
+/** Percent crop of a source painting, same numbers as dungeon-map regions. */
+export type MapCrop = { left: number; top: number; width: number; height: number };
+
 export type OverlayMode = "move" | "aim" | "idle";
 
 export type Overlay = {
@@ -55,6 +58,7 @@ export class Board {
   private floor = new Graphics();
   private mapSprite: Sprite | null = null;
   private mapArt = "";
+  private mapCrop: MapCrop | null = null;
   private overlayG = new Graphics();
   private pathG = new Graphics();
   private tokenLayer = new Container();
@@ -222,6 +226,7 @@ export class Board {
     const w = this.cols * c;
     const h = this.rows * c;
     const art = Boolean(this.mapArt);
+    g.rect(this.ox - 480, this.oy - 480, w + 960, h + 960).fill({ color: 0x0a0705, alpha: 1 });
     if (!art) {
       g.roundRect(this.ox - 12, this.oy - 12, w + 24, h + 24, 16).fill({ color: 0x0a0705, alpha: 0.96 });
     }
@@ -298,8 +303,13 @@ export class Board {
     if (!source || (!(img instanceof HTMLImageElement) && !(img instanceof HTMLCanvasElement))) return;
     const nativeW = img instanceof HTMLImageElement ? img.naturalWidth : img.width;
     const nativeH = img instanceof HTMLImageElement ? img.naturalHeight : img.height;
-    const key = `${this.mapArt}:${Math.ceil(w)}x${Math.ceil(h)}`;
-    if (w <= nativeW + 1 && h <= nativeH + 1) {
+    const crop = this.mapCrop;
+    const key = `${this.mapArt}:${crop ? `${crop.left},${crop.top},${crop.width},${crop.height}` : "full"}:${Math.ceil(w)}x${Math.ceil(h)}`;
+    const sx = crop ? (crop.left / 100) * nativeW : 0;
+    const sy = crop ? (crop.top / 100) * nativeH : 0;
+    const sw0 = crop ? (crop.width / 100) * nativeW : nativeW;
+    const sh0 = crop ? (crop.height / 100) * nativeH : nativeH;
+    if (!crop && w <= nativeW + 1 && h <= nativeH + 1) {
       if (sprite.texture !== source) {
         const blown = sprite.texture;
         sprite.texture = source;
@@ -314,9 +324,15 @@ export class Board {
     canvas.height = Math.ceil(h);
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
-    let current: CanvasImageSource = img;
-    let sw = nativeW;
-    let sh = nativeH;
+    const cut = document.createElement("canvas");
+    cut.width = Math.max(1, Math.round(sw0));
+    cut.height = Math.max(1, Math.round(sh0));
+    const cutCtx = cut.getContext("2d");
+    if (!cutCtx) return;
+    cutCtx.drawImage(img, sx, sy, sw0, sh0, 0, 0, cut.width, cut.height);
+    let current: CanvasImageSource = cut;
+    let sw = cut.width;
+    let sh = cut.height;
     while (sw * 2 <= canvas.width && sh * 2 <= canvas.height) {
       sw *= 2;
       sh *= 2;
@@ -338,15 +354,25 @@ export class Board {
     this.sharpKey = key;
   }
 
-  /** Painted VTT floor, sized to the cell lattice. Empty url clears it. */
-  setMapArt(url: string | null) {
+  /** Painted VTT floor, sized to the cell lattice. Empty url clears it. Optional percent crop of the source. */
+  setMapArt(url: string | null, crop?: MapCrop | null) {
     const next = url ?? "";
-    if (next === this.mapArt && this.mapSprite) {
+    const nextCrop = crop ?? null;
+    const sameCrop =
+      (!this.mapCrop && !nextCrop) ||
+      (this.mapCrop &&
+        nextCrop &&
+        this.mapCrop.left === nextCrop.left &&
+        this.mapCrop.top === nextCrop.top &&
+        this.mapCrop.width === nextCrop.width &&
+        this.mapCrop.height === nextCrop.height);
+    if (next === this.mapArt && sameCrop && this.mapSprite) {
       this.layoutMap();
       this.drawFloor();
       return;
     }
     this.mapArt = next;
+    this.mapCrop = nextCrop;
     this.dropMapSprite();
     if (!next) {
       this.drawFloor();

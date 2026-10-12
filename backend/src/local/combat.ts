@@ -885,6 +885,24 @@ function hasCondition(token: CombatToken, id: string): boolean {
   return Boolean(token.conditions?.includes(id));
 }
 
+function cannotAct(token: CombatToken): boolean {
+  return hasCondition(token, "incapacitated") || hasCondition(token, "paralyzed") || hasCondition(token, "unconscious");
+}
+
+function wakeFromDying(token: CombatToken): void {
+  token.dying = false;
+  token.stable = false;
+  token.deathSuccesses = 0;
+  token.deathFailures = 0;
+}
+
+function stripTurn(token: CombatToken): void {
+  token.movementLeft = 0;
+  token.hasAction = false;
+  token.hasBonusAction = false;
+  token.extraAction = false;
+}
+
 function beginTurn(combat: CombatState): void {
   let guard = 0;
   while (guard < combat.turnOrder.length + 1) {
@@ -901,22 +919,20 @@ function beginTurn(combat: CombatState): void {
           if (!combat.awaiting?.some((a) => a.id === id)) {
             combat.awaiting = [...(combat.awaiting ?? []), { id, playerId: t.playerId, label: "Death save", step: "death" }];
           }
-        } else resolveDeathSave(combat, t);
+          emit(combat, { kind: "turn", tokenId: t.id, round: combat.round, line: `Round ${combat.round} — ${t.name} is down.` });
+          combat.reachable = [];
+          return;
+        }
+        resolveDeathSave(combat, t);
       }
       if (combat.status !== "active") return;
-      if (t.dead) {
+      if (t.dead || t.dying || t.stable) {
+        if (!t.dead) {
+          emit(combat, { kind: "turn", tokenId: t.id, round: combat.round, line: `Round ${combat.round} — ${t.name} is down.` });
+        }
         stepIndex(combat);
         guard += 1;
         continue;
-      }
-      if (t.dying || t.stable) {
-        t.movementLeft = 0;
-        t.hasAction = false;
-        t.hasBonusAction = false;
-        t.reactionReady = false;
-        emit(combat, { kind: "turn", tokenId: t.id, round: combat.round, line: `Round ${combat.round} — ${t.name} is down.` });
-        combat.reachable = [];
-        return;
       }
     } else if (hasCondition(t, "incapacitated") || hasCondition(t, "paralyzed") || hasCondition(t, "unconscious")) {
       if (t.kind === "pc") {
@@ -999,6 +1015,7 @@ function beginTurn(combat: CombatState): void {
 
 /** Resolve every enemy turn in initiative order until a living hero is up or the fight ends. */
 function settleEnemies(combat: CombatState): void {
+  const startRound = combat.round;
   let guard = 0;
   while (combat.status === "active" && !combat.pending && guard < combat.turnOrder.length * 2 + 4) {
     guard += 1;
@@ -1011,6 +1028,7 @@ function settleEnemies(combat: CombatState): void {
       refreshReachable(combat);
       return;
     }
+    if (combat.round > startRound) return;
     runEnemyTurn(combat, cur);
     if (combat.status !== "active" || combat.pending) return;
     stepIndex(combat);
@@ -1565,6 +1583,7 @@ export function proposeMove(
   if (combat.pending) throw new Error("REACTION_PENDING");
   const t = currentToken(combat);
   if (!t || t.kind !== "pc" || t.playerId !== playerId) throw new Error("NOT_YOUR_TURN");
+  if (t.dying || t.stable || cannotAct(t)) throw new Error("DYING");
   const route = pathTo(combat, t, x, y);
   if (!route || route.cost > t.movementLeft) throw new Error("UNREACHABLE");
   commitMove(combat, t, route.path, route.cost);
@@ -1665,10 +1684,7 @@ function castSpecial(
     const spent = Math.min(pool, Math.max(1, need));
     t.layOnHands = pool - spent;
     ally.hp = Math.min(ally.maxHp, ally.hp + spent);
-    ally.dying = false;
-    ally.stable = false;
-    ally.deathSuccesses = 0;
-    ally.deathFailures = 0;
+    if (ally.hp > 0) wakeFromDying(ally);
     spendEconomy(t, false);
     statusEvent(combat, t, name, `${t.name} lays on hands. ${ally.name} recovers ${spent}.`);
     return { rolls: [] };
@@ -1684,6 +1700,7 @@ function castSpecial(
       const gain = Math.min(pool, half - ally.hp);
       ally.hp += gain;
       pool -= gain;
+      if (ally.hp > 0) wakeFromDying(ally);
     }
     spendEconomy(t, false);
     statusEvent(combat, t, name, `${t.name} releases a warm light. The wounded are drawn back from the edge.`);
@@ -1837,6 +1854,7 @@ function castSpecial(
     for (const ally of allies) {
       ally.maxHp += amount;
       ally.hp += amount;
+      if (ally.hp > 0) wakeFromDying(ally);
     }
     spendEconomy(t, false);
     statusEvent(combat, t, name, `${t.name} casts aid. ${allies.map((a) => a.name).join(", ")} gain ${amount} hit points.`);
@@ -1873,6 +1891,7 @@ export function performPcAction(
   combat.aimRequest = undefined;
   const t = currentToken(combat);
   if (!t || t.kind !== "pc" || t.playerId !== playerId) throw new Error("NOT_YOUR_TURN");
+  if (t.dying || t.stable || cannotAct(t)) throw new Error("DYING");
   if (t.sheetDriven && t.characterId) refreshMenus(t, getPregen(t.characterId), getAbility);
 
   let quicken = false;
@@ -2047,12 +2066,7 @@ export function performPcAction(
     if (t.features?.includes("disciple_of_life") || t.features?.includes("domain_life")) healed += 2 + Math.max(1, slotUsed);
     const before = patient.hp;
     patient.hp = Math.min(patient.maxHp, patient.hp + healed);
-    if (healed > 0 && patient.hp > 0) {
-      patient.dying = false;
-      patient.stable = false;
-      patient.deathSuccesses = 0;
-      patient.deathFailures = 0;
-    }
+    if (healed > 0 && patient.hp > 0) wakeFromDying(patient);
     spendEconomy(t, isBonus);
     const dice = makeDiceRoll({
       roller: t.name,
@@ -2172,6 +2186,7 @@ export function performPcAction(
     hasCondition(target, "restrained") ||
     hasCondition(target, "paralyzed") ||
     hasCondition(target, "unconscious") ||
+    Boolean(target.dying || target.stable) ||
     (hasCondition(target, "prone") && !ranged) ||
     Boolean(target.reckless);
   const advantage = t.hidden || Boolean(t.helpingTargetId) || t.invisible || t.reckless || easyTarget;
@@ -2533,6 +2548,7 @@ export function applyDamage(combat: CombatState, target: CombatToken, amount: nu
     if (harm > 0) {
       target.stable = false;
       target.dying = true;
+      stripTurn(target);
       target.deathFailures = (target.deathFailures ?? 0) + (crit ? 2 : 1);
       if (harm >= target.maxHp) target.deathFailures = 3;
       if ((target.deathFailures ?? 0) >= 3) markDead(combat, target);
@@ -2550,7 +2566,9 @@ export function applyDamage(combat: CombatState, target: CombatToken, amount: nu
       target.stable = false;
       target.deathSuccesses = 0;
       target.deathFailures = 0;
+      stripTurn(target);
       emit(combat, { kind: "down", tokenId: target.id, line: `${target.name} collapses!` });
+      if (currentToken(combat)?.id === target.id) advanceTurn(combat);
     } else {
       markDead(combat, target);
     }
@@ -2738,6 +2756,9 @@ export function commitDeathSave(combat: CombatState, playerId: string): void {
   if (!t) throw new Error("NO_PLAYER");
   combat.awaiting = (combat.awaiting ?? []).filter((a) => a.id !== `death-${playerId}`);
   resolveDeathSave(combat, t);
+  if (combat.status !== "active") return;
+  if (t.dead || t.dying || t.stable) advanceTurn(combat);
+  else beginTurn(combat);
 }
 
 function meleeOf(token: CombatToken): string | undefined {
@@ -2922,6 +2943,7 @@ export function endTurn(combat: CombatState, playerId: string): void {
   if (combat.pending) throw new Error("REACTION_PENDING");
   const t = currentToken(combat);
   if (!t || t.kind !== "pc" || t.playerId !== playerId) throw new Error("NOT_YOUR_TURN");
+  if ((combat.awaiting ?? []).some((a) => a.step === "death" && a.playerId === playerId)) throw new Error("NO_ROLL");
   runLegendaryWindow(combat, t);
   advanceTurn(combat);
 }
@@ -2981,6 +3003,10 @@ export function buildPcSheet(
     spellSlotMax: (pregen as { spellSlots?: Record<string, number> } | undefined)?.spellSlots ?? token.slots ?? null,
     conditions: token.conditions ?? [],
     concentrating: token.concentrating?.spellId ?? null,
+    dying: Boolean(token.dying),
+    stable: Boolean(token.stable),
+    deathSuccesses: token.deathSuccesses ?? 0,
+    deathFailures: token.deathFailures ?? 0,
     resources: {
       ki: token.ki ?? null,
       layOnHands: token.layOnHands ?? null,
@@ -3060,7 +3086,9 @@ export function publicCombat(combat: CombatState, viewerPlayerId?: string) {
   };
 
   const liveMenu =
-    current?.kind === "pc" && !current.dead && combat.status === "active" ? menuFor(current, true) : null;
+    current?.kind === "pc" && !current.dead && !current.dying && !current.stable && combat.status === "active"
+      ? menuFor(current, true)
+      : null;
 
   const sheetTok = viewerPlayerId
     ? combat.tokens.find((t) => t.playerId === viewerPlayerId && t.kind === "pc")
@@ -3095,6 +3123,10 @@ export function publicCombat(combat: CombatState, viewerPlayerId?: string) {
       maxHp: t.maxHp,
       ac: t.ac,
       dead: t.dead,
+      dying: Boolean(t.dying),
+      stable: Boolean(t.stable),
+      deathSuccesses: t.deathSuccesses ?? 0,
+      deathFailures: t.deathFailures ?? 0,
       initiative: t.initiative,
       playerId: t.playerId,
       characterId: t.characterId,
@@ -3144,6 +3176,11 @@ export function applyDisconnectDodge(combat: CombatState, playerId: string): voi
   if (combat.status !== "active") return;
   const t = currentToken(combat);
   if (!t || t.kind !== "pc" || t.playerId !== playerId || t.dead) return;
+  combat.awaiting = (combat.awaiting ?? []).filter((a) => a.playerId !== playerId);
+  if (t.dying || t.stable) {
+    advanceTurn(combat);
+    return;
+  }
   t.hasAction = false;
   t.movementLeft = 0;
   t.dodging = true;

@@ -408,6 +408,7 @@ const WING_RETURN = new Set([
   "well_enter",
   "well_lock",
   "well_bucket",
+  "well_after_centipedes",
   "fight_well_centipedes",
   "store_enter",
   "store_vials",
@@ -889,14 +890,8 @@ export function resolveVote(roomCode: string): Room {
 function maybeHoleAmbush(room: Room): string | null {
   if (hasFlag(room, "spider_dead")) return null;
   const seals = sealCount(room);
-  if (seals === 1 && !hasFlag(room, "hole_rats_done")) {
-    room.flags.push("hole_rats_done");
-    return "hole_rats";
-  }
-  if (seals === 2 && !hasFlag(room, "hole_centipedes_done")) {
-    room.flags.push("hole_centipedes_done");
-    return "hole_centipedes";
-  }
+  if (seals === 1 && !hasFlag(room, "hole_rats_done")) return "hole_rats";
+  if (seals === 2 && !hasFlag(room, "hole_centipedes_done")) return "hole_centipedes";
   return null;
 }
 
@@ -1109,6 +1104,7 @@ function failPuzzle(room: Room, node: StoryNode, detail = ""): Room {
 
 function applyPenalty(room: Room, effects: unknown[] | undefined): { display: string; spoken: string } {
   if (!effects?.length) return { display: "", spoken: "" };
+  if (!room.wounds) room.wounds = {};
   const display: string[] = [];
   const spoken: string[] = [];
   for (const raw of effects) {
@@ -1116,7 +1112,8 @@ function applyPenalty(room: Room, effects: unknown[] | undefined): { display: st
       type?: string;
       ability?: string;
       dc?: number;
-      damage?: { dice: string; type: string };
+      halfOnSuccess?: boolean;
+      damage?: { dice: string; type: string; halfOnSuccess?: boolean };
       targets?: string;
     };
     if (effect.targets === "all_pcs" && effect.damage?.type === "piercing") {
@@ -1129,22 +1126,37 @@ function applyPenalty(room: Room, effects: unknown[] | undefined): { display: st
       continue;
     }
     if (effect.type !== "saving_throw" || !effect.damage?.dice) continue;
-    const victim = bestPlayer(room, effect.ability ?? "dex");
-    const save = rollCheck({
-      roller: victim?.name ?? "The party",
-      label: `${(effect.ability ?? "dex").toUpperCase()} save · trap`,
-      bonus: victim?.mod ?? 0,
-      dc: effect.dc ?? 12,
-      purpose: "save",
-    });
-    const dmg = rollNotation(effect.damage.dice);
-    const taken = save.outcome === "success" ? Math.floor(dmg.total / 2) : dmg.total;
-    room.lastDice = save;
-    display.push(
-      save.outcome === "success"
-        ? ` ${victim?.name ?? "You"} twists aside and takes only ${taken} ${effect.damage.type}.`
-        : ` ${victim?.name ?? "You"} takes ${taken} ${effect.damage.type}.`,
-    );
+    const half = Boolean(effect.halfOnSuccess ?? effect.damage.halfOnSuccess);
+    const victims =
+      effect.targets === "all_pcs"
+        ? room.players.map((p) => ({ player: p, name: p.characterName, mod: playerCheckBonus(p, effect.ability ?? "dex") }))
+        : (() => {
+            const one = bestPlayer(room, effect.ability ?? "dex");
+            return one ? [one] : [];
+          })();
+    const rolls: DiceRoll[] = [];
+    for (const victim of victims) {
+      const save = rollCheck({
+        roller: victim.name,
+        label: `${(effect.ability ?? "dex").toUpperCase()} save · trap`,
+        bonus: victim.mod,
+        dc: effect.dc ?? 12,
+        purpose: "save",
+      });
+      rolls.push(save);
+      const dmg = rollNotation(effect.damage.dice);
+      const taken = save.outcome === "success" ? (half ? Math.floor(dmg.total / 2) : 0) : dmg.total;
+      if (taken > 0) room.wounds[victim.player.playerId] = (room.wounds[victim.player.playerId] ?? 0) + taken;
+      display.push(
+        save.outcome === "success"
+          ? taken > 0
+            ? ` ${victim.name} twists aside and takes only ${taken} ${effect.damage.type}.`
+            : ` ${victim.name} twists aside.`
+          : ` ${victim.name} takes ${taken} ${effect.damage.type}.`,
+      );
+    }
+    if (rolls.length) room.lastDice = rolls[rolls.length - 1];
+    room.diceQueue = rolls;
     spoken.push(TRAP_HIT_VOICE);
   }
   return { display: display.join(""), spoken: spoken.join(" ") };
@@ -1313,6 +1325,8 @@ const RETREAT: Record<string, string> = {
 export function withdraw(roomCode: string): Room {
   const room = requireRoom(roomCode);
   if (room.combat?.status === "active") throw new Error("COMBAT_ACTIVE");
+  const node = getNode(room.nodeId);
+  if (node?.type === "encounter" && !room.combat) throw new Error("NO_WITHDRAW");
   const next = RETREAT[room.nodeId] ?? "corridor_hub";
   goTo(room, next);
   const line = "You drag each other back to safer stone and catch your breath. The way is still open.";
@@ -1335,6 +1349,8 @@ export function beginCombat(roomCode: string): Room {
     extraInventory: room.lootInventory,
   });
   if (surprise) dropFlag(room, "spider_surprise");
+  if (node.encounterId === "hole_rats") setFlags(room, ["hole_rats_done"]);
+  if (node.encounterId === "hole_centipedes") setFlags(room, ["hole_centipedes_done"]);
   touch(room);
   autosave(room);
   return room;

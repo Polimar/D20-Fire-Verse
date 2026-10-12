@@ -231,6 +231,8 @@ const ERROR_TEXT: Record<string, string> = {
   NO_SORCERY: "You don't have enough sorcery points.",
   NO_KI: "You don't have enough ki.",
   BONUS_SPELL: "After a bonus-action spell, only a cantrip is left.",
+  DYING: "That hero is down — wait for a death save or for someone to help.",
+  NO_WITHDRAW: "You can't step back from this scene. Pick a way forward.",
 };
 
 /** Player-facing sentence for a server error code. Never shows a raw code. */
