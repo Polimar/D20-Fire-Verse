@@ -1,0 +1,73 @@
+{
+  "id": "arena_custom_test_medium",
+  "name": "test",
+  "theme": "coliseum",
+  "size": "medium",
+  "width": 24,
+  "height": 24,
+  "cellSizeFt": 5,
+  "walls": [],
+  "hazards": [],
+  "spawn": {
+    "ffa": [
+      {
+        "x": 2,
+        "y": 2
+      },
+      {
+        "x": 22,
+        "y": 2
+      },
+      {
+        "x": 2,
+        "y": 22
+      },
+      {
+        "x": 22,
+        "y": 22
+      },
+      {
+        "x": 2,
+        "y": 12
+      },
+      {
+        "x": 22,
+        "y": 12
+      }
+    ],
+    "teamA": [
+      {
+        "x": 2,
+        "y": 11
+      },
+      {
+        "x": 2,
+        "y": 12
+      },
+      {
+        "x": 2,
+        "y": 13
+      }
+    ],
+    "teamB": [
+      {
+        "x": 21,
+        "y": 11
+      },
+      {
+        "x": 21,
+        "y": 12
+      },
+      {
+        "x": 21,
+        "y": 13
+      }
+    ]
+  },
+  "art": "/art/arena/custom/arena_custom_test_medium.jpg",
+  "createdBy": {
+    "userId": "user_ffa5b0f632e2b94b",
+    "username": "Matteo.Di.Benedetto"
+  },
+  "createdAt": "2026-10-12T10:09:01.595Z"
+}
