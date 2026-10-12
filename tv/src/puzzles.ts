@@ -162,6 +162,7 @@ export function puzzleKindForNode(nodeId: string): PuzzleKind | null {
 const localDraft = new Map<string, string[]>();
 /** Optimistic draft wins only until the server echo lands. */
 const draftDirtyUntil = new Map<string, number>();
+const draftFails = new Map<string, number>();
 
 const HINT_COLORS = ["#7ec8e3", "#f0b429", "#e891a8", "#b8e040", "#c4a0e8"];
 
@@ -187,13 +188,24 @@ function hintMarks(hints: NonNullable<PuzzleProgress>["hints"], match: (h: { opt
 }
 
 function takeDraft(nodeId: string, server: string[], fails: number): string[] {
+  const prevFails = draftFails.get(nodeId) ?? 0;
+  draftFails.set(nodeId, fails);
+  if (fails > prevFails) {
+    localDraft.delete(nodeId);
+    draftDirtyUntil.delete(nodeId);
+    return [...server];
+  }
   const local = localDraft.get(nodeId);
   const dirty = (draftDirtyUntil.get(nodeId) ?? 0) > Date.now();
   if (local && dirty) return [...local];
   localDraft.set(nodeId, [...server]);
   draftDirtyUntil.delete(nodeId);
-  void fails;
   return [...server];
+}
+
+function clearDraft(nodeId: string) {
+  localDraft.delete(nodeId);
+  draftDirtyUntil.delete(nodeId);
 }
 
 function rememberDraft(nodeId: string, picks: string[]) {
@@ -462,6 +474,7 @@ export function renderInteractivePuzzle(
   });
   host.querySelector("#seqSubmit")?.addEventListener("click", () => {
     if (!isHolder || picks.length < spec.slots.length) return;
+    clearDraft(opts.nodeId);
     opts.onSolve([...picks]);
   });
   return true;

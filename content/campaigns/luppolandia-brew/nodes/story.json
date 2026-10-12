@@ -556,7 +556,27 @@
     "id": "fight_well_centipedes",
     "type": "encounter",
     "encounterId": "well_centipedes",
-    "onVictory": "well_bucket"
+    "onVictory": "well_after_centipedes"
+  },
+  "well_after_centipedes": {
+    "id": "well_after_centipedes",
+    "type": "story",
+    "alexaScene": "explore",
+    "narration": {
+      "text": "The swarm falls quiet. The pulley lock still waits on the rim — the Seal of the Well is not yours yet."
+    },
+    "choices": [
+      {
+        "id": "lock",
+        "label": "Return to the pulley lock",
+        "next": "well_lock"
+      },
+      {
+        "id": "leave",
+        "label": "Leave for the mosaic corridor",
+        "next": "corridor_hub"
+      }
+    ]
   },
   "well_bucket": {
     "id": "well_bucket",

@@ -57,6 +57,10 @@ export type Token = {
   maxHp: number;
   ac: number;
   dead: boolean;
+  dying?: boolean;
+  stable?: boolean;
+  deathSuccesses?: number;
+  deathFailures?: number;
   initiative: number;
   playerId?: string;
   characterId?: string;

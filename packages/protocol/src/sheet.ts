@@ -30,6 +30,10 @@ export type PcSheet = {
   spellSlotMax?: Record<string, number> | null;
   conditions?: string[];
   concentrating?: string | null;
+  dying?: boolean;
+  stable?: boolean;
+  deathSuccesses?: number;
+  deathFailures?: number;
   savingThrows: string[];
   skills: string[];
   features: string[];
@@ -161,7 +165,13 @@ export function pcSheetHtml(sheet: PcSheet, tab: SheetTab, opts: SheetOptions): 
     </header>
     <div class="sheet-hp" role="img" aria-label="${sheet.hp} of ${sheet.maxHp} hit points">
       <span style="--hp:${ratio}"></span><strong>${sheet.hp}<em>/${sheet.maxHp} HP</em></strong>
+      ${sheet.dying || sheet.stable ? `<em class="sheet-down">${sheet.stable ? "Stable" : "Down"}</em>` : ""}
     </div>
+    ${
+      sheet.dying || sheet.stable
+        ? `<p class="death-pips" aria-label="${sheet.deathSuccesses ?? 0} death successes, ${sheet.deathFailures ?? 0} failures">Death saves ${Array.from({ length: 3 }, (_, i) => `<i class="${i < (sheet.deathSuccesses ?? 0) ? "ok" : ""}"></i>`).join("")} ${Array.from({ length: 3 }, (_, i) => `<i class="${i < (sheet.deathFailures ?? 0) ? "bad" : ""}"></i>`).join("")}</p>`
+        : ""
+    }
     <div class="sheet-vitals">
       <span><em>AC</em>${sheet.ac}</span>
       <span><em>Speed</em>${sheet.speedCells * 5} ft</span>

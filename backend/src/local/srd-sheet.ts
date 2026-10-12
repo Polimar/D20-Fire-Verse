@@ -122,8 +122,8 @@ export function initSheet(token: CombatToken, pregen: Pregen, saved?: Vitals): v
   token.conditions = [];
   token.deathSuccesses = saved?.deathSuccesses ?? 0;
   token.deathFailures = saved?.deathFailures ?? 0;
-  token.dying = Boolean(saved?.dying) || token.hp <= 0;
   token.stable = Boolean(saved?.stable);
+  token.dying = Boolean(saved?.dying) || (token.hp <= 0 && !token.stable);
   token.secondWindUsed = Boolean(saved?.secondWindUsed);
   token.ragesLeft = saved?.ragesLeft ?? (pregen.class === "barbarian" ? (level >= 3 ? 3 : 2) : 0);
   token.actionSurge = saved?.actionSurge ?? (pregen.class === "fighter" && level >= 2);
@@ -139,7 +139,8 @@ export function initSheet(token: CombatToken, pregen: Pregen, saved?: Vitals): v
   token.hitDice = saved?.hitDice ?? level;
   if (token.hp <= 0) {
     token.hp = 0;
-    token.dying = true;
+    if (token.stable) token.dying = false;
+    else token.dying = true;
   }
   if (pregen.class === "wizard" && !token.reactionIds.includes("spell_shield") && token.spells.includes("spell_shield")) {
     token.reactionIds.push("spell_shield");

@@ -47,9 +47,9 @@ appRoot.innerHTML = `
   <div class="vignette" aria-hidden="true"></div>
   <div class="grain" aria-hidden="true"></div>
   <header class="topbar">
-    <div class="brand-mark"><img src="/icons/icon-192.png" alt="" width="36" height="36" />D20 FireVerse <span>Luppolandia</span></div>
+    <div class="brand-mark"><img src="/icons/icon-192.png" alt="" width="36" height="36" />D20 FireVerse</div>
     <ol class="party-rail" id="partyRail" aria-label="The party"></ol>
-    <div class="now-playing" id="nowPlaying" aria-live="off"><span class="music-bars" aria-hidden="true"><i></i><i></i><i></i></span><span><em id="musicKicker">Music</em><strong id="musicTitle">A Very Potent Brew</strong></span></div>
+    <div class="now-playing" id="nowPlaying" aria-live="off"><span class="music-bars" aria-hidden="true"><i></i><i></i><i></i></span><span><em id="musicKicker">Music</em><strong id="musicTitle">D20 FireVerse</strong></span></div>
     <div class="conn" id="conn" role="status">Connecting…</div>
     <div class="play-controls" id="playControls" hidden>
       <button type="button" class="ghost" id="btnSaveGame">Save</button>
@@ -83,9 +83,10 @@ appRoot.innerHTML = `
   <main class="pages">
     <section class="page page-home active" id="pageHome" aria-label="Title">
       <div class="home-hero">
-        <p class="home-kicker">A one-shot for the living room · 5E rules</p>
-        <h1 class="home-title">A Very<br />Potent Brew</h1>
-        <p class="home-lead">The television is the table. Nobody has to run the game: the rules roll every die in the open, the narrator reads every scene aloud, and the party decides the rest.</p>
+        <p class="home-kicker">Your couch. Your party. Every die on the big screen.</p>
+        <h1 class="home-title">D20 FireVerse</h1>
+        <p class="home-pillars"><span>Play campaigns</span><span>Fight in the arena</span></p>
+        <p class="home-lead">No human game master — authored adventures with open dice and spoken scenes, then a competitive arena to prove who is strongest.</p>
         <p class="home-welcome" id="homeWelcome" hidden></p>
         <div class="home-cta" id="homeCta"></div>
         <div class="home-load" id="homeLoad" hidden>
@@ -1169,10 +1170,8 @@ function renderChoices(s: RoomState) {
     return;
   }
   if (s.nodeType === "encounter" && !s.combat) {
-    box.innerHTML = `<button type="button" class="choice primary" id="btnBeginFight" data-autofocus><span class="choice-n">⚔</span><span>Roll initiative</span></button>
-      <button type="button" class="choice" id="btnStepBack"><span class="choice-n">↩</span><span>Step back to safer ground</span></button>`;
+    box.innerHTML = `<button type="button" class="choice primary" id="btnBeginFight" data-autofocus><span class="choice-n">⚔</span><span>Roll initiative</span></button>`;
     $("btnBeginFight").addEventListener("click", () => send({ action: "BEGIN_COMBAT", roomCode: s.roomCode }));
-    $("btnStepBack").addEventListener("click", () => send({ action: "WITHDRAW", roomCode: s.roomCode }));
     return;
   }
 

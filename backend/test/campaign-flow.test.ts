@@ -31,6 +31,24 @@ test("cellar, well, and store doors offer Leave back to the hub", () => {
   }
 });
 
+test("winning the well swarm does not grant the seal", () => {
+  const { room, playerId } = seat("brenna_ironveal");
+  room.nodeId = "fight_well_centipedes";
+  beginCombat(room.roomCode);
+  const combat = room.combat!;
+  for (const t of combat.tokens.filter((tok) => tok.kind === "enemy")) {
+    t.hp = 0;
+    t.dead = true;
+  }
+  combat.status = "victory";
+  playerDisconnect(room.roomCode, playerId);
+  assert.equal(room.nodeId, "well_after_centipedes");
+  assert.ok(!room.flags.includes("seal_well"));
+  const ids = publicState(room).choices.map((c) => c.id);
+  assert.ok(ids.includes("lock"));
+  assert.ok(ids.includes("leave"));
+});
+
 test("withdraw from the well swarm returns to the well chamber, not the lock", () => {
   const { room } = seat("brenna_ironveal");
   room.nodeId = "fight_well_centipedes";
@@ -39,6 +57,24 @@ test("withdraw from the well swarm returns to the well chamber, not the lock", (
   withdraw(room.roomCode);
   assert.equal(room.nodeId, "well_enter");
   assert.ok(publicState(room).choices.some((c) => c.id === "leave"));
+});
+
+test("approach cannot withdraw until the fight has started", () => {
+  const { room } = seat("brenna_ironveal");
+  room.nodeId = "fight_well_centipedes";
+  assert.throws(() => withdraw(room.roomCode), /NO_WITHDRAW/);
+  assert.equal(room.nodeId, "fight_well_centipedes");
+});
+
+test("the hole ambush flag is set when combat begins, not on approach", () => {
+  const { room, playerId } = seat("brenna_ironveal");
+  room.flags.push("seal_cellar", "tiles_done");
+  room.nodeId = "well_enter";
+  choose(room.roomCode, "leave", playerId);
+  assert.equal(room.nodeId, "hole_rats");
+  assert.ok(!room.flags.includes("hole_rats_done"));
+  beginCombat(room.roomCode);
+  assert.ok(room.flags.includes("hole_rats_done"));
 });
 
 test("lab Perception DC 14 spots the spider; a miss sets surprise and she goes first", () => {
