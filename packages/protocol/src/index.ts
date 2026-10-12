@@ -71,6 +71,7 @@ export type ClientMessage = {
   format?: string;
   theme?: string;
   mapSize?: string;
+  mapId?: string;
   level?: number;
   privacy?: string;
   name?: string;

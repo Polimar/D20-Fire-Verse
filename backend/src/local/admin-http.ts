@@ -52,7 +52,21 @@ import {
   updateDraftNode,
 } from "./catalog.js";
 import type { EncounterDef, StoryNode } from "./campaign.js";
-import { getArenaMap, listArenaMapFiles, saveArenaMapFile } from "./arena-maps.js";
+import {
+  ARENA_THEMES,
+  assertCanEditArenaMap,
+  clearArenaMapArt,
+  createArenaMapFile,
+  ensureArenaMapFile,
+  getArenaMap,
+  listAdminArenaMaps,
+  listCustomArenaMaps,
+  listMyArenaMaps,
+  publicCustomMap,
+  saveArenaMapArt,
+  saveArenaMapFile,
+} from "./arena-maps.js";
+import { isArenaSize, isArenaTheme } from "./arena.js";
 import { compactRects, parseCellGrid, parseCellPoints } from "./map-grid.js";
 import { brevoStatus, readBrevo, sendMail, writeBrevo } from "./mail.js";
 import { closeRoom, getRoom, listRooms, listSaves } from "./room.js";
@@ -122,6 +136,94 @@ function parseCampaignSpawn(
     throw new Error("BAD_MAP");
   }
   return { pcs, enemies };
+}
+
+function needUser(req: Request): SessionUser {
+  const user = requestUser(req);
+  if (!user) throw new Error("AUTH_REQUIRED");
+  if (user.disabled) throw new Error("FORBIDDEN");
+  return user;
+}
+
+function arenaListRow(map: { id: string; name: string; width: number; height: number; size?: string; createdBy?: { userId: string; username: string } }) {
+  return {
+    source: "arena" as const,
+    id: map.id,
+    name: map.name,
+    width: map.width,
+    height: map.height,
+    size: map.size,
+    createdBy: map.createdBy ? { username: map.createdBy.username, userId: map.createdBy.userId } : null,
+  };
+}
+
+function arenaPaintJson(map: NonNullable<ReturnType<typeof getArenaMap>>) {
+  const art = map.art?.startsWith("/") ? map.art : map.art ? map.art : null;
+  return {
+    source: "arena" as const,
+    id: map.id,
+    name: map.name,
+    width: map.width,
+    height: map.height,
+    walls: map.walls,
+    hazards: map.hazards ?? [],
+    spawn: map.spawn,
+    art: art || null,
+    createdBy: map.createdBy ?? null,
+  };
+}
+
+function requireOwnedCustom(id: string, user: SessionUser, adminBypass: boolean) {
+  const map = getArenaMap(id);
+  if (!map?.createdBy) throw new Error("FORBIDDEN");
+  assertCanEditArenaMap(map, user, adminBypass);
+  return map;
+}
+
+function paintArenaMap(id: string, body: Record<string, unknown> | undefined, user: SessionUser, adminBypass: boolean) {
+  const current = adminBypass ? (isBuiltinId(id) ? ensureArenaMapFile(id) : getArenaMap(id)) : requireOwnedCustom(id, user, false);
+  if (!current) throw new Error("BAD_MAP");
+  if (adminBypass) assertCanEditArenaMap(current, user, true);
+  const wallsGrid = parseCellGrid(body?.walls, current.width, current.height);
+  const hazardGrid = parseCellGrid(body?.hazards ?? [], current.width, current.height);
+  if (!wallsGrid || !hazardGrid) throw new Error("BAD_MAP");
+  for (let y = 0; y < current.height; y += 1) {
+    for (let x = 0; x < current.width; x += 1) {
+      if (wallsGrid[y]![x]) hazardGrid[y]![x] = false;
+    }
+  }
+  const art = typeof body?.art === "string" ? body.art : undefined;
+  return saveArenaMapFile(
+    id,
+    compactRects(wallsGrid),
+    compactRects(hazardGrid),
+    parseArenaSpawn(body?.spawn, current.width, current.height, current.spawn),
+    art,
+  );
+}
+
+function isBuiltinId(id: string): boolean {
+  return ARENA_THEMES.some((t) => id === `arena_${t.id}_small` || id === `arena_${t.id}_medium` || id === `arena_${t.id}_large`);
+}
+
+export function handleArenaArt(req: Request, res: Response): void {
+  try {
+    const user = needUser(req);
+    const id = String(req.params.id);
+    const adminPath = req.path.includes("/api/admin/");
+    if (adminPath) {
+      const map = isBuiltinId(id) ? ensureArenaMapFile(id) : getArenaMap(id);
+      if (!map) throw new Error("BAD_MAP");
+      assertCanEditArenaMap(map, user, true);
+    } else {
+      requireOwnedCustom(id, user, false);
+    }
+    const buf = Buffer.isBuffer(req.body) ? req.body : Buffer.from(req.body ?? []);
+    const mime = String(req.headers["content-type"] ?? "");
+    res.json(arenaPaintJson(saveArenaMapArt(id, buf, mime)));
+  } catch (err) {
+    fail(res, err);
+  }
 }
 
 function parseArenaSpawn(
@@ -330,6 +432,76 @@ export function mountAccountRoutes(app: Express): void {
     }
     const scope = req.query.scope === "friends" ? "friends" : "global";
     res.json({ scope, rows: arenaLeaderboard(scope, user.id) });
+  });
+
+  app.get("/api/arena/maps", (req, res) => {
+    try {
+      needUser(req);
+      const sizeRaw = String(req.query.size ?? "");
+      const size = isArenaSize(sizeRaw) ? sizeRaw : undefined;
+      res.json({ maps: listCustomArenaMaps(size).map(publicCustomMap) });
+    } catch (err) {
+      fail(res, err);
+    }
+  });
+
+  app.get("/api/me/arena-maps", (req, res) => {
+    try {
+      const user = needUser(req);
+      res.json({ maps: listMyArenaMaps(user.id).map(arenaListRow) });
+    } catch (err) {
+      fail(res, err);
+    }
+  });
+
+  app.post("/api/me/arena-maps", (req, res) => {
+    try {
+      const user = needUser(req);
+      const size = String(req.body?.size ?? "");
+      const themeRaw = String(req.body?.theme ?? "brewery");
+      if (!isArenaSize(size)) throw new Error("BAD_MAP");
+      if (themeRaw && !isArenaTheme(themeRaw)) throw new Error("ARENA_BAD_THEME");
+      const map = createArenaMapFile({
+        slug: String(req.body?.slug ?? ""),
+        size,
+        theme: isArenaTheme(themeRaw) ? themeRaw : "brewery",
+        name: String(req.body?.name ?? ""),
+        owner: { userId: user.id, username: user.username },
+      });
+      res.json(arenaPaintJson(map));
+    } catch (err) {
+      fail(res, err);
+    }
+  });
+
+  app.get("/api/me/arena-maps/:id", (req, res) => {
+    try {
+      const user = needUser(req);
+      const map = requireOwnedCustom(String(req.params.id), user, false);
+      res.json(arenaPaintJson(map));
+    } catch (err) {
+      fail(res, err);
+    }
+  });
+
+  app.put("/api/me/arena-maps/:id", (req, res) => {
+    try {
+      const user = needUser(req);
+      const saved = paintArenaMap(String(req.params.id), req.body, user, false);
+      res.json(arenaPaintJson(saved));
+    } catch (err) {
+      fail(res, err);
+    }
+  });
+
+  app.delete("/api/me/arena-maps/:id/art", (req, res) => {
+    try {
+      const user = needUser(req);
+      requireOwnedCustom(String(req.params.id), user, false);
+      res.json(arenaPaintJson(clearArenaMapArt(String(req.params.id))));
+    } catch (err) {
+      fail(res, err);
+    }
   });
 
   app.get("/api/campaigns", (_req, res) => {
@@ -588,13 +760,7 @@ export function mountAdminRoutes(app: Express): void {
         width: m.width,
         height: m.height,
       }));
-      const arenas = listArenaMapFiles().map((m) => ({
-        source: "arena" as const,
-        id: m.id,
-        name: m.name,
-        width: m.width,
-        height: m.height,
-      }));
+      const arenas = listAdminArenaMaps().map((m) => arenaListRow(m));
       res.json({ maps: [...campaign, ...arenas] });
     } catch (err) {
       fail(res, err);
@@ -624,20 +790,9 @@ export function mountAdminRoutes(app: Express): void {
         return;
       }
       if (source === "arena") {
-        const map = getArenaMap(id);
+        const map = isBuiltinId(id) ? ensureArenaMapFile(id) : getArenaMap(id);
         if (!map) throw new Error("BAD_MAP");
-        const art = map.art?.startsWith("/") ? map.art : `/art/arena/${map.theme}-${map.size}.png`;
-        res.json({
-          source,
-          id: map.id,
-          name: map.name,
-          width: map.width,
-          height: map.height,
-          walls: map.walls,
-          hazards: map.hazards ?? [],
-          spawn: map.spawn,
-          art,
-        });
+        res.json(arenaPaintJson(map));
         return;
       }
       throw new Error("BAD_MAP");
@@ -646,62 +801,80 @@ export function mountAdminRoutes(app: Express): void {
     }
   });
 
+  app.post("/api/admin/maps", (req, res) => {
+    try {
+      const user = assertAdmin(requestUser(req));
+      if (req.body?.source !== "arena") throw new Error("BAD_MAP");
+      const size = String(req.body?.size ?? "");
+      const themeRaw = String(req.body?.theme ?? "brewery");
+      if (!isArenaSize(size)) throw new Error("BAD_MAP");
+      if (themeRaw && !isArenaTheme(themeRaw)) throw new Error("ARENA_BAD_THEME");
+      const map = createArenaMapFile({
+        slug: String(req.body?.slug ?? ""),
+        size,
+        theme: isArenaTheme(themeRaw) ? themeRaw : "brewery",
+        name: String(req.body?.name ?? ""),
+        owner: { userId: user.id, username: user.username },
+      });
+      res.json(arenaPaintJson(map));
+    } catch (err) {
+      fail(res, err);
+    }
+  });
+
   app.put("/api/admin/maps/:source/:id", (req, res) => {
     try {
-      assertAdmin(requestUser(req));
+      const user = assertAdmin(requestUser(req));
       const source = String(req.params.source);
       const id = String(req.params.id);
-      const current =
-        source === "campaign" ? getBuiltinMap(id) : source === "arena" ? getArenaMap(id) : undefined;
-      if (!current) throw new Error("BAD_MAP");
-      const wallsGrid = parseCellGrid(req.body?.walls, current.width, current.height);
-      const hazardGrid = parseCellGrid(req.body?.hazards ?? [], current.width, current.height);
-      if (!wallsGrid || !hazardGrid) throw new Error("BAD_MAP");
-      for (let y = 0; y < current.height; y += 1) {
-        for (let x = 0; x < current.width; x += 1) {
-          if (wallsGrid[y]![x]) hazardGrid[y]![x] = false;
+      if (source === "campaign") {
+        const current = getBuiltinMap(id);
+        if (!current) throw new Error("BAD_MAP");
+        const wallsGrid = parseCellGrid(req.body?.walls, current.width, current.height);
+        const hazardGrid = parseCellGrid(req.body?.hazards ?? [], current.width, current.height);
+        if (!wallsGrid || !hazardGrid) throw new Error("BAD_MAP");
+        for (let y = 0; y < current.height; y += 1) {
+          for (let x = 0; x < current.width; x += 1) {
+            if (wallsGrid[y]![x]) hazardGrid[y]![x] = false;
+          }
         }
+        const camp = getBuiltinMap(id)!;
+        const saved = saveBuiltinCampaignMap(
+          id,
+          compactRects(wallsGrid),
+          compactRects(hazardGrid),
+          parseCampaignSpawn(req.body?.spawn, camp.width, camp.height, camp.spawn),
+          parseLabels(req.body?.labels, camp.width, camp.height, camp.labels),
+        );
+        res.json({
+          source,
+          id: saved.id,
+          name: saved.name,
+          width: saved.width,
+          height: saved.height,
+          walls: saved.walls,
+          hazards: saved.hazards ?? [],
+          spawn: saved.spawn,
+          labels: saved.labels ?? null,
+        });
+        return;
       }
-      const walls = compactRects(wallsGrid);
-      const hazards = compactRects(hazardGrid);
-      const saved =
-        source === "campaign"
-          ? (() => {
-              const camp = getBuiltinMap(id)!;
-              return saveBuiltinCampaignMap(
-                id,
-                walls,
-                hazards,
-                parseCampaignSpawn(req.body?.spawn, camp.width, camp.height, camp.spawn),
-                parseLabels(req.body?.labels, camp.width, camp.height, camp.labels),
-              );
-            })()
-          : saveArenaMapFile(
-              id,
-              walls,
-              hazards,
-              parseArenaSpawn(
-                req.body?.spawn,
-                current.width,
-                current.height,
-                current.spawn as {
-                  ffa: Array<{ x: number; y: number }>;
-                  teamA: Array<{ x: number; y: number }>;
-                  teamB: Array<{ x: number; y: number }>;
-                },
-              ),
-            );
-      res.json({
-        source,
-        id: saved.id,
-        name: saved.name,
-        width: saved.width,
-        height: saved.height,
-        walls: saved.walls,
-        hazards: saved.hazards ?? [],
-        spawn: saved.spawn,
-        labels: "labels" in saved ? ((saved as { labels?: Record<string, { x: number; y: number }> }).labels ?? null) : null,
-      });
+      if (source !== "arena") throw new Error("BAD_MAP");
+      res.json(arenaPaintJson(paintArenaMap(id, req.body, user, true)));
+    } catch (err) {
+      fail(res, err);
+    }
+  });
+
+  app.delete("/api/admin/maps/:source/:id/art", (req, res) => {
+    try {
+      const user = assertAdmin(requestUser(req));
+      const id = String(req.params.id);
+      if (String(req.params.source) !== "arena") throw new Error("BAD_MAP");
+      const map = isBuiltinId(id) ? ensureArenaMapFile(id) : getArenaMap(id);
+      if (!map) throw new Error("BAD_MAP");
+      assertCanEditArenaMap(map, user, true);
+      res.json(arenaPaintJson(clearArenaMapArt(id)));
     } catch (err) {
       fail(res, err);
     }

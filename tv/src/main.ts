@@ -29,6 +29,7 @@ import { chapterCard, mountScenes, setScene } from "./scenefx";
 import { ART, sceneForNode } from "./scenes";
 import { clearSession, loadSession, saveSession, type Session, type SessionMode } from "./session";
 import { adminOpen, closeAdmin, handleAdminKey, openAdmin } from "./admin-ui";
+import { arenaEditorOpen, closeArenaEditor, handleArenaEditorKey, openArenaEditor } from "./arena-editor-ui";
 import { closeSettings, openSettings, settingsOpen } from "./settings-ui";
 import { onSettings, settings } from "./settings";
 import { sfx } from "./sfx";
@@ -592,6 +593,7 @@ let arenaCreate = {
   format: "ffa_1v1",
   theme: "brewery",
   mapSize: "small" as "small" | "medium" | "large",
+  mapId: "",
   level: 1,
   privacy: "public",
   name: "",
@@ -636,6 +638,7 @@ function renderHome() {
     cta.innerHTML = `
       <button type="button" class="primary" id="btnModeCampaign" data-autofocus>Campaign</button>
       <button type="button" id="btnModeArena">Arena</button>
+      ${account ? `<button type="button" id="btnModeArenaEditor">Arena editor</button>` : ""}
       <button type="button" class="ghost" id="btnSettings">Settings</button>
       ${account?.role === "admin" ? `<button type="button" class="ghost" id="btnAdmin">Manage the table</button>` : ""}`;
     $("btnModeCampaign").addEventListener("click", () => {
@@ -646,6 +649,7 @@ function renderHome() {
       homeView = "arena";
       renderHome();
     });
+    $("btnModeArenaEditor")?.addEventListener("click", () => openArenaEditor());
   } else if (homeView === "campaign") {
     cta.innerHTML = `${campaign ? continueMarkup(campaign) : ""}
     ${camp}
@@ -699,6 +703,7 @@ function renderHome() {
       <label>Format <select id="arenaFormat">${ARENA_FORMATS.map((f) => `<option value="${f.id}" ${arenaCreate.format === f.id ? "selected" : ""}>${esc(f.label)}</option>`).join("")}</select></label>
       <label>Theme <select id="arenaTheme">${ARENA_THEMES.map((t) => `<option value="${t.id}" ${arenaCreate.theme === t.id ? "selected" : ""}>${esc(t.label)}</option>`).join("")}</select></label>
       <label>Size <select id="arenaSize">${["small", "medium", "large"].map((s) => `<option value="${s}" ${arenaCreate.mapSize === s ? "selected" : ""}>${s}</option>`).join("")}</select></label>
+      <label>Custom map <select id="arenaMapId"><option value="">None</option></select></label>
       <label>Hero level <select id="arenaLevel">${[1, 2, 3].map((l) => `<option value="${l}" ${arenaCreate.level === l ? "selected" : ""}>${l}</option>`).join("")}</select></label>
       <label>Privacy <select id="arenaPrivacy"><option value="public" ${arenaCreate.privacy === "public" ? "selected" : ""}>Public</option><option value="private" ${arenaCreate.privacy === "private" ? "selected" : ""}>Private (code only)</option></select></label>
       <label>Name <input id="arenaName" maxlength="24" value="${esc(arenaCreate.name)}" placeholder="Optional" /></label>
@@ -721,12 +726,39 @@ function renderHome() {
       if (list.some((m) => m.id === arenaCreate.monsterId)) sel.value = arenaCreate.monsterId;
       else arenaCreate.monsterId = list[0]?.id ?? "";
     };
+    const fillCustomMaps = async () => {
+      const size = ($("arenaSize") as HTMLSelectElement).value;
+      const sel = $("arenaMapId") as HTMLSelectElement | null;
+      if (!sel) return;
+      try {
+        const data = await fetch(`/api/arena/maps?size=${encodeURIComponent(size)}`, { credentials: "same-origin" }).then(
+          (r) => r.json() as Promise<{ maps?: Array<{ id: string; name: string; createdBy?: { username: string } }> }>,
+        );
+        const maps = data.maps ?? [];
+        sel.innerHTML = `<option value="">None</option>${maps
+          .map((m) => `<option value="${esc(m.id)}">${esc(m.name)} · ${esc(m.createdBy?.username ?? "player")}</option>`)
+          .join("")}`;
+        if (maps.some((m) => m.id === arenaCreate.mapId)) sel.value = arenaCreate.mapId;
+        else arenaCreate.mapId = "";
+      } catch {
+        sel.innerHTML = `<option value="">None</option>`;
+      }
+      const theme = $("arenaTheme") as HTMLSelectElement;
+      theme.disabled = Boolean(sel.value);
+    };
     const syncSize = () => {
       const format = ($("arenaFormat") as HTMLSelectElement).value;
       ($("arenaSize") as HTMLSelectElement).value = suggestedSize(format);
       if (pveWrap) pveWrap.hidden = format !== "pve_1v1";
+      void fillCustomMaps();
     };
     $("arenaFormat").addEventListener("change", syncSize);
+    $("arenaSize").addEventListener("change", () => void fillCustomMaps());
+    $("arenaMapId").addEventListener("change", () => {
+      const custom = Boolean(($("arenaMapId") as HTMLSelectElement).value);
+      ($("arenaTheme") as HTMLSelectElement).disabled = custom;
+    });
+    void fillCustomMaps();
     $("arenaMonsterQ")?.addEventListener("input", refreshMonsters);
     $("arenaMonsterCr")?.addEventListener("change", refreshMonsters);
     $("arenaForm").addEventListener("submit", (e) => {
@@ -735,6 +767,7 @@ function renderHome() {
         format: ($("arenaFormat") as HTMLSelectElement).value,
         theme: ($("arenaTheme") as HTMLSelectElement).value,
         mapSize: ($("arenaSize") as HTMLSelectElement).value as "small" | "medium" | "large",
+        mapId: ($("arenaMapId") as HTMLSelectElement)?.value ?? "",
         level: Number(($("arenaLevel") as HTMLSelectElement).value),
         privacy: ($("arenaPrivacy") as HTMLSelectElement).value,
         name: ($("arenaName") as HTMLInputElement).value,
@@ -753,6 +786,7 @@ function renderHome() {
         format: arenaCreate.format,
         theme: arenaCreate.theme,
         mapSize: arenaCreate.mapSize,
+        mapId: arenaCreate.mapId || undefined,
         level: arenaCreate.level,
         privacy: arenaCreate.privacy,
         name: arenaCreate.name,
@@ -1536,6 +1570,11 @@ function connect() {
 // ------------------------------------------------------------------ remote
 
 function handleBack(): boolean {
+  if (arenaEditorOpen() && handleArenaEditorKey("back")) return true;
+  if (arenaEditorOpen()) {
+    closeArenaEditor();
+    return true;
+  }
   if (adminOpen() && handleAdminKey("back")) return true;
   if (adminOpen()) {
     closeAdmin();
@@ -1605,10 +1644,15 @@ window.addEventListener("keydown", (e) => {
   }
   if (key === "menu") {
     e.preventDefault();
-    if (adminOpen()) closeAdmin();
+    if (arenaEditorOpen()) closeArenaEditor();
+    else if (adminOpen()) closeAdmin();
     else if (!$("leaveModal").hidden) closeLeaveModal();
     else if (settingsOpen()) closeSettings();
     else openTableSettings();
+    return;
+  }
+  if (arenaEditorOpen() && handleArenaEditorKey(key)) {
+    e.preventDefault();
     return;
   }
   if (adminOpen() && handleAdminKey(key)) {

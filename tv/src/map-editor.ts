@@ -16,6 +16,7 @@ export type MapListItem = {
   name: string;
   width: number;
   height: number;
+  createdBy?: { username: string } | null;
 };
 
 export type MapPaint = {
@@ -152,6 +153,9 @@ function setPinPos(s: MapPaintSession, h: Held, x: number, y: number) {
 }
 
 function artVars(spec: MapPaint): { cls: string; style: string } {
+  if (spec.art?.startsWith("/")) {
+    return { cls: "has-art", style: `;--map-art:url('${esc(spec.art)}')` };
+  }
   if (spec.source === "campaign") {
     const room = roomForMapId(spec.id);
     if (room) {
@@ -161,9 +165,6 @@ function artVars(spec: MapPaint): { cls: string; style: string } {
         style: `;--map-art:url('/art/dungeon-map.jpg');--map-art-size:${crop.size};--map-art-pos:${crop.position}`,
       };
     }
-  }
-  if (spec.art?.startsWith("/")) {
-    return { cls: "has-art", style: `;--map-art:url('${esc(spec.art)}')` };
   }
   return { cls: "", style: "" };
 }
@@ -292,7 +293,12 @@ function parseMark(raw: string | undefined): Held | null {
 export function renderMapPainter(
   host: HTMLElement,
   spec: MapPaint,
-  opts: { onBack: () => void; onSave: (s: MapPaintSession) => Promise<void> },
+  opts: {
+    onBack: () => void;
+    onSave: (s: MapPaintSession) => Promise<void>;
+    onImportArt?: (file: File) => Promise<string | null>;
+    onClearArt?: () => Promise<string | null>;
+  },
 ) {
   const walls = empty(spec.width, spec.height);
   const hazards = empty(spec.width, spec.height);
@@ -332,6 +338,13 @@ export function renderMapPainter(
         <button type="button" class="ghost on" data-brush="wall" data-nav-key="brush-wall" data-autofocus>Wall</button>
         <button type="button" class="ghost" data-brush="hazard" data-nav-key="brush-hazard">Hazard</button>
         <span class="meta" id="mapHint">Paint terrain, or pick a letter to move it</span>
+        ${
+          opts.onImportArt
+            ? `<button type="button" class="ghost" id="mapImportArt" data-nav-key="map-import">Import base image</button>
+        <button type="button" class="ghost" id="mapClearArt" data-nav-key="map-clear-art">Clear art</button>
+        <input type="file" id="mapArtFile" accept="image/jpeg,image/png,image/webp" hidden />`
+            : ""
+        }
         <button type="button" class="primary" id="mapSave" data-nav-key="map-save">Save</button>
         <button type="button" class="ghost" id="mapBack" data-nav-key="map-back">Back to maps</button>
       </div>
@@ -468,6 +481,50 @@ export function renderMapPainter(
   paintLegend();
   host.querySelector("#mapBack")!.addEventListener("click", () => void leave());
   host.querySelector("#mapSave")!.addEventListener("click", () => void persist());
+  const applyArt = (url: string | null) => {
+    s.spec.art = url;
+    const el = host.querySelector<HTMLElement>("#mapPaint");
+    if (!el) return;
+    if (url?.startsWith("/")) {
+      el.classList.add("has-art");
+      el.style.setProperty("--map-art", `url('${url}')`);
+      el.style.removeProperty("--map-art-size");
+      el.style.removeProperty("--map-art-pos");
+    } else {
+      el.classList.remove("has-art");
+      el.style.removeProperty("--map-art");
+    }
+  };
+  const fileInput = host.querySelector<HTMLInputElement>("#mapArtFile");
+  host.querySelector("#mapImportArt")?.addEventListener("click", () => fileInput?.click());
+  fileInput?.addEventListener("change", () => {
+    const file = fileInput.files?.[0];
+    fileInput.value = "";
+    if (!file || !opts.onImportArt) return;
+    void opts.onImportArt(file).then((url) => {
+      applyArt(url);
+      sfx("uiConfirm");
+      const live = hint();
+      if (live) live.textContent = "Base image imported.";
+    }).catch((err: unknown) => {
+      sfx("uiError");
+      const live = hint();
+      if (live) live.textContent = err instanceof Error ? err.message : "Import failed";
+    });
+  });
+  host.querySelector("#mapClearArt")?.addEventListener("click", () => {
+    if (!opts.onClearArt) return;
+    void opts.onClearArt().then((url) => {
+      applyArt(url);
+      sfx("uiConfirm");
+      const live = hint();
+      if (live) live.textContent = "Base image cleared.";
+    }).catch((err: unknown) => {
+      sfx("uiError");
+      const live = hint();
+      if (live) live.textContent = err instanceof Error ? err.message : "Clear failed";
+    });
+  });
 
   const cellAt = (ev: PointerEvent) => {
     const r = grid.getBoundingClientRect();

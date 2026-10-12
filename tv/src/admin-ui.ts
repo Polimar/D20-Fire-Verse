@@ -206,24 +206,34 @@ async function renderMaps(gen: number) {
   if (!host) return;
   const camps = maps.filter((m) => m.source === "campaign");
   const arenas = maps.filter((m) => m.source === "arena");
-  const rows = (list: MapListItem[]) =>
-    list
-      .map(
-        (m) => `<tr>
+  const campRows = camps
+    .map(
+      (m) => `<tr>
           <td>${esc(m.name)}</td>
           <td>${esc(m.id)}</td>
           <td>${m.width}×${m.height}</td>
           <td class="admin-actions"><button type="button" data-src="${esc(m.source)}" data-id="${esc(m.id)}">Paint</button></td>
         </tr>`,
-      )
-      .join("");
+    )
+    .join("");
+  const arenaRows = arenas
+    .map(
+      (m) => `<tr>
+          <td>${esc(m.name)}</td>
+          <td>${esc(m.id)}</td>
+          <td>${m.width}×${m.height}</td>
+          <td>${esc(m.createdBy?.username ?? "table")}</td>
+          <td class="admin-actions"><button type="button" data-src="${esc(m.source)}" data-id="${esc(m.id)}">Paint</button></td>
+        </tr>`,
+    )
+    .join("");
   host.innerHTML = `<div class="admin-block">
       <h3>Encounter maps</h3>
-      <p class="meta">Paint floor, walls, and hazards on imported grids. Save writes the JSON in content/; the next fight uses it.</p>
+      <p class="meta">Paint floor, walls, and hazards. Arena custom maps show who created them. You can edit every arena map.</p>
       <h4>Campaign</h4>
-      <table class="admin-table"><tr><th>Name</th><th>Id</th><th>Size</th><th></th></tr>${rows(camps) || `<tr><td colspan="4">No campaign maps</td></tr>`}</table>
+      <table class="admin-table"><tr><th>Name</th><th>Id</th><th>Size</th><th></th></tr>${campRows || `<tr><td colspan="4">No campaign maps</td></tr>`}</table>
       <h4>Arena</h4>
-      <table class="admin-table"><tr><th>Name</th><th>Id</th><th>Size</th><th></th></tr>${rows(arenas) || `<tr><td colspan="4">No arena files</td></tr>`}</table>
+      <table class="admin-table"><tr><th>Name</th><th>Id</th><th>Size</th><th>Created by</th><th></th></tr>${arenaRows || `<tr><td colspan="5">No arena maps</td></tr>`}</table>
     </div>`;
   host.querySelectorAll<HTMLButtonElement>("[data-src]").forEach((b) => {
     b.addEventListener("click", () => {
@@ -262,9 +272,33 @@ async function openMapPainter(source: MapListItem["source"], id: string) {
             hazards: s.hazards,
             spawn,
             labels: s.labels,
+            art: s.spec.art ?? undefined,
           }),
         });
       },
+      onImportArt:
+        source === "arena"
+          ? async (file) => {
+              const spec = await fetch(`/api/admin/maps/arena/${id}/art`, {
+                method: "POST",
+                credentials: "same-origin",
+                headers: { "Content-Type": file.type || "image/jpeg" },
+                body: file,
+              }).then(async (res) => {
+                const data = (await res.json().catch(() => ({}))) as { error?: string; art?: string | null };
+                if (!res.ok) throw new Error(data.error || res.statusText);
+                return data;
+              });
+              return spec.art ?? null;
+            }
+          : undefined,
+      onClearArt:
+        source === "arena"
+          ? async () => {
+              const spec = await api<{ art?: string | null }>(`/api/admin/maps/arena/${id}/art`, { method: "DELETE" });
+              return spec.art ?? null;
+            }
+          : undefined,
     });
   } catch (err) {
     const live = body();

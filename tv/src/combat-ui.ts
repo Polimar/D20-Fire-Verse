@@ -283,9 +283,9 @@ export class CombatUi {
       this.awaiting = false;
       this.displayTurnId = c.currentTokenId;
       board.setBoard(this.fightKey, c.width, c.height, c.walls, c.tokens, c.hazards);
-      const png = c.art && c.art.endsWith(".png") ? c.art : null;
-      const room = !png ? roomForMapId(c.mapId) : null;
-      board.setMapArt(png ?? (room ? "/art/dungeon-map.jpg" : null), room ? DUNGEON_ROOMS[room] : null);
+      const custom = c.art?.startsWith("/") ? c.art : null;
+      const room = !custom ? roomForMapId(c.mapId) : null;
+      board.setMapArt(custom ?? (room ? "/art/dungeon-map.jpg" : null), room ? DUNGEON_ROOMS[room] : null);
       if (opts.resumed || !c.events.some((e) => e.kind === "start")) this.director!.skipTo(c);
       else this.director!.skipTo({ ...c, seq: Math.min(...c.events.map((e) => e.seq)) - 1 });
       this.paintBackdrop();

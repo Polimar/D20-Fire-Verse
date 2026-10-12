@@ -35,6 +35,7 @@ export type ArenaConfig = {
   format: ArenaFormatId;
   theme: ArenaThemeId;
   size: ArenaSize;
+  mapId?: string;
   level: 1 | 2 | 3;
   privacy: "public" | "private";
   name: string;
@@ -67,6 +68,7 @@ export function parseCreateArena(body: {
   format?: string;
   theme?: string;
   mapSize?: string;
+  mapId?: string;
   level?: number;
   privacy?: string;
   name?: string;
@@ -74,9 +76,19 @@ export function parseCreateArena(body: {
 }): Omit<ArenaConfig, "phase"> {
   const format = body.format ?? "ffa_1v1";
   if (!isArenaFormat(format)) throw new Error("ARENA_BAD_FORMAT");
-  const theme = (body.theme ?? "brewery") as string;
+  let theme = (body.theme ?? "brewery") as string;
+  let size = (body.mapSize ?? suggestedSize(format)) as string;
+  let mapId: string | undefined;
+  const requested = String(body.mapId ?? "").trim();
+  if (requested) {
+    const map = getArenaMap(requested);
+    if (!map) throw new Error("BAD_MAP");
+    if (body.mapSize && body.mapSize !== map.size) throw new Error("ARENA_BAD_SIZE");
+    theme = map.theme;
+    size = map.size;
+    mapId = map.id;
+  }
   if (!isArenaTheme(theme)) throw new Error("ARENA_BAD_THEME");
-  const size = (body.mapSize ?? suggestedSize(format)) as string;
   if (!isArenaSize(size)) throw new Error("ARENA_BAD_SIZE");
   const level = Number(body.level ?? 1);
   if (level !== 1 && level !== 2 && level !== 3) throw new Error("BAD_LEVEL");
@@ -90,7 +102,7 @@ export function parseCreateArena(body: {
     }
     if (!getMonster(monsterId)) throw new Error("ARENA_BAD_MONSTER");
   }
-  return { format, theme, size, level, privacy, name, monsterId };
+  return { format, theme, size, mapId, level, privacy, name, monsterId };
 }
 
 export function suggestedSize(format: ArenaFormatId): ArenaSize {
@@ -145,8 +157,12 @@ export function publicArena(room: Room) {
     pve: a.format === "pve_1v1",
     monsterId: a.monsterId ?? null,
     monsterName: a.monsterId ? getMonster(a.monsterId)?.name ?? a.monsterId : null,
-    mapId: arenaMapId(a.theme, a.size),
-    art: `/art/arena/${a.theme}-${a.size}.png`,
+    mapId: a.mapId ?? arenaMapId(a.theme, a.size),
+    art: (() => {
+      const id = a.mapId ?? arenaMapId(a.theme, a.size);
+      const art = getArenaMap(id)?.art;
+      return art && art.startsWith("/") ? art : `/art/arena/${a.theme}-${a.size}.png`;
+    })(),
     catalog: {
       formats: Object.entries(ARENA_FORMATS).map(([id, v]) => ({ id, ...v })),
       themes: ARENA_THEMES,
@@ -244,7 +260,7 @@ export function assertCanStart(room: Room, actorId?: string): void {
 
 export function beginArenaFight(room: Room, holdPcIds: string[] = []): CombatState {
   if (!room.arena) throw new Error("NOT_ARENA");
-  const map = getArenaMap(arenaMapId(room.arena.theme, room.arena.size));
+  const map = getArenaMap(room.arena.mapId ?? arenaMapId(room.arena.theme, room.arena.size));
   if (!map) throw new Error("BAD_MAP");
   const teams = ARENA_FORMATS[room.arena.format].teams === 2;
   const pve = room.arena.format === "pve_1v1";

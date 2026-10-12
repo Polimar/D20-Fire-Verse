@@ -4,7 +4,7 @@ import path from "node:path";
 import fs from "node:fs";
 import express from "express";
 import { actionNeedsAuth, activeUserById, type SessionUser } from "./auth.js";
-import { handleCampaignImport, mountAccountRoutes, mountAdminRoutes, requestUser } from "./admin-http.js";
+import { handleArenaArt, handleCampaignImport, mountAccountRoutes, mountAdminRoutes, requestUser } from "./admin-http.js";
 import { announceScene } from "./alexa.js";
 import {
   armGrace,
@@ -120,6 +120,7 @@ type ClientMsg = {
   format?: string;
   theme?: string;
   mapSize?: string;
+  mapId?: string;
   level?: number;
   privacy?: string;
   name?: string;
@@ -173,6 +174,8 @@ loadPersistedRooms();
 const app = express();
 app.disable("x-powered-by");
 app.post("/api/admin/campaigns/import", express.raw({ type: () => true, limit: "32mb" }), handleCampaignImport);
+app.post("/api/admin/maps/arena/:id/art", express.raw({ type: () => true, limit: "8mb" }), handleArenaArt);
+app.post("/api/me/arena-maps/:id/art", express.raw({ type: () => true, limit: "8mb" }), handleArenaArt);
 app.use(express.json({ limit: "2mb" }));
 mountAccountRoutes(app);
 mountAdminRoutes(app);
@@ -844,6 +847,7 @@ function handle(sock: Sock, msg: ClientMsg): void {
         format: msg.format,
         theme: msg.theme,
         mapSize: msg.mapSize,
+        mapId: msg.mapId,
         level: msg.level,
         privacy: msg.privacy,
         name: msg.name,

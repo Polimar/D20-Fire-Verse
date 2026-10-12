@@ -259,6 +259,7 @@ export function createArena(opts: {
   format?: string;
   theme?: string;
   mapSize?: string;
+  mapId?: string;
   level?: number;
   privacy?: string;
   name?: string;
