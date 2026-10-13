@@ -1,0 +1,94 @@
+{
+  "entries": [
+    {
+      "id": "human",
+      "name": "Human",
+      "speedFt": 30,
+      "size": "medium",
+      "traits": [
+        "Human"
+      ]
+    },
+    {
+      "id": "elf",
+      "name": "Elf",
+      "speedFt": 30,
+      "size": "medium",
+      "traits": [
+        "Elf"
+      ]
+    },
+    {
+      "id": "dwarf",
+      "name": "Dwarf",
+      "speedFt": 30,
+      "size": "medium",
+      "traits": [
+        "Dwarf"
+      ]
+    },
+    {
+      "id": "halfling",
+      "name": "Halfling",
+      "speedFt": 30,
+      "size": "small",
+      "traits": [
+        "Halfling"
+      ]
+    },
+    {
+      "id": "gnome",
+      "name": "Gnome",
+      "speedFt": 30,
+      "size": "small",
+      "traits": [
+        "Gnome"
+      ]
+    },
+    {
+      "id": "dragonborn",
+      "name": "Dragonborn",
+      "speedFt": 30,
+      "size": "medium",
+      "traits": [
+        "Dragonborn"
+      ]
+    },
+    {
+      "id": "tiefling",
+      "name": "Tiefling",
+      "speedFt": 30,
+      "size": "medium",
+      "traits": [
+        "Tiefling"
+      ]
+    },
+    {
+      "id": "orc",
+      "name": "Orc",
+      "speedFt": 30,
+      "size": "medium",
+      "traits": [
+        "Orc"
+      ]
+    },
+    {
+      "id": "goliath",
+      "name": "Goliath",
+      "speedFt": 30,
+      "size": "medium",
+      "traits": [
+        "Goliath"
+      ]
+    },
+    {
+      "id": "aasimar",
+      "name": "Aasimar",
+      "speedFt": 30,
+      "size": "medium",
+      "traits": [
+        "Aasimar"
+      ]
+    }
+  ]
+}

@@ -68,7 +68,7 @@ test("the tavern leads down to the cellar fight, voiced and seated", () => {
   assert.ok(state.combat?.events.some((e) => e.kind === "start"));
   const me = state.combat?.tokens.find((t) => t.playerId === playerId);
   assert.ok(me?.portrait?.startsWith("/art/portraits/"));
-  assert.throws(() => joinRoom(room.roomCode, "Late", "quill_ashmere"), /IN_COMBAT/);
+  assert.throws(() => joinRoom(room.roomCode, "Late", "quill_ashmere"), /CAMPAIGN_SEALED/);
 });
 
 test("a dropped table takes its seat back, a stranger gets the table only", () => {

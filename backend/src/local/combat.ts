@@ -1,3 +1,4 @@
+import { applyMastery, type MasteryId } from "@d20-fireverse/rules";
 import {
   abilityMod,
   getAbility,
@@ -89,6 +90,11 @@ export type CombatToken = {
   deathFailures?: number;
   acBonus?: number;
   acFloor?: number;
+  /** From the equipped loadout. Weapon mastery riders stay in packages/rules. */
+  gearAttackBonus?: number;
+  gearDamageBonus?: number;
+  masteries?: string[];
+  grantedSpells?: string[];
   blur?: boolean;
   invisible?: boolean;
   raging?: boolean;
@@ -2177,6 +2183,7 @@ export function performPcAction(
   const ranged = range > 1;
   if (t.fightingStyle === "archery" && ranged) attackBonus += 2;
   if (t.fightingStyle === "dueling" && !ranged) attackBonus += 2;
+  attackBonus += t.gearAttackBonus ?? 0;
   const foeAdjacent = combat.tokens.some(
     (e) => isFoe(combat, t, e) && chebyshev(e.x, e.y, t.x, t.y) <= 1,
   );
@@ -2226,13 +2233,21 @@ export function performPcAction(
   const style = resumed ? resumed.style : atkEffect.spellAttack ? "spell" : ranged ? "ranged" : "melee";
   if (!resumed && !landed) {
     const fumble = attackRoll.outcome === "fumble";
+    const graze = applyMastery({
+      mastery: t.masteries?.includes("graze") ? "graze" : undefined,
+      granted: Boolean(t.masteries?.includes("graze")),
+      hit: false,
+      melee: !ranged,
+      abilityMod: abilityMod(pregen?.abilities.str ?? 10),
+    });
+    if (graze.grazeDamage > 0) applyDamage(combat, target, graze.grazeDamage, false, "slashing");
     emit(combat, {
       kind: "strike",
       tokenId: t.id,
       ability: ability.name,
       style,
       rolls,
-      hits: [{ targetId: target.id, outcome: attackRoll.outcome ?? "miss", damage: 0, hp: target.hp }],
+      hits: [{ targetId: target.id, outcome: attackRoll.outcome ?? "miss", damage: graze.grazeDamage, hp: target.hp }],
       line: fumble
         ? `${t.name} swings ${ability.name} — a natural 1. ${target.name} looks almost embarrassed for them.`
         : `${t.name} attacks ${target.name} with ${ability.name}: ${attackRoll.total} vs AC ${target.ac} — miss.`,
@@ -2318,6 +2333,21 @@ export function performPcAction(
     dmgTotal += pushPartDamage(rolls, t.name, target.brand.dice, weaponType, "brand", crit);
   }
   if (t.raging && !ranged) dmgTotal += 2;
+  dmgTotal += t.gearDamageBonus ?? 0;
+  const knownMastery = new Set<MasteryId>(["cleave", "graze", "nick", "push", "sap", "slow", "topple", "vex"]);
+  const beside = combat.tokens.find((other) => other.id !== target.id && !other.dead && chebyshev(other.x, other.y, target.x, target.y) <= 1)?.id;
+  for (const raw of t.masteries ?? []) {
+    if (!knownMastery.has(raw as MasteryId)) continue;
+    const rider = applyMastery({
+      mastery: raw as MasteryId,
+      granted: Boolean(t.features?.includes("weapon_mastery")),
+      hit: true,
+      melee: !ranged,
+      abilityMod: 0,
+      targetAdjacentId: beside,
+    });
+    if (rider.vexAdvantageNext || rider.sap) target.marked = true;
+  }
   const dtype = weaponType;
   if (
     !ranged &&

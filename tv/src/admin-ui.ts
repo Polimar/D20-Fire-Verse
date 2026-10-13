@@ -13,7 +13,7 @@ import {
 import type { RemoteKey } from "./nav";
 import { sfx } from "./sfx";
 
-type Tab = "users" | "rooms" | "saves" | "camps" | "maps" | "mail" | "amazon";
+type Tab = "users" | "rooms" | "saves" | "camps" | "maps" | "mail" | "amazon" | "content" | "stats";
 
 type AdminUser = { id: string; username: string; role: "admin" | "player"; disabled: boolean };
 type RoomRow = {
@@ -111,6 +111,8 @@ export function openAdmin() {
           <button type="button" class="ghost" data-tab="maps">Maps</button>
           <button type="button" class="ghost" data-tab="mail">Mail</button>
           <button type="button" class="ghost" data-tab="amazon">Amazon</button>
+          <button type="button" class="ghost" data-tab="content">Content</button>
+          <button type="button" class="ghost" data-tab="stats">Stats</button>
         </nav>
         <div id="adminBody"></div>
         <div class="row modal-actions">
@@ -122,7 +124,7 @@ export function openAdmin() {
     overlay.querySelectorAll<HTMLButtonElement>("[data-tab]").forEach((b) => {
       b.addEventListener("click", () => {
         const next = b.dataset.tab;
-        if (next !== "users" && next !== "rooms" && next !== "saves" && next !== "camps" && next !== "maps" && next !== "mail" && next !== "amazon") return;
+        if (next !== "users" && next !== "rooms" && next !== "saves" && next !== "camps" && next !== "maps" && next !== "mail" && next !== "amazon" && next !== "content" && next !== "stats") return;
         void (async () => {
           if (mapEditorOpen() && !(await flushMapEditor())) return;
           tab = next;
@@ -186,6 +188,8 @@ async function refresh() {
     else if (tab === "camps") await renderCamps(gen);
     else if (tab === "maps") await renderMaps(gen);
     else if (tab === "mail") await renderMail(gen);
+    else if (tab === "content") await renderContent(gen);
+    else if (tab === "stats") await renderStats(gen);
     else await renderAmazon(gen);
   } catch (err) {
     if (gen !== paintGen) return;
@@ -783,4 +787,41 @@ async function openEditor(id: string) {
   };
   editor.querySelector("#adminNodePick")?.addEventListener("change", () => void load());
   await load();
+}
+
+async function renderContent(gen: number) {
+  const data = await api<{ entries: Array<{ kind: string; id: string; name: string; enabled: boolean; valid: boolean; issues: string[]; inPlay: boolean }> }>("/api/admin/content");
+  const host = still(gen);
+  if (!host) return;
+  const rows = data.entries
+    .map((entry) => `<tr>
+      <td>${esc(entry.kind)}</td>
+      <td>${esc(entry.name)}</td>
+      <td>${entry.valid ? "ok" : esc(entry.issues[0] || "invalid")}</td>
+      <td>${entry.inPlay ? "in play" : "off"}</td>
+      <td class="admin-actions"><button type="button" data-kind="${esc(entry.kind)}" data-id="${esc(entry.id)}" data-on="${entry.enabled ? "1" : "0"}">${entry.enabled ? "Disable" : "Enable"}</button></td>
+    </tr>`)
+    .join("");
+  host.innerHTML = `<p class="admin-note">Everything starts off, including entries Zod accepts. A bad file stays out of the game.</p>
+    <table class="admin-table"><tr><th>Kind</th><th>Name</th><th>Check</th><th>Play</th><th></th></tr>${rows}</table>`;
+  host.querySelectorAll<HTMLButtonElement>("[data-kind]").forEach((button) => {
+    button.addEventListener("click", () => {
+      void api(`/api/admin/content/${button.dataset.kind}/${button.dataset.id}`, {
+        method: "POST",
+        body: JSON.stringify({ enabled: button.dataset.on !== "1" }),
+      }).then(() => refresh());
+    });
+  });
+}
+
+async function renderStats(gen: number) {
+  const data = await api<{ goldFlow: { earned: number; spent: number }; drops: Array<{ rarity: string; n: number }>; iap: { receipts: number }; winRate: Array<{ classId: string; wins: number; fights: number }>; dau: number }>("/api/admin/analytics");
+  const host = still(gen);
+  if (!host) return;
+  const bar = (n: number, max: number) => `<span class="spell-pips" style="display:inline-block;width:${max ? Math.round((n / max) * 120) : 0}px;background:#c4552a;height:0.6rem"></span>`;
+  const maxDrop = Math.max(1, ...data.drops.map((row) => row.n));
+  host.innerHTML = `<div class="admin-block"><h3>Gold</h3><p>Earned ${data.goldFlow.earned} · spent ${data.goldFlow.spent}</p>
+    <p>DAU ${data.dau} · IAP receipts ${data.iap.receipts}</p></div>
+    <div class="admin-block"><h3>Drops</h3>${data.drops.map((row) => `<p>${esc(row.rarity)} ${row.n} ${bar(row.n, maxDrop)}</p>`).join("") || "<p class='admin-note'>No drops yet.</p>"}</div>
+    <div class="admin-block"><h3>Win rate</h3>${data.winRate.map((row) => `<p>${esc(row.classId)} ${row.wins}/${row.fights}</p>`).join("") || "<p class='admin-note'>No matches yet.</p>"}</div>`;
 }

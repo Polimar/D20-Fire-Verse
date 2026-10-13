@@ -1,0 +1,112 @@
+{
+  "entries": [
+    {
+      "id": "berserker",
+      "classId": "barbarian",
+      "name": "Berserker",
+      "level": 3,
+      "features": [
+        "Berserker"
+      ]
+    },
+    {
+      "id": "college_of_lore",
+      "classId": "bard",
+      "name": "College of Lore",
+      "level": 3,
+      "features": [
+        "College of Lore"
+      ]
+    },
+    {
+      "id": "life_domain",
+      "classId": "cleric",
+      "name": "Life Domain",
+      "level": 3,
+      "features": [
+        "Life Domain"
+      ]
+    },
+    {
+      "id": "circle_of_the_land",
+      "classId": "druid",
+      "name": "Circle of the Land",
+      "level": 3,
+      "features": [
+        "Circle of the Land"
+      ]
+    },
+    {
+      "id": "champion",
+      "classId": "fighter",
+      "name": "Champion",
+      "level": 3,
+      "features": [
+        "Champion"
+      ]
+    },
+    {
+      "id": "warrior_of_the_open_hand",
+      "classId": "monk",
+      "name": "Warrior of the Open Hand",
+      "level": 3,
+      "features": [
+        "Warrior of the Open Hand"
+      ]
+    },
+    {
+      "id": "oath_of_devotion",
+      "classId": "paladin",
+      "name": "Oath of Devotion",
+      "level": 3,
+      "features": [
+        "Oath of Devotion"
+      ]
+    },
+    {
+      "id": "hunter",
+      "classId": "ranger",
+      "name": "Hunter",
+      "level": 3,
+      "features": [
+        "Hunter"
+      ]
+    },
+    {
+      "id": "thief",
+      "classId": "rogue",
+      "name": "Thief",
+      "level": 3,
+      "features": [
+        "Thief"
+      ]
+    },
+    {
+      "id": "draconic_sorcery",
+      "classId": "sorcerer",
+      "name": "Draconic Sorcery",
+      "level": 3,
+      "features": [
+        "Draconic Sorcery"
+      ]
+    },
+    {
+      "id": "fiend_patron",
+      "classId": "warlock",
+      "name": "Fiend Patron",
+      "level": 3,
+      "features": [
+        "Fiend Patron"
+      ]
+    },
+    {
+      "id": "evoker",
+      "classId": "wizard",
+      "name": "Evoker",
+      "level": 3,
+      "features": [
+        "Evoker"
+      ]
+    }
+  ]
+}

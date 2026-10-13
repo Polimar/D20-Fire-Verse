@@ -13,6 +13,7 @@ export type Manifest = {
   /** Speaking characters: how the table shows them and how the server voices them. */
   cast?: Record<string, CastDef>;
   alexaHints?: Record<string, unknown>;
+  levelCap?: { "1": number; "2": number; "3": number; "4": number };
 };
 
 export type CastDef = {
@@ -90,6 +91,8 @@ export type Pregen = {
   portrait?: string;
   /** Custom heroes are private to the account that built them. */
   ownerUserId?: string;
+  /** V1 forged heroes stay on the sheet and cannot take a seat. */
+  legacy?: boolean;
 };
 
 export type MapDef = {
@@ -188,6 +191,7 @@ export function getPregen(id: string): Pregen | undefined {
 
 /** Built-in heroes are shared; a custom one is only for its owner. */
 export function assertCanPlayCharacter(pregen: Pregen, userId?: string): void {
+  if (pregen.legacy) throw new Error("LEGACY_CHARACTER");
   if (!pregen.ownerUserId) return;
   if (!userId || pregen.ownerUserId !== userId) throw new Error("BAD_CHARACTER");
 }

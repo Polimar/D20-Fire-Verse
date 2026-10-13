@@ -1,0 +1,124 @@
+{
+  "entries": [
+    {
+      "id": "longsword",
+      "name": "Longsword",
+      "rarity": "common",
+      "slot": "mainhand",
+      "weaponId": "longsword",
+      "weaponMastery": "sap",
+      "effects": [],
+      "priceGold": 100
+    },
+    {
+      "id": "greataxe",
+      "name": "Greataxe",
+      "rarity": "common",
+      "slot": "mainhand",
+      "weaponId": "greataxe",
+      "weaponMastery": "cleave",
+      "effects": [],
+      "priceGold": 100
+    },
+    {
+      "id": "dagger",
+      "name": "Dagger",
+      "rarity": "common",
+      "slot": "mainhand",
+      "weaponId": "dagger",
+      "weaponMastery": "nick",
+      "effects": [],
+      "priceGold": 100
+    },
+    {
+      "id": "pike",
+      "name": "Pike",
+      "rarity": "common",
+      "slot": "mainhand",
+      "weaponId": "pike",
+      "weaponMastery": "push",
+      "effects": [],
+      "priceGold": 100
+    },
+    {
+      "id": "mace",
+      "name": "Mace",
+      "rarity": "common",
+      "slot": "mainhand",
+      "weaponId": "mace",
+      "weaponMastery": "sap",
+      "effects": [],
+      "priceGold": 100
+    },
+    {
+      "id": "club",
+      "name": "Club",
+      "rarity": "common",
+      "slot": "mainhand",
+      "weaponId": "club",
+      "weaponMastery": "slow",
+      "effects": [],
+      "priceGold": 100
+    },
+    {
+      "id": "quarterstaff",
+      "name": "Quarterstaff",
+      "rarity": "common",
+      "slot": "mainhand",
+      "weaponId": "quarterstaff",
+      "weaponMastery": "topple",
+      "effects": [],
+      "priceGold": 100
+    },
+    {
+      "id": "shortbow",
+      "name": "Shortbow",
+      "rarity": "common",
+      "slot": "mainhand",
+      "weaponId": "shortbow",
+      "weaponMastery": "vex",
+      "effects": [],
+      "priceGold": 100
+    },
+    {
+      "id": "scimitar",
+      "name": "Scimitar",
+      "rarity": "common",
+      "slot": "mainhand",
+      "weaponId": "scimitar",
+      "weaponMastery": "nick",
+      "effects": [],
+      "priceGold": 100
+    },
+    {
+      "id": "handaxe",
+      "name": "Handaxe",
+      "rarity": "common",
+      "slot": "mainhand",
+      "weaponId": "handaxe",
+      "weaponMastery": "vex",
+      "effects": [],
+      "priceGold": 100
+    },
+    {
+      "id": "greatsword",
+      "name": "Greatsword",
+      "rarity": "common",
+      "slot": "mainhand",
+      "weaponId": "greatsword",
+      "weaponMastery": "graze",
+      "effects": [],
+      "priceGold": 100
+    },
+    {
+      "id": "warhammer",
+      "name": "Warhammer",
+      "rarity": "common",
+      "slot": "mainhand",
+      "weaponId": "warhammer",
+      "weaponMastery": "topple",
+      "effects": [],
+      "priceGold": 100
+    }
+  ]
+}

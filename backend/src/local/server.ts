@@ -5,6 +5,7 @@ import fs from "node:fs";
 import express from "express";
 import { actionNeedsAuth, activeUserById, type SessionUser } from "./auth.js";
 import { handleArenaArt, handleCampaignImport, mountAccountRoutes, mountAdminRoutes, requestUser } from "./admin-http.js";
+import { mountV2Routes } from "./v2-http.js";
 import { announceScene } from "./alexa.js";
 import {
   armGrace,
@@ -179,6 +180,7 @@ app.post("/api/me/arena-maps/:id/art", express.raw({ type: () => true, limit: "8
 app.use(express.json({ limit: "2mb" }));
 mountAccountRoutes(app);
 mountAdminRoutes(app);
+mountV2Routes(app);
 app.use((_req, res, next) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
@@ -717,6 +719,7 @@ function tableWatched(roomCode: string): boolean {
 function armDropTimer(roomCode: string, playerId: string) {
   const key = seatKey(roomCode, playerId);
   if (dropTimers.has(key)) return;
+  const ranked = getRoom(roomCode)?.arena?.mode === "ranked";
   dropTimers.set(
     key,
     setTimeout(() => {
@@ -728,7 +731,7 @@ function armDropTimer(roomCode: string, playerId: string) {
       }
       const room = playerDisconnect(roomCode, playerId);
       if (room) broadcast(room.roomCode);
-    }, DROP_GRACE_MS),
+    }, ranked ? 45_000 : DROP_GRACE_MS),
   );
 }
 

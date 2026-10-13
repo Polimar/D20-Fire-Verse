@@ -1,0 +1,72 @@
+{
+  "entries": [
+    {
+      "id": "longsword_plus_1",
+      "name": "+1 Longsword",
+      "rarity": "uncommon",
+      "slot": "mainhand",
+      "weaponId": "longsword",
+      "weaponMastery": "sap",
+      "effects": [
+        {
+          "kind": "attack_bonus",
+          "amount": 1
+        },
+        {
+          "kind": "damage_bonus",
+          "amount": 1,
+          "damageType": "slashing"
+        }
+      ],
+      "priceGold": 500
+    },
+    {
+      "id": "cloak_of_protection",
+      "name": "Cloak of Protection",
+      "rarity": "uncommon",
+      "slot": "trinket",
+      "requires": {
+        "attunement": true
+      },
+      "effects": [
+        {
+          "kind": "ac_bonus",
+          "amount": 1
+        }
+      ],
+      "priceGold": 500
+    },
+    {
+      "id": "armor_plus_2",
+      "name": "+2 Armor",
+      "rarity": "rare",
+      "slot": "armor",
+      "effects": [
+        {
+          "kind": "ac_bonus",
+          "amount": 2
+        }
+      ],
+      "priceGold": 3000
+    },
+    {
+      "id": "flame_tongue",
+      "name": "Flame Tongue",
+      "rarity": "rare",
+      "slot": "mainhand",
+      "weaponId": "longsword",
+      "weaponMastery": "sap",
+      "requires": {
+        "attunement": true
+      },
+      "effects": [
+        {
+          "kind": "on_hit_rider",
+          "damage": "2d6",
+          "damageType": "fire"
+        }
+      ],
+      "priceGold": 3000
+    }
+  ]
+}

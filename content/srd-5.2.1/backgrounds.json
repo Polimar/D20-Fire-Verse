@@ -1,0 +1,52 @@
+{
+  "entries": [
+    {
+      "id": "acolyte",
+      "name": "Acolyte",
+      "skills": [
+        "insight",
+        "religion"
+      ]
+    },
+    {
+      "id": "criminal",
+      "name": "Criminal",
+      "skills": [
+        "deception",
+        "stealth"
+      ]
+    },
+    {
+      "id": "sage",
+      "name": "Sage",
+      "skills": [
+        "arcana",
+        "history"
+      ]
+    },
+    {
+      "id": "soldier",
+      "name": "Soldier",
+      "skills": [
+        "athletics",
+        "intimidation"
+      ]
+    },
+    {
+      "id": "entertainer",
+      "name": "Entertainer",
+      "skills": [
+        "acrobatics",
+        "performance"
+      ]
+    },
+    {
+      "id": "hermit",
+      "name": "Hermit",
+      "skills": [
+        "medicine",
+        "religion"
+      ]
+    }
+  ]
+}

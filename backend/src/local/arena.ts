@@ -43,6 +43,9 @@ export type ArenaConfig = {
   heroSwapEndsAt?: number;
   lastResult?: string;
   monsterId?: string;
+  /** Ranked counts a 45s absence as a loss. Arcade and test keep Dodge. */
+  mode?: "ranked" | "arcade" | "test";
+  queueType?: "solo" | "duo" | "full_team";
 };
 
 const HERO_SWAP_MS = 30_000;

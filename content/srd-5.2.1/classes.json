@@ -1,0 +1,2822 @@
+{
+  "entries": [
+    {
+      "id": "barbarian",
+      "name": "Barbarian",
+      "hitDie": 12,
+      "saves": [
+        "str",
+        "con"
+      ],
+      "skillChoices": 2,
+      "skillList": [
+        "animal_handling",
+        "athletics",
+        "intimidation",
+        "nature",
+        "perception",
+        "survival"
+      ],
+      "primary": [
+        "str"
+      ],
+      "multiclass": {
+        "allOf": [
+          {
+            "ability": "str",
+            "min": 13
+          }
+        ]
+      },
+      "caster": "none",
+      "weaponMastery": true,
+      "levels": [
+        {
+          "level": 1,
+          "proficiencyBonus": 2,
+          "features": [
+            "Barbarian",
+            "weapon_mastery"
+          ]
+        },
+        {
+          "level": 2,
+          "proficiencyBonus": 2,
+          "features": []
+        },
+        {
+          "level": 3,
+          "proficiencyBonus": 2,
+          "features": [
+            "subclass"
+          ]
+        },
+        {
+          "level": 4,
+          "proficiencyBonus": 2,
+          "features": [
+            "asi_or_feat"
+          ]
+        },
+        {
+          "level": 5,
+          "proficiencyBonus": 3,
+          "features": []
+        },
+        {
+          "level": 6,
+          "proficiencyBonus": 3,
+          "features": []
+        },
+        {
+          "level": 7,
+          "proficiencyBonus": 3,
+          "features": []
+        },
+        {
+          "level": 8,
+          "proficiencyBonus": 3,
+          "features": [
+            "asi_or_feat"
+          ]
+        },
+        {
+          "level": 9,
+          "proficiencyBonus": 4,
+          "features": []
+        },
+        {
+          "level": 10,
+          "proficiencyBonus": 4,
+          "features": []
+        },
+        {
+          "level": 11,
+          "proficiencyBonus": 4,
+          "features": []
+        },
+        {
+          "level": 12,
+          "proficiencyBonus": 4,
+          "features": [
+            "asi_or_feat"
+          ]
+        },
+        {
+          "level": 13,
+          "proficiencyBonus": 5,
+          "features": []
+        },
+        {
+          "level": 14,
+          "proficiencyBonus": 5,
+          "features": []
+        },
+        {
+          "level": 15,
+          "proficiencyBonus": 5,
+          "features": []
+        },
+        {
+          "level": 16,
+          "proficiencyBonus": 5,
+          "features": [
+            "asi_or_feat"
+          ]
+        },
+        {
+          "level": 17,
+          "proficiencyBonus": 6,
+          "features": []
+        },
+        {
+          "level": 18,
+          "proficiencyBonus": 6,
+          "features": []
+        },
+        {
+          "level": 19,
+          "proficiencyBonus": 6,
+          "features": [
+            "asi_or_feat"
+          ]
+        },
+        {
+          "level": 20,
+          "proficiencyBonus": 6,
+          "features": []
+        }
+      ]
+    },
+    {
+      "id": "bard",
+      "name": "Bard",
+      "hitDie": 8,
+      "saves": [
+        "dex",
+        "cha"
+      ],
+      "skillChoices": 3,
+      "skillList": [
+        "acrobatics",
+        "deception",
+        "performance",
+        "persuasion",
+        "insight"
+      ],
+      "primary": [
+        "cha"
+      ],
+      "multiclass": {
+        "allOf": [
+          {
+            "ability": "cha",
+            "min": 13
+          }
+        ]
+      },
+      "caster": "full",
+      "spellAbility": "cha",
+      "weaponMastery": false,
+      "levels": [
+        {
+          "level": 1,
+          "proficiencyBonus": 2,
+          "features": [
+            "Bard",
+            "spellcasting"
+          ],
+          "spellSlots": {
+            "1": 2
+          }
+        },
+        {
+          "level": 2,
+          "proficiencyBonus": 2,
+          "features": [],
+          "spellSlots": {
+            "1": 3
+          }
+        },
+        {
+          "level": 3,
+          "proficiencyBonus": 2,
+          "features": [
+            "subclass"
+          ],
+          "spellSlots": {
+            "1": 4,
+            "2": 2
+          }
+        },
+        {
+          "level": 4,
+          "proficiencyBonus": 2,
+          "features": [
+            "asi_or_feat"
+          ],
+          "spellSlots": {
+            "1": 4,
+            "2": 3
+          }
+        },
+        {
+          "level": 5,
+          "proficiencyBonus": 3,
+          "features": [],
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 2
+          }
+        },
+        {
+          "level": 6,
+          "proficiencyBonus": 3,
+          "features": [],
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3
+          }
+        },
+        {
+          "level": 7,
+          "proficiencyBonus": 3,
+          "features": [],
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 1
+          }
+        },
+        {
+          "level": 8,
+          "proficiencyBonus": 3,
+          "features": [
+            "asi_or_feat"
+          ],
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 2
+          }
+        },
+        {
+          "level": 9,
+          "proficiencyBonus": 4,
+          "features": [],
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 1
+          }
+        },
+        {
+          "level": 10,
+          "proficiencyBonus": 4,
+          "features": [],
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2
+          }
+        },
+        {
+          "level": 11,
+          "proficiencyBonus": 4,
+          "features": [],
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2,
+            "6": 1
+          }
+        },
+        {
+          "level": 12,
+          "proficiencyBonus": 4,
+          "features": [
+            "asi_or_feat"
+          ],
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2,
+            "6": 1
+          }
+        },
+        {
+          "level": 13,
+          "proficiencyBonus": 5,
+          "features": [],
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2,
+            "6": 1,
+            "7": 1
+          }
+        },
+        {
+          "level": 14,
+          "proficiencyBonus": 5,
+          "features": [],
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2,
+            "6": 1,
+            "7": 1
+          }
+        },
+        {
+          "level": 15,
+          "proficiencyBonus": 5,
+          "features": [],
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2,
+            "6": 1,
+            "7": 1,
+            "8": 1
+          }
+        },
+        {
+          "level": 16,
+          "proficiencyBonus": 5,
+          "features": [
+            "asi_or_feat"
+          ],
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2,
+            "6": 1,
+            "7": 1,
+            "8": 1
+          }
+        },
+        {
+          "level": 17,
+          "proficiencyBonus": 6,
+          "features": [],
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2,
+            "6": 1,
+            "7": 1,
+            "8": 1,
+            "9": 1
+          }
+        },
+        {
+          "level": 18,
+          "proficiencyBonus": 6,
+          "features": [],
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 3,
+            "6": 1,
+            "7": 1,
+            "8": 1,
+            "9": 1
+          }
+        },
+        {
+          "level": 19,
+          "proficiencyBonus": 6,
+          "features": [
+            "asi_or_feat"
+          ],
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 3,
+            "6": 2,
+            "7": 1,
+            "8": 1,
+            "9": 1
+          }
+        },
+        {
+          "level": 20,
+          "proficiencyBonus": 6,
+          "features": [],
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 3,
+            "6": 2,
+            "7": 2,
+            "8": 1,
+            "9": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "cleric",
+      "name": "Cleric",
+      "hitDie": 8,
+      "saves": [
+        "wis",
+        "cha"
+      ],
+      "skillChoices": 2,
+      "skillList": [
+        "history",
+        "insight",
+        "medicine",
+        "persuasion",
+        "religion"
+      ],
+      "primary": [
+        "wis"
+      ],
+      "multiclass": {
+        "allOf": [
+          {
+            "ability": "wis",
+            "min": 13
+          }
+        ]
+      },
+      "caster": "full",
+      "spellAbility": "wis",
+      "weaponMastery": false,
+      "levels": [
+        {
+          "level": 1,
+          "proficiencyBonus": 2,
+          "features": [
+            "Cleric",
+            "spellcasting"
+          ],
+          "spellSlots": {
+            "1": 2
+          }
+        },
+        {
+          "level": 2,
+          "proficiencyBonus": 2,
+          "features": [],
+          "spellSlots": {
+            "1": 3
+          }
+        },
+        {
+          "level": 3,
+          "proficiencyBonus": 2,
+          "features": [
+            "subclass"
+          ],
+          "spellSlots": {
+            "1": 4,
+            "2": 2
+          }
+        },
+        {
+          "level": 4,
+          "proficiencyBonus": 2,
+          "features": [
+            "asi_or_feat"
+          ],
+          "spellSlots": {
+            "1": 4,
+            "2": 3
+          }
+        },
+        {
+          "level": 5,
+          "proficiencyBonus": 3,
+          "features": [],
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 2
+          }
+        },
+        {
+          "level": 6,
+          "proficiencyBonus": 3,
+          "features": [],
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3
+          }
+        },
+        {
+          "level": 7,
+          "proficiencyBonus": 3,
+          "features": [],
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 1
+          }
+        },
+        {
+          "level": 8,
+          "proficiencyBonus": 3,
+          "features": [
+            "asi_or_feat"
+          ],
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 2
+          }
+        },
+        {
+          "level": 9,
+          "proficiencyBonus": 4,
+          "features": [],
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 1
+          }
+        },
+        {
+          "level": 10,
+          "proficiencyBonus": 4,
+          "features": [],
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2
+          }
+        },
+        {
+          "level": 11,
+          "proficiencyBonus": 4,
+          "features": [],
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2,
+            "6": 1
+          }
+        },
+        {
+          "level": 12,
+          "proficiencyBonus": 4,
+          "features": [
+            "asi_or_feat"
+          ],
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2,
+            "6": 1
+          }
+        },
+        {
+          "level": 13,
+          "proficiencyBonus": 5,
+          "features": [],
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2,
+            "6": 1,
+            "7": 1
+          }
+        },
+        {
+          "level": 14,
+          "proficiencyBonus": 5,
+          "features": [],
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2,
+            "6": 1,
+            "7": 1
+          }
+        },
+        {
+          "level": 15,
+          "proficiencyBonus": 5,
+          "features": [],
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2,
+            "6": 1,
+            "7": 1,
+            "8": 1
+          }
+        },
+        {
+          "level": 16,
+          "proficiencyBonus": 5,
+          "features": [
+            "asi_or_feat"
+          ],
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2,
+            "6": 1,
+            "7": 1,
+            "8": 1
+          }
+        },
+        {
+          "level": 17,
+          "proficiencyBonus": 6,
+          "features": [],
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2,
+            "6": 1,
+            "7": 1,
+            "8": 1,
+            "9": 1
+          }
+        },
+        {
+          "level": 18,
+          "proficiencyBonus": 6,
+          "features": [],
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 3,
+            "6": 1,
+            "7": 1,
+            "8": 1,
+            "9": 1
+          }
+        },
+        {
+          "level": 19,
+          "proficiencyBonus": 6,
+          "features": [
+            "asi_or_feat"
+          ],
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 3,
+            "6": 2,
+            "7": 1,
+            "8": 1,
+            "9": 1
+          }
+        },
+        {
+          "level": 20,
+          "proficiencyBonus": 6,
+          "features": [],
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 3,
+            "6": 2,
+            "7": 2,
+            "8": 1,
+            "9": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "druid",
+      "name": "Druid",
+      "hitDie": 8,
+      "saves": [
+        "int",
+        "wis"
+      ],
+      "skillChoices": 2,
+      "skillList": [
+        "animal_handling",
+        "arcana",
+        "insight",
+        "medicine",
+        "nature",
+        "perception",
+        "religion",
+        "survival"
+      ],
+      "primary": [
+        "wis"
+      ],
+      "multiclass": {
+        "allOf": [
+          {
+            "ability": "wis",
+            "min": 13
+          }
+        ]
+      },
+      "caster": "full",
+      "spellAbility": "wis",
+      "weaponMastery": false,
+      "levels": [
+        {
+          "level": 1,
+          "proficiencyBonus": 2,
+          "features": [
+            "Druid",
+            "spellcasting"
+          ],
+          "spellSlots": {
+            "1": 2
+          }
+        },
+        {
+          "level": 2,
+          "proficiencyBonus": 2,
+          "features": [],
+          "spellSlots": {
+            "1": 3
+          }
+        },
+        {
+          "level": 3,
+          "proficiencyBonus": 2,
+          "features": [
+            "subclass"
+          ],
+          "spellSlots": {
+            "1": 4,
+            "2": 2
+          }
+        },
+        {
+          "level": 4,
+          "proficiencyBonus": 2,
+          "features": [
+            "asi_or_feat"
+          ],
+          "spellSlots": {
+            "1": 4,
+            "2": 3
+          }
+        },
+        {
+          "level": 5,
+          "proficiencyBonus": 3,
+          "features": [],
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 2
+          }
+        },
+        {
+          "level": 6,
+          "proficiencyBonus": 3,
+          "features": [],
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3
+          }
+        },
+        {
+          "level": 7,
+          "proficiencyBonus": 3,
+          "features": [],
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 1
+          }
+        },
+        {
+          "level": 8,
+          "proficiencyBonus": 3,
+          "features": [
+            "asi_or_feat"
+          ],
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 2
+          }
+        },
+        {
+          "level": 9,
+          "proficiencyBonus": 4,
+          "features": [],
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 1
+          }
+        },
+        {
+          "level": 10,
+          "proficiencyBonus": 4,
+          "features": [],
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2
+          }
+        },
+        {
+          "level": 11,
+          "proficiencyBonus": 4,
+          "features": [],
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2,
+            "6": 1
+          }
+        },
+        {
+          "level": 12,
+          "proficiencyBonus": 4,
+          "features": [
+            "asi_or_feat"
+          ],
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2,
+            "6": 1
+          }
+        },
+        {
+          "level": 13,
+          "proficiencyBonus": 5,
+          "features": [],
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2,
+            "6": 1,
+            "7": 1
+          }
+        },
+        {
+          "level": 14,
+          "proficiencyBonus": 5,
+          "features": [],
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2,
+            "6": 1,
+            "7": 1
+          }
+        },
+        {
+          "level": 15,
+          "proficiencyBonus": 5,
+          "features": [],
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2,
+            "6": 1,
+            "7": 1,
+            "8": 1
+          }
+        },
+        {
+          "level": 16,
+          "proficiencyBonus": 5,
+          "features": [
+            "asi_or_feat"
+          ],
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2,
+            "6": 1,
+            "7": 1,
+            "8": 1
+          }
+        },
+        {
+          "level": 17,
+          "proficiencyBonus": 6,
+          "features": [],
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2,
+            "6": 1,
+            "7": 1,
+            "8": 1,
+            "9": 1
+          }
+        },
+        {
+          "level": 18,
+          "proficiencyBonus": 6,
+          "features": [],
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 3,
+            "6": 1,
+            "7": 1,
+            "8": 1,
+            "9": 1
+          }
+        },
+        {
+          "level": 19,
+          "proficiencyBonus": 6,
+          "features": [
+            "asi_or_feat"
+          ],
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 3,
+            "6": 2,
+            "7": 1,
+            "8": 1,
+            "9": 1
+          }
+        },
+        {
+          "level": 20,
+          "proficiencyBonus": 6,
+          "features": [],
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 3,
+            "6": 2,
+            "7": 2,
+            "8": 1,
+            "9": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "fighter",
+      "name": "Fighter",
+      "hitDie": 10,
+      "saves": [
+        "str",
+        "con"
+      ],
+      "skillChoices": 2,
+      "skillList": [
+        "acrobatics",
+        "athletics",
+        "history",
+        "insight",
+        "intimidation",
+        "perception",
+        "survival"
+      ],
+      "primary": [
+        "str",
+        "dex"
+      ],
+      "multiclass": {
+        "anyOf": [
+          {
+            "ability": "str",
+            "min": 13
+          },
+          {
+            "ability": "dex",
+            "min": 13
+          }
+        ]
+      },
+      "caster": "none",
+      "weaponMastery": true,
+      "levels": [
+        {
+          "level": 1,
+          "proficiencyBonus": 2,
+          "features": [
+            "Fighter",
+            "weapon_mastery"
+          ]
+        },
+        {
+          "level": 2,
+          "proficiencyBonus": 2,
+          "features": []
+        },
+        {
+          "level": 3,
+          "proficiencyBonus": 2,
+          "features": [
+            "subclass"
+          ]
+        },
+        {
+          "level": 4,
+          "proficiencyBonus": 2,
+          "features": [
+            "asi_or_feat"
+          ]
+        },
+        {
+          "level": 5,
+          "proficiencyBonus": 3,
+          "features": []
+        },
+        {
+          "level": 6,
+          "proficiencyBonus": 3,
+          "features": []
+        },
+        {
+          "level": 7,
+          "proficiencyBonus": 3,
+          "features": []
+        },
+        {
+          "level": 8,
+          "proficiencyBonus": 3,
+          "features": [
+            "asi_or_feat"
+          ]
+        },
+        {
+          "level": 9,
+          "proficiencyBonus": 4,
+          "features": []
+        },
+        {
+          "level": 10,
+          "proficiencyBonus": 4,
+          "features": []
+        },
+        {
+          "level": 11,
+          "proficiencyBonus": 4,
+          "features": []
+        },
+        {
+          "level": 12,
+          "proficiencyBonus": 4,
+          "features": [
+            "asi_or_feat"
+          ]
+        },
+        {
+          "level": 13,
+          "proficiencyBonus": 5,
+          "features": []
+        },
+        {
+          "level": 14,
+          "proficiencyBonus": 5,
+          "features": []
+        },
+        {
+          "level": 15,
+          "proficiencyBonus": 5,
+          "features": []
+        },
+        {
+          "level": 16,
+          "proficiencyBonus": 5,
+          "features": [
+            "asi_or_feat"
+          ]
+        },
+        {
+          "level": 17,
+          "proficiencyBonus": 6,
+          "features": []
+        },
+        {
+          "level": 18,
+          "proficiencyBonus": 6,
+          "features": []
+        },
+        {
+          "level": 19,
+          "proficiencyBonus": 6,
+          "features": [
+            "asi_or_feat"
+          ]
+        },
+        {
+          "level": 20,
+          "proficiencyBonus": 6,
+          "features": []
+        }
+      ]
+    },
+    {
+      "id": "monk",
+      "name": "Monk",
+      "hitDie": 8,
+      "saves": [
+        "str",
+        "dex"
+      ],
+      "skillChoices": 2,
+      "skillList": [
+        "acrobatics",
+        "athletics",
+        "history",
+        "insight",
+        "religion",
+        "stealth"
+      ],
+      "primary": [
+        "dex",
+        "wis"
+      ],
+      "multiclass": {
+        "allOf": [
+          {
+            "ability": "dex",
+            "min": 13
+          },
+          {
+            "ability": "wis",
+            "min": 13
+          }
+        ]
+      },
+      "caster": "none",
+      "weaponMastery": false,
+      "levels": [
+        {
+          "level": 1,
+          "proficiencyBonus": 2,
+          "features": [
+            "Monk"
+          ]
+        },
+        {
+          "level": 2,
+          "proficiencyBonus": 2,
+          "features": []
+        },
+        {
+          "level": 3,
+          "proficiencyBonus": 2,
+          "features": [
+            "subclass"
+          ]
+        },
+        {
+          "level": 4,
+          "proficiencyBonus": 2,
+          "features": [
+            "asi_or_feat"
+          ]
+        },
+        {
+          "level": 5,
+          "proficiencyBonus": 3,
+          "features": []
+        },
+        {
+          "level": 6,
+          "proficiencyBonus": 3,
+          "features": []
+        },
+        {
+          "level": 7,
+          "proficiencyBonus": 3,
+          "features": []
+        },
+        {
+          "level": 8,
+          "proficiencyBonus": 3,
+          "features": [
+            "asi_or_feat"
+          ]
+        },
+        {
+          "level": 9,
+          "proficiencyBonus": 4,
+          "features": []
+        },
+        {
+          "level": 10,
+          "proficiencyBonus": 4,
+          "features": []
+        },
+        {
+          "level": 11,
+          "proficiencyBonus": 4,
+          "features": []
+        },
+        {
+          "level": 12,
+          "proficiencyBonus": 4,
+          "features": [
+            "asi_or_feat"
+          ]
+        },
+        {
+          "level": 13,
+          "proficiencyBonus": 5,
+          "features": []
+        },
+        {
+          "level": 14,
+          "proficiencyBonus": 5,
+          "features": []
+        },
+        {
+          "level": 15,
+          "proficiencyBonus": 5,
+          "features": []
+        },
+        {
+          "level": 16,
+          "proficiencyBonus": 5,
+          "features": [
+            "asi_or_feat"
+          ]
+        },
+        {
+          "level": 17,
+          "proficiencyBonus": 6,
+          "features": []
+        },
+        {
+          "level": 18,
+          "proficiencyBonus": 6,
+          "features": []
+        },
+        {
+          "level": 19,
+          "proficiencyBonus": 6,
+          "features": [
+            "asi_or_feat"
+          ]
+        },
+        {
+          "level": 20,
+          "proficiencyBonus": 6,
+          "features": []
+        }
+      ]
+    },
+    {
+      "id": "paladin",
+      "name": "Paladin",
+      "hitDie": 10,
+      "saves": [
+        "wis",
+        "cha"
+      ],
+      "skillChoices": 2,
+      "skillList": [
+        "athletics",
+        "insight",
+        "intimidation",
+        "medicine",
+        "persuasion",
+        "religion"
+      ],
+      "primary": [
+        "str",
+        "cha"
+      ],
+      "multiclass": {
+        "allOf": [
+          {
+            "ability": "str",
+            "min": 13
+          },
+          {
+            "ability": "cha",
+            "min": 13
+          }
+        ]
+      },
+      "caster": "half",
+      "spellAbility": "cha",
+      "weaponMastery": true,
+      "levels": [
+        {
+          "level": 1,
+          "proficiencyBonus": 2,
+          "features": [
+            "Paladin",
+            "weapon_mastery",
+            "spellcasting"
+          ]
+        },
+        {
+          "level": 2,
+          "proficiencyBonus": 2,
+          "features": [],
+          "spellSlots": {
+            "1": 2
+          }
+        },
+        {
+          "level": 3,
+          "proficiencyBonus": 2,
+          "features": [
+            "subclass"
+          ],
+          "spellSlots": {
+            "1": 2
+          }
+        },
+        {
+          "level": 4,
+          "proficiencyBonus": 2,
+          "features": [
+            "asi_or_feat"
+          ],
+          "spellSlots": {
+            "1": 3
+          }
+        },
+        {
+          "level": 5,
+          "proficiencyBonus": 3,
+          "features": [],
+          "spellSlots": {
+            "1": 3
+          }
+        },
+        {
+          "level": 6,
+          "proficiencyBonus": 3,
+          "features": [],
+          "spellSlots": {
+            "1": 4,
+            "2": 2
+          }
+        },
+        {
+          "level": 7,
+          "proficiencyBonus": 3,
+          "features": [],
+          "spellSlots": {
+            "1": 4,
+            "2": 2
+          }
+        },
+        {
+          "level": 8,
+          "proficiencyBonus": 3,
+          "features": [
+            "asi_or_feat"
+          ],
+          "spellSlots": {
+            "1": 4,
+            "2": 3
+          }
+        },
+        {
+          "level": 9,
+          "proficiencyBonus": 4,
+          "features": [],
+          "spellSlots": {
+            "1": 4,
+            "2": 3
+          }
+        },
+        {
+          "level": 10,
+          "proficiencyBonus": 4,
+          "features": [],
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 2
+          }
+        },
+        {
+          "level": 11,
+          "proficiencyBonus": 4,
+          "features": [],
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 2
+          }
+        },
+        {
+          "level": 12,
+          "proficiencyBonus": 4,
+          "features": [
+            "asi_or_feat"
+          ],
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3
+          }
+        },
+        {
+          "level": 13,
+          "proficiencyBonus": 5,
+          "features": [],
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3
+          }
+        },
+        {
+          "level": 14,
+          "proficiencyBonus": 5,
+          "features": [],
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 1
+          }
+        },
+        {
+          "level": 15,
+          "proficiencyBonus": 5,
+          "features": [],
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 1
+          }
+        },
+        {
+          "level": 16,
+          "proficiencyBonus": 5,
+          "features": [
+            "asi_or_feat"
+          ],
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 2
+          }
+        },
+        {
+          "level": 17,
+          "proficiencyBonus": 6,
+          "features": [],
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 2
+          }
+        },
+        {
+          "level": 18,
+          "proficiencyBonus": 6,
+          "features": [],
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 1
+          }
+        },
+        {
+          "level": 19,
+          "proficiencyBonus": 6,
+          "features": [
+            "asi_or_feat"
+          ],
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 1
+          }
+        },
+        {
+          "level": 20,
+          "proficiencyBonus": 6,
+          "features": [],
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "ranger",
+      "name": "Ranger",
+      "hitDie": 10,
+      "saves": [
+        "str",
+        "dex"
+      ],
+      "skillChoices": 3,
+      "skillList": [
+        "animal_handling",
+        "athletics",
+        "insight",
+        "investigation",
+        "nature",
+        "perception",
+        "stealth",
+        "survival"
+      ],
+      "primary": [
+        "dex",
+        "wis"
+      ],
+      "multiclass": {
+        "allOf": [
+          {
+            "ability": "dex",
+            "min": 13
+          },
+          {
+            "ability": "wis",
+            "min": 13
+          }
+        ]
+      },
+      "caster": "half",
+      "spellAbility": "wis",
+      "weaponMastery": true,
+      "levels": [
+        {
+          "level": 1,
+          "proficiencyBonus": 2,
+          "features": [
+            "Ranger",
+            "weapon_mastery",
+            "spellcasting"
+          ]
+        },
+        {
+          "level": 2,
+          "proficiencyBonus": 2,
+          "features": [],
+          "spellSlots": {
+            "1": 2
+          }
+        },
+        {
+          "level": 3,
+          "proficiencyBonus": 2,
+          "features": [
+            "subclass"
+          ],
+          "spellSlots": {
+            "1": 2
+          }
+        },
+        {
+          "level": 4,
+          "proficiencyBonus": 2,
+          "features": [
+            "asi_or_feat"
+          ],
+          "spellSlots": {
+            "1": 3
+          }
+        },
+        {
+          "level": 5,
+          "proficiencyBonus": 3,
+          "features": [],
+          "spellSlots": {
+            "1": 3
+          }
+        },
+        {
+          "level": 6,
+          "proficiencyBonus": 3,
+          "features": [],
+          "spellSlots": {
+            "1": 4,
+            "2": 2
+          }
+        },
+        {
+          "level": 7,
+          "proficiencyBonus": 3,
+          "features": [],
+          "spellSlots": {
+            "1": 4,
+            "2": 2
+          }
+        },
+        {
+          "level": 8,
+          "proficiencyBonus": 3,
+          "features": [
+            "asi_or_feat"
+          ],
+          "spellSlots": {
+            "1": 4,
+            "2": 3
+          }
+        },
+        {
+          "level": 9,
+          "proficiencyBonus": 4,
+          "features": [],
+          "spellSlots": {
+            "1": 4,
+            "2": 3
+          }
+        },
+        {
+          "level": 10,
+          "proficiencyBonus": 4,
+          "features": [],
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 2
+          }
+        },
+        {
+          "level": 11,
+          "proficiencyBonus": 4,
+          "features": [],
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 2
+          }
+        },
+        {
+          "level": 12,
+          "proficiencyBonus": 4,
+          "features": [
+            "asi_or_feat"
+          ],
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3
+          }
+        },
+        {
+          "level": 13,
+          "proficiencyBonus": 5,
+          "features": [],
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3
+          }
+        },
+        {
+          "level": 14,
+          "proficiencyBonus": 5,
+          "features": [],
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 1
+          }
+        },
+        {
+          "level": 15,
+          "proficiencyBonus": 5,
+          "features": [],
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 1
+          }
+        },
+        {
+          "level": 16,
+          "proficiencyBonus": 5,
+          "features": [
+            "asi_or_feat"
+          ],
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 2
+          }
+        },
+        {
+          "level": 17,
+          "proficiencyBonus": 6,
+          "features": [],
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 2
+          }
+        },
+        {
+          "level": 18,
+          "proficiencyBonus": 6,
+          "features": [],
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 1
+          }
+        },
+        {
+          "level": 19,
+          "proficiencyBonus": 6,
+          "features": [
+            "asi_or_feat"
+          ],
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 1
+          }
+        },
+        {
+          "level": 20,
+          "proficiencyBonus": 6,
+          "features": [],
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "rogue",
+      "name": "Rogue",
+      "hitDie": 8,
+      "saves": [
+        "dex",
+        "int"
+      ],
+      "skillChoices": 4,
+      "skillList": [
+        "acrobatics",
+        "athletics",
+        "deception",
+        "insight",
+        "intimidation",
+        "investigation",
+        "perception",
+        "persuasion",
+        "sleight_of_hand",
+        "stealth"
+      ],
+      "primary": [
+        "dex"
+      ],
+      "multiclass": {
+        "allOf": [
+          {
+            "ability": "dex",
+            "min": 13
+          }
+        ]
+      },
+      "caster": "none",
+      "weaponMastery": false,
+      "levels": [
+        {
+          "level": 1,
+          "proficiencyBonus": 2,
+          "features": [
+            "Rogue"
+          ]
+        },
+        {
+          "level": 2,
+          "proficiencyBonus": 2,
+          "features": []
+        },
+        {
+          "level": 3,
+          "proficiencyBonus": 2,
+          "features": [
+            "subclass"
+          ]
+        },
+        {
+          "level": 4,
+          "proficiencyBonus": 2,
+          "features": [
+            "asi_or_feat"
+          ]
+        },
+        {
+          "level": 5,
+          "proficiencyBonus": 3,
+          "features": []
+        },
+        {
+          "level": 6,
+          "proficiencyBonus": 3,
+          "features": []
+        },
+        {
+          "level": 7,
+          "proficiencyBonus": 3,
+          "features": []
+        },
+        {
+          "level": 8,
+          "proficiencyBonus": 3,
+          "features": [
+            "asi_or_feat"
+          ]
+        },
+        {
+          "level": 9,
+          "proficiencyBonus": 4,
+          "features": []
+        },
+        {
+          "level": 10,
+          "proficiencyBonus": 4,
+          "features": []
+        },
+        {
+          "level": 11,
+          "proficiencyBonus": 4,
+          "features": []
+        },
+        {
+          "level": 12,
+          "proficiencyBonus": 4,
+          "features": [
+            "asi_or_feat"
+          ]
+        },
+        {
+          "level": 13,
+          "proficiencyBonus": 5,
+          "features": []
+        },
+        {
+          "level": 14,
+          "proficiencyBonus": 5,
+          "features": []
+        },
+        {
+          "level": 15,
+          "proficiencyBonus": 5,
+          "features": []
+        },
+        {
+          "level": 16,
+          "proficiencyBonus": 5,
+          "features": [
+            "asi_or_feat"
+          ]
+        },
+        {
+          "level": 17,
+          "proficiencyBonus": 6,
+          "features": []
+        },
+        {
+          "level": 18,
+          "proficiencyBonus": 6,
+          "features": []
+        },
+        {
+          "level": 19,
+          "proficiencyBonus": 6,
+          "features": [
+            "asi_or_feat"
+          ]
+        },
+        {
+          "level": 20,
+          "proficiencyBonus": 6,
+          "features": []
+        }
+      ]
+    },
+    {
+      "id": "sorcerer",
+      "name": "Sorcerer",
+      "hitDie": 6,
+      "saves": [
+        "con",
+        "cha"
+      ],
+      "skillChoices": 2,
+      "skillList": [
+        "arcana",
+        "deception",
+        "insight",
+        "intimidation",
+        "persuasion",
+        "religion"
+      ],
+      "primary": [
+        "cha"
+      ],
+      "multiclass": {
+        "allOf": [
+          {
+            "ability": "cha",
+            "min": 13
+          }
+        ]
+      },
+      "caster": "full",
+      "spellAbility": "cha",
+      "weaponMastery": false,
+      "levels": [
+        {
+          "level": 1,
+          "proficiencyBonus": 2,
+          "features": [
+            "Sorcerer",
+            "spellcasting"
+          ],
+          "spellSlots": {
+            "1": 2
+          }
+        },
+        {
+          "level": 2,
+          "proficiencyBonus": 2,
+          "features": [],
+          "spellSlots": {
+            "1": 3
+          }
+        },
+        {
+          "level": 3,
+          "proficiencyBonus": 2,
+          "features": [
+            "subclass"
+          ],
+          "spellSlots": {
+            "1": 4,
+            "2": 2
+          }
+        },
+        {
+          "level": 4,
+          "proficiencyBonus": 2,
+          "features": [
+            "asi_or_feat"
+          ],
+          "spellSlots": {
+            "1": 4,
+            "2": 3
+          }
+        },
+        {
+          "level": 5,
+          "proficiencyBonus": 3,
+          "features": [],
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 2
+          }
+        },
+        {
+          "level": 6,
+          "proficiencyBonus": 3,
+          "features": [],
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3
+          }
+        },
+        {
+          "level": 7,
+          "proficiencyBonus": 3,
+          "features": [],
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 1
+          }
+        },
+        {
+          "level": 8,
+          "proficiencyBonus": 3,
+          "features": [
+            "asi_or_feat"
+          ],
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 2
+          }
+        },
+        {
+          "level": 9,
+          "proficiencyBonus": 4,
+          "features": [],
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 1
+          }
+        },
+        {
+          "level": 10,
+          "proficiencyBonus": 4,
+          "features": [],
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2
+          }
+        },
+        {
+          "level": 11,
+          "proficiencyBonus": 4,
+          "features": [],
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2,
+            "6": 1
+          }
+        },
+        {
+          "level": 12,
+          "proficiencyBonus": 4,
+          "features": [
+            "asi_or_feat"
+          ],
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2,
+            "6": 1
+          }
+        },
+        {
+          "level": 13,
+          "proficiencyBonus": 5,
+          "features": [],
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2,
+            "6": 1,
+            "7": 1
+          }
+        },
+        {
+          "level": 14,
+          "proficiencyBonus": 5,
+          "features": [],
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2,
+            "6": 1,
+            "7": 1
+          }
+        },
+        {
+          "level": 15,
+          "proficiencyBonus": 5,
+          "features": [],
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2,
+            "6": 1,
+            "7": 1,
+            "8": 1
+          }
+        },
+        {
+          "level": 16,
+          "proficiencyBonus": 5,
+          "features": [
+            "asi_or_feat"
+          ],
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2,
+            "6": 1,
+            "7": 1,
+            "8": 1
+          }
+        },
+        {
+          "level": 17,
+          "proficiencyBonus": 6,
+          "features": [],
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2,
+            "6": 1,
+            "7": 1,
+            "8": 1,
+            "9": 1
+          }
+        },
+        {
+          "level": 18,
+          "proficiencyBonus": 6,
+          "features": [],
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 3,
+            "6": 1,
+            "7": 1,
+            "8": 1,
+            "9": 1
+          }
+        },
+        {
+          "level": 19,
+          "proficiencyBonus": 6,
+          "features": [
+            "asi_or_feat"
+          ],
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 3,
+            "6": 2,
+            "7": 1,
+            "8": 1,
+            "9": 1
+          }
+        },
+        {
+          "level": 20,
+          "proficiencyBonus": 6,
+          "features": [],
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 3,
+            "6": 2,
+            "7": 2,
+            "8": 1,
+            "9": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "warlock",
+      "name": "Warlock",
+      "hitDie": 8,
+      "saves": [
+        "wis",
+        "cha"
+      ],
+      "skillChoices": 2,
+      "skillList": [
+        "arcana",
+        "deception",
+        "history",
+        "intimidation",
+        "investigation",
+        "nature",
+        "religion"
+      ],
+      "primary": [
+        "cha"
+      ],
+      "multiclass": {
+        "allOf": [
+          {
+            "ability": "cha",
+            "min": 13
+          }
+        ]
+      },
+      "caster": "pact",
+      "spellAbility": "cha",
+      "weaponMastery": false,
+      "levels": [
+        {
+          "level": 1,
+          "proficiencyBonus": 2,
+          "features": [
+            "Warlock",
+            "spellcasting"
+          ],
+          "pactSlots": {
+            "slotLevel": 1,
+            "count": 1
+          }
+        },
+        {
+          "level": 2,
+          "proficiencyBonus": 2,
+          "features": [],
+          "pactSlots": {
+            "slotLevel": 1,
+            "count": 2
+          }
+        },
+        {
+          "level": 3,
+          "proficiencyBonus": 2,
+          "features": [
+            "subclass"
+          ],
+          "pactSlots": {
+            "slotLevel": 2,
+            "count": 2
+          }
+        },
+        {
+          "level": 4,
+          "proficiencyBonus": 2,
+          "features": [
+            "asi_or_feat"
+          ],
+          "pactSlots": {
+            "slotLevel": 2,
+            "count": 2
+          }
+        },
+        {
+          "level": 5,
+          "proficiencyBonus": 3,
+          "features": [],
+          "pactSlots": {
+            "slotLevel": 3,
+            "count": 2
+          }
+        },
+        {
+          "level": 6,
+          "proficiencyBonus": 3,
+          "features": [],
+          "pactSlots": {
+            "slotLevel": 3,
+            "count": 2
+          }
+        },
+        {
+          "level": 7,
+          "proficiencyBonus": 3,
+          "features": [],
+          "pactSlots": {
+            "slotLevel": 4,
+            "count": 2
+          }
+        },
+        {
+          "level": 8,
+          "proficiencyBonus": 3,
+          "features": [
+            "asi_or_feat"
+          ],
+          "pactSlots": {
+            "slotLevel": 4,
+            "count": 2
+          }
+        },
+        {
+          "level": 9,
+          "proficiencyBonus": 4,
+          "features": [],
+          "pactSlots": {
+            "slotLevel": 5,
+            "count": 2
+          }
+        },
+        {
+          "level": 10,
+          "proficiencyBonus": 4,
+          "features": [],
+          "pactSlots": {
+            "slotLevel": 5,
+            "count": 2
+          }
+        },
+        {
+          "level": 11,
+          "proficiencyBonus": 4,
+          "features": [],
+          "pactSlots": {
+            "slotLevel": 5,
+            "count": 3
+          }
+        },
+        {
+          "level": 12,
+          "proficiencyBonus": 4,
+          "features": [
+            "asi_or_feat"
+          ],
+          "pactSlots": {
+            "slotLevel": 5,
+            "count": 3
+          }
+        },
+        {
+          "level": 13,
+          "proficiencyBonus": 5,
+          "features": [],
+          "pactSlots": {
+            "slotLevel": 5,
+            "count": 3
+          }
+        },
+        {
+          "level": 14,
+          "proficiencyBonus": 5,
+          "features": [],
+          "pactSlots": {
+            "slotLevel": 5,
+            "count": 3
+          }
+        },
+        {
+          "level": 15,
+          "proficiencyBonus": 5,
+          "features": [],
+          "pactSlots": {
+            "slotLevel": 5,
+            "count": 3
+          }
+        },
+        {
+          "level": 16,
+          "proficiencyBonus": 5,
+          "features": [
+            "asi_or_feat"
+          ],
+          "pactSlots": {
+            "slotLevel": 5,
+            "count": 3
+          }
+        },
+        {
+          "level": 17,
+          "proficiencyBonus": 6,
+          "features": [],
+          "pactSlots": {
+            "slotLevel": 5,
+            "count": 4
+          }
+        },
+        {
+          "level": 18,
+          "proficiencyBonus": 6,
+          "features": [],
+          "pactSlots": {
+            "slotLevel": 5,
+            "count": 4
+          }
+        },
+        {
+          "level": 19,
+          "proficiencyBonus": 6,
+          "features": [
+            "asi_or_feat"
+          ],
+          "pactSlots": {
+            "slotLevel": 5,
+            "count": 4
+          }
+        },
+        {
+          "level": 20,
+          "proficiencyBonus": 6,
+          "features": [],
+          "pactSlots": {
+            "slotLevel": 5,
+            "count": 4
+          }
+        }
+      ]
+    },
+    {
+      "id": "wizard",
+      "name": "Wizard",
+      "hitDie": 6,
+      "saves": [
+        "int",
+        "wis"
+      ],
+      "skillChoices": 2,
+      "skillList": [
+        "arcana",
+        "history",
+        "insight",
+        "investigation",
+        "medicine",
+        "religion"
+      ],
+      "primary": [
+        "int"
+      ],
+      "multiclass": {
+        "allOf": [
+          {
+            "ability": "int",
+            "min": 13
+          }
+        ]
+      },
+      "caster": "full",
+      "spellAbility": "int",
+      "weaponMastery": false,
+      "levels": [
+        {
+          "level": 1,
+          "proficiencyBonus": 2,
+          "features": [
+            "Wizard",
+            "spellcasting"
+          ],
+          "spellSlots": {
+            "1": 2
+          }
+        },
+        {
+          "level": 2,
+          "proficiencyBonus": 2,
+          "features": [],
+          "spellSlots": {
+            "1": 3
+          }
+        },
+        {
+          "level": 3,
+          "proficiencyBonus": 2,
+          "features": [
+            "subclass"
+          ],
+          "spellSlots": {
+            "1": 4,
+            "2": 2
+          }
+        },
+        {
+          "level": 4,
+          "proficiencyBonus": 2,
+          "features": [
+            "asi_or_feat"
+          ],
+          "spellSlots": {
+            "1": 4,
+            "2": 3
+          }
+        },
+        {
+          "level": 5,
+          "proficiencyBonus": 3,
+          "features": [],
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 2
+          }
+        },
+        {
+          "level": 6,
+          "proficiencyBonus": 3,
+          "features": [],
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3
+          }
+        },
+        {
+          "level": 7,
+          "proficiencyBonus": 3,
+          "features": [],
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 1
+          }
+        },
+        {
+          "level": 8,
+          "proficiencyBonus": 3,
+          "features": [
+            "asi_or_feat"
+          ],
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 2
+          }
+        },
+        {
+          "level": 9,
+          "proficiencyBonus": 4,
+          "features": [],
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 1
+          }
+        },
+        {
+          "level": 10,
+          "proficiencyBonus": 4,
+          "features": [],
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2
+          }
+        },
+        {
+          "level": 11,
+          "proficiencyBonus": 4,
+          "features": [],
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2,
+            "6": 1
+          }
+        },
+        {
+          "level": 12,
+          "proficiencyBonus": 4,
+          "features": [
+            "asi_or_feat"
+          ],
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2,
+            "6": 1
+          }
+        },
+        {
+          "level": 13,
+          "proficiencyBonus": 5,
+          "features": [],
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2,
+            "6": 1,
+            "7": 1
+          }
+        },
+        {
+          "level": 14,
+          "proficiencyBonus": 5,
+          "features": [],
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2,
+            "6": 1,
+            "7": 1
+          }
+        },
+        {
+          "level": 15,
+          "proficiencyBonus": 5,
+          "features": [],
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2,
+            "6": 1,
+            "7": 1,
+            "8": 1
+          }
+        },
+        {
+          "level": 16,
+          "proficiencyBonus": 5,
+          "features": [
+            "asi_or_feat"
+          ],
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2,
+            "6": 1,
+            "7": 1,
+            "8": 1
+          }
+        },
+        {
+          "level": 17,
+          "proficiencyBonus": 6,
+          "features": [],
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2,
+            "6": 1,
+            "7": 1,
+            "8": 1,
+            "9": 1
+          }
+        },
+        {
+          "level": 18,
+          "proficiencyBonus": 6,
+          "features": [],
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 3,
+            "6": 1,
+            "7": 1,
+            "8": 1,
+            "9": 1
+          }
+        },
+        {
+          "level": 19,
+          "proficiencyBonus": 6,
+          "features": [
+            "asi_or_feat"
+          ],
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 3,
+            "6": 2,
+            "7": 1,
+            "8": 1,
+            "9": 1
+          }
+        },
+        {
+          "level": 20,
+          "proficiencyBonus": 6,
+          "features": [],
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 3,
+            "6": 2,
+            "7": 2,
+            "8": 1,
+            "9": 1
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,4 +1,6 @@
-/** Character creation wizard (SRD 5.1 levels 1–3). */
+/** Character creation wizard. The 5.1 catalog is legacy. V2 heroes use /api/heroes. */
+
+import { gearStepHtml, levelUpHtml } from "./level-up.js";
 
 export type AbilityKey = "str" | "dex" | "con" | "int" | "wis" | "cha";
 
@@ -279,6 +281,8 @@ export function mountChargen(opts: {
         <button type="button" class="ghost" id="cgClose" aria-label="Close the hero forge">Close</button>
       </header>
       <div id="cgBody"></div>
+      ${gearStepHtml()}
+      ${levelUpHtml("your hero")}
     </div>
   `;
   opts.root.appendChild(panel);

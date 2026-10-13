@@ -51,12 +51,19 @@ export type PcSheet = {
   };
   actions: SheetAction[];
   bonusActions: SheetAction[];
+  classes?: Array<{ id: string; level: number; subclass?: string }>;
+  loadout?: { armor?: string; shield?: string; mainhand?: string; offhand?: string; trinkets: string[]; consumables: string[] };
+  attunements?: string[];
+  xp?: { current: number; next: number };
+  pendingLevelUp?: boolean;
+  spells?: Array<{ id: string; name: string; level: number; classId: string }>;
 };
 
 export const SHEET_TABS = [
   { id: "overview", label: "Sheet" },
   { id: "gear", label: "Gear" },
   { id: "features", label: "Traits" },
+  { id: "spells", label: "Spells" },
 ] as const;
 export type SheetTab = (typeof SHEET_TABS)[number]["id"];
 
@@ -129,11 +136,21 @@ function tabBodyHtml(sheet: PcSheet, tab: SheetTab): string {
           ${sheet.concentrating ? `<p class="meta">Concentrating on ${pretty(sheet.concentrating)}</p>` : ""}
           ${sheet.conditions?.length ? `<p class="meta">${sheet.conditions.map((c) => esc(pretty(c))).join(", ")}</p>` : ""}`;
     }
-    case "gear":
-      return `<p class="meta">Weapons ${sheet.weapons.map(pretty).join(", ") || "—"}</p>
-          <ul class="sheet-list">${sheet.inventory.map((i) => `<li>${esc(pretty(i))}</li>`).join("") || "<li class='meta'>Nothing carried</li>"}</ul>`;
+    case "gear": {
+      const worn = sheet.loadout
+        ? [sheet.loadout.armor, sheet.loadout.shield, sheet.loadout.mainhand, sheet.loadout.offhand, ...sheet.loadout.trinkets, ...sheet.loadout.consumables].filter(Boolean)
+        : [];
+      const xp = sheet.xp ? `<p class="meta">XP ${sheet.xp.current} / ${sheet.xp.next}${sheet.pendingLevelUp ? " · level ready" : ""}</p>` : "";
+      return `${xp}<p class="meta">Weapons ${sheet.weapons.map(pretty).join(", ") || "—"}</p>
+          <ul class="sheet-list">${[...worn.map((i) => pretty(String(i))), ...sheet.inventory].map((i) => `<li>${esc(pretty(i))}</li>`).join("") || "<li class='meta'>Nothing carried</li>"}</ul>
+          ${sheet.attunements?.length ? `<p class="meta">Attuned ${sheet.attunements.map((id) => esc(pretty(id))).join(", ")}</p>` : ""}`;
+    }
     case "features":
-      return `<ul class="sheet-list">${[...sheet.features, ...sheet.traits].map((f) => `<li>${esc(pretty(f))}</li>`).join("") || "<li class='meta'>None listed</li>"}</ul>`;
+      return `<ul class="sheet-list">${[...(sheet.classes ?? []).map((c) => `${pretty(c.id)} ${c.level}${c.subclass ? ` (${pretty(c.subclass)})` : ""}`), ...sheet.features, ...sheet.traits].map((f) => `<li>${esc(pretty(f))}</li>`).join("") || "<li class='meta'>None listed</li>"}</ul>`;
+    case "spells": {
+      const rows = (sheet.spells ?? []).filter((spell) => spell.level >= 0);
+      return `<ul class="sheet-list">${rows.map((spell) => `<li>${esc(spell.name)} <em>L${spell.level} · ${esc(pretty(spell.classId))}</em></li>`).join("") || "<li class='meta'>No spells</li>"}</ul>`;
+    }
     default: {
       const exhaustive: never = tab;
       return exhaustive;

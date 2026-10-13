@@ -1867,6 +1867,12 @@ async function ensureLogin(): Promise<void> {
   amazonOnServer = options?.amazon === true;
   if (me.ok) {
     account = await readAccount(me);
+    void fetch("/api/session/surface", {
+      method: "POST",
+      credentials: "same-origin",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ surface: onFireTv() ? "tv" : "web" }),
+    });
     $("loginGate").hidden = true;
     renderHome();
     return;

@@ -542,7 +542,10 @@ test("one failed death save stays down and the next hero acts", () => {
   c.turnOrder = [hero.id, pal.id, foe.id];
   c.turnIndex = 1;
   pal.hasAction = true;
-  const restore = scriptDice([[20, 7]]);
+  const restore = scriptDice([
+    [20, 7],
+    [20, 7],
+  ]);
   try {
     endTurn(c, "P2");
   } finally {

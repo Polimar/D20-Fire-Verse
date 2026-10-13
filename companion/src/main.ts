@@ -880,6 +880,12 @@ $("padBack").addEventListener("click", () => {
 function intentFromSpeech(text: string): { intent?: string; choice?: number } | null {
   const t = text.toLowerCase();
   if (/\bend\b/.test(t) && /turn/.test(t)) return { intent: "end_turn" };
+  if (/\bequip\b/.test(t)) return { intent: "equip" };
+  if (/\bunequip\b/.test(t)) return { intent: "unequip" };
+  if (/loadout|preset/.test(t)) return { intent: "switch_loadout" };
+  if (/shop|vendor|store/.test(t)) return { intent: "vendor_browse" };
+  if (/\bready\b/.test(t)) return { intent: "ready" };
+  if (/\bbuy\b/.test(t)) return { intent: "buy_slot" };
   if (/magic missile|missile/.test(t)) return { intent: "cast_magic_missile" };
   if (/attack|strike|hit|swing|shoot/.test(t)) return { intent: "attack_nearest" };
   if (/\b(three|third|3)\b/.test(t)) return { choice: 3 };

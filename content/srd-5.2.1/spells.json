@@ -1,0 +1,174 @@
+{
+  "entries": [
+    {
+      "id": "fire_bolt",
+      "name": "Fire Bolt",
+      "level": 0,
+      "school": "evocation",
+      "classes": [
+        "sorcerer",
+        "wizard"
+      ],
+      "castingTime": "Action",
+      "range": "120 feet",
+      "duration": "Instantaneous",
+      "description": "A mote of fire."
+    },
+    {
+      "id": "sacred_flame",
+      "name": "Sacred Flame",
+      "level": 0,
+      "school": "evocation",
+      "classes": [
+        "cleric"
+      ],
+      "castingTime": "Action",
+      "range": "60 feet",
+      "duration": "Instantaneous",
+      "description": "Flame descends on one creature."
+    },
+    {
+      "id": "eldritch_blast",
+      "name": "Eldritch Blast",
+      "level": 0,
+      "school": "evocation",
+      "classes": [
+        "warlock"
+      ],
+      "castingTime": "Action",
+      "range": "120 feet",
+      "duration": "Instantaneous",
+      "description": "A beam of crackling energy."
+    },
+    {
+      "id": "vicious_mockery",
+      "name": "Vicious Mockery",
+      "level": 0,
+      "school": "enchantment",
+      "classes": [
+        "bard"
+      ],
+      "castingTime": "Action",
+      "range": "60 feet",
+      "duration": "Instantaneous",
+      "description": "A string of insults."
+    },
+    {
+      "id": "guidance",
+      "name": "Guidance",
+      "level": 0,
+      "school": "divination",
+      "classes": [
+        "cleric",
+        "druid"
+      ],
+      "castingTime": "Action",
+      "range": "Touch",
+      "duration": "1 minute",
+      "description": "A prayer steadies a check."
+    },
+    {
+      "id": "mage_armor",
+      "name": "Mage Armor",
+      "level": 1,
+      "school": "abjuration",
+      "classes": [
+        "sorcerer",
+        "wizard"
+      ],
+      "castingTime": "Action",
+      "range": "Touch",
+      "duration": "8 hours",
+      "description": "An invisible force protects the target."
+    },
+    {
+      "id": "magic_missile",
+      "name": "Magic Missile",
+      "level": 1,
+      "school": "evocation",
+      "classes": [
+        "sorcerer",
+        "wizard"
+      ],
+      "castingTime": "Action",
+      "range": "120 feet",
+      "duration": "Instantaneous",
+      "description": "Darts of force that do not miss."
+    },
+    {
+      "id": "shield",
+      "name": "Shield",
+      "level": 1,
+      "school": "abjuration",
+      "classes": [
+        "sorcerer",
+        "wizard"
+      ],
+      "castingTime": "Reaction",
+      "range": "Self",
+      "duration": "1 round",
+      "description": "An invisible barrier."
+    },
+    {
+      "id": "cure_wounds",
+      "name": "Cure Wounds",
+      "level": 1,
+      "school": "abjuration",
+      "classes": [
+        "bard",
+        "cleric",
+        "druid",
+        "paladin",
+        "ranger"
+      ],
+      "castingTime": "Action",
+      "range": "Touch",
+      "duration": "Instantaneous",
+      "description": "A creature regains hit points."
+    },
+    {
+      "id": "healing_word",
+      "name": "Healing Word",
+      "level": 1,
+      "school": "abjuration",
+      "classes": [
+        "bard",
+        "cleric",
+        "druid"
+      ],
+      "castingTime": "Bonus action",
+      "range": "60 feet",
+      "duration": "Instantaneous",
+      "description": "A word of healing."
+    },
+    {
+      "id": "hunters_mark",
+      "name": "Hunter's Mark",
+      "level": 1,
+      "school": "divination",
+      "classes": [
+        "ranger"
+      ],
+      "castingTime": "Bonus action",
+      "range": "90 feet",
+      "duration": "1 hour",
+      "description": "You mark a quarry."
+    },
+    {
+      "id": "thunderwave",
+      "name": "Thunderwave",
+      "level": 1,
+      "school": "evocation",
+      "classes": [
+        "bard",
+        "druid",
+        "sorcerer",
+        "wizard"
+      ],
+      "castingTime": "Action",
+      "range": "Self",
+      "duration": "Instantaneous",
+      "description": "A wave of thunder."
+    }
+  ]
+}

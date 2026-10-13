@@ -1,5 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
+import { accountElo, setAccountElo } from "./arena-queue.js";
+import { finishCampaignRun } from "./campaign-hero.js";
 import {
   getEncounter,
   getManifest,
@@ -139,6 +141,11 @@ export type Room = {
   updatedAt: string;
   mode?: "campaign" | "arena";
   arena?: ArenaConfig;
+  /** Set when the party leaves the opening scene. Later joins are refused. */
+  campaignPartySize?: 1 | 2 | 3 | 4;
+  campaignLevelCap?: number;
+  /** V1 saves stay readable and cannot be resumed. */
+  archived?: boolean;
 };
 
 const voteTimers = new Map<string, ReturnType<typeof setTimeout>>();
@@ -347,6 +354,7 @@ export function joinRoom(
     touch(room);
     return { room, playerId };
   }
+  if (room.campaignPartySize) throw new Error("CAMPAIGN_SEALED");
   if (room.players.length >= 3) throw new Error("ROOM_FULL");
   const pregen = getPregen(characterId);
   if (!pregen) throw new Error("BAD_CHARACTER");
@@ -573,6 +581,12 @@ function routeTravel(
 }
 
 function goTo(room: Room, nextId: string): void {
+  if (room.mode !== "arena" && !room.campaignPartySize && room.nodeId === getManifest().startNodeId && nextId !== room.nodeId) {
+    const size = Math.max(1, Math.min(4, room.players.length || 1)) as 1 | 2 | 3 | 4;
+    room.campaignPartySize = size;
+    const cap = getManifest().levelCap?.[String(size) as "1" | "2" | "3" | "4"];
+    if (cap) room.campaignLevelCap = cap;
+  }
   const travel = routeTravel(room, room.nodeId, nextId);
   nextId = travel.id;
   room.fx = travel.fx;
@@ -597,6 +611,11 @@ function goTo(room: Room, nextId: string): void {
     room.puzzleCoop.hints = [];
   }
   if (nextId === "END_SAVE" || nextId === "END_WIN") {
+    if (nextId === "END_WIN") {
+      for (const player of room.players) {
+        if (player.characterId.startsWith("campaignhero_")) finishCampaignRun(player.characterId);
+      }
+    }
     room.nodeId = nextId;
     narrate(
       room,
@@ -1895,6 +1914,7 @@ export function resumeSave(saveId: string, actor?: { id: string; role: string })
   const file = path.join(DATA_DIR, "saves", `${saveId}.json`);
   if (!fs.existsSync(file)) throw new Error("SAVE_NOT_FOUND");
   const room = JSON.parse(fs.readFileSync(file, "utf8")) as Room;
+  if (room.archived) throw new Error("SAVE_ARCHIVED");
   if (actor && room.ownerUserId && actor.role !== "admin" && room.ownerUserId !== actor.id) {
     throw new Error("FORBIDDEN");
   }
@@ -1979,6 +1999,11 @@ export function listSaves(): SaveSummary[] {
 export function playerDisconnect(roomCode: string, playerId: string): Room | undefined {
   const room = getRoom(roomCode);
   if (!room?.combat) return undefined;
+  if (room.arena?.mode === "ranked") {
+    const player = room.players.find((p) => p.playerId === playerId);
+    if (player?.userId) setAccountElo(player.userId, accountElo(player.userId) - 15);
+    room.arena.lastResult = "Gone for 45 seconds. Ranked counts that as a loss.";
+  }
   applyDisconnectDodge(room.combat, playerId);
   afterCombatAction(room);
   return room;
@@ -2012,6 +2037,13 @@ export function voiceIntent(roomCode: string, playerId: string, intent: string):
   }
   if (intent === "end_turn") {
     return combatEndTurn(roomCode, playerId);
+  }
+  if (intent === "ready") {
+    return arenaReady(roomCode, playerId, true);
+  }
+  if (intent === "vendor_browse" || intent.startsWith("buy_slot") || intent.startsWith("equip") || intent.startsWith("unequip") || intent.startsWith("switch_loadout")) {
+    room.lastNarration = intent === "vendor_browse" ? "The day's shop is on your phone." : "The armory heard you.";
+    return room;
   }
   if (intent === "attack_nearest" || intent === "cast_magic_missile") {
     const combat = requireCombat(room);

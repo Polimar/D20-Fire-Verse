@@ -67,6 +67,12 @@ function database(): DatabaseSync {
   if (!cols.has("amazon_user_id")) db.exec("ALTER TABLE users ADD COLUMN amazon_user_id TEXT");
   db.exec("CREATE UNIQUE INDEX IF NOT EXISTS users_email ON users(email) WHERE email IS NOT NULL");
   db.exec("CREATE UNIQUE INDEX IF NOT EXISTS users_amazon ON users(amazon_user_id) WHERE amazon_user_id IS NOT NULL");
+  const sessionCols = new Set(
+    (db.prepare("PRAGMA table_info(sessions)").all() as Array<{ name: string }>).map((c) => c.name),
+  );
+  if (!sessionCols.has("surface")) db.exec("ALTER TABLE sessions ADD COLUMN surface TEXT");
+  if (!cols.has("selected_hero_id")) db.exec("ALTER TABLE users ADD COLUMN selected_hero_id TEXT");
+  ensureProgressTables(db);
   const count = db.prepare("SELECT COUNT(*) AS n FROM users").get() as { n: number };
   if (count.n === 0) {
     createUser("admin", "admin", "admin");
@@ -168,6 +174,143 @@ function openSession(userId: string): string {
   const token = randomBytes(32).toString("hex");
   database().prepare("INSERT INTO sessions (token, user_id, created_at) VALUES (?, ?, ?)").run(token, userId, new Date().toISOString());
   return token;
+}
+
+export function accountDb(): DatabaseSync {
+  return database();
+}
+
+/** TV and web cannot sit on the same account at once. The companion session stays. */
+export function claimSurface(token: string, surface: "tv" | "web" | "companion"): void {
+  const row = database().prepare("SELECT user_id FROM sessions WHERE token = ?").get(token) as { user_id: string } | undefined;
+  if (!row) throw new Error("AUTH_REQUIRED");
+  if (surface === "tv" || surface === "web") {
+    database()
+      .prepare("DELETE FROM sessions WHERE user_id = ? AND surface IN ('tv', 'web') AND token != ?")
+      .run(row.user_id, token);
+  }
+  database().prepare("UPDATE sessions SET surface = ? WHERE token = ?").run(surface, token);
+}
+
+function ensureProgressTables(databaseHandle: DatabaseSync): void {
+  databaseHandle.exec(`
+    CREATE TABLE IF NOT EXISTS heroes (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      name TEXT NOT NULL,
+      classes_json TEXT NOT NULL,
+      species TEXT NOT NULL,
+      background TEXT NOT NULL,
+      alignment TEXT NOT NULL,
+      level INTEGER NOT NULL,
+      xp INTEGER NOT NULL,
+      ability_scores_json TEXT NOT NULL,
+      skills_json TEXT NOT NULL,
+      portrait TEXT,
+      respec_free_credits INTEGER NOT NULL DEFAULT 0,
+      features_json TEXT NOT NULL DEFAULT '[]',
+      spells_json TEXT NOT NULL DEFAULT '[]',
+      loadout_json TEXT NOT NULL DEFAULT '{"trinkets":[],"consumables":[]}',
+      created_at TEXT NOT NULL,
+      deleted_at TEXT
+    );
+    CREATE TABLE IF NOT EXISTS account_stash (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      item_def_id TEXT NOT NULL,
+      item_instance_data_json TEXT NOT NULL DEFAULT '{}',
+      equipped_by_hero_id TEXT,
+      attuned_by_hero_id TEXT,
+      acquired_at TEXT NOT NULL
+    );
+    CREATE TABLE IF NOT EXISTS hero_milestones (
+      hero_id TEXT NOT NULL,
+      kind TEXT NOT NULL,
+      count INTEGER NOT NULL DEFAULT 0,
+      achieved_at TEXT,
+      PRIMARY KEY (hero_id, kind)
+    );
+    CREATE TABLE IF NOT EXISTS account_wallet (
+      user_id TEXT PRIMARY KEY,
+      gold_balance INTEGER NOT NULL DEFAULT 0,
+      hard_currency_balance INTEGER NOT NULL DEFAULT 0
+    );
+    CREATE TABLE IF NOT EXISTS content_flags (
+      kind TEXT NOT NULL,
+      entry_id TEXT NOT NULL,
+      enabled INTEGER NOT NULL DEFAULT 0,
+      PRIMARY KEY (kind, entry_id)
+    );
+    CREATE TABLE IF NOT EXISTS account_rating (
+      user_id TEXT PRIMARY KEY,
+      elo INTEGER NOT NULL DEFAULT 1000
+    );
+    CREATE TABLE IF NOT EXISTS loadout_presets (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      hero_id TEXT NOT NULL,
+      name TEXT NOT NULL,
+      loadout_json TEXT NOT NULL
+    );
+    CREATE TABLE IF NOT EXISTS events (
+      id TEXT PRIMARY KEY,
+      hero_id TEXT,
+      user_id TEXT NOT NULL,
+      event_type TEXT NOT NULL,
+      payload_json TEXT NOT NULL,
+      ts TEXT NOT NULL
+    );
+    CREATE TABLE IF NOT EXISTS seasons (
+      id TEXT PRIMARY KEY,
+      starts_at TEXT NOT NULL,
+      ends_at TEXT NOT NULL
+    );
+    CREATE TABLE IF NOT EXISTS season_pass (
+      user_id TEXT NOT NULL,
+      season_id TEXT NOT NULL,
+      xp INTEGER NOT NULL DEFAULT 0,
+      premium INTEGER NOT NULL DEFAULT 0,
+      PRIMARY KEY (user_id, season_id)
+    );
+    CREATE TABLE IF NOT EXISTS campaign_heroes (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      campaign_id TEXT NOT NULL,
+      name TEXT NOT NULL,
+      classes_json TEXT NOT NULL,
+      species TEXT NOT NULL,
+      level INTEGER NOT NULL,
+      xp INTEGER NOT NULL,
+      run_count INTEGER NOT NULL DEFAULT 0,
+      created_at TEXT NOT NULL
+    );
+    CREATE TABLE IF NOT EXISTS iap_receipts (
+      receipt TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      product_id TEXT NOT NULL,
+      created_at TEXT NOT NULL
+    );
+    CREATE TABLE IF NOT EXISTS arcade_daily (
+      user_id TEXT NOT NULL,
+      day TEXT NOT NULL,
+      matches INTEGER NOT NULL DEFAULT 0,
+      PRIMARY KEY (user_id, day)
+    );
+    CREATE TABLE IF NOT EXISTS match_board (
+      id TEXT PRIMARY KEY,
+      mode TEXT NOT NULL,
+      queue_type TEXT NOT NULL,
+      winner_user_id TEXT,
+      loadout_json TEXT NOT NULL,
+      elo_json TEXT NOT NULL,
+      ended_at TEXT NOT NULL
+    );
+    CREATE TABLE IF NOT EXISTS cosmetics (
+      user_id TEXT NOT NULL,
+      cosmetic_id TEXT NOT NULL,
+      PRIMARY KEY (user_id, cosmetic_id)
+    );
+  `);
 }
 
 export type LoginResult =

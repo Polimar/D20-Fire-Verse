@@ -37,7 +37,20 @@ export type ClientAction =
   | "ARENA_PICK_HERO"
   | "ARENA_KICK"
   | "VOICE_INTENT"
-  | "PING";
+  | "PING"
+  | "CREATE_HERO"
+  | "LIST_HEROES"
+  | "SELECT_HERO"
+  | "LEVEL_UP"
+  | "DELETE_HERO"
+  | "RENAME_HERO"
+  | "RESPEC_HERO"
+  | "BUY_STARTER_BUNDLE"
+  | "EQUIP"
+  | "UNEQUIP"
+  | "FORCE_UNEQUIP"
+  | "TOGGLE_ATTUNE"
+  | "SET_LOADOUT_PRESET";
 
 export type ServerEvent =
   | "HELLO"
@@ -78,6 +91,17 @@ export type ClientMessage = {
   teamId?: string;
   monsterId?: string;
   ready?: boolean;
+  heroId?: string;
+  itemInstanceId?: string;
+  itemId?: string;
+  receipt?: string;
+  payWith?: string;
+  classId?: string;
+  species?: string;
+  background?: string;
+  alignment?: string;
+  presetId?: string;
+  inCombat?: boolean;
 };
 
 export const VOICE_INTENTS = [
@@ -87,6 +111,12 @@ export const VOICE_INTENTS = [
   "end_turn",
   "attack_nearest",
   "cast_magic_missile",
+  "equip",
+  "unequip",
+  "switch_loadout",
+  "ready",
+  "vendor_browse",
+  "buy_slot",
 ] as const;
 
 export type VoiceIntent = (typeof VOICE_INTENTS)[number];
@@ -234,6 +264,25 @@ const ERROR_TEXT: Record<string, string> = {
   BONUS_SPELL: "After a bonus-action spell, only a cantrip is left.",
   DYING: "That hero is down — wait for a death save or for someone to help.",
   NO_WITHDRAW: "You can't step back from this scene. Pick a way forward.",
+  NAME_DENIED: "That name isn't allowed.",
+  CLASS_DISABLED: "That class is turned off. An admin enables it from the content list.",
+  SPECIES_DISABLED: "That species is turned off.",
+  BACKGROUND_DISABLED: "That background is turned off.",
+  ITEM_DISABLED: "That item is turned off.",
+  NEED_GOLD: "You don't have enough gold.",
+  BAD_GOLD: "That gold amount isn't valid.",
+  BAD_RECEIPT: "That payment receipt isn't valid.",
+  RECEIPT_USED: "That payment was already claimed.",
+  NOT_IN_SHOP: "That item isn't in today's shop.",
+  BAD_ITEM: "That item can't be bought here.",
+  BAD_PARTY: "That party doesn't fit this queue.",
+  BAD_SURFACE: "Say whether this is the TV, the web, or the companion.",
+  BAD_CONTENT: "That content entry isn't in the catalog.",
+  CAMPAIGN_SEALED: "This adventure has already started. The party is closed.",
+  SAVE_ARCHIVED: "That save is from an earlier version. You can look at it, not resume it.",
+  LEGACY_CHARACTER: "That hero is from an earlier version. You can look at the sheet, not play it.",
+  MULTICLASS_LEVEL: "A second class is chosen when you level up.",
+  MULTICLASS_PREREQ: "That class needs higher ability scores.",
 };
 
 /** Player-facing sentence for a server error code. Never shows a raw code. */

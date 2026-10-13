@@ -26,6 +26,7 @@ import {
   type Role,
   type SessionUser,
 } from "./auth.js";
+import { archiveV1Once } from "./hero.js";
 import {
   amazonEnabled,
   amazonStatus,
@@ -270,6 +271,7 @@ function parseLabels(
 
 export function mountAccountRoutes(app: Express): void {
   openAuth();
+  archiveV1Once();
 
   app.post("/api/login", (req, res) => {
     const username = String(req.body?.username ?? "");

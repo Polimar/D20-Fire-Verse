@@ -1,0 +1,44 @@
+{
+  "entries": [
+    {
+      "id": "cleave",
+      "name": "Cleave",
+      "summary": "On a hit, a second adjacent creature takes the weapon damage."
+    },
+    {
+      "id": "graze",
+      "name": "Graze",
+      "summary": "On a miss, the target still takes damage equal to the ability modifier."
+    },
+    {
+      "id": "nick",
+      "name": "Nick",
+      "summary": "An extra attack with this weapon can be part of the Attack action."
+    },
+    {
+      "id": "push",
+      "name": "Push",
+      "summary": "On a hit, push the target 10 feet."
+    },
+    {
+      "id": "sap",
+      "name": "Sap",
+      "summary": "On a hit, the next attack against the target has advantage until your next turn."
+    },
+    {
+      "id": "slow",
+      "name": "Slow",
+      "summary": "On a hit, the target's speed drops by 10 feet."
+    },
+    {
+      "id": "topple",
+      "name": "Topple",
+      "summary": "On a hit, the target makes a save or falls prone."
+    },
+    {
+      "id": "vex",
+      "name": "Vex",
+      "summary": "On a hit, your next attack against the target has advantage."
+    }
+  ]
+}

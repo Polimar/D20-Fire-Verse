@@ -1,0 +1,22 @@
+{
+  "entries": [
+    {
+      "id": "alert",
+      "name": "Alert",
+      "repeatable": false,
+      "description": "You react before others do."
+    },
+    {
+      "id": "tough",
+      "name": "Tough",
+      "repeatable": false,
+      "description": "Your hit point maximum increases."
+    },
+    {
+      "id": "magic_initiate",
+      "name": "Magic Initiate",
+      "repeatable": false,
+      "description": "You learn two cantrips and a 1st-level spell."
+    }
+  ]
+}

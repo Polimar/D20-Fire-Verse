@@ -1,0 +1,6 @@
+{
+  "id": "sample_unparsed",
+  "kind": "spell",
+  "reason": "Missing level, school, and classes after 10 strategies.",
+  "_raw_md": "## Sample\n\nThis paragraph has no spell stat line."
+}

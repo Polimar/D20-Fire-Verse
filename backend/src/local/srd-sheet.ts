@@ -195,6 +195,7 @@ export function refreshMenus(token: CombatToken, pregen: Pregen | undefined, loo
   if (token.inventory.includes("potion_healing")) place("use_potion_healing");
   for (const id of token.cantrips ?? []) place(id);
   for (const id of token.spells ?? []) place(id);
+  for (const id of token.grantedSpells ?? []) place(id);
 
   const cls = pregen?.class;
   const level = pregen?.level ?? 1;

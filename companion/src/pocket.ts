@@ -64,6 +64,7 @@ export function mountPocket(host: HTMLElement, adopt: (key: string) => void, sca
       }</div>
       <div class="row2">
         <button type="button" class="primary" id="pocketForge">Forge a hero</button>
+        <button type="button" id="pocketArmory">Armory</button>
         <button type="button" id="pocketSocial">Friends & board</button>
       </div>`;
     card().querySelector("#pocketOut")!.addEventListener("click", () => {
@@ -73,6 +74,7 @@ export function mountPocket(host: HTMLElement, adopt: (key: string) => void, sca
       });
     });
     card().querySelector("#pocketForge")!.addEventListener("click", () => void openForge());
+    card().querySelector("#pocketArmory")!.addEventListener("click", () => void openArmory());
     card().querySelector("#pocketSocial")!.addEventListener("click", () => void openSocial());
     card().querySelectorAll<HTMLElement>("[data-hero]").forEach((b) => b.addEventListener("click", () => void openHero(b.dataset.hero!)));
   };
@@ -219,10 +221,45 @@ export function mountPocket(host: HTMLElement, adopt: (key: string) => void, sca
     });
   };
 
+  const openArmory = async () => {
+    const [heroesBody, stashBody, shop] = await Promise.all([
+      api<{ heroes: Array<{ id: string; name: string; level: number; xp: number; classes: Array<{ id: string; level: number }> }> }>("/api/heroes"),
+      api<{ stash: Array<{ id: string; name: string; inUseBy?: string; itemDefId: string }> }>("/api/stash"),
+      api<{ payToWin: string; slots: Array<{ itemId: string; name: string; priceGold: number }> }>("/api/vendor"),
+    ]);
+    const hero = heroesBody.heroes[0];
+    card().innerHTML = `
+      <h2>Armory</h2>
+      <p class="meta">${esc(shop.payToWin)}</p>
+      ${hero ? `<p><strong>${esc(hero.name)}</strong> level ${hero.level} · XP ${hero.xp}</p>
+        <button type="button" class="primary" id="armLevel">Level up</button>` : `<p class="meta">Forge a V2 hero from the web content list once a class is enabled.</p>`}
+      <ul class="sheet-list">${stashBody.stash.map((item) => `<li>${esc(item.name)}${item.inUseBy ? ` · In use: ${esc(item.inUseBy)}` : ""} <button type="button" data-equip="${esc(item.id)}">Equip</button></li>`).join("") || "<li class='meta'>Stash is empty</li>"}</ul>
+      <h3>Today's shop</h3>
+      <ul class="sheet-list">${shop.slots.map((slot) => `<li>${esc(slot.name)} · ${slot.priceGold} gold <button type="button" data-buy="${esc(slot.itemId)}">Buy</button></li>`).join("") || "<li class='meta'>Nothing enabled for sale</li>"}</ul>
+      <button type="button" class="ghost" id="armBack">Back</button>`;
+    card().querySelector("#armBack")!.addEventListener("click", () => paintHome());
+    card().querySelector("#armLevel")?.addEventListener("click", () => {
+      if (!hero) return;
+      void api(`/api/heroes/${hero.id}/level-up`, { method: "POST", body: "{}" }).then(() => openArmory());
+    });
+    card().querySelectorAll<HTMLButtonElement>("[data-equip]").forEach((button) => {
+      button.addEventListener("click", () => {
+        if (!hero) return;
+        void api("/api/stash/equip", { method: "POST", body: JSON.stringify({ heroId: hero.id, itemInstanceId: button.dataset.equip }) }).then(() => openArmory());
+      });
+    });
+    card().querySelectorAll<HTMLButtonElement>("[data-buy]").forEach((button) => {
+      button.addEventListener("click", () => {
+        void api("/api/vendor/buy", { method: "POST", body: JSON.stringify({ itemId: button.dataset.buy }) }).then(() => openArmory());
+      });
+    });
+  };
+
   const refresh = async () => {
     try {
       const me = await api<{ user: { username: string } }>("/api/me");
       user = me.user.username;
+      void api("/api/session/surface", { method: "POST", body: JSON.stringify({ surface: "companion" }) });
       heroes = (await api<Pregen[]>("/api/pregens")).filter((p) => p.custom || String(p.id).startsWith("custom_"));
       paintHome();
     } catch {
