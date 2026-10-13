@@ -336,6 +336,36 @@ export function stashView(userId: string): Array<StashRow & { name: string; inUs
   });
 }
 
+export type EquippedItem = { instanceId: string; slot: keyof LoadoutSlots; item: ItemDef; attuned: boolean };
+
+/** What the hero carries into a fight. Items an admin switched off since they were equipped stay home. */
+export function equippedGear(hero: HeroRow): EquippedItem[] {
+  const rows = accountDb()
+    .prepare("SELECT id, item_def_id, attuned_by_hero_id FROM account_stash WHERE equipped_by_hero_id = ?")
+    .all(hero.id) as Array<{ id: string; item_def_id: string; attuned_by_hero_id: string | null }>;
+  const byInstance = new Map(rows.map((row) => [row.id, row]));
+  const slots: Array<[keyof LoadoutSlots, string | undefined]> = [
+    ["armor", hero.loadout.armor],
+    ["shield", hero.loadout.shield],
+    ["mainhand", hero.loadout.mainhand],
+    ["offhand", hero.loadout.offhand],
+    ...hero.loadout.trinkets.map((id): [keyof LoadoutSlots, string] => ["trinkets", id]),
+    ...hero.loadout.consumables.map((id): [keyof LoadoutSlots, string] => ["consumables", id]),
+  ];
+  const out: EquippedItem[] = [];
+  for (const [slot, instanceId] of slots) {
+    const row = instanceId ? byInstance.get(instanceId) : undefined;
+    const item = row ? enabledById<ItemDef>("item", row.item_def_id) : undefined;
+    if (!row || !item) continue;
+    out.push({ instanceId: row.id, slot, item, attuned: row.attuned_by_hero_id === hero.id });
+  }
+  return out;
+}
+
+export function classPackWeapon(classId: string): string | undefined {
+  return CLASS_PACK[classId];
+}
+
 function ownHero(userId: string, heroId: string): HeroRow {
   const hero = getHero(heroId);
   if (!hero || hero.userId !== userId) throw new Error("BAD_CHARACTER");
@@ -360,8 +390,14 @@ export function equip(userId: string, heroId: string, instanceId: string, inComb
   const check = canEquip(toRules(hero), asItem(def), attunedCount(heroId));
   if (!check.ok) throw new Error(check.reason);
   if (def.requires?.attunement && inCombat) throw new Error("IN_COMBAT");
-  accountDb().prepare("UPDATE account_stash SET equipped_by_hero_id = ? WHERE id = ?").run(heroId, instanceId);
   const slot = def.slot;
+  const replaced = slot === "trinket" || slot === "consumable" ? undefined : hero.loadout[slot];
+  if (replaced && replaced !== instanceId) {
+    accountDb()
+      .prepare("UPDATE account_stash SET equipped_by_hero_id = NULL, attuned_by_hero_id = NULL WHERE id = ? AND equipped_by_hero_id = ?")
+      .run(replaced, heroId);
+  }
+  accountDb().prepare("UPDATE account_stash SET equipped_by_hero_id = ? WHERE id = ?").run(heroId, instanceId);
   if (slot === "trinket") hero.loadout.trinkets = [...new Set([...hero.loadout.trinkets, instanceId])];
   else if (slot === "consumable") hero.loadout.consumables = [...new Set([...hero.loadout.consumables, instanceId])];
   else hero.loadout[slot] = instanceId;

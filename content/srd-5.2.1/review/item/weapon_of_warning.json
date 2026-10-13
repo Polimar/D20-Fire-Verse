@@ -21,7 +21,7 @@
   "id": "weapon_of_warning",
   "status": "needs_review",
   "confidence": "low",
-  "usage": "Vendor, loot, and stash. Equipped effects are listed on the sheet; no fight applies them yet.",
+  "usage": "Vendor, loot, and stash. Account heroes carry its typed effects into fights while it is equipped (and attuned, when required).",
   "srd": {
     "line": "Weapon (Any Simple or Martial), Uncommon (Requires Attunement)",
     "text": "_Weapon (Any Simple or Martial), Uncommon (Requires Attunement)_\n\nAs long as this weapon is within your reach and you are attuned to it, you and allies within 30 feet of you gain the following benefits.\n\n_Alarm._ The weapon magically awakens each subject who is sleeping naturally when combat begins. This benefit doesn't wake a subject from magically induced sleep.\n\n_Supernatural Readiness._ Each subject has Advantage on its Initiative rolls."

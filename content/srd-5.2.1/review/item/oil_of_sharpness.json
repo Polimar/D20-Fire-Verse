@@ -21,7 +21,7 @@
   "id": "oil_of_sharpness",
   "status": "needs_review",
   "confidence": "low",
-  "usage": "Vendor, loot, and stash. Equipped effects are listed on the sheet; no fight applies them yet.",
+  "usage": "Vendor, loot, and stash. Account heroes carry its typed effects into fights while it is equipped (and attuned, when required).",
   "srd": {
     "line": "Potion, Very Rare",
     "text": "_Potion, Very Rare_\n\nOne vial of this oil can coat one Melee weapon or twenty pieces of ammunition, but only ammunition and Melee weapons that are nonmagical and deal Slashing or Piercing damage are affected. Applying the oil takes 1 minute, after which the oil magically seeps into whatever it coats, turning the coated weapon into a _+3 Weapon_ or the coated ammunition into _+3 Ammunition_.\n\nThis clear, gelatinous oil sparkles with tiny, ultrathin silver shards."

@@ -5,7 +5,7 @@
   "id": "pistol",
   "status": "auto_ok",
   "confidence": "high",
-  "usage": "Vendor, loot, and stash. Equipped effects are listed on the sheet; no fight applies them yet.",
+  "usage": "Vendor, loot, and stash. Account heroes carry its typed effects into fights while it is equipped (and attuned, when required).",
   "srd": {
     "line": "martial ranged weapon",
     "text": "| Name | Damage | Properties | Mastery | Weight | Cost |\n| --- | --- | --- | --- | --- | --- |\n| Pistol | 1d10 Piercing | Ammunition (Range 30/90; Bullet), Loading | Vex | 3 lb. | 250 GP |"

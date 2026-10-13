@@ -33,7 +33,7 @@
   "id": "ammunition_of_slaying",
   "status": "needs_review",
   "confidence": "low",
-  "usage": "Vendor, loot, and stash. Equipped effects are listed on the sheet; no fight applies them yet.",
+  "usage": "Vendor, loot, and stash. Account heroes carry its typed effects into fights while it is equipped (and attuned, when required).",
   "srd": {
     "line": "Weapon (Any Ammunition), Very Rare",
     "text": "_Weapon (Any Ammunition), Very Rare_\n\nThis magic ammunition is meant to slay creatures of a particular type, which the GM chooses or determines randomly by rolling on the table below. If a creature of that type takes damage from the ammunition, the creature makes a DC 17 Constitution saving throw, taking an extra 6d10 Force damage on a failed save or half as much extra damage on a successful one.\n\nAfter dealing its extra damage to a creature, the ammunition becomes nonmagical.\n\n| 1d100 | Creature Type | 1d100 | Creature Type |\n| --- | --- | --- | --- |\n| 01–10 | Aberrations | 51–60 | Fey |\n| 11–15 | Beasts | 61–70 | Fiends |\n| 16–20 | Celestials | 71–75 | Giants |\n| 21–25 | Constructs | 76–80 | Monstrosities |\n| 26–35 | Dragons | 81–85 | Oozes |\n| 36–45 | Elementals | 86–90 | Plants |\n| 46–50 | Humanoids | 91–00 | Undead |"

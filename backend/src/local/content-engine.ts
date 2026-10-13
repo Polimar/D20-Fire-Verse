@@ -6,6 +6,8 @@
 import type { EffectDef, ItemDef, MonsterAction, MonsterDef as CatalogMonster, SpellDef } from "@d20-fireverse/content-schema";
 import { getAbility, getMonster, type AbilityDef } from "./campaign.js";
 import { currentSnapshot } from "./catalog.js";
+import { catalogEntry } from "./content-catalog.js";
+import { gearAbility, gearAttackId } from "./gear-abilities.js";
 import { srdMonsterId } from "./srd-monsters.js";
 
 export type EngineLine = { label: string; detail: string; ok: boolean };
@@ -204,28 +206,34 @@ function spellView(id: string, game: SpellDef): EngineView {
   };
 }
 
-function itemEffectLine(effect: EffectDef): EngineLine {
+function itemEffectLine(effect: EffectDef, weapon: boolean): EngineLine {
   switch (effect.kind) {
     case "ac_bonus":
-      return { label: "AC", detail: `+${effect.amount} Armor Class`, ok: false };
+      return { label: "AC", detail: `+${effect.amount} Armor Class while equipped.`, ok: true };
     case "attack_bonus":
-      return { label: "Attack", detail: `+${effect.amount} to attack rolls`, ok: false };
+      return { label: "Attack", detail: `+${effect.amount} to ${weapon ? "attack rolls with this weapon" : "every attack roll"}.`, ok: true };
     case "damage_bonus":
-      return { label: "Damage", detail: `+${effect.amount}${effect.damageType ? ` ${effect.damageType}` : ""} damage`, ok: false };
+      return { label: "Damage", detail: `+${effect.amount} to ${weapon ? "damage with this weapon" : "every damage roll"}.`, ok: true };
     case "on_hit_rider":
-      return { label: "On hit", detail: `+${effect.damage} ${effect.damageType}`, ok: false };
+      return weapon
+        ? { label: "On hit", detail: `+${effect.damage} ${effect.damageType} rolled on every hit (doubled on a crit). Resistance reads the weapon's damage type for the whole hit.`, ok: true }
+        : { label: "On hit", detail: `+${effect.damage} ${effect.damageType}, but this item is not a weapon, so nothing carries it.`, ok: false };
     case "resistance":
-      return { label: "Resistance", detail: effect.damageType, ok: false };
+      return { label: "Resistance", detail: `Half ${effect.damageType} damage taken.`, ok: true };
     case "immunity":
-      return { label: "Immunity", detail: effect.damageType, ok: false };
-    case "grant_spell":
-      return { label: "Spell", detail: `${effect.spellId}${getAbility(`spell_${effect.spellId}`) || getAbility(effect.spellId) ? " (castable in combat)" : " (no combat ability)"}`, ok: false };
+      return { label: "Immunity", detail: `No ${effect.damageType} damage taken.`, ok: true };
+    case "grant_spell": {
+      const known = getAbility(`spell_${effect.spellId}`) ?? getAbility(effect.spellId);
+      return known
+        ? { label: "Spell", detail: `${known.name} on the combat menu; it spends the item's charges, not spell slots.`, ok: true }
+        : { label: "Spell", detail: `${effect.spellId.replace(/_/g, " ")}: the combat engine has no ability for it.`, ok: false };
+    }
     case "grant_feature":
-      return { label: "Feature", detail: effect.featureId, ok: false };
+      return { label: "Feature", detail: `${effect.featureId}: not applied by the combat seat.`, ok: false };
     case "stat_set":
-      return { label: "Ability", detail: `${ABILITY_NAMES[effect.ability]} becomes ${effect.score}`, ok: false };
+      return { label: "Ability", detail: `${ABILITY_NAMES[effect.ability]} becomes ${effect.score} unless already higher.`, ok: true };
     case "stat_increase_cap":
-      return { label: "Ability cap", detail: `${ABILITY_NAMES[effect.ability]} max ${effect.cap}`, ok: false };
+      return { label: "Ability cap", detail: `${ABILITY_NAMES[effect.ability]} max ${effect.cap}: not applied by the combat seat.`, ok: false };
     default: {
       const never: never = effect;
       return never;
@@ -233,32 +241,65 @@ function itemEffectLine(effect: EffectDef): EngineLine {
   }
 }
 
-function itemView(game: ItemDef): EngineView {
-  const lines: EngineLine[] = game.effects.map(itemEffectLine);
-  if (game.weapon) {
-    const attack = getAbility(`${game.weaponId ?? game.id}_attack`);
-    lines.unshift({
-      label: "Weapon attack",
-      detail: attack
-        ? `${attack.id}: ${describeAbility(attack)}. Heroes swing it when their sheet lists the weapon.`
-        : `${game.weapon.damage} ${game.weapon.damageType} in the SRD, but no ${game.weaponId ?? game.id}_attack ability exists, so nobody can swing it.`,
-      ok: Boolean(attack),
-    });
-  }
-  if (game.armor) {
-    lines.unshift({
-      label: "Armor",
-      detail: `${game.armor.category} · base AC ${game.armor.baseAc}${game.armor.dexCap === null ? " + DEX" : game.armor.dexCap ? ` + DEX (max ${game.armor.dexCap})` : ""}. Not read by any sheet or fight.`,
-      ok: false,
-    });
-  }
-  const weaponRuns = lines.some((l) => l.ok);
+function weaponLine(base: ItemDef): EngineLine {
+  const attack = gearAbility(gearAttackId(base.id));
+  const reach = base.weapon?.properties.some((p) => /^reach$/i.test(p));
   return {
-    state: weaponRuns ? "partial" : game.effects.length || game.armor ? "unused" : "sheet",
-    headline: game.effects.length || game.armor
-      ? "Vendors, loot drops, and the stash use it. Nothing applies its effects yet: recomputeFromLoadout in packages/rules computes them, but no sheet or fight calls it."
-      : "Vendors, loot drops, and the stash use it. It has no typed effects, so equipping it changes nothing.",
-    source: "packages/rules/src/loadout.ts (effects) · backend/src/local/vendor.ts and loot.ts (sale and drops)",
+    label: "Weapon attack",
+    detail: attack
+      ? `${describeAbility(attack)}.${reach ? " Reach is not modeled: it attacks adjacent cells only." : ""}`
+      : `${base.weapon?.damage ?? "?"} ${base.weapon?.damageType ?? ""} in the SRD, but no attack can be built from it.`,
+    ok: Boolean(attack),
+  };
+}
+
+function itemView(game: ItemDef): EngineView {
+  const bases = (game.baseItems ?? []).map((id) => catalogEntry<ItemDef>("item", id)).filter((g): g is ItemDef => Boolean(g));
+  const isWeapon = Boolean(game.weapon) || bases.some((g) => g.weapon);
+  const lines: EngineLine[] = [];
+  if (game.weapon) lines.push(weaponLine(game));
+  if (game.armor && game.armor.category !== "shield") {
+    const dex = game.armor.dexCap === null ? " + DEX" : game.armor.dexCap ? ` + DEX (max ${game.armor.dexCap})` : "";
+    const str = game.armor.strength ? ` Under Strength ${game.armor.strength}, Speed drops by 10 feet.` : "";
+    lines.push({ label: "Armor", detail: `Hero AC is ${game.armor.baseAc}${dex}.${str}`, ok: true });
+  }
+  if (bases.length) {
+    const kind = bases.some((g) => g.weapon) ? "weapon" : "armor";
+    lines.push({
+      label: "Base",
+      detail:
+        kind === "weapon"
+          ? `Swung as the hero's class starting weapon when it is on the list, otherwise as ${bases.find((g) => g.weapon)!.name}. Allowed: ${bases.map((g) => g.name).join(", ")}.`
+          : `Worn as the heaviest allowed armor the hero's Strength can carry. Allowed: ${bases.map((g) => g.name).join(", ")}.`,
+      ok: true,
+    });
+    const first = bases.find((g) => g.weapon);
+    if (first) lines.push(weaponLine(first));
+  } else if (game.slot === "shield" && !game.armor) {
+    lines.push({ label: "Shield", detail: "+2 Armor Class as a Shield, plus its own bonus.", ok: true });
+  } else if ((game.slot === "mainhand" || game.slot === "offhand") && !game.weapon) {
+    lines.push({ label: "Weapon attack", detail: "No base weapon the game knows, so equipping it gives no attack.", ok: false });
+  }
+  lines.push(...game.effects.map((effect) => itemEffectLine(effect, isWeapon)));
+  if (game.requires?.attunement) lines.push({ label: "Attunement", detail: "Does nothing until the hero attunes to it.", ok: true });
+  const grantsSpell = game.effects.some((e) => e.kind === "grant_spell");
+  if (grantsSpell) {
+    lines.push({
+      label: "Charges",
+      detail: `${game.charges ?? 1} per fight, shared by its spells, one per cast. They refill when the next fight starts.`,
+      ok: true,
+    });
+  }
+
+  const applied = lines.filter((l) => l.ok).length;
+  const missing = lines.filter((l) => !l.ok).length;
+  const state: EngineView["state"] = !lines.length ? "sheet" : !missing ? "runs" : applied ? "partial" : "unused";
+  return {
+    state,
+    headline: lines.length
+      ? "Account heroes carry it into arena and campaign fights while it is equipped. Pregenerated characters keep their fixed sheets."
+      : "Vendors, loot drops, and the stash use it. It has no typed effects, so equipping it changes nothing in a fight.",
+    source: "backend/src/local/hero-pregen.ts (seat) · gear-abilities.ts (weapon attacks) · combat.ts (bonuses and riders)",
     lines,
     mismatches: [],
     notes: [],

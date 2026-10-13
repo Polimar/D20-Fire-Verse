@@ -5,7 +5,7 @@
   "id": "amulet_of_proof_against_detection_and_location",
   "status": "auto_ok",
   "confidence": "high",
-  "usage": "Vendor, loot, and stash. Equipped effects are listed on the sheet; no fight applies them yet.",
+  "usage": "Vendor, loot, and stash. Account heroes carry its typed effects into fights while it is equipped (and attuned, when required).",
   "srd": {
     "line": "Wondrous Item, Uncommon (Requires Attunement)",
     "text": "_Wondrous Item, Uncommon (Requires Attunement)_\n\nWhile wearing this amulet, you can't be targeted by Divination spells or perceived through magical scrying sensors unless you allow it."

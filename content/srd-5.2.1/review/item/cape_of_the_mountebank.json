@@ -5,7 +5,7 @@
   "id": "cape_of_the_mountebank",
   "status": "needs_review",
   "confidence": "medium",
-  "usage": "Vendor, loot, and stash. Equipped effects are listed on the sheet; no fight applies them yet.",
+  "usage": "Vendor, loot, and stash. Account heroes carry its typed effects into fights while it is equipped (and attuned, when required).",
   "srd": {
     "line": "Wondrous Item, Rare",
     "text": "_Wondrous Item, Rare_\n\nThis cape smells faintly of brimstone. While wearing it, you can use it to cast _Dimension Door_ as a Magic action. This property can't be used again until the next dawn.\n\nWhen you teleport with that spell, you leave behind a cloud of smoke. The space you left is Lightly Obscured by that smoke until the end of your next turn."

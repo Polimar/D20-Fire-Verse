@@ -66,5 +66,8 @@ test("the engine panel reports what combat really runs", () => {
   assert.ok(aboleth?.lines.some((l) => l.label === "Action: Tentacle" && l.ok && /2d6\+5/.test(l.detail)));
 
   const plate = engineView("item", "armor_plus_1", readPack<ItemDef>("items/magic.json").find((i) => i.id === "armor_plus_1"));
-  assert.ok(plate && plate.state !== "runs", "item effects are not applied in a fight yet");
+  assert.equal(plate?.state, "runs", "account heroes wear it over a mundane base");
+  assert.ok(plate?.lines.some((l) => l.label === "Base" && /Plate Armor/.test(l.detail)));
+  const crab = engineView("item", "apparatus_of_the_crab", readPack<ItemDef>("items/magic.json").find((i) => i.id === "apparatus_of_the_crab"));
+  assert.equal(crab?.state, "sheet", "no typed effects, nothing for a fight to apply");
 });

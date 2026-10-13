@@ -5,7 +5,7 @@
   "id": "trident_of_fish_command",
   "status": "needs_review",
   "confidence": "medium",
-  "usage": "Vendor, loot, and stash. Equipped effects are listed on the sheet; no fight applies them yet.",
+  "usage": "Vendor, loot, and stash. Account heroes carry its typed effects into fights while it is equipped (and attuned, when required).",
   "srd": {
     "line": "Weapon (Trident), Uncommon (Requires Attunement)",
     "text": "_Weapon (Trident), Uncommon (Requires Attunement)_\n\nThis magic weapon has 3 charges, and it regains 1d3 expended charges daily at dawn. While you carry it, you can expend 1 charge to cast _Dominate Beast_ (save DC 15) from it on a Beast that has a Swim Speed."

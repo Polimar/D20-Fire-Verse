@@ -5,7 +5,7 @@
   "id": "bracers_of_defense",
   "status": "auto_ok",
   "confidence": "high",
-  "usage": "Vendor, loot, and stash. Equipped effects are listed on the sheet; no fight applies them yet.",
+  "usage": "Vendor, loot, and stash. Account heroes carry its typed effects into fights while it is equipped (and attuned, when required).",
   "srd": {
     "line": "Wondrous Item, Rare (Requires Attunement)",
     "text": "_Wondrous Item, Rare (Requires Attunement)_\n\nWhile wearing these bracers, you gain a +2 bonus to Armor Class if you are wearing no armor and using no Shield."

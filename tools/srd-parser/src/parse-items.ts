@@ -117,8 +117,6 @@ export function parseArmor(equipment: string): ParsedItem[] {
       const id = slug(name);
       const shield = category === "shield";
       const notModeled = [
-        ...(shield ? [] : [`Base AC ${acCell}: the loadout starts from AC 10 and adds bonuses, so the armor's own AC is not used yet.`]),
-        ...(strength ? [`Strength ${strength} or Speed drops by 10 feet.`] : []),
         ...(/Disadvantage/i.test(stealth) ? ["Disadvantage on Dexterity (Stealth) checks."] : []),
       ];
       const item: ItemDef = {
@@ -186,9 +184,57 @@ const MECHANICAL =
 
 type Read = { effects: EffectDef[]; notModeled: string[]; ambiguities: Ambiguity[]; mechanical: number };
 
+/** “You have Resistance…”, not “the weapon ignores Resistance” or “a creature with Immunity…”. */
+function grantsBearer(sentence: string): boolean {
+  if (/\bignores?\b/i.test(sentence)) return false;
+  if (/\b(?:can take|you can|Magic action|Bonus Action|Reaction)\b/i.test(sentence)) return false;
+  if (/\b(?:a|the|that|each|any) (?:creature|target)\b[^.]*\b(?:has|have|is)\b[^.]*\b(?:Resistance|Immunity|immune)\b/i.test(sentence)) return false;
+  return /\b(?:you|your|wearer|bearer|wielder)\b/i.test(sentence);
+}
+
+const WEAPON_ANY: Array<[RegExp, (w: NonNullable<ItemDef["weapon"]>) => boolean]> = [
+  [/^Any Melee Weapon$/i, (w) => w.category.endsWith("_melee")],
+  [/^Any Ranged Weapon$/i, (w) => w.category.endsWith("_ranged")],
+  [/^Any Simple or Martial$/i, () => true],
+];
+
+/** Gear ids the type line allows as the mundane base: “Weapon (Longbow or Shortbow)”, “Armor (Any Medium or Heavy, Except Hide Armor)”. */
+export function baseItemsOf(line: string, gear: ItemDef[]): { ids: string[]; unknown: string[] } {
+  const m = line.match(/^(Weapon|Armor) \(([^)]+)\)/i);
+  if (!m || /Ammunition|Shield/i.test(m[2]!)) return { ids: [], unknown: [] };
+  const inner = m[2]!.trim();
+  if (m[1]!.toLowerCase() === "weapon") {
+    const weapons = gear.filter((g) => g.weapon);
+    const any = WEAPON_ANY.find(([re]) => re.test(inner));
+    if (any) return { ids: weapons.filter((g) => any[1](g.weapon!)).map((g) => g.id), unknown: [] };
+    return byName(inner, weapons);
+  }
+  const armors = gear.filter((g) => g.armor && g.armor.category !== "shield");
+  const any = inner.match(/^Any ([^,]+(?:, [^,]+)*?)(?:, Except (.+))?$/i);
+  if (any) {
+    const cats = any[1]!.split(/,\s*(?:or\s+)?|\s+or\s+/).map((c) => c.trim().toLowerCase());
+    const except = new Set((any[2] ?? "").split(/,\s*|\s+or\s+/).map((n) => slug(n)).filter(Boolean));
+    return { ids: armors.filter((g) => cats.includes(g.armor!.category) && !except.has(g.id)).map((g) => g.id), unknown: [] };
+  }
+  return byName(inner, armors);
+}
+
+function byName(list: string, gear: ItemDef[]): { ids: string[]; unknown: string[] } {
+  const names = list.split(/,\s*(?:or\s+)?|\s+or\s+/).map((n) => n.trim()).filter(Boolean);
+  const ids: string[] = [];
+  const unknown: string[] = [];
+  for (const name of names) {
+    const id = slug(name);
+    const hit = gear.find((g) => g.id === id || g.id === `${id}_armor` || slug(g.name) === id);
+    if (hit) ids.push(hit.id);
+    else unknown.push(name);
+  }
+  return { ids, unknown };
+}
+
 function typesIn(list: string): string[] {
   return list
-    .split(/,\s*|\s+and\s+|\s+or\s+/)
+    .split(/,\s*(?:and\s+|or\s+)?|\s+and\s+|\s+or\s+/)
     .map((t) => t.trim().toLowerCase())
     .filter((t) => isDamageType(t));
 }
@@ -208,8 +254,23 @@ function readEffects(body: string, knownSpells: Set<string>, variantBonus?: numb
     mechanical += 1;
     let covered = false;
     if (/^(?:Spells\.\s*)?(?:This|The) \w+ has \d+ charges\.?$/i.test(s) || (variantBonus && /determined by (?:its|the [\w']+) rarity\.?$/i.test(s) && !/bonus to/i.test(s))) continue;
+    const situational = (effect: EffectDef, what: string) => {
+      ambiguities.push({
+        field: "effects",
+        summary: `Situational ${what}: “${s}” The engine applies item bonuses to every roll and cannot check the situation.`,
+        options: [
+          { label: "Leave the bonus out", patch: {} },
+          { label: `Apply it to every roll`, patch: { __addEffect: effect } },
+        ],
+        parserChoice: 0,
+      });
+    };
+    const onlyAgainst = (found: RegExpMatchArray) => /^[^,.;]*\bagainst\b/i.test(s.slice(found.index! + found[0].length));
     const ac = s.match(/\+(\d) bonus to (?:Armor Class|AC)\b/i);
-    if (ac) {
+    if (ac && onlyAgainst(ac)) {
+      situational({ kind: "ac_bonus", amount: Number(ac[1]) }, "AC bonus");
+      covered = true;
+    } else if (ac) {
       effects.push({ kind: "ac_bonus", amount: Number(ac[1]) });
       covered = true;
       if (/and saving throws/i.test(s)) notModeled.push(`+${ac[1]} bonus to saving throws.`);
@@ -227,11 +288,12 @@ function readEffects(body: string, knownSpells: Set<string>, variantBonus?: numb
     } else {
       const atk = s.match(/\+(\d) bonus to attack rolls\b/i);
       if (atk && !/spell attack/i.test(s)) {
-        effects.push({ kind: "attack_bonus", amount: Number(atk[1]) });
+        if (onlyAgainst(atk)) situational({ kind: "attack_bonus", amount: Number(atk[1]) }, "attack bonus");
+        else effects.push({ kind: "attack_bonus", amount: Number(atk[1]) });
         covered = true;
       }
     }
-    const resist = s.match(/Resistance to ([A-Za-z, ]+?) damage/i);
+    const resist = grantsBearer(s) ? s.match(/Resistance to ([A-Za-z, ]+?) damage/i) : null;
     if (resist) {
       const types = typesIn(resist[1]!);
       if (types.length) {
@@ -249,7 +311,7 @@ function readEffects(body: string, knownSpells: Set<string>, variantBonus?: numb
         covered = true;
       }
     }
-    const immune = s.match(/Immunity to ([A-Za-z, ]+?) damage/i);
+    const immune = grantsBearer(s) ? s.match(/Immunity to ([A-Za-z, ]+?) damage/i) : null;
     if (immune) {
       const types = typesIn(immune[1]!);
       for (const t of types) effects.push({ kind: "immunity", damageType: t });
@@ -258,7 +320,8 @@ function readEffects(body: string, knownSpells: Set<string>, variantBonus?: numb
     const rider = s.match(/extra (\d+d\d+) ([A-Za-z]+) damage/i);
     if (rider && isDamageType(rider[2]!)) {
       const effect: EffectDef = { kind: "on_hit_rider", damage: cleanDice(rider[1]!), damageType: rider[2]!.toLowerCase() };
-      if (/\b(if|against|while|when|until)\b/i.test(s)) {
+      const condition = s.replace(/^When you hit (?:a (?:creature|target) )?with (?:an attack(?: roll)? using |a (?:melee |ranged )?attack using )?this (?:magic )?(?:weapon|ammunition),?\s*/i, "");
+      if (/\b(if|against|while|when|until)\b/i.test(condition)) {
         ambiguities.push({
           field: "effects",
           summary: `Conditional extra damage: “${s}” The engine cannot check the condition.`,
@@ -317,7 +380,7 @@ function chunks4(markdown: string): Array<{ title: string; body: string }> {
     });
 }
 
-export function parseMagicItems(markdown: string, knownSpells: Set<string>): ParsedItem[] {
+export function parseMagicItems(markdown: string, knownSpells: Set<string>, gear: ItemDef[]): ParsedItem[] {
   const section = markdown.slice(markdown.indexOf("## Magic Item Descriptions"));
   const source = section.includes("####") ? section : markdown;
   const out: ParsedItem[] = [];
@@ -329,12 +392,15 @@ export function parseMagicItems(markdown: string, knownSpells: Set<string>): Par
     const slot = slotOf(line);
     const requires = requiresOf(line);
     const charges = flat(body).match(/has (\d+) charges/i)?.[1];
+    const bases = baseItemsOf(line, gear);
+    const baseNote = bases.unknown.length ? [`Base ${bases.unknown.join(", ")} is not in the equipment tables, so the game cannot use it.`] : [];
     const base = (extra: Partial<ItemDef>): ItemDef => ({
       id: slug(chunk.title),
       name: chunk.title,
       rarity: rarityOf(line) ?? "common",
       slot,
       ...(requires ? { requires } : {}),
+      ...(bases.ids.length ? { baseItems: bases.ids } : {}),
       effects: [],
       ...(charges ? { charges: Number(charges) } : {}),
       ...extra,
@@ -350,7 +416,7 @@ export function parseMagicItems(markdown: string, knownSpells: Set<string>): Par
           item: base({ id: `${slug(plus[1]!)}_plus_${n}`, name: `${plus[1]} +${n}`, rarity: rarityOf(v[1]!) ?? "rare", effects: read.effects }),
           text,
           line,
-          notModeled: read.notModeled,
+          notModeled: [...baseNote, ...read.notModeled],
           ambiguities: read.ambiguities,
           mechanical: read.mechanical,
         });
@@ -376,7 +442,7 @@ export function parseMagicItems(markdown: string, knownSpells: Set<string>): Par
           }),
           text,
           line,
-          notModeled: read.notModeled.filter((s) => !/Strength (changes|is)/i.test(s)),
+          notModeled: [...baseNote, ...read.notModeled.filter((s) => !/Strength (changes|is)/i.test(s))],
           ambiguities: read.ambiguities,
           mechanical: read.mechanical,
         });
@@ -385,7 +451,7 @@ export function parseMagicItems(markdown: string, knownSpells: Set<string>): Par
     }
 
     const read = readEffects(body, knownSpells);
-    out.push({ item: base({ effects: read.effects }), text, line, notModeled: read.notModeled, ambiguities: read.ambiguities, mechanical: read.mechanical });
+    out.push({ item: base({ effects: read.effects }), text, line, notModeled: [...baseNote, ...read.notModeled], ambiguities: read.ambiguities, mechanical: read.mechanical });
   }
   return out;
 }

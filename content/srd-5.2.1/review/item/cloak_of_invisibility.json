@@ -21,7 +21,7 @@
   "id": "cloak_of_invisibility",
   "status": "needs_review",
   "confidence": "low",
-  "usage": "Vendor, loot, and stash. Equipped effects are listed on the sheet; no fight applies them yet.",
+  "usage": "Vendor, loot, and stash. Account heroes carry its typed effects into fights while it is equipped (and attuned, when required).",
   "srd": {
     "line": "Wondrous Item, Legendary (Requires Attunement)",
     "text": "_Wondrous Item, Legendary (Requires Attunement)_\n\nThis cloak has 3 charges and regains 1d3 expended charges daily at dawn. While wearing the cloak, you can take a Magic action to pull its hood over your\nhead and expend 1 charge to give yourself the Invisible condition for 1 hour. The effect ends early if you pull the hood down (no action required) or cease wearing the cloak."

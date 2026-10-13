@@ -36,7 +36,7 @@ const USAGE: Record<string, string> = {
   species: "Chargen species. Unparsed trait numbers count as 0 until you fill them in the wizard.",
   background: "Chargen background. Grants the listed skills.",
   feat: "Chosen at an ASI level or as an Epic Boon when the class table says so.",
-  item: "Vendor, loot, and stash. Equipped effects are listed on the sheet; no fight applies them yet.",
+  item: "Vendor, loot, and stash. Account heroes carry its typed effects into fights while it is equipped (and attuned, when required).",
   monster: "Arena PvE foe once enabled. The engine runs the actions it can compile from the stat block; campaign encounters use their own copies.",
 };
 
@@ -127,7 +127,7 @@ export function importCatalog(): { report: Record<string, number> } {
   const { species, backgrounds } = parseOrigins(read("character-origins.md"), reviews);
   const feats = parseFeats(read("feats.md"), reviews);
   const gear = parseGear(read("equipment.md"), reviews);
-  const magic = parseMagic(read("magic-items.md"), knownSpells, reviews);
+  const magic = parseMagic(read("magic-items.md"), knownSpells, gear, reviews);
   const monsters = parseMonsters(read("monsters-A-Z.md"), reviews);
 
   writeJson(path.join(out, "classes.json"), { entries: classes.classes });
@@ -235,8 +235,8 @@ function parseGear(markdown: string, reviews: ReviewBundle[]): ItemDef[] {
   return rows.map((row) => row.item);
 }
 
-function parseMagic(markdown: string, knownSpells: Set<string>, reviews: ReviewBundle[]): ItemDef[] {
-  const rows = uniqueIds(parseMagicItems(markdown, knownSpells));
+function parseMagic(markdown: string, knownSpells: Set<string>, gear: ItemDef[], reviews: ReviewBundle[]): ItemDef[] {
+  const rows = uniqueIds(parseMagicItems(markdown, knownSpells, gear));
   for (const row of rows) reviews.push(itemReview(row));
   return rows.map((row) => row.item);
 }

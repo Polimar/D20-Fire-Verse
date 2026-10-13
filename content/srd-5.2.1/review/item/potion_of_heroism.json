@@ -21,7 +21,7 @@
   "id": "potion_of_heroism",
   "status": "needs_review",
   "confidence": "low",
-  "usage": "Vendor, loot, and stash. Equipped effects are listed on the sheet; no fight applies them yet.",
+  "usage": "Vendor, loot, and stash. Account heroes carry its typed effects into fights while it is equipped (and attuned, when required).",
   "srd": {
     "line": "Potion, Rare",
     "text": "_Potion, Rare_\n\nWhen you drink this potion, you gain 10 Temporary Hit Points that last for 1 hour. For the same duration, you are under the effect of the _Bless_ spell (no Concentration required).\n\nThis potion's blue liquid bubbles and steams as if boiling."

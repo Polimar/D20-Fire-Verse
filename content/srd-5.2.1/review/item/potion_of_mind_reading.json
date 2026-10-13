@@ -5,7 +5,7 @@
   "id": "potion_of_mind_reading",
   "status": "auto_ok",
   "confidence": "high",
-  "usage": "Vendor, loot, and stash. Equipped effects are listed on the sheet; no fight applies them yet.",
+  "usage": "Vendor, loot, and stash. Account heroes carry its typed effects into fights while it is equipped (and attuned, when required).",
   "srd": {
     "line": "Potion, Rare",
     "text": "_Potion, Rare_\n\nWhen you drink this potion, you gain the effect of the _Detect Thoughts_ spell (save DC 13) for 10 minutes (no Concentration required).\n\nThis potion's dense, purple liquid has an ovoid cloud of pink floating in it."

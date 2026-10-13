@@ -21,7 +21,7 @@
   "id": "potions_of_healing",
   "status": "needs_review",
   "confidence": "low",
-  "usage": "Vendor, loot, and stash. Equipped effects are listed on the sheet; no fight applies them yet.",
+  "usage": "Vendor, loot, and stash. Account heroes carry its typed effects into fights while it is equipped (and attuned, when required).",
   "srd": {
     "line": "Potion, Rarity Varies",
     "text": "_Potion, Rarity Varies_\n\nYou regain Hit Points when you drink this potion. The number of Hit Points depends on the potion's rarity, as shown in the table below.\n\nWhatever its potency, the potion's red liquid glimmers when agitated.\n\n| Potion | HP Regained | Rarity |\n| --- | --- | --- |\n| Potion of Healing | 2d4 + 2 | Common |\n| Potion of Healing (greater) | 4d4 + 4 | Uncommon |\n| Potion of Healing (superior) | 8d4 + 8 | Rare |\n| Potion of Healing (supreme) | 10d4 + 20 | Very Rare |"

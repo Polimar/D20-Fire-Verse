@@ -31,6 +31,7 @@ import {
   refreshMenus,
   scaledDice,
   shortRestResources,
+  slotReady,
   spendSlot,
   type Vitals,
 } from "./srd-sheet.js";
@@ -93,8 +94,14 @@ export type CombatToken = {
   /** From the equipped loadout. Weapon mastery riders stay in packages/rules. */
   gearAttackBonus?: number;
   gearDamageBonus?: number;
+  /** Magic weapon bonuses, keyed by the attack they ride on. */
+  weaponGear?: Record<string, { attack: number; damage: number; onHit: Array<{ damage: string; damageType: string }> }>;
   masteries?: string[];
   grantedSpells?: string[];
+  /** Spell id → the equipped item that casts it. */
+  gearSpells?: Record<string, string>;
+  /** Item instance → charges left this fight. */
+  gearCharges?: Record<string, number>;
   blur?: boolean;
   invisible?: boolean;
   raging?: boolean;
@@ -1062,9 +1069,15 @@ type AttackSpec = {
 
 type DamagePart = { dice: string; damageType: string; ability?: string };
 
+/** "finesse" weapons use whichever of Strength or Dexterity is higher. */
+function weaponAbility(pregen: Pregen | undefined, named: string): string {
+  if (named !== "finesse") return named;
+  return (pregen?.abilities.dex ?? 10) > (pregen?.abilities.str ?? 10) ? "dex" : "str";
+}
+
 function weaponNotation(part: DamagePart, pregen: Pregen | undefined): string {
   if (part.ability && /^\d+d\d+$/i.test(part.dice)) {
-    const mod = abilityMod(pregen?.abilities[part.ability] ?? 10);
+    const mod = abilityMod(pregen?.abilities[weaponAbility(pregen, part.ability)] ?? 10);
     return `${part.dice}${mod >= 0 ? "+" : ""}${mod}`;
   }
   return part.dice;
@@ -1646,7 +1659,7 @@ function addCondition(token: CombatToken, id: string): void {
 
 function spellKey(token: CombatToken, pregen: Pregen | undefined, named: string): string {
   if (named === "spell") return token.spellAbility ?? (pregen as { spellAbility?: string } | undefined)?.spellAbility ?? "int";
-  return named;
+  return weaponAbility(pregen, named);
 }
 
 function castSpecial(
@@ -1931,7 +1944,12 @@ export function performPcAction(
   const level = Number((ability as { level?: number }).level ?? effect.slot ?? 0);
   if (level > 0 && tokenCastBlocked(t, level, isBonus || quicken)) throw new Error("BONUS_SPELL");
   let slotUsed = 0;
-  if (t.sheetDriven && level > 0 && castId !== "spell_spiritual_weapon_strike") {
+  const pool = t.gearSpells?.[castId];
+  const charges = pool ? (t.gearCharges?.[pool] ?? 0) : 0;
+  const fromItem = t.sheetDriven && level > 0 && charges > 0 && !(t.spells?.includes(castId) && slotReady(t, level));
+  if (fromItem) {
+    t.gearCharges![pool!] = charges - 1;
+  } else if (t.sheetDriven && level > 0 && castId !== "spell_spiritual_weapon_strike") {
     slotUsed = spendSlot(t, level);
     const grown = scaledDice(effect, slotUsed);
     if (grown && Array.isArray(effect.damage)) {
@@ -2183,7 +2201,8 @@ export function performPcAction(
   const ranged = range > 1;
   if (t.fightingStyle === "archery" && ranged) attackBonus += 2;
   if (t.fightingStyle === "dueling" && !ranged) attackBonus += 2;
-  attackBonus += t.gearAttackBonus ?? 0;
+  const magicWeapon = t.weaponGear?.[castId];
+  attackBonus += (t.gearAttackBonus ?? 0) + (magicWeapon?.attack ?? 0);
   const foeAdjacent = combat.tokens.some(
     (e) => isFoe(combat, t, e) && chebyshev(e.x, e.y, t.x, t.y) <= 1,
   );
@@ -2269,6 +2288,7 @@ export function performPcAction(
       preview.push(...previewFromNotation(weaponNotation(part, pregen), part.damageType, crit));
     }
     if (sneakOk) preview.push(...previewFromNotation("2d6", weaponType, crit));
+    for (const rider of magicWeapon?.onHit ?? []) preview.push(...previewFromNotation(rider.damage, rider.damageType, crit));
     if (target.brand?.by === t.id) preview.push(...previewFromNotation(target.brand.dice, weaponType, crit));
     combat.damagePreview = preview;
     emit(combat, {
@@ -2311,6 +2331,9 @@ export function performPcAction(
     t.sneakUsed = true;
     dmgTotal += pushPartDamage(rolls, t.name, "2d6", weaponType, "sneak attack", crit);
   }
+  for (const rider of magicWeapon?.onHit ?? []) {
+    dmgTotal += pushPartDamage(rolls, t.name, rider.damage, rider.damageType, `${rider.damageType} damage`, crit);
+  }
 
   const onHit = (atkEffect.onHit as Array<{ condition?: string }> | undefined) ?? [];
   if (onHit.some((h) => h.condition === "attack_advantage_next")) target.marked = true;
@@ -2333,7 +2356,7 @@ export function performPcAction(
     dmgTotal += pushPartDamage(rolls, t.name, target.brand.dice, weaponType, "brand", crit);
   }
   if (t.raging && !ranged) dmgTotal += 2;
-  dmgTotal += t.gearDamageBonus ?? 0;
+  dmgTotal += (t.gearDamageBonus ?? 0) + (magicWeapon?.damage ?? 0);
   const knownMastery = new Set<MasteryId>(["cleave", "graze", "nick", "push", "sap", "slow", "topple", "vex"]);
   const beside = combat.tokens.find((other) => other.id !== target.id && !other.dead && chebyshev(other.x, other.y, target.x, target.y) <= 1)?.id;
   for (const raw of t.masteries ?? []) {

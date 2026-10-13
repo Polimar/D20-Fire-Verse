@@ -5,7 +5,7 @@
   "id": "gauntlets_of_ogre_power",
   "status": "auto_ok",
   "confidence": "high",
-  "usage": "Vendor, loot, and stash. Equipped effects are listed on the sheet; no fight applies them yet.",
+  "usage": "Vendor, loot, and stash. Account heroes carry its typed effects into fights while it is equipped (and attuned, when required).",
   "srd": {
     "line": "Wondrous Item, Uncommon (Requires Attunement)",
     "text": "_Wondrous Item, Uncommon (Requires Attunement)_\n\nYour Strength is 19 while you wear these gauntlets. They have no effect on you if your Strength is 19 or higher without them."

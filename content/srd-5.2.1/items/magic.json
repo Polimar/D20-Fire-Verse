@@ -5,6 +5,16 @@
       "name": "Adamantine Armor",
       "rarity": "uncommon",
       "slot": "armor",
+      "baseItems": [
+        "chain_shirt",
+        "scale_mail",
+        "breastplate",
+        "half_plate_armor",
+        "ring_mail",
+        "chain_mail",
+        "splint_armor",
+        "plate_armor"
+      ],
       "effects": []
     },
     {
@@ -118,22 +128,27 @@
       "name": "Apparatus of the Crab",
       "rarity": "legendary",
       "slot": "trinket",
-      "effects": [
-        {
-          "kind": "immunity",
-          "damageType": "poison"
-        },
-        {
-          "kind": "immunity",
-          "damageType": "psychic"
-        }
-      ]
+      "effects": []
     },
     {
       "id": "armor_plus_1",
       "name": "Armor +1",
       "rarity": "rare",
       "slot": "armor",
+      "baseItems": [
+        "padded_armor",
+        "leather_armor",
+        "studded_leather_armor",
+        "hide_armor",
+        "chain_shirt",
+        "scale_mail",
+        "breastplate",
+        "half_plate_armor",
+        "ring_mail",
+        "chain_mail",
+        "splint_armor",
+        "plate_armor"
+      ],
       "effects": [
         {
           "kind": "ac_bonus",
@@ -146,6 +161,20 @@
       "name": "Armor +2",
       "rarity": "very_rare",
       "slot": "armor",
+      "baseItems": [
+        "padded_armor",
+        "leather_armor",
+        "studded_leather_armor",
+        "hide_armor",
+        "chain_shirt",
+        "scale_mail",
+        "breastplate",
+        "half_plate_armor",
+        "ring_mail",
+        "chain_mail",
+        "splint_armor",
+        "plate_armor"
+      ],
       "effects": [
         {
           "kind": "ac_bonus",
@@ -158,6 +187,20 @@
       "name": "Armor +3",
       "rarity": "legendary",
       "slot": "armor",
+      "baseItems": [
+        "padded_armor",
+        "leather_armor",
+        "studded_leather_armor",
+        "hide_armor",
+        "chain_shirt",
+        "scale_mail",
+        "breastplate",
+        "half_plate_armor",
+        "ring_mail",
+        "chain_mail",
+        "splint_armor",
+        "plate_armor"
+      ],
       "effects": [
         {
           "kind": "ac_bonus",
@@ -173,6 +216,9 @@
       "requires": {
         "attunement": true
       },
+      "baseItems": [
+        "plate_armor"
+      ],
       "effects": [
         {
           "kind": "resistance",
@@ -183,12 +229,8 @@
           "damageType": "piercing"
         },
         {
-          "kind": "immunity",
-          "damageType": "bludgeoning"
-        },
-        {
-          "kind": "immunity",
-          "damageType": "piercing"
+          "kind": "resistance",
+          "damageType": "slashing"
         }
       ]
     },
@@ -200,6 +242,20 @@
       "requires": {
         "attunement": true
       },
+      "baseItems": [
+        "padded_armor",
+        "leather_armor",
+        "studded_leather_armor",
+        "hide_armor",
+        "chain_shirt",
+        "scale_mail",
+        "breastplate",
+        "half_plate_armor",
+        "ring_mail",
+        "chain_mail",
+        "splint_armor",
+        "plate_armor"
+      ],
       "effects": []
     },
     {
@@ -210,6 +266,20 @@
       "requires": {
         "attunement": true
       },
+      "baseItems": [
+        "padded_armor",
+        "leather_armor",
+        "studded_leather_armor",
+        "hide_armor",
+        "chain_shirt",
+        "scale_mail",
+        "breastplate",
+        "half_plate_armor",
+        "ring_mail",
+        "chain_mail",
+        "splint_armor",
+        "plate_armor"
+      ],
       "effects": [
         {
           "kind": "grant_spell",
@@ -225,12 +295,7 @@
       "requires": {
         "attunement": true
       },
-      "effects": [
-        {
-          "kind": "ac_bonus",
-          "amount": 2
-        }
-      ]
+      "effects": []
     },
     {
       "id": "bag_of_beans",
@@ -377,6 +442,11 @@
       "requires": {
         "attunement": true
       },
+      "baseItems": [
+        "battleaxe",
+        "greataxe",
+        "halberd"
+      ],
       "effects": [
         {
           "kind": "attack_bonus",
@@ -789,6 +859,9 @@
       "name": "Dagger of Venom",
       "rarity": "rare",
       "slot": "mainhand",
+      "baseItems": [
+        "dagger"
+      ],
       "effects": [
         {
           "kind": "attack_bonus",
@@ -808,6 +881,13 @@
       "requires": {
         "attunement": true
       },
+      "baseItems": [
+        "greatsword",
+        "longsword",
+        "rapier",
+        "scimitar",
+        "shortsword"
+      ],
       "effects": []
     },
     {
@@ -832,6 +912,36 @@
       "requires": {
         "attunement": true
       },
+      "baseItems": [
+        "club",
+        "dagger",
+        "greatclub",
+        "handaxe",
+        "javelin",
+        "light_hammer",
+        "mace",
+        "quarterstaff",
+        "sickle",
+        "spear",
+        "battleaxe",
+        "flail",
+        "glaive",
+        "greataxe",
+        "greatsword",
+        "halberd",
+        "lance",
+        "longsword",
+        "maul",
+        "morningstar",
+        "pike",
+        "rapier",
+        "scimitar",
+        "shortsword",
+        "trident",
+        "warhammer",
+        "war_pick",
+        "whip"
+      ],
       "effects": [
         {
           "kind": "attack_bonus",
@@ -855,6 +965,20 @@
       "requires": {
         "attunement": true
       },
+      "baseItems": [
+        "padded_armor",
+        "leather_armor",
+        "studded_leather_armor",
+        "hide_armor",
+        "chain_shirt",
+        "scale_mail",
+        "breastplate",
+        "half_plate_armor",
+        "ring_mail",
+        "chain_mail",
+        "splint_armor",
+        "plate_armor"
+      ],
       "effects": [
         {
           "kind": "ac_bonus",
@@ -909,6 +1033,9 @@
       "requires": {
         "attunement": true
       },
+      "baseItems": [
+        "scale_mail"
+      ],
       "effects": [
         {
           "kind": "ac_bonus",
@@ -921,6 +1048,46 @@
       "name": "Dragon Slayer",
       "rarity": "rare",
       "slot": "mainhand",
+      "baseItems": [
+        "club",
+        "dagger",
+        "greatclub",
+        "handaxe",
+        "javelin",
+        "light_hammer",
+        "mace",
+        "quarterstaff",
+        "sickle",
+        "spear",
+        "dart",
+        "light_crossbow",
+        "shortbow",
+        "sling",
+        "battleaxe",
+        "flail",
+        "glaive",
+        "greataxe",
+        "greatsword",
+        "halberd",
+        "lance",
+        "longsword",
+        "maul",
+        "morningstar",
+        "pike",
+        "rapier",
+        "scimitar",
+        "shortsword",
+        "trident",
+        "warhammer",
+        "war_pick",
+        "whip",
+        "blowgun",
+        "hand_crossbow",
+        "heavy_crossbow",
+        "longbow",
+        "musket",
+        "pistol"
+      ],
       "effects": [
         {
           "kind": "attack_bonus",
@@ -958,6 +1125,10 @@
       "name": "Dwarven Plate",
       "rarity": "very_rare",
       "slot": "armor",
+      "baseItems": [
+        "half_plate_armor",
+        "plate_armor"
+      ],
       "effects": [
         {
           "kind": "ac_bonus",
@@ -977,6 +1148,9 @@
           "creature_attuned_to_a_belt_of_dwarvenkind"
         ]
       },
+      "baseItems": [
+        "warhammer"
+      ],
       "effects": [
         {
           "kind": "attack_bonus",
@@ -1021,6 +1195,10 @@
       "name": "Elven Chain",
       "rarity": "rare",
       "slot": "armor",
+      "baseItems": [
+        "chain_mail",
+        "chain_shirt"
+      ],
       "effects": [
         {
           "kind": "ac_bonus",
@@ -1036,6 +1214,10 @@
       "requires": {
         "attunement": true
       },
+      "baseItems": [
+        "longbow",
+        "shortbow"
+      ],
       "effects": [
         {
           "kind": "attack_bonus",
@@ -1105,6 +1287,36 @@
       "requires": {
         "attunement": true
       },
+      "baseItems": [
+        "club",
+        "dagger",
+        "greatclub",
+        "handaxe",
+        "javelin",
+        "light_hammer",
+        "mace",
+        "quarterstaff",
+        "sickle",
+        "spear",
+        "battleaxe",
+        "flail",
+        "glaive",
+        "greataxe",
+        "greatsword",
+        "halberd",
+        "lance",
+        "longsword",
+        "maul",
+        "morningstar",
+        "pike",
+        "rapier",
+        "scimitar",
+        "shortsword",
+        "trident",
+        "warhammer",
+        "war_pick",
+        "whip"
+      ],
       "effects": []
     },
     {
@@ -1122,7 +1334,20 @@
       "requires": {
         "attunement": true
       },
+      "baseItems": [
+        "glaive",
+        "greatsword",
+        "longsword",
+        "rapier",
+        "scimitar",
+        "shortsword"
+      ],
       "effects": [
+        {
+          "kind": "on_hit_rider",
+          "damage": "1d6",
+          "damageType": "cold"
+        },
         {
           "kind": "resistance",
           "damageType": "fire"
@@ -1169,6 +1394,46 @@
       "name": "Giant Slayer",
       "rarity": "rare",
       "slot": "mainhand",
+      "baseItems": [
+        "club",
+        "dagger",
+        "greatclub",
+        "handaxe",
+        "javelin",
+        "light_hammer",
+        "mace",
+        "quarterstaff",
+        "sickle",
+        "spear",
+        "dart",
+        "light_crossbow",
+        "shortbow",
+        "sling",
+        "battleaxe",
+        "flail",
+        "glaive",
+        "greataxe",
+        "greatsword",
+        "halberd",
+        "lance",
+        "longsword",
+        "maul",
+        "morningstar",
+        "pike",
+        "rapier",
+        "scimitar",
+        "shortsword",
+        "trident",
+        "warhammer",
+        "war_pick",
+        "whip",
+        "blowgun",
+        "hand_crossbow",
+        "heavy_crossbow",
+        "longbow",
+        "musket",
+        "pistol"
+      ],
       "effects": [
         {
           "kind": "attack_bonus",
@@ -1185,6 +1450,9 @@
       "name": "Glamoured Studded Leather",
       "rarity": "rare",
       "slot": "armor",
+      "baseItems": [
+        "studded_leather_armor"
+      ],
       "effects": [
         {
           "kind": "ac_bonus",
@@ -1234,6 +1502,10 @@
       "requires": {
         "attunement": true
       },
+      "baseItems": [
+        "maul",
+        "warhammer"
+      ],
       "effects": [
         {
           "kind": "attack_bonus",
@@ -1386,6 +1658,46 @@
           "paladin"
         ]
       },
+      "baseItems": [
+        "club",
+        "dagger",
+        "greatclub",
+        "handaxe",
+        "javelin",
+        "light_hammer",
+        "mace",
+        "quarterstaff",
+        "sickle",
+        "spear",
+        "dart",
+        "light_crossbow",
+        "shortbow",
+        "sling",
+        "battleaxe",
+        "flail",
+        "glaive",
+        "greataxe",
+        "greatsword",
+        "halberd",
+        "lance",
+        "longsword",
+        "maul",
+        "morningstar",
+        "pike",
+        "rapier",
+        "scimitar",
+        "shortsword",
+        "trident",
+        "warhammer",
+        "war_pick",
+        "whip",
+        "blowgun",
+        "hand_crossbow",
+        "heavy_crossbow",
+        "longbow",
+        "musket",
+        "pistol"
+      ],
       "effects": [
         {
           "kind": "attack_bonus",
@@ -1440,16 +1752,7 @@
       "requires": {
         "attunement": true
       },
-      "effects": [
-        {
-          "kind": "immunity",
-          "damageType": "bludgeoning"
-        },
-        {
-          "kind": "immunity",
-          "damageType": "piercing"
-        }
-      ]
+      "effects": []
     },
     {
       "id": "ioun_stone",
@@ -1485,6 +1788,9 @@
       "name": "Javelin of Lightning",
       "rarity": "uncommon",
       "slot": "mainhand",
+      "baseItems": [
+        "javelin"
+      ],
       "effects": []
     },
     {
@@ -1502,6 +1808,15 @@
       "requires": {
         "attunement": true
       },
+      "baseItems": [
+        "glaive",
+        "greatsword",
+        "longsword",
+        "rapier",
+        "scimitar",
+        "sickle",
+        "shortsword"
+      ],
       "effects": [
         {
           "kind": "attack_bonus",
@@ -1525,6 +1840,9 @@
       "requires": {
         "attunement": true
       },
+      "baseItems": [
+        "mace"
+      ],
       "effects": []
     },
     {
@@ -1532,6 +1850,9 @@
       "name": "Mace of Smiting",
       "rarity": "rare",
       "slot": "mainhand",
+      "baseItems": [
+        "mace"
+      ],
       "effects": [
         {
           "kind": "attack_bonus",
@@ -1551,6 +1872,9 @@
       "requires": {
         "attunement": true
       },
+      "baseItems": [
+        "mace"
+      ],
       "effects": [],
       "charges": 3
     },
@@ -1620,22 +1944,23 @@
       "name": "Mirror of Life Trapping",
       "rarity": "very_rare",
       "slot": "trinket",
-      "effects": [
-        {
-          "kind": "immunity",
-          "damageType": "poison"
-        },
-        {
-          "kind": "immunity",
-          "damageType": "psychic"
-        }
-      ]
+      "effects": []
     },
     {
       "id": "mithral_armor",
       "name": "Mithral Armor",
       "rarity": "uncommon",
       "slot": "armor",
+      "baseItems": [
+        "chain_shirt",
+        "scale_mail",
+        "breastplate",
+        "half_plate_armor",
+        "ring_mail",
+        "chain_mail",
+        "splint_armor",
+        "plate_armor"
+      ],
       "effects": []
     },
     {
@@ -1715,6 +2040,46 @@
       "requires": {
         "attunement": true
       },
+      "baseItems": [
+        "club",
+        "dagger",
+        "greatclub",
+        "handaxe",
+        "javelin",
+        "light_hammer",
+        "mace",
+        "quarterstaff",
+        "sickle",
+        "spear",
+        "dart",
+        "light_crossbow",
+        "shortbow",
+        "sling",
+        "battleaxe",
+        "flail",
+        "glaive",
+        "greataxe",
+        "greatsword",
+        "halberd",
+        "lance",
+        "longsword",
+        "maul",
+        "morningstar",
+        "pike",
+        "rapier",
+        "scimitar",
+        "shortsword",
+        "trident",
+        "warhammer",
+        "war_pick",
+        "whip",
+        "blowgun",
+        "hand_crossbow",
+        "heavy_crossbow",
+        "longbow",
+        "musket",
+        "pistol"
+      ],
       "effects": [
         {
           "kind": "attack_bonus",
@@ -1734,6 +2099,10 @@
       "requires": {
         "attunement": true
       },
+      "baseItems": [
+        "longbow",
+        "shortbow"
+      ],
       "effects": []
     },
     {
@@ -1835,6 +2204,10 @@
       "requires": {
         "attunement": true
       },
+      "baseItems": [
+        "half_plate_armor",
+        "plate_armor"
+      ],
       "effects": []
     },
     {
@@ -2048,6 +2421,9 @@
       "requires": {
         "attunement": true
       },
+      "baseItems": [
+        "quarterstaff"
+      ],
       "effects": [
         {
           "kind": "attack_bonus",
@@ -2512,32 +2888,14 @@
       "name": "Rope of Climbing",
       "rarity": "uncommon",
       "slot": "trinket",
-      "effects": [
-        {
-          "kind": "immunity",
-          "damageType": "poison"
-        },
-        {
-          "kind": "immunity",
-          "damageType": "psychic"
-        }
-      ]
+      "effects": []
     },
     {
       "id": "rope_of_entanglement",
       "name": "Rope of Entanglement",
       "rarity": "rare",
       "slot": "trinket",
-      "effects": [
-        {
-          "kind": "immunity",
-          "damageType": "poison"
-        },
-        {
-          "kind": "immunity",
-          "damageType": "psychic"
-        }
-      ]
+      "effects": []
     },
     {
       "id": "scarab_of_protection",
@@ -2563,6 +2921,9 @@
       "requires": {
         "attunement": true
       },
+      "baseItems": [
+        "scimitar"
+      ],
       "effects": [
         {
           "kind": "attack_bonus",
@@ -3169,6 +3530,9 @@
       "requires": {
         "attunement": true
       },
+      "baseItems": [
+        "longsword"
+      ],
       "effects": [
         {
           "kind": "attack_bonus",
@@ -3188,6 +3552,14 @@
       "requires": {
         "attunement": true
       },
+      "baseItems": [
+        "glaive",
+        "greatsword",
+        "longsword",
+        "rapier",
+        "scimitar",
+        "shortsword"
+      ],
       "effects": []
     },
     {
@@ -3198,6 +3570,12 @@
       "requires": {
         "attunement": true
       },
+      "baseItems": [
+        "glaive",
+        "greatsword",
+        "longsword",
+        "scimitar"
+      ],
       "effects": []
     },
     {
@@ -3208,7 +3586,21 @@
       "requires": {
         "attunement": true
       },
-      "effects": []
+      "baseItems": [
+        "glaive",
+        "greatsword",
+        "longsword",
+        "rapier",
+        "scimitar",
+        "shortsword"
+      ],
+      "effects": [
+        {
+          "kind": "on_hit_rider",
+          "damage": "2d6",
+          "damageType": "necrotic"
+        }
+      ]
     },
     {
       "id": "talisman_of_pure_good",
@@ -3254,6 +3646,9 @@
       "requires": {
         "attunement": true
       },
+      "baseItems": [
+        "greatclub"
+      ],
       "effects": [
         {
           "kind": "stat_set",
@@ -3296,6 +3691,9 @@
       "requires": {
         "attunement": true
       },
+      "baseItems": [
+        "trident"
+      ],
       "effects": [
         {
           "kind": "grant_spell",
@@ -3316,6 +3714,46 @@
       "name": "Vicious Weapon",
       "rarity": "rare",
       "slot": "mainhand",
+      "baseItems": [
+        "club",
+        "dagger",
+        "greatclub",
+        "handaxe",
+        "javelin",
+        "light_hammer",
+        "mace",
+        "quarterstaff",
+        "sickle",
+        "spear",
+        "dart",
+        "light_crossbow",
+        "shortbow",
+        "sling",
+        "battleaxe",
+        "flail",
+        "glaive",
+        "greataxe",
+        "greatsword",
+        "halberd",
+        "lance",
+        "longsword",
+        "maul",
+        "morningstar",
+        "pike",
+        "rapier",
+        "scimitar",
+        "shortsword",
+        "trident",
+        "warhammer",
+        "war_pick",
+        "whip",
+        "blowgun",
+        "hand_crossbow",
+        "heavy_crossbow",
+        "longbow",
+        "musket",
+        "pistol"
+      ],
       "effects": []
     },
     {
@@ -3326,6 +3764,12 @@
       "requires": {
         "attunement": true
       },
+      "baseItems": [
+        "glaive",
+        "greatsword",
+        "longsword",
+        "scimitar"
+      ],
       "effects": [
         {
           "kind": "attack_bonus",
@@ -3334,14 +3778,6 @@
         {
           "kind": "damage_bonus",
           "amount": 3
-        },
-        {
-          "kind": "resistance",
-          "damageType": "slashing"
-        },
-        {
-          "kind": "immunity",
-          "damageType": "slashing"
         }
       ]
     },
@@ -3559,6 +3995,46 @@
       "name": "Weapon +1",
       "rarity": "uncommon",
       "slot": "mainhand",
+      "baseItems": [
+        "club",
+        "dagger",
+        "greatclub",
+        "handaxe",
+        "javelin",
+        "light_hammer",
+        "mace",
+        "quarterstaff",
+        "sickle",
+        "spear",
+        "dart",
+        "light_crossbow",
+        "shortbow",
+        "sling",
+        "battleaxe",
+        "flail",
+        "glaive",
+        "greataxe",
+        "greatsword",
+        "halberd",
+        "lance",
+        "longsword",
+        "maul",
+        "morningstar",
+        "pike",
+        "rapier",
+        "scimitar",
+        "shortsword",
+        "trident",
+        "warhammer",
+        "war_pick",
+        "whip",
+        "blowgun",
+        "hand_crossbow",
+        "heavy_crossbow",
+        "longbow",
+        "musket",
+        "pistol"
+      ],
       "effects": [
         {
           "kind": "attack_bonus",
@@ -3575,6 +4051,46 @@
       "name": "Weapon +2",
       "rarity": "rare",
       "slot": "mainhand",
+      "baseItems": [
+        "club",
+        "dagger",
+        "greatclub",
+        "handaxe",
+        "javelin",
+        "light_hammer",
+        "mace",
+        "quarterstaff",
+        "sickle",
+        "spear",
+        "dart",
+        "light_crossbow",
+        "shortbow",
+        "sling",
+        "battleaxe",
+        "flail",
+        "glaive",
+        "greataxe",
+        "greatsword",
+        "halberd",
+        "lance",
+        "longsword",
+        "maul",
+        "morningstar",
+        "pike",
+        "rapier",
+        "scimitar",
+        "shortsword",
+        "trident",
+        "warhammer",
+        "war_pick",
+        "whip",
+        "blowgun",
+        "hand_crossbow",
+        "heavy_crossbow",
+        "longbow",
+        "musket",
+        "pistol"
+      ],
       "effects": [
         {
           "kind": "attack_bonus",
@@ -3591,6 +4107,46 @@
       "name": "Weapon +3",
       "rarity": "very_rare",
       "slot": "mainhand",
+      "baseItems": [
+        "club",
+        "dagger",
+        "greatclub",
+        "handaxe",
+        "javelin",
+        "light_hammer",
+        "mace",
+        "quarterstaff",
+        "sickle",
+        "spear",
+        "dart",
+        "light_crossbow",
+        "shortbow",
+        "sling",
+        "battleaxe",
+        "flail",
+        "glaive",
+        "greataxe",
+        "greatsword",
+        "halberd",
+        "lance",
+        "longsword",
+        "maul",
+        "morningstar",
+        "pike",
+        "rapier",
+        "scimitar",
+        "shortsword",
+        "trident",
+        "warhammer",
+        "war_pick",
+        "whip",
+        "blowgun",
+        "hand_crossbow",
+        "heavy_crossbow",
+        "longbow",
+        "musket",
+        "pistol"
+      ],
       "effects": [
         {
           "kind": "attack_bonus",
@@ -3610,6 +4166,46 @@
       "requires": {
         "attunement": true
       },
+      "baseItems": [
+        "club",
+        "dagger",
+        "greatclub",
+        "handaxe",
+        "javelin",
+        "light_hammer",
+        "mace",
+        "quarterstaff",
+        "sickle",
+        "spear",
+        "dart",
+        "light_crossbow",
+        "shortbow",
+        "sling",
+        "battleaxe",
+        "flail",
+        "glaive",
+        "greataxe",
+        "greatsword",
+        "halberd",
+        "lance",
+        "longsword",
+        "maul",
+        "morningstar",
+        "pike",
+        "rapier",
+        "scimitar",
+        "shortsword",
+        "trident",
+        "warhammer",
+        "war_pick",
+        "whip",
+        "blowgun",
+        "hand_crossbow",
+        "heavy_crossbow",
+        "longbow",
+        "musket",
+        "pistol"
+      ],
       "effects": []
     },
     {

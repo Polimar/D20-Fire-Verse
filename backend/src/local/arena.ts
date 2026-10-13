@@ -213,6 +213,7 @@ export function joinArenaSeat(
   if (room.arena.phase === "active") throw new Error("ARENA_IN_FIGHT");
   const cap = arenaSeatCap(room);
   if (room.players.length >= cap) throw new Error("ARENA_FULL");
+  if (characterId.startsWith("hero_") && heroPending(characterId)) throw new Error("LEVEL_UP_PENDING");
   const raw = getPregen(characterId);
   if (!raw) throw new Error("BAD_CHARACTER");
   assertCanPlayCharacter(raw, userId);

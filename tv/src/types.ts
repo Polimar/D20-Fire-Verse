@@ -221,4 +221,6 @@ export type Pregen = {
   race?: string;
   portrait?: string;
   custom?: boolean;
+  /** An account hero: keeps its own level and equipped gear. */
+  hero?: boolean;
 };

@@ -5,7 +5,7 @@
   "id": "wand_of_web",
   "status": "needs_review",
   "confidence": "medium",
-  "usage": "Vendor, loot, and stash. Equipped effects are listed on the sheet; no fight applies them yet.",
+  "usage": "Vendor, loot, and stash. Account heroes carry its typed effects into fights while it is equipped (and attuned, when required).",
   "srd": {
     "line": "Wand, Uncommon (Requires Attunement by a Spellcaster)",
     "text": "_Wand, Uncommon (Requires Attunement by a Spellcaster)_\n\nThis wand has 7 charges. While holding it, you can expend 1 charge to cast _Web_ (save DC 13) from it.\n\n_Regaining Charges._ The wand regains 1d6 + 1 expended charges daily at dawn. If you expend the wand's last charge, roll 1d20. On a 1, the wand crumbles into ashes and is destroyed."

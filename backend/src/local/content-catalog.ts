@@ -504,6 +504,12 @@ export function enabledById<T>(kind: Bucket, id: string): T | undefined {
   return toRow(row, enabledSet(), resolutions()).inPlay ? (row.parsed as T) : undefined;
 }
 
+/** The parsed entry whatever its switch: a magic sword's mundane base, a hero's class after an admin turned it off. */
+export function catalogEntry<T>(kind: Bucket, id: string): T | undefined {
+  const row = stored(kind, id);
+  return row?.valid ? (row.parsed as T) : undefined;
+}
+
 export function xpThresholds(): number[] {
   const file = path.join(ROOT, "xp-table.json");
   const parsed = xpTable.safeParse(readJson(file));

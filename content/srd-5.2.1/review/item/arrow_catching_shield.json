@@ -1,11 +1,38 @@
 {
-  "ambiguities": [],
-  "unparsedFields": [],
+  "ambiguities": [
+    {
+      "field": "effects",
+      "summary": "Situational AC bonus: “You gain a +2 bonus to Armor Class against ranged attack rolls while you wield this Shield.” The engine applies item bonuses to every roll and cannot check the situation.",
+      "options": [
+        {
+          "label": "Leave the bonus out",
+          "patch": {
+            "effects": []
+          }
+        },
+        {
+          "label": "Apply it to every roll",
+          "patch": {
+            "effects": [
+              {
+                "kind": "ac_bonus",
+                "amount": 2
+              }
+            ]
+          }
+        }
+      ],
+      "parserChoice": 0
+    }
+  ],
+  "unparsedFields": [
+    "effects"
+  ],
   "kind": "item",
   "id": "arrow_catching_shield",
   "status": "needs_review",
-  "confidence": "medium",
-  "usage": "Vendor, loot, and stash. Equipped effects are listed on the sheet; no fight applies them yet.",
+  "confidence": "low",
+  "usage": "Vendor, loot, and stash. Account heroes carry its typed effects into fights while it is equipped (and attuned, when required).",
   "srd": {
     "line": "Armor (Shield), Rare (Requires Attunement)",
     "text": "_Armor (Shield), Rare (Requires Attunement)_\n\nYou gain a +2 bonus to Armor Class against ranged attack rolls while you wield this Shield. This bonus is in addition to the Shield's normal bonus to AC.\n\nWhenever an attacker makes a ranged attack roll against a target within 5 feet of you, you can take a Reaction to become the target of the attack instead."

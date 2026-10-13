@@ -21,7 +21,7 @@
   "id": "elemental_gem",
   "status": "needs_review",
   "confidence": "low",
-  "usage": "Vendor, loot, and stash. Equipped effects are listed on the sheet; no fight applies them yet.",
+  "usage": "Vendor, loot, and stash. Account heroes carry its typed effects into fights while it is equipped (and attuned, when required).",
   "srd": {
     "line": "Wondrous Item, Uncommon",
     "text": "_Wondrous Item, Uncommon_\n\nThis gem contains a mote of elemental energy. When you take a Utilize action to break the gem, an elemental is summoned (see \"Monsters\" for its stat block), and the gem ceases to be magical. The elemental appears in an unoccupied space as close to the broken gem as possible, understands your languages, obeys your commands, and takes its turn immediately after you on your Initiative count. The elemental disappears after 1 hour, when it dies, or when you dismiss it as a Bonus Action. The type of gem determines the elemental, as shown in the following table.\n\n| Gem | Summoned Elemental |\n| --- | --- |\n| Blue sapphire | Air Elemental |\n| Emerald | Water Elemental |\n| Red corundum | Fire Elemental |\n| Yellow diamond | Earth Elemental |"

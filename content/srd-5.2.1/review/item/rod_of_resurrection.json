@@ -5,7 +5,7 @@
   "id": "rod_of_resurrection",
   "status": "needs_review",
   "confidence": "medium",
-  "usage": "Vendor, loot, and stash. Equipped effects are listed on the sheet; no fight applies them yet.",
+  "usage": "Vendor, loot, and stash. Account heroes carry its typed effects into fights while it is equipped (and attuned, when required).",
   "srd": {
     "line": "Rod, Legendary (Requires Attunement)",
     "text": "_Rod, Legendary (Requires Attunement)_\n\nThe rod has 5 charges. While you hold it, you can cast one of the following spells from it: _Heal_ (expends 1 charge) or _Resurrection_ (expends 5 charges).\n\nThe rod regains 1 expended charge daily at dawn. If you expend the last charge, roll 1d20. On a 1, the rod disappears in a harmless burst of radiance."

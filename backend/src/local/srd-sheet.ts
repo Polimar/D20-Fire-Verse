@@ -3,6 +3,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import type { Pregen } from "./campaign.js";
 import type { CombatToken } from "./combat.js";
+import type { GearSheet } from "./hero-pregen.js";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const catalog = JSON.parse(
@@ -108,6 +109,7 @@ export function initSheet(token: CombatToken, pregen: Pregen, saved?: Vitals): v
     features?: string[];
     fightingStyle?: string;
     weapons?: string[];
+    gear?: GearSheet;
   };
   const level = pregen.level ?? 1;
   token.sheetDriven = true;
@@ -148,6 +150,18 @@ export function initSheet(token: CombatToken, pregen: Pregen, saved?: Vitals): v
   if (pregen.class === "paladin" && level >= 2 && !token.features.includes("divine_smite")) {
     token.features.push("divine_smite");
   }
+  const gear = extra.gear;
+  if (gear) {
+    token.gearAttackBonus = gear.attack;
+    token.gearDamageBonus = gear.damage;
+    token.weaponGear = structuredClone(gear.weapons);
+    token.damageResistances = [...gear.resistances];
+    token.damageImmunities = [...gear.immunities];
+    token.masteries = [...gear.masteries];
+    token.gearSpells = { ...gear.granted };
+    token.gearCharges = { ...gear.charges };
+    token.grantedSpells = Object.keys(gear.granted);
+  }
 }
 
 export function exportVitals(token: CombatToken): Vitals {
@@ -177,11 +191,11 @@ export function refreshMenus(token: CombatToken, pregen: Pregen | undefined, loo
   if (!token.sheetDriven || token.kind !== "pc") return;
   const actions: string[] = [];
   const bonus: string[] = [];
-  const place = (id: string) => {
+  const place = (id: string, charged = false) => {
     const ability = lookup(id);
     if (!ability || ability.actionType === "reaction") return;
     const level = spellLevel(ability);
-    if (level > 0 && !slotReady(token, level)) return;
+    if (level > 0 && !charged && !slotReady(token, level)) return;
     if (token.raging && level > 0 && id.startsWith("spell_")) return;
     if (token.castBonusSpell && level > 0) return;
     if (token.castLeveled && ability.actionType === "bonus_action" && level > 0) return;
@@ -195,7 +209,10 @@ export function refreshMenus(token: CombatToken, pregen: Pregen | undefined, loo
   if (token.inventory.includes("potion_healing")) place("use_potion_healing");
   for (const id of token.cantrips ?? []) place(id);
   for (const id of token.spells ?? []) place(id);
-  for (const id of token.grantedSpells ?? []) place(id);
+  for (const id of token.grantedSpells ?? []) {
+    const pool = token.gearSpells?.[id];
+    if (pool && (token.gearCharges?.[pool] ?? 0) > 0) place(id, true);
+  }
 
   const cls = pregen?.class;
   const level = pregen?.level ?? 1;

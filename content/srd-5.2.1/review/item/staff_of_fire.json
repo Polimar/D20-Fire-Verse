@@ -5,7 +5,7 @@
   "id": "staff_of_fire",
   "status": "needs_review",
   "confidence": "medium",
-  "usage": "Vendor, loot, and stash. Equipped effects are listed on the sheet; no fight applies them yet.",
+  "usage": "Vendor, loot, and stash. Account heroes carry its typed effects into fights while it is equipped (and attuned, when required).",
   "srd": {
     "line": "Staff, Very Rare (Requires Attunement by a Druid, Sorcerer, Warlock, or Wizard)",
     "text": "_Staff, Very Rare (Requires Attunement by a Druid, Sorcerer, Warlock, or Wizard)_\n\nYou have Resistance to Fire damage while you hold this staff.\n\n_Spells._ The staff has 10 charges. While holding the staff, you can cast one of the spells on the following table from it, using your spell save DC. The table indicates how many charges you must expend to cast the spell.\n\n| Spell | Charge Cost | Spell | Charge Cost |\n| --- | --- | --- | --- |\n| *Burning Hands* | 1 | *Wall of Fire* | 4 |\n| *Fireball* | 3 |  |  |\n\n_Regaining Charges._ The staff regains 1d6 + 4 expended charges daily at dawn. If you expend the last charge, roll 1d20. On a 1, the staff crumbles into cinders and is destroyed."

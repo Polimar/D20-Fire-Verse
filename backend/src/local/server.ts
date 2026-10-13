@@ -225,6 +225,7 @@ function pregenList(viewerUserId?: string | null) {
     ac: p.ac,
     portrait: portraitForCharacter(p.id),
     custom: p.id.startsWith("custom_"),
+    hero: p.id.startsWith("hero_"),
   }));
 }
 

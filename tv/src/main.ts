@@ -902,12 +902,12 @@ function renderLobby() {
     pregens
       .map((p) => {
         const busy = taken.has(p.id);
-        const lv = arena && level ? level : p.level;
+        const lv = arena && level && !p.hero ? level : p.level;
         return `<button type="button" class="hero-card ${busy ? "taken" : ""}" data-hero="${esc(p.id)}" ${busy ? "disabled" : ""} ${selectedHero === p.id ? "data-autofocus" : ""}>
           <span class="hero-portrait">${p.portrait ? `<img src="${esc(p.portrait)}" alt="" loading="lazy" />` : ""}</span>
           <span class="hero-copy">
             <strong>${esc(p.name)}</strong>
-            <em>${esc([srdLabel(p.race), srdLabel(p.class), `level ${lv}`].filter(Boolean).join(" · "))}${p.custom ? " · forged" : ""}</em>
+            <em>${esc([srdLabel(p.race), srdLabel(p.class), `level ${lv}`].filter(Boolean).join(" · "))}${p.custom ? " · forged" : p.hero ? " · your hero" : ""}</em>
             <span>${esc(p.summary)}</span>
           </span>
           ${busy ? `<span class="hero-taken">At the table</span>` : ""}

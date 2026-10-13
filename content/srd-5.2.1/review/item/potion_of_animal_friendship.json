@@ -5,7 +5,7 @@
   "id": "potion_of_animal_friendship",
   "status": "auto_ok",
   "confidence": "high",
-  "usage": "Vendor, loot, and stash. Equipped effects are listed on the sheet; no fight applies them yet.",
+  "usage": "Vendor, loot, and stash. Account heroes carry its typed effects into fights while it is equipped (and attuned, when required).",
   "srd": {
     "line": "Potion, Uncommon",
     "text": "_Potion, Uncommon_\n\nWhen you drink this potion, you can cast the level 3 version of the _Animal Friendship_ spell (save DC 13).\n\nAgitating this potion's muddy liquid brings little bits into view: a fish scale, a hummingbird feather, a cat claw, or a squirrel hair."

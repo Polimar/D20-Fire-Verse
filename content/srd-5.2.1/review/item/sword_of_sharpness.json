@@ -21,7 +21,7 @@
   "id": "sword_of_sharpness",
   "status": "needs_review",
   "confidence": "low",
-  "usage": "Vendor, loot, and stash. Equipped effects are listed on the sheet; no fight applies them yet.",
+  "usage": "Vendor, loot, and stash. Account heroes carry its typed effects into fights while it is equipped (and attuned, when required).",
   "srd": {
     "line": "Weapon (Glaive, Greatsword, Longsword, or Scimitar), Very Rare (Requires Attunement)",
     "text": "_Weapon (Glaive, Greatsword, Longsword, or Scimitar), Very Rare (Requires Attunement)_\n\nWhen you attack an object with this magic weapon and hit, maximize your weapon damage dice against the target.\n\nWhen you attack a creature with this weapon and roll a 20 on the d20 for the attack roll, that target takes an extra 14 Slashing damage and gains 1 Exhaustion level."

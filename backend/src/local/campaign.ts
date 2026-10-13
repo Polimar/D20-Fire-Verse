@@ -1,6 +1,8 @@
 import type { CastMember } from "@d20-fireverse/protocol";
 import { getCustomCharacter, listCustomCharacters } from "./chargen.js";
 import { srdAbility } from "./srd-sheet.js";
+import { gearAbility } from "./gear-abilities.js";
+import { heroPregen, listHeroPregens } from "./hero-pregen.js";
 import { currentSnapshot, initCatalog } from "./catalog.js";
 import { configureVoices, type VoiceFx } from "./narration.js";
 import { PORTRAITS, defaultPortrait, isPortraitId, portraitUrl } from "./portraits.js";
@@ -191,7 +193,7 @@ export function getNode(id: string): StoryNode | undefined {
 }
 
 export function listPregens(viewerUserId?: string | null): Pregen[] {
-  return [...Object.values(pack().pregens), ...listCustomCharacters(viewerUserId)];
+  return [...Object.values(pack().pregens), ...listCustomCharacters(viewerUserId), ...listHeroPregens(viewerUserId, getAbility)];
 }
 
 /** Old oneshot ids still resolve so existing tests and seats find the V2 sheets. */
@@ -203,6 +205,7 @@ const PREGEN_REMAP: Record<string, string> = {
 };
 
 export function getPregen(id: string): Pregen | undefined {
+  if (id.startsWith("hero_")) return heroPregen(id, getAbility);
   const canonical = PREGEN_REMAP[id] ?? id;
   const found = pack().pregens[canonical] ?? getCustomCharacter(canonical);
   if (!found) return undefined;
@@ -229,7 +232,7 @@ export function getMonster(id: string): MonsterDef | undefined {
 }
 
 export function getAbility(id: string): AbilityDef | undefined {
-  return pack().abilities[id] ?? srdAbility(id);
+  return pack().abilities[id] ?? srdAbility(id) ?? gearAbility(id);
 }
 
 export { PORTRAITS, portraitUrl, isPortraitId };

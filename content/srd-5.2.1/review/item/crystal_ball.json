@@ -5,7 +5,7 @@
   "id": "crystal_ball",
   "status": "auto_ok",
   "confidence": "high",
-  "usage": "Vendor, loot, and stash. Equipped effects are listed on the sheet; no fight applies them yet.",
+  "usage": "Vendor, loot, and stash. Account heroes carry its typed effects into fights while it is equipped (and attuned, when required).",
   "srd": {
     "line": "Wondrous Item, Very Rare (Requires Attunement)",
     "text": "_Wondrous Item, Very Rare (Requires Attunement)_\n\nWhile touching this crystal orb, you can cast _Scrying_ (save DC 17) with it."

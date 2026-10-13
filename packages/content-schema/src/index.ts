@@ -217,6 +217,8 @@ export const itemDef = z
     rarity: rarity,
     slot: z.enum(["armor", "shield", "mainhand", "offhand", "trinket", "consumable"]),
     weaponId: z.string().optional(),
+    /** Magic weapons and armor: the gear ids the SRD allows as the mundane base. */
+    baseItems: z.array(z.string().min(1)).min(1).optional(),
     requires: itemRequires.optional(),
     effects: z.array(effectDef),
     weaponMastery: z.enum(["cleave", "graze", "nick", "push", "sap", "slow", "topple", "vex"]).optional(),

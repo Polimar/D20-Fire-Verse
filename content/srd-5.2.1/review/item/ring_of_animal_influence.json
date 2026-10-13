@@ -5,7 +5,7 @@
   "id": "ring_of_animal_influence",
   "status": "needs_review",
   "confidence": "medium",
-  "usage": "Vendor, loot, and stash. Equipped effects are listed on the sheet; no fight applies them yet.",
+  "usage": "Vendor, loot, and stash. Account heroes carry its typed effects into fights while it is equipped (and attuned, when required).",
   "srd": {
     "line": "Ring, Rare",
     "text": "_Ring, Rare_\n\nThis ring has 3 charges, and it regains 1d3 expended charges daily at dawn. While wearing the ring, you can expend 1 charge to cast one of the following spells (save DC 13) from it:\n\n- _Animal Friendship_\n- _Fear_ (affects Beasts only)\n- _Speak with Animals_"

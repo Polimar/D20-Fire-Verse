@@ -5,7 +5,7 @@
   "id": "potion_of_water_breathing",
   "status": "auto_ok",
   "confidence": "high",
-  "usage": "Vendor, loot, and stash. Equipped effects are listed on the sheet; no fight applies them yet.",
+  "usage": "Vendor, loot, and stash. Account heroes carry its typed effects into fights while it is equipped (and attuned, when required).",
   "srd": {
     "line": "Potion, Uncommon",
     "text": "_Potion, Uncommon_\n\nYou can breathe underwater for 24 hours after drinking this potion.\nThis potion's cloudy green fluid smells of the sea and has a jellyfish-like bubble floating in it."

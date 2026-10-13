@@ -3,14 +3,11 @@
   "unparsedFields": [],
   "kind": "item",
   "id": "hide_armor",
-  "status": "needs_review",
-  "confidence": "medium",
-  "usage": "Vendor, loot, and stash. Equipped effects are listed on the sheet; no fight applies them yet.",
+  "status": "auto_ok",
+  "confidence": "high",
+  "usage": "Vendor, loot, and stash. Account heroes carry its typed effects into fights while it is equipped (and attuned, when required).",
   "srd": {
     "line": "Medium armor",
     "text": "| Armor | AC | Strength | Stealth | Weight | Cost |\n| --- | --- | --- | --- | --- | --- |\n| Hide Armor | 12 + Dex modifier (max 2) | — | — | 12 lb. | 10 GP |"
-  },
-  "notModeled": [
-    "Base AC 12 + Dex modifier (max 2): the loadout starts from AC 10 and adds bonuses, so the armor's own AC is not used yet."
-  ]
+  }
 }

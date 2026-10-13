@@ -5,7 +5,7 @@
   "id": "wand_of_fear",
   "status": "needs_review",
   "confidence": "medium",
-  "usage": "Vendor, loot, and stash. Equipped effects are listed on the sheet; no fight applies them yet.",
+  "usage": "Vendor, loot, and stash. Account heroes carry its typed effects into fights while it is equipped (and attuned, when required).",
   "srd": {
     "line": "Wand, Rare (Requires Attunement)",
     "text": "_Wand, Rare (Requires Attunement)_\n\nThis wand has 7 charges.\n\n_Spells._ While holding the wand, you can cast one of the spells (save DC 15) on the following table from it. The table indicates how many charges you must expend to cast the spell.\n\n| Spell | Charge Cost |\n| --- | --- |\n| *Command* (flee or grovel only) | 1 |\n| *Fear* (60-foot Cone) | 3 |\n\n_Regaining Charges._ The wand regains 1d6 + 1 expended charges daily at dawn. If you expend the wand's last charge, roll 1d20. On a 1, the wand crumbles into ashes and is destroyed."

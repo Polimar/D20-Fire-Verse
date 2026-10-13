@@ -21,7 +21,7 @@
   "id": "vicious_weapon",
   "status": "needs_review",
   "confidence": "low",
-  "usage": "Vendor, loot, and stash. Equipped effects are listed on the sheet; no fight applies them yet.",
+  "usage": "Vendor, loot, and stash. Account heroes carry its typed effects into fights while it is equipped (and attuned, when required).",
   "srd": {
     "line": "Weapon (Any Simple or Martial), Rare",
     "text": "_Weapon (Any Simple or Martial), Rare_\n\nThis magic weapon deals an extra 2d6 damage to any creature it hits. This extra damage is of the same type as the weapon's normal damage."
