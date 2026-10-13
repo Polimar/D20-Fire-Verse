@@ -1,0 +1,15 @@
+{
+  "ambiguities": [],
+  "unparsedFields": [
+    "trait:Darkvision",
+    "trait:Elven Lineage",
+    "trait:Fey Ancestry",
+    "trait:Keen Senses",
+    "trait:Trance"
+  ],
+  "kind": "species",
+  "id": "elf",
+  "status": "auto_ok",
+  "confidence": "medium",
+  "usage": "Chargen species. Unparsed trait numbers count as 0 until you fill them in the wizard."
+}

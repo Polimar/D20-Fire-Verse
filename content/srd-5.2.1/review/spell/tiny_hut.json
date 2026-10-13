@@ -1,0 +1,13 @@
+{
+  "ambiguities": [],
+  "unparsedFields": [],
+  "kind": "spell",
+  "id": "tiny_hut",
+  "status": "auto_ok",
+  "confidence": "high",
+  "usage": "Level-up spell list for the listed classes. Combat only if a wired ability uses this id.",
+  "srd": {
+    "components": "V, S, M (a crystal bead)",
+    "line": "Level 3 Evocation (Bard, Wizard)"
+  }
+}

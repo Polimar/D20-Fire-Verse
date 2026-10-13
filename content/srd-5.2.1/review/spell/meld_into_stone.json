@@ -1,0 +1,13 @@
+{
+  "ambiguities": [],
+  "unparsedFields": [],
+  "kind": "spell",
+  "id": "meld_into_stone",
+  "status": "auto_ok",
+  "confidence": "high",
+  "usage": "Level-up spell list for the listed classes. Combat only if a wired ability uses this id.",
+  "srd": {
+    "components": "V, S",
+    "line": "Level 3 Transmutation (Cleric, Druid, Ranger)"
+  }
+}

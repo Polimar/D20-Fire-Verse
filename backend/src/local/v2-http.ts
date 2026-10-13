@@ -5,6 +5,7 @@ import { accountDb, claimSurface, type SessionUser } from "./auth.js";
 import { requestUser } from "./admin-http.js";
 import { analytics } from "./events.js";
 import {
+  addXp,
   applyLevelUp,
   applyPreset,
   archiveV1Once,
@@ -14,6 +15,7 @@ import {
   equip,
   forceUnequip,
   grantGold,
+  levelOptions,
   listHeroes,
   listPresets,
   renameHero,
@@ -25,7 +27,7 @@ import {
   unequip,
   wallet,
 } from "./hero.js";
-import { listCatalog, savePending, setContentEnabled } from "./content-catalog.js";
+import { contentDetail, listCatalog, playbook, resolveContent, saveCustomEntry, savePending, setContentEnabled, setPlaybook } from "./content-catalog.js";
 import { buyVendorSlot, declarePayToWin, vendorStock } from "./vendor.js";
 import { enqueue, leaderboard, takeMatch, type ArenaMode } from "./arena-queue.js";
 import { buyPremium, closeSeasonIfDue, currentSeason, skipPassTier } from "./seasons.js";
@@ -90,6 +92,35 @@ export function mountV2Routes(app: Express): void {
     try {
       selectHero(user(req).id, req.params.id);
       res.json({ ok: true });
+    } catch (err) {
+      fail(res, err);
+    }
+  });
+
+  app.get("/api/heroes/:id", (req, res) => {
+    try {
+      const hero = listHeroes(user(req).id).find((row) => row.id === req.params.id);
+      if (!hero) throw new Error("BAD_CHARACTER");
+      res.json({ hero, options: levelOptions(hero.id) });
+    } catch (err) {
+      fail(res, err);
+    }
+  });
+
+  app.get("/api/heroes/:id/level-options", (req, res) => {
+    try {
+      const hero = listHeroes(user(req).id).find((row) => row.id === req.params.id);
+      if (!hero) throw new Error("BAD_CHARACTER");
+      res.json(levelOptions(hero.id));
+    } catch (err) {
+      fail(res, err);
+    }
+  });
+
+  app.post("/api/admin/heroes/:id/xp", (req, res) => {
+    try {
+      if (user(req).role !== "admin") throw new Error("FORBIDDEN");
+      res.json({ hero: addXp(req.params.id, Number(req.body?.amount ?? 0), "admin") });
     } catch (err) {
       fail(res, err);
     }
@@ -260,7 +291,72 @@ export function mountV2Routes(app: Express): void {
   app.get("/api/admin/content", (req, res) => {
     try {
       if (user(req).role !== "admin") throw new Error("FORBIDDEN");
-      res.json({ entries: listCatalog() });
+      const status = String(req.query.reviewStatus ?? "");
+      const kind = String(req.query.kind ?? "");
+      let entries = listCatalog();
+      if (status) entries = entries.filter((entry) => entry.reviewStatus === status);
+      if (kind) entries = entries.filter((entry) => entry.kind === kind);
+      res.json({ entries });
+    } catch (err) {
+      fail(res, err);
+    }
+  });
+
+  app.get("/api/admin/content/stats", (req, res) => {
+    try {
+      if (user(req).role !== "admin") throw new Error("FORBIDDEN");
+      const entries = listCatalog();
+      res.json({
+        total: entries.length,
+        inPlay: entries.filter((entry) => entry.inPlay).length,
+        needsReview: entries.filter((entry) => entry.reviewStatus === "needs_review").length,
+        playbook: playbook(),
+      });
+    } catch (err) {
+      fail(res, err);
+    }
+  });
+
+  app.post("/api/admin/content/playbook/:id", (req, res) => {
+    try {
+      if (user(req).role !== "admin") throw new Error("FORBIDDEN");
+      setPlaybook(req.params.id, Boolean(req.body?.done));
+      res.json({ playbook: playbook() });
+    } catch (err) {
+      fail(res, err);
+    }
+  });
+
+  app.get("/api/admin/content/:kind/:id", (req, res) => {
+    try {
+      if (user(req).role !== "admin") throw new Error("FORBIDDEN");
+      res.json(contentDetail(req.params.kind, req.params.id));
+    } catch (err) {
+      fail(res, err);
+    }
+  });
+
+  app.post("/api/admin/content/:kind/:id/resolve", (req, res) => {
+    try {
+      if (user(req).role !== "admin") throw new Error("FORBIDDEN");
+      res.json({
+        entry: resolveContent(req.params.kind, req.params.id, {
+          optionIndex: req.body?.optionIndex == null ? undefined : Number(req.body.optionIndex),
+          patch: req.body?.patch,
+          adminNote: req.body?.adminNote ? String(req.body.adminNote) : undefined,
+          reject: Boolean(req.body?.reject),
+        }),
+      });
+    } catch (err) {
+      fail(res, err);
+    }
+  });
+
+  app.put("/api/admin/content/:kind/:id", (req, res) => {
+    try {
+      if (user(req).role !== "admin") throw new Error("FORBIDDEN");
+      saveCustomEntry(req.params.kind, req.params.id, req.body ?? {});
+      res.json({ ok: true });
     } catch (err) {
       fail(res, err);
     }

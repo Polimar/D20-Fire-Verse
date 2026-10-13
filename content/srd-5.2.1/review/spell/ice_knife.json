@@ -1,0 +1,13 @@
+{
+  "ambiguities": [],
+  "unparsedFields": [],
+  "kind": "spell",
+  "id": "ice_knife",
+  "status": "auto_ok",
+  "confidence": "high",
+  "usage": "Level-up spell list for the listed classes. Combat only if a wired ability uses this id.",
+  "srd": {
+    "components": "S, M (a drop of water or a piece of ice)",
+    "line": "Level 1 Conjuration (Druid, Sorcerer, Wizard)"
+  }
+}

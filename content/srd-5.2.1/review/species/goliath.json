@@ -1,0 +1,13 @@
+{
+  "ambiguities": [],
+  "unparsedFields": [
+    "trait:Giant Ancestry",
+    "trait:Large Form",
+    "trait:Powerful Build"
+  ],
+  "kind": "species",
+  "id": "goliath",
+  "status": "auto_ok",
+  "confidence": "medium",
+  "usage": "Chargen species. Unparsed trait numbers count as 0 until you fill them in the wizard."
+}

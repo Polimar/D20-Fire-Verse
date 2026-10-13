@@ -285,8 +285,7 @@ export function longRestResources(token: CombatToken, pregen: Pregen | undefined
   const knownSlots = (pregen as { spellSlots?: Record<string, number> } | undefined)?.spellSlots;
   if (knownSlots) token.slots = { ...knownSlots };
   const level = pregen?.level ?? 1;
-  const recover = Math.max(1, Math.floor(level / 2));
-  token.hitDice = Math.min(level, (token.hitDice ?? 0) + recover);
+  if (token.hitDice == null) token.hitDice = level;
   token.secondWindUsed = false;
   token.actionSurge = pregen?.class === "fighter" && level >= 2;
   token.ki = token.kiMax ?? 0;

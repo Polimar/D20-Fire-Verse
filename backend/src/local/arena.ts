@@ -9,6 +9,8 @@ import {
   type ArenaThemeId,
 } from "./arena-maps.js";
 import { startArenaCombat, type CombatState } from "./combat.js";
+import { heroPending } from "./hero.js";
+import { settleHero } from "./rewards.js";
 import type { Room } from "./room.js";
 import { defaultMonsterId, listArenaMonsters } from "./srd-monsters.js";
 import { getMonster } from "./campaign.js";
@@ -284,6 +286,14 @@ export function beginArenaFight(room: Room, holdPcIds: string[] = []): CombatSta
 
 export function finishArena(room: Room, combat: CombatState): void {
   if (!room.arena) return;
+  if (room.arena.mode === "ranked" || room.arena.mode === "arcade" || room.arena.mode === "test" || !room.arena.mode) {
+    for (const player of room.players) {
+      if (!player.characterId?.startsWith("hero_")) continue;
+      const won = combat.pvpWinner === player.characterName;
+      settleHero({ heroId: player.characterId, mode: room.arena.mode === "test" ? "test" : room.arena.mode === "ranked" ? "ranked" : "arcade", won });
+      if (heroPending(player.characterId)) room.levelUpPending = { heroId: player.characterId, playerId: player.playerId };
+    }
+  }
   const line =
     combat.status === "draw"
       ? "The last blow drops every remaining fighter. Draw."

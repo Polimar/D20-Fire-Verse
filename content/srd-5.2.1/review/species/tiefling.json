@@ -1,0 +1,13 @@
+{
+  "ambiguities": [],
+  "unparsedFields": [
+    "trait:Darkvision",
+    "trait:Fiendish Legacy",
+    "trait:Otherworldly Presence"
+  ],
+  "kind": "species",
+  "id": "tiefling",
+  "status": "auto_ok",
+  "confidence": "medium",
+  "usage": "Chargen species. Unparsed trait numbers count as 0 until you fill them in the wizard."
+}

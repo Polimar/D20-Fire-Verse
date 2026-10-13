@@ -1,0 +1,12 @@
+{
+  "ambiguities": [],
+  "unparsedFields": [],
+  "kind": "item",
+  "id": "frost_brand",
+  "status": "auto_ok",
+  "confidence": "high",
+  "usage": "Vendor, loot, and stash. Typed effects change AC, attack, and damage.",
+  "srd": {
+    "line": "Weapon (Glaive, Greatsword, Longsword, Rapier, Scimitar, or Shortsword), Very Rare (Requires Attunement)"
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "ambiguities": [],
+  "unparsedFields": [],
+  "kind": "spell",
+  "id": "flesh_to_stone",
+  "status": "auto_ok",
+  "confidence": "high",
+  "usage": "Level-up spell list for the listed classes. Combat only if a wired ability uses this id.",
+  "srd": {
+    "components": "V, S, M (a cockatrice feather)",
+    "line": "Level 6 Transmutation (Druid, Sorcerer, Wizard)"
+  }
+}

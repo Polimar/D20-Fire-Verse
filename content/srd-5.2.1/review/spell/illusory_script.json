@@ -1,0 +1,13 @@
+{
+  "ambiguities": [],
+  "unparsedFields": [],
+  "kind": "spell",
+  "id": "illusory_script",
+  "status": "auto_ok",
+  "confidence": "high",
+  "usage": "Level-up spell list for the listed classes. Combat only if a wired ability uses this id.",
+  "srd": {
+    "components": "S, M (ink worth 10+ GP, which the spell consumes)",
+    "line": "Level 1 Illusion (Bard, Warlock, Wizard)"
+  }
+}

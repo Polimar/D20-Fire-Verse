@@ -1,21 +1,16 @@
 {
   "entries": [
     {
-      "id": "human",
-      "name": "Human",
+      "id": "dragonborn",
+      "name": "Dragonborn",
       "speedFt": 30,
       "size": "medium",
       "traits": [
-        "Human"
-      ]
-    },
-    {
-      "id": "elf",
-      "name": "Elf",
-      "speedFt": 30,
-      "size": "medium",
-      "traits": [
-        "Elf"
+        "Draconic Ancestry",
+        "Breath Weapon",
+        "Damage Resistance",
+        "Darkvision",
+        "Draconic Flight"
       ]
     },
     {
@@ -24,16 +19,24 @@
       "speedFt": 30,
       "size": "medium",
       "traits": [
-        "Dwarf"
-      ]
+        "Darkvision",
+        "Dwarven Resilience",
+        "Dwarven Toughness",
+        "Stonecunning"
+      ],
+      "hpPerLevel": 1
     },
     {
-      "id": "halfling",
-      "name": "Halfling",
+      "id": "elf",
+      "name": "Elf",
       "speedFt": 30,
-      "size": "small",
+      "size": "medium",
       "traits": [
-        "Halfling"
+        "Darkvision",
+        "Elven Lineage",
+        "Fey Ancestry",
+        "Keen Senses",
+        "Trance"
       ]
     },
     {
@@ -42,25 +45,43 @@
       "speedFt": 30,
       "size": "small",
       "traits": [
-        "Gnome"
+        "Darkvision",
+        "Gnomish Cunning",
+        "Gnomish Lineage"
       ]
     },
     {
-      "id": "dragonborn",
-      "name": "Dragonborn",
-      "speedFt": 30,
+      "id": "goliath",
+      "name": "Goliath",
+      "speedFt": 35,
       "size": "medium",
       "traits": [
-        "Dragonborn"
+        "Giant Ancestry",
+        "Large Form",
+        "Powerful Build"
       ]
     },
     {
-      "id": "tiefling",
-      "name": "Tiefling",
+      "id": "halfling",
+      "name": "Halfling",
       "speedFt": 30,
-      "size": "medium",
+      "size": "small",
       "traits": [
-        "Tiefling"
+        "Brave",
+        "Halfling Nimbleness",
+        "Luck",
+        "Naturally Stealthy"
+      ]
+    },
+    {
+      "id": "human",
+      "name": "Human",
+      "speedFt": 30,
+      "size": "small",
+      "traits": [
+        "Resourceful",
+        "Skillful",
+        "Versatile"
       ]
     },
     {
@@ -69,25 +90,20 @@
       "speedFt": 30,
       "size": "medium",
       "traits": [
-        "Orc"
+        "Adrenaline Rush",
+        "Darkvision",
+        "Relentless Endurance"
       ]
     },
     {
-      "id": "goliath",
-      "name": "Goliath",
+      "id": "tiefling",
+      "name": "Tiefling",
       "speedFt": 30,
-      "size": "medium",
+      "size": "small",
       "traits": [
-        "Goliath"
-      ]
-    },
-    {
-      "id": "aasimar",
-      "name": "Aasimar",
-      "speedFt": 30,
-      "size": "medium",
-      "traits": [
-        "Aasimar"
+        "Darkvision",
+        "Fiendish Legacy",
+        "Otherworldly Presence"
       ]
     }
   ]

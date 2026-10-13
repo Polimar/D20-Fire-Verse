@@ -1,0 +1,12 @@
+{
+  "ambiguities": [],
+  "unparsedFields": [],
+  "kind": "item",
+  "id": "dragon_scale_mail",
+  "status": "auto_ok",
+  "confidence": "high",
+  "usage": "Vendor, loot, and stash. Typed effects change AC, attack, and damage.",
+  "srd": {
+    "line": "Armor (Scale Mail), Very Rare (Requires Attunement)"
+  }
+}

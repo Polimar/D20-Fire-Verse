@@ -1,0 +1,13 @@
+{
+  "ambiguities": [],
+  "unparsedFields": [],
+  "kind": "spell",
+  "id": "disintegrate",
+  "status": "auto_ok",
+  "confidence": "high",
+  "usage": "Level-up spell list for the listed classes. Combat only if a wired ability uses this id.",
+  "srd": {
+    "components": "V, S, M (a lodestone and dust)",
+    "line": "Level 6 Transmutation (Sorcerer, Wizard)"
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "ambiguities": [],
+  "unparsedFields": [],
+  "kind": "spell",
+  "id": "planar_binding",
+  "status": "auto_ok",
+  "confidence": "high",
+  "usage": "Level-up spell list for the listed classes. Combat only if a wired ability uses this id.",
+  "srd": {
+    "components": "V, S, M (a jewel worth 1,000+ GP, which the spell consumes)",
+    "line": "Level 5 Abjuration (Bard, Cleric, Druid, Warlock, Wizard)"
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "ambiguities": [],
+  "unparsedFields": [],
+  "kind": "class",
+  "id": "barbarian",
+  "status": "auto_ok",
+  "confidence": "high",
+  "usage": "Chargen and level-up: hit die, saves, skills, multiclass gates, spell slots."
+}

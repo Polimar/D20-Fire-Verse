@@ -1,0 +1,9 @@
+{
+  "ambiguities": [],
+  "unparsedFields": [],
+  "kind": "subclass",
+  "id": "circle_of_the_land",
+  "status": "auto_ok",
+  "confidence": "high",
+  "usage": "Chosen at the subclass level. Feature names are sheet labels until combat wires them."
+}

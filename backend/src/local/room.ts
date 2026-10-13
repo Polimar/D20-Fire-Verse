@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { accountElo, setAccountElo } from "./arena-queue.js";
+import { heroPending } from "./hero.js";
 import { finishCampaignRun } from "./campaign-hero.js";
 import {
   getEncounter,
@@ -146,6 +147,8 @@ export type Room = {
   campaignLevelCap?: number;
   /** V1 saves stay readable and cannot be resumed. */
   archived?: boolean;
+  /** Set when an account hero still has level-up choices after a match. */
+  levelUpPending?: { heroId: string; playerId: string } | null;
 };
 
 const voteTimers = new Map<string, ReturnType<typeof setTimeout>>();
@@ -354,6 +357,7 @@ export function joinRoom(
     touch(room);
     return { room, playerId };
   }
+  if (characterId.startsWith("hero_") && heroPending(characterId)) throw new Error("LEVEL_UP_PENDING");
   if (room.campaignPartySize) throw new Error("CAMPAIGN_SEALED");
   if (room.players.length >= 3) throw new Error("ROOM_FULL");
   const pregen = getPregen(characterId);
@@ -788,6 +792,7 @@ function publicStateBody(room: Room, viewerPlayerId?: string, viewerUserId?: str
     savePrompt: node?.savePrompt === true,
     autosaveId: room.autosaveId ?? null,
     localPlayerId: viewerPlayerId ?? null,
+    levelUp: room.levelUpPending ?? null,
     rest: (() => {
       const budget = room.restBudget ?? 2;
       const offer = room.mode !== "arena" && room.restOffer === true && budget > 0;

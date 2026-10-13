@@ -5,8 +5,9 @@ import type { SessionUser } from "./auth.js";
 import { CONTENT_ROOT, REPO_ROOT } from "./paths.js";
 
 export function scalePregenToLevel(pregen: Pregen, level: number): Pregen {
+  if (pregen.id.startsWith("hero_")) return { ...pregen };
   const src = Math.max(1, pregen.level || 3);
-  const lv = Math.min(3, Math.max(1, level));
+  const lv = Math.min(20, Math.max(1, level));
   if (src === lv) return { ...pregen, level: lv };
   const hp = Math.max(6, Math.round((pregen.hp * lv) / src));
   return { ...pregen, level: lv, hp, summary: `${pregen.summary} · arena L${lv}` };

@@ -1,0 +1,13 @@
+{
+  "ambiguities": [],
+  "unparsedFields": [],
+  "kind": "item",
+  "id": "warhammer",
+  "status": "auto_ok",
+  "confidence": "high",
+  "usage": "Vendor, loot, and stash. Typed effects change AC, attack, and damage.",
+  "srd": {
+    "damage": "1d8 Bludgeoning",
+    "properties": "Versatile (1d10)"
+  }
+}

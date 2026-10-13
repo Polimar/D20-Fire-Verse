@@ -1,0 +1,13 @@
+{
+  "ambiguities": [],
+  "unparsedFields": [],
+  "kind": "item",
+  "id": "heavy_crossbow",
+  "status": "auto_ok",
+  "confidence": "high",
+  "usage": "Vendor, loot, and stash. Typed effects change AC, attack, and damage.",
+  "srd": {
+    "damage": "1d10 Piercing",
+    "properties": "Ammunition (Range 100/400; Bolt), Heavy, Loading, Two-Handed"
+  }
+}

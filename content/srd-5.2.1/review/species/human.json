@@ -1,0 +1,13 @@
+{
+  "ambiguities": [],
+  "unparsedFields": [
+    "trait:Resourceful",
+    "trait:Skillful",
+    "trait:Versatile"
+  ],
+  "kind": "species",
+  "id": "human",
+  "status": "auto_ok",
+  "confidence": "medium",
+  "usage": "Chargen species. Unparsed trait numbers count as 0 until you fill them in the wizard."
+}

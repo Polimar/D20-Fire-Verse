@@ -8,19 +8,25 @@ import fs from "node:fs";
 import path from "node:path";
 import type { ClassDef, ItemDef } from "@d20-fireverse/content-schema";
 import {
+  applyPick,
   canAddClass,
   canEquip,
   defaultLevelPicks,
   levelForXp,
   meetsMulticlass,
   milestoneReward,
+  nextAsk,
   placeholderPrice,
+  type CatalogSlice,
   type HeroRules,
   type ItemRules,
+  type LevelPick,
   type LoadoutSlots,
+  type PendingAsk,
+  type ProgressionHero,
 } from "@d20-fireverse/rules";
 import { accountDb, type SessionUser } from "./auth.js";
-import { enabledById, enabledItems, enabledSpells, listCatalog, xpThresholds } from "./content-catalog.js";
+import { enabledById, enabledClasses, enabledItems, enabledSpells, listCatalog, xpThresholds } from "./content-catalog.js";
 import { recordEvent } from "./events.js";
 import { CONTENT_ROOT, DATA_DIR } from "./paths.js";
 
@@ -44,6 +50,8 @@ export type HeroRow = {
   features: string[];
   spells: string[];
   loadout: LoadoutSlots;
+  pending: PendingAsk[];
+  maxHp: number;
   deletedAt: string | null;
 };
 
@@ -123,6 +131,8 @@ function mapHero(row: Record<string, unknown>): HeroRow {
     features: parseJson(String(row.features_json ?? "[]"), []),
     spells: parseJson(String(row.spells_json ?? "[]"), []),
     loadout,
+    pending: parseJson(String(row.pending_choices_json ?? "[]"), []),
+    maxHp: Number(row.hp_current ?? 0),
     deletedAt: row.deleted_at == null ? null : String(row.deleted_at),
   };
 }
@@ -151,6 +161,7 @@ function saveHero(hero: HeroRow): void {
       JSON.stringify(hero.loadout),
       hero.id,
     );
+  accountDb().prepare("UPDATE heroes SET pending_choices_json = ?, hp_current = ? WHERE id = ?").run(JSON.stringify(hero.pending ?? []), hero.maxHp || null, hero.id);
 }
 
 export function toRules(hero: HeroRow): HeroRules {
@@ -453,55 +464,64 @@ export function canLevelUp(heroId: string): boolean {
   return levelForXp(hero.xp, xpThresholds()) > hero.level;
 }
 
-export function applyLevelUp(heroId: string, picks?: { subclassId?: string; ability?: Ability; featId?: string; spellId?: string; classId?: string }): HeroRow {
+function progressionCatalog(): CatalogSlice {
+  const inPlay = new Set(listCatalog().filter((row) => row.inPlay).map((row) => `${row.kind}:${row.id}`));
+  const take = <T extends { id: string }>(kind: string, rows: T[]) => rows.filter((row) => inPlay.has(`${kind}:${row.id}`));
+  return {
+    classes: take("class", enabledClasses()) as CatalogSlice["classes"],
+    subclasses: take("subclass", listCatalog().filter((row) => row.kind === "subclass").map((row) => enabledById<CatalogSlice["subclasses"][number]>("subclass", row.id)).filter((row): row is CatalogSlice["subclasses"][number] => Boolean(row))),
+    feats: take("feat", listCatalog().filter((row) => row.kind === "feat").map((row) => enabledById<CatalogSlice["feats"][number]>("feat", row.id)).filter((row): row is CatalogSlice["feats"][number] => Boolean(row))),
+    spells: take("spell", enabledSpells()),
+    species: take("species", listCatalog().filter((row) => row.kind === "species").map((row) => enabledById<NonNullable<CatalogSlice["species"]>[number]>("species", row.id)).filter((row): row is NonNullable<CatalogSlice["species"]>[number] => Boolean(row))),
+    xpThresholds: xpThresholds(),
+  };
+}
+
+function toProgress(hero: HeroRow): ProgressionHero {
+  return {
+    ...toRules(hero),
+    cantrips: [],
+    pending: hero.pending,
+    maxHp: hero.maxHp || 1,
+  };
+}
+
+export function heroPending(heroId: string): boolean {
+  const hero = getHero(heroId);
+  if (!hero) return false;
+  return nextAsk(toProgress(hero), progressionCatalog()) != null;
+}
+
+export function levelOptions(heroId: string): { ask: PendingAsk | null; classes: string[]; subclasses: string[]; feats: string[]; spells: string[] } {
   const hero = getHero(heroId);
   if (!hero) throw new Error("BAD_CHARACTER");
-  const target = levelForXp(hero.xp, xpThresholds());
-  let spentNewClass = hero.classes.some((row) => row.id === picks?.classId);
-  while (hero.level < target) {
-    const next = hero.level + 1;
-    const adding = picks?.classId && picks.classId !== hero.classes[0]?.id && !spentNewClass ? picks.classId : undefined;
-    if (adding) {
-      if (!canAddClass({ level: hero.level, classes: hero.classes }, true)) throw new Error("MULTICLASS_LEVEL");
-      const extra = classDef(adding);
-      const gate = extra.multiclass;
-      if (!meetsMulticlass(hero.abilities, gate)) throw new Error("MULTICLASS_PREREQ");
-      hero.classes.push({ id: extra.id, level: 1 });
-      spentNewClass = true;
-    } else {
-      const main = hero.classes[0];
-      if (!main) throw new Error("BAD_CHARACTER");
-      main.level += 1;
-    }
-    hero.level = next;
-    hero.respecFreeCredits += 1;
-    const primaryClass = classDef(hero.classes[0]?.id ?? "");
-    const levelRow = primaryClass.levels[hero.classes[0]!.level - 1];
-    if (levelRow?.features.includes("subclass") && hero.classes[0] && !hero.classes[0].subclass) {
-      const subs = subclassIds(primaryClass.id);
-      const fallback = defaultLevelPicks({
-        classId: primaryClass.id,
-        primary: primaryClass.primary[0] ?? "str",
-        subclasses: subs,
-        spells: spellIds(primaryClass.id),
-        feats: ["tough"],
-      });
-      hero.classes[0].subclass = picks?.subclassId && subs.includes(picks.subclassId) ? picks.subclassId : fallback.subclass;
-    }
-    if (levelRow?.features.includes("asi_or_feat")) {
-      const ability = picks?.ability ?? primaryClass.primary[0] ?? "str";
-      if (!picks?.featId) hero.abilities[ability] = Math.min(20, hero.abilities[ability] + 2);
-      else hero.features.push(picks.featId);
-    }
-    if (levelRow?.features.includes("spellcasting") || primaryClass.caster !== "none") {
-      const known = spellIds(primaryClass.id);
-      const spell = picks?.spellId && known.includes(picks.spellId) ? picks.spellId : known[0];
-      if (spell && !hero.spells.includes(spell)) hero.spells.push(spell);
-    }
-    for (const feature of levelRow?.features ?? []) {
-      if (!hero.features.includes(feature)) hero.features.push(feature);
-    }
-  }
+  const catalog = progressionCatalog();
+  const ask = nextAsk(toProgress(hero), catalog);
+  const classId = ask && "classId" in ask ? ask.classId : hero.classes[0]?.id;
+  return {
+    ask,
+    classes: catalog.classes.map((row) => row.id),
+    subclasses: catalog.subclasses.filter((row) => row.classId === classId).map((row) => row.id),
+    feats: catalog.feats.map((row) => row.id),
+    spells: catalog.spells.filter((row) => !classId || row.classes.includes(classId)).map((row) => row.id),
+  };
+}
+
+export function applyLevelUp(heroId: string, picks?: LevelPick): HeroRow {
+  const hero = getHero(heroId);
+  if (!hero) throw new Error("BAD_CHARACTER");
+  const catalog = progressionCatalog();
+  const ask = nextAsk(toProgress(hero), catalog);
+  if (!ask) return hero;
+  if (!picks) throw new Error("LEVEL_CHOICE");
+  const progress = applyPick(toProgress(hero), picks, catalog);
+  hero.level = progress.level;
+  hero.classes = progress.classes;
+  hero.abilities = progress.abilities;
+  hero.features = progress.features;
+  hero.spells = progress.spells;
+  hero.pending = progress.pending;
+  hero.maxHp = progress.maxHp;
   saveHero(hero);
   return hero;
 }
@@ -517,16 +537,8 @@ function spellIds(classId: string): string[] {
   return enabledSpells().filter((spell) => spell.classes.includes(classId)).map((spell) => spell.id);
 }
 
-export function respec(userId: string, heroId: string): HeroRow {
-  const hero = ownHero(userId, heroId);
-  if (hero.respecFreeCredits > 0) hero.respecFreeCredits -= 1;
-  else spend(userId, 200, 0);
-  const cls = classDef(hero.classes[0]?.id ?? "");
-  hero.features = cls.levels[0]?.features ?? [];
-  hero.spells = [];
-  for (const progress of hero.classes) progress.subclass = undefined;
-  saveHero(hero);
-  return applyLevelUp(hero.id);
+export function respec(_userId: string, _heroId: string): HeroRow {
+  throw new Error("RESPEC_DISABLED");
 }
 
 export function setPreset(userId: string, heroId: string, name: string): void {

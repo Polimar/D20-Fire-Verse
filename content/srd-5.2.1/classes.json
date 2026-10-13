@@ -35,116 +35,147 @@
           "level": 1,
           "proficiencyBonus": 2,
           "features": [
-            "Barbarian",
-            "weapon_mastery"
+            "Rage",
+            "Unarmored Defense",
+            "Weapon Mastery"
           ]
         },
         {
           "level": 2,
           "proficiencyBonus": 2,
-          "features": []
+          "features": [
+            "Danger Sense",
+            "Reckless Attack"
+          ]
         },
         {
           "level": 3,
           "proficiencyBonus": 2,
           "features": [
-            "subclass"
+            "Barbarian Subclass",
+            "Primal Knowledge"
           ]
         },
         {
           "level": 4,
           "proficiencyBonus": 2,
           "features": [
-            "asi_or_feat"
+            "Ability Score Improvement"
           ]
         },
         {
           "level": 5,
           "proficiencyBonus": 3,
-          "features": []
+          "features": [
+            "Extra Attack",
+            "Fast Movement"
+          ]
         },
         {
           "level": 6,
           "proficiencyBonus": 3,
-          "features": []
+          "features": [
+            "Subclass feature"
+          ]
         },
         {
           "level": 7,
           "proficiencyBonus": 3,
-          "features": []
+          "features": [
+            "Feral Instinct",
+            "Instinctive Pounce"
+          ]
         },
         {
           "level": 8,
           "proficiencyBonus": 3,
           "features": [
-            "asi_or_feat"
+            "Ability Score Improvement"
           ]
         },
         {
           "level": 9,
           "proficiencyBonus": 4,
-          "features": []
+          "features": [
+            "Brutal Strike"
+          ]
         },
         {
           "level": 10,
           "proficiencyBonus": 4,
-          "features": []
+          "features": [
+            "Subclass feature"
+          ]
         },
         {
           "level": 11,
           "proficiencyBonus": 4,
-          "features": []
+          "features": [
+            "Relentless Rage"
+          ]
         },
         {
           "level": 12,
           "proficiencyBonus": 4,
           "features": [
-            "asi_or_feat"
+            "Ability Score Improvement"
           ]
         },
         {
           "level": 13,
           "proficiencyBonus": 5,
-          "features": []
+          "features": [
+            "Improved Brutal Strike"
+          ]
         },
         {
           "level": 14,
           "proficiencyBonus": 5,
-          "features": []
+          "features": [
+            "Subclass feature"
+          ]
         },
         {
           "level": 15,
           "proficiencyBonus": 5,
-          "features": []
+          "features": [
+            "Persistent Rage"
+          ]
         },
         {
           "level": 16,
           "proficiencyBonus": 5,
           "features": [
-            "asi_or_feat"
+            "Ability Score Improvement"
           ]
         },
         {
           "level": 17,
           "proficiencyBonus": 6,
-          "features": []
+          "features": [
+            "Improved Brutal Strike"
+          ]
         },
         {
           "level": 18,
           "proficiencyBonus": 6,
-          "features": []
+          "features": [
+            "Indomitable Might"
+          ]
         },
         {
           "level": 19,
           "proficiencyBonus": 6,
           "features": [
-            "asi_or_feat"
+            "Epic Boon"
           ]
         },
         {
           "level": 20,
           "proficiencyBonus": 6,
-          "features": []
+          "features": [
+            "Primal Champion"
+          ]
         }
       ]
     },
@@ -156,14 +187,8 @@
         "dex",
         "cha"
       ],
-      "skillChoices": 3,
-      "skillList": [
-        "acrobatics",
-        "deception",
-        "performance",
-        "persuasion",
-        "insight"
-      ],
+      "skillChoices": 2,
+      "skillList": [],
       "primary": [
         "cha"
       ],
@@ -177,121 +202,159 @@
       },
       "caster": "full",
       "spellAbility": "cha",
+      "spellProgression": {
+        "mode": "prepared"
+      },
       "weaponMastery": false,
       "levels": [
         {
           "level": 1,
           "proficiencyBonus": 2,
           "features": [
-            "Bard",
-            "spellcasting"
+            "Bardic Inspiration",
+            "Spellcasting"
           ],
           "spellSlots": {
             "1": 2
-          }
+          },
+          "cantrips": 2,
+          "preparedSpells": 4
         },
         {
           "level": 2,
           "proficiencyBonus": 2,
-          "features": [],
+          "features": [
+            "Expertise",
+            "Jack of All Trades"
+          ],
           "spellSlots": {
             "1": 3
-          }
+          },
+          "cantrips": 2,
+          "preparedSpells": 5
         },
         {
           "level": 3,
           "proficiencyBonus": 2,
           "features": [
-            "subclass"
+            "Bard Subclass"
           ],
           "spellSlots": {
             "1": 4,
             "2": 2
-          }
+          },
+          "cantrips": 2,
+          "preparedSpells": 6
         },
         {
           "level": 4,
           "proficiencyBonus": 2,
           "features": [
-            "asi_or_feat"
+            "Ability Score Improvement"
           ],
           "spellSlots": {
             "1": 4,
             "2": 3
-          }
+          },
+          "cantrips": 3,
+          "preparedSpells": 7
         },
         {
           "level": 5,
           "proficiencyBonus": 3,
-          "features": [],
+          "features": [
+            "Font of Inspiration"
+          ],
           "spellSlots": {
             "1": 4,
             "2": 3,
             "3": 2
-          }
+          },
+          "cantrips": 3,
+          "preparedSpells": 9
         },
         {
           "level": 6,
           "proficiencyBonus": 3,
-          "features": [],
+          "features": [
+            "Subclass feature"
+          ],
           "spellSlots": {
             "1": 4,
             "2": 3,
             "3": 3
-          }
+          },
+          "cantrips": 3,
+          "preparedSpells": 10
         },
         {
           "level": 7,
           "proficiencyBonus": 3,
-          "features": [],
+          "features": [
+            "Countercharm"
+          ],
           "spellSlots": {
             "1": 4,
             "2": 3,
             "3": 3,
             "4": 1
-          }
+          },
+          "cantrips": 3,
+          "preparedSpells": 11
         },
         {
           "level": 8,
           "proficiencyBonus": 3,
           "features": [
-            "asi_or_feat"
+            "Ability Score Improvement"
           ],
           "spellSlots": {
             "1": 4,
             "2": 3,
             "3": 3,
             "4": 2
-          }
+          },
+          "cantrips": 3,
+          "preparedSpells": 12
         },
         {
           "level": 9,
           "proficiencyBonus": 4,
-          "features": [],
+          "features": [
+            "Expertise"
+          ],
           "spellSlots": {
             "1": 4,
             "2": 3,
             "3": 3,
             "4": 3,
             "5": 1
-          }
+          },
+          "cantrips": 3,
+          "preparedSpells": 14
         },
         {
           "level": 10,
           "proficiencyBonus": 4,
-          "features": [],
+          "features": [
+            "Magical Secrets"
+          ],
           "spellSlots": {
             "1": 4,
             "2": 3,
             "3": 3,
             "4": 3,
             "5": 2
-          }
+          },
+          "cantrips": 4,
+          "preparedSpells": 15
         },
         {
           "level": 11,
           "proficiencyBonus": 4,
-          "features": [],
+          "features": [
+            "—"
+          ],
           "spellSlots": {
             "1": 4,
             "2": 3,
@@ -299,13 +362,15 @@
             "4": 3,
             "5": 2,
             "6": 1
-          }
+          },
+          "cantrips": 4,
+          "preparedSpells": 16
         },
         {
           "level": 12,
           "proficiencyBonus": 4,
           "features": [
-            "asi_or_feat"
+            "Ability Score Improvement"
           ],
           "spellSlots": {
             "1": 4,
@@ -314,12 +379,16 @@
             "4": 3,
             "5": 2,
             "6": 1
-          }
+          },
+          "cantrips": 4,
+          "preparedSpells": 16
         },
         {
           "level": 13,
           "proficiencyBonus": 5,
-          "features": [],
+          "features": [
+            "—"
+          ],
           "spellSlots": {
             "1": 4,
             "2": 3,
@@ -328,12 +397,16 @@
             "5": 2,
             "6": 1,
             "7": 1
-          }
+          },
+          "cantrips": 4,
+          "preparedSpells": 17
         },
         {
           "level": 14,
           "proficiencyBonus": 5,
-          "features": [],
+          "features": [
+            "Subclass feature"
+          ],
           "spellSlots": {
             "1": 4,
             "2": 3,
@@ -342,28 +415,15 @@
             "5": 2,
             "6": 1,
             "7": 1
-          }
+          },
+          "cantrips": 4,
+          "preparedSpells": 17
         },
         {
           "level": 15,
           "proficiencyBonus": 5,
-          "features": [],
-          "spellSlots": {
-            "1": 4,
-            "2": 3,
-            "3": 3,
-            "4": 3,
-            "5": 2,
-            "6": 1,
-            "7": 1,
-            "8": 1
-          }
-        },
-        {
-          "level": 16,
-          "proficiencyBonus": 5,
           "features": [
-            "asi_or_feat"
+            "—"
           ],
           "spellSlots": {
             "1": 4,
@@ -374,12 +434,35 @@
             "6": 1,
             "7": 1,
             "8": 1
-          }
+          },
+          "cantrips": 4,
+          "preparedSpells": 18
+        },
+        {
+          "level": 16,
+          "proficiencyBonus": 5,
+          "features": [
+            "Ability Score Improvement"
+          ],
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2,
+            "6": 1,
+            "7": 1,
+            "8": 1
+          },
+          "cantrips": 4,
+          "preparedSpells": 18
         },
         {
           "level": 17,
           "proficiencyBonus": 6,
-          "features": [],
+          "features": [
+            "—"
+          ],
           "spellSlots": {
             "1": 4,
             "2": 3,
@@ -390,12 +473,16 @@
             "7": 1,
             "8": 1,
             "9": 1
-          }
+          },
+          "cantrips": 4,
+          "preparedSpells": 19
         },
         {
           "level": 18,
           "proficiencyBonus": 6,
-          "features": [],
+          "features": [
+            "Superior Inspiration"
+          ],
           "spellSlots": {
             "1": 4,
             "2": 3,
@@ -406,13 +493,15 @@
             "7": 1,
             "8": 1,
             "9": 1
-          }
+          },
+          "cantrips": 4,
+          "preparedSpells": 20
         },
         {
           "level": 19,
           "proficiencyBonus": 6,
           "features": [
-            "asi_or_feat"
+            "Epic Boon"
           ],
           "spellSlots": {
             "1": 4,
@@ -424,12 +513,16 @@
             "7": 1,
             "8": 1,
             "9": 1
-          }
+          },
+          "cantrips": 4,
+          "preparedSpells": 21
         },
         {
           "level": 20,
           "proficiencyBonus": 6,
-          "features": [],
+          "features": [
+            "Words of Creation"
+          ],
           "spellSlots": {
             "1": 4,
             "2": 3,
@@ -440,7 +533,9 @@
             "7": 2,
             "8": 1,
             "9": 1
-          }
+          },
+          "cantrips": 4,
+          "preparedSpells": 22
         }
       ]
     },
@@ -473,121 +568,158 @@
       },
       "caster": "full",
       "spellAbility": "wis",
+      "spellProgression": {
+        "mode": "prepared"
+      },
       "weaponMastery": false,
       "levels": [
         {
           "level": 1,
           "proficiencyBonus": 2,
           "features": [
-            "Cleric",
-            "spellcasting"
+            "Spellcasting",
+            "Divine Order"
           ],
           "spellSlots": {
             "1": 2
-          }
+          },
+          "cantrips": 3,
+          "preparedSpells": 4
         },
         {
           "level": 2,
           "proficiencyBonus": 2,
-          "features": [],
+          "features": [
+            "Channel Divinity"
+          ],
           "spellSlots": {
             "1": 3
-          }
+          },
+          "cantrips": 3,
+          "preparedSpells": 5
         },
         {
           "level": 3,
           "proficiencyBonus": 2,
           "features": [
-            "subclass"
+            "Cleric Subclass"
           ],
           "spellSlots": {
             "1": 4,
             "2": 2
-          }
+          },
+          "cantrips": 3,
+          "preparedSpells": 6
         },
         {
           "level": 4,
           "proficiencyBonus": 2,
           "features": [
-            "asi_or_feat"
+            "Ability Score Improvement"
           ],
           "spellSlots": {
             "1": 4,
             "2": 3
-          }
+          },
+          "cantrips": 4,
+          "preparedSpells": 7
         },
         {
           "level": 5,
           "proficiencyBonus": 3,
-          "features": [],
+          "features": [
+            "Sear Undead"
+          ],
           "spellSlots": {
             "1": 4,
             "2": 3,
             "3": 2
-          }
+          },
+          "cantrips": 4,
+          "preparedSpells": 9
         },
         {
           "level": 6,
           "proficiencyBonus": 3,
-          "features": [],
+          "features": [
+            "Subclass feature"
+          ],
           "spellSlots": {
             "1": 4,
             "2": 3,
             "3": 3
-          }
+          },
+          "cantrips": 4,
+          "preparedSpells": 10
         },
         {
           "level": 7,
           "proficiencyBonus": 3,
-          "features": [],
+          "features": [
+            "Blessed Strikes"
+          ],
           "spellSlots": {
             "1": 4,
             "2": 3,
             "3": 3,
             "4": 1
-          }
+          },
+          "cantrips": 4,
+          "preparedSpells": 11
         },
         {
           "level": 8,
           "proficiencyBonus": 3,
           "features": [
-            "asi_or_feat"
+            "Ability Score Improvement"
           ],
           "spellSlots": {
             "1": 4,
             "2": 3,
             "3": 3,
             "4": 2
-          }
+          },
+          "cantrips": 4,
+          "preparedSpells": 12
         },
         {
           "level": 9,
           "proficiencyBonus": 4,
-          "features": [],
+          "features": [
+            "—"
+          ],
           "spellSlots": {
             "1": 4,
             "2": 3,
             "3": 3,
             "4": 3,
             "5": 1
-          }
+          },
+          "cantrips": 4,
+          "preparedSpells": 14
         },
         {
           "level": 10,
           "proficiencyBonus": 4,
-          "features": [],
+          "features": [
+            "Divine Intervention"
+          ],
           "spellSlots": {
             "1": 4,
             "2": 3,
             "3": 3,
             "4": 3,
             "5": 2
-          }
+          },
+          "cantrips": 5,
+          "preparedSpells": 15
         },
         {
           "level": 11,
           "proficiencyBonus": 4,
-          "features": [],
+          "features": [
+            "—"
+          ],
           "spellSlots": {
             "1": 4,
             "2": 3,
@@ -595,13 +727,15 @@
             "4": 3,
             "5": 2,
             "6": 1
-          }
+          },
+          "cantrips": 5,
+          "preparedSpells": 16
         },
         {
           "level": 12,
           "proficiencyBonus": 4,
           "features": [
-            "asi_or_feat"
+            "Ability Score Improvement"
           ],
           "spellSlots": {
             "1": 4,
@@ -610,12 +744,16 @@
             "4": 3,
             "5": 2,
             "6": 1
-          }
+          },
+          "cantrips": 5,
+          "preparedSpells": 16
         },
         {
           "level": 13,
           "proficiencyBonus": 5,
-          "features": [],
+          "features": [
+            "—"
+          ],
           "spellSlots": {
             "1": 4,
             "2": 3,
@@ -624,12 +762,16 @@
             "5": 2,
             "6": 1,
             "7": 1
-          }
+          },
+          "cantrips": 5,
+          "preparedSpells": 17
         },
         {
           "level": 14,
           "proficiencyBonus": 5,
-          "features": [],
+          "features": [
+            "Improved Blessed Strikes"
+          ],
           "spellSlots": {
             "1": 4,
             "2": 3,
@@ -638,28 +780,15 @@
             "5": 2,
             "6": 1,
             "7": 1
-          }
+          },
+          "cantrips": 5,
+          "preparedSpells": 17
         },
         {
           "level": 15,
           "proficiencyBonus": 5,
-          "features": [],
-          "spellSlots": {
-            "1": 4,
-            "2": 3,
-            "3": 3,
-            "4": 3,
-            "5": 2,
-            "6": 1,
-            "7": 1,
-            "8": 1
-          }
-        },
-        {
-          "level": 16,
-          "proficiencyBonus": 5,
           "features": [
-            "asi_or_feat"
+            "—"
           ],
           "spellSlots": {
             "1": 4,
@@ -670,12 +799,35 @@
             "6": 1,
             "7": 1,
             "8": 1
-          }
+          },
+          "cantrips": 5,
+          "preparedSpells": 18
+        },
+        {
+          "level": 16,
+          "proficiencyBonus": 5,
+          "features": [
+            "Ability Score Improvement"
+          ],
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2,
+            "6": 1,
+            "7": 1,
+            "8": 1
+          },
+          "cantrips": 5,
+          "preparedSpells": 18
         },
         {
           "level": 17,
           "proficiencyBonus": 6,
-          "features": [],
+          "features": [
+            "Subclass feature"
+          ],
           "spellSlots": {
             "1": 4,
             "2": 3,
@@ -686,12 +838,16 @@
             "7": 1,
             "8": 1,
             "9": 1
-          }
+          },
+          "cantrips": 5,
+          "preparedSpells": 19
         },
         {
           "level": 18,
           "proficiencyBonus": 6,
-          "features": [],
+          "features": [
+            "—"
+          ],
           "spellSlots": {
             "1": 4,
             "2": 3,
@@ -702,13 +858,15 @@
             "7": 1,
             "8": 1,
             "9": 1
-          }
+          },
+          "cantrips": 5,
+          "preparedSpells": 20
         },
         {
           "level": 19,
           "proficiencyBonus": 6,
           "features": [
-            "asi_or_feat"
+            "Epic Boon"
           ],
           "spellSlots": {
             "1": 4,
@@ -720,12 +878,16 @@
             "7": 1,
             "8": 1,
             "9": 1
-          }
+          },
+          "cantrips": 5,
+          "preparedSpells": 21
         },
         {
           "level": 20,
           "proficiencyBonus": 6,
-          "features": [],
+          "features": [
+            "Greater Divine Intervention"
+          ],
           "spellSlots": {
             "1": 4,
             "2": 3,
@@ -736,7 +898,9 @@
             "7": 2,
             "8": 1,
             "9": 1
-          }
+          },
+          "cantrips": 5,
+          "preparedSpells": 22
         }
       ]
     },
@@ -772,121 +936,160 @@
       },
       "caster": "full",
       "spellAbility": "wis",
+      "spellProgression": {
+        "mode": "prepared"
+      },
       "weaponMastery": false,
       "levels": [
         {
           "level": 1,
           "proficiencyBonus": 2,
           "features": [
-            "Druid",
-            "spellcasting"
+            "Spellcasting",
+            "Druidic",
+            "Primal Order"
           ],
           "spellSlots": {
             "1": 2
-          }
+          },
+          "cantrips": 2,
+          "preparedSpells": 4
         },
         {
           "level": 2,
           "proficiencyBonus": 2,
-          "features": [],
+          "features": [
+            "Wild Shape",
+            "Wild Companion"
+          ],
           "spellSlots": {
             "1": 3
-          }
+          },
+          "cantrips": 2,
+          "preparedSpells": 5
         },
         {
           "level": 3,
           "proficiencyBonus": 2,
           "features": [
-            "subclass"
+            "Druid Subclass"
           ],
           "spellSlots": {
             "1": 4,
             "2": 2
-          }
+          },
+          "cantrips": 2,
+          "preparedSpells": 6
         },
         {
           "level": 4,
           "proficiencyBonus": 2,
           "features": [
-            "asi_or_feat"
+            "Ability Score Improvement"
           ],
           "spellSlots": {
             "1": 4,
             "2": 3
-          }
+          },
+          "cantrips": 3,
+          "preparedSpells": 7
         },
         {
           "level": 5,
           "proficiencyBonus": 3,
-          "features": [],
+          "features": [
+            "Wild Resurgence"
+          ],
           "spellSlots": {
             "1": 4,
             "2": 3,
             "3": 2
-          }
+          },
+          "cantrips": 3,
+          "preparedSpells": 9
         },
         {
           "level": 6,
           "proficiencyBonus": 3,
-          "features": [],
+          "features": [
+            "Subclass feature"
+          ],
           "spellSlots": {
             "1": 4,
             "2": 3,
             "3": 3
-          }
+          },
+          "cantrips": 3,
+          "preparedSpells": 10
         },
         {
           "level": 7,
           "proficiencyBonus": 3,
-          "features": [],
+          "features": [
+            "Elemental Fury"
+          ],
           "spellSlots": {
             "1": 4,
             "2": 3,
             "3": 3,
             "4": 1
-          }
+          },
+          "cantrips": 3,
+          "preparedSpells": 11
         },
         {
           "level": 8,
           "proficiencyBonus": 3,
           "features": [
-            "asi_or_feat"
+            "Ability Score Improvement"
           ],
           "spellSlots": {
             "1": 4,
             "2": 3,
             "3": 3,
             "4": 2
-          }
+          },
+          "cantrips": 3,
+          "preparedSpells": 12
         },
         {
           "level": 9,
           "proficiencyBonus": 4,
-          "features": [],
+          "features": [
+            "—"
+          ],
           "spellSlots": {
             "1": 4,
             "2": 3,
             "3": 3,
             "4": 3,
             "5": 1
-          }
+          },
+          "cantrips": 3,
+          "preparedSpells": 14
         },
         {
           "level": 10,
           "proficiencyBonus": 4,
-          "features": [],
+          "features": [
+            "Subclass feature"
+          ],
           "spellSlots": {
             "1": 4,
             "2": 3,
             "3": 3,
             "4": 3,
             "5": 2
-          }
+          },
+          "cantrips": 4,
+          "preparedSpells": 15
         },
         {
           "level": 11,
           "proficiencyBonus": 4,
-          "features": [],
+          "features": [
+            "—"
+          ],
           "spellSlots": {
             "1": 4,
             "2": 3,
@@ -894,13 +1097,15 @@
             "4": 3,
             "5": 2,
             "6": 1
-          }
+          },
+          "cantrips": 4,
+          "preparedSpells": 16
         },
         {
           "level": 12,
           "proficiencyBonus": 4,
           "features": [
-            "asi_or_feat"
+            "Ability Score Improvement"
           ],
           "spellSlots": {
             "1": 4,
@@ -909,12 +1114,16 @@
             "4": 3,
             "5": 2,
             "6": 1
-          }
+          },
+          "cantrips": 4,
+          "preparedSpells": 16
         },
         {
           "level": 13,
           "proficiencyBonus": 5,
-          "features": [],
+          "features": [
+            "—"
+          ],
           "spellSlots": {
             "1": 4,
             "2": 3,
@@ -923,12 +1132,16 @@
             "5": 2,
             "6": 1,
             "7": 1
-          }
+          },
+          "cantrips": 4,
+          "preparedSpells": 17
         },
         {
           "level": 14,
           "proficiencyBonus": 5,
-          "features": [],
+          "features": [
+            "Subclass feature"
+          ],
           "spellSlots": {
             "1": 4,
             "2": 3,
@@ -937,28 +1150,15 @@
             "5": 2,
             "6": 1,
             "7": 1
-          }
+          },
+          "cantrips": 4,
+          "preparedSpells": 17
         },
         {
           "level": 15,
           "proficiencyBonus": 5,
-          "features": [],
-          "spellSlots": {
-            "1": 4,
-            "2": 3,
-            "3": 3,
-            "4": 3,
-            "5": 2,
-            "6": 1,
-            "7": 1,
-            "8": 1
-          }
-        },
-        {
-          "level": 16,
-          "proficiencyBonus": 5,
           "features": [
-            "asi_or_feat"
+            "Improved Elemental Fury"
           ],
           "spellSlots": {
             "1": 4,
@@ -969,12 +1169,35 @@
             "6": 1,
             "7": 1,
             "8": 1
-          }
+          },
+          "cantrips": 4,
+          "preparedSpells": 18
+        },
+        {
+          "level": 16,
+          "proficiencyBonus": 5,
+          "features": [
+            "Ability Score Improvement"
+          ],
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2,
+            "6": 1,
+            "7": 1,
+            "8": 1
+          },
+          "cantrips": 4,
+          "preparedSpells": 18
         },
         {
           "level": 17,
           "proficiencyBonus": 6,
-          "features": [],
+          "features": [
+            "—"
+          ],
           "spellSlots": {
             "1": 4,
             "2": 3,
@@ -985,12 +1208,16 @@
             "7": 1,
             "8": 1,
             "9": 1
-          }
+          },
+          "cantrips": 4,
+          "preparedSpells": 19
         },
         {
           "level": 18,
           "proficiencyBonus": 6,
-          "features": [],
+          "features": [
+            "Beast Spells"
+          ],
           "spellSlots": {
             "1": 4,
             "2": 3,
@@ -1001,13 +1228,15 @@
             "7": 1,
             "8": 1,
             "9": 1
-          }
+          },
+          "cantrips": 4,
+          "preparedSpells": 20
         },
         {
           "level": 19,
           "proficiencyBonus": 6,
           "features": [
-            "asi_or_feat"
+            "Epic Boon"
           ],
           "spellSlots": {
             "1": 4,
@@ -1019,12 +1248,16 @@
             "7": 1,
             "8": 1,
             "9": 1
-          }
+          },
+          "cantrips": 4,
+          "preparedSpells": 21
         },
         {
           "level": 20,
           "proficiencyBonus": 6,
-          "features": [],
+          "features": [
+            "Archdruid"
+          ],
           "spellSlots": {
             "1": 4,
             "2": 3,
@@ -1035,7 +1268,9 @@
             "7": 2,
             "8": 1,
             "9": 1
-          }
+          },
+          "cantrips": 4,
+          "preparedSpells": 22
         }
       ]
     },
@@ -1050,10 +1285,12 @@
       "skillChoices": 2,
       "skillList": [
         "acrobatics",
+        "animal_handling",
         "athletics",
         "history",
         "insight",
         "intimidation",
+        "persuasion",
         "perception",
         "survival"
       ],
@@ -1080,116 +1317,148 @@
           "level": 1,
           "proficiencyBonus": 2,
           "features": [
-            "Fighter",
-            "weapon_mastery"
+            "Fighting Style",
+            "Second Wind",
+            "Weapon Mastery"
           ]
         },
         {
           "level": 2,
           "proficiencyBonus": 2,
-          "features": []
+          "features": [
+            "Action Surge (one use)",
+            "Tactical Mind"
+          ]
         },
         {
           "level": 3,
           "proficiencyBonus": 2,
           "features": [
-            "subclass"
+            "Fighter Subclass"
           ]
         },
         {
           "level": 4,
           "proficiencyBonus": 2,
           "features": [
-            "asi_or_feat"
+            "Ability Score Improvement"
           ]
         },
         {
           "level": 5,
           "proficiencyBonus": 3,
-          "features": []
+          "features": [
+            "Extra Attack",
+            "Tactical Shift"
+          ]
         },
         {
           "level": 6,
           "proficiencyBonus": 3,
-          "features": []
+          "features": [
+            "Ability Score Improvement"
+          ]
         },
         {
           "level": 7,
           "proficiencyBonus": 3,
-          "features": []
+          "features": [
+            "Subclass feature"
+          ]
         },
         {
           "level": 8,
           "proficiencyBonus": 3,
           "features": [
-            "asi_or_feat"
+            "Ability Score Improvement"
           ]
         },
         {
           "level": 9,
           "proficiencyBonus": 4,
-          "features": []
+          "features": [
+            "Indomitable (one use)",
+            "Tactical Master"
+          ]
         },
         {
           "level": 10,
           "proficiencyBonus": 4,
-          "features": []
+          "features": [
+            "Subclass feature"
+          ]
         },
         {
           "level": 11,
           "proficiencyBonus": 4,
-          "features": []
+          "features": [
+            "Two Extra Attacks"
+          ]
         },
         {
           "level": 12,
           "proficiencyBonus": 4,
           "features": [
-            "asi_or_feat"
+            "Ability Score Improvement"
           ]
         },
         {
           "level": 13,
           "proficiencyBonus": 5,
-          "features": []
+          "features": [
+            "Indomitable (two uses)",
+            "Studied Attacks"
+          ]
         },
         {
           "level": 14,
           "proficiencyBonus": 5,
-          "features": []
+          "features": [
+            "Ability Score Improvement"
+          ]
         },
         {
           "level": 15,
           "proficiencyBonus": 5,
-          "features": []
+          "features": [
+            "Subclass feature"
+          ]
         },
         {
           "level": 16,
           "proficiencyBonus": 5,
           "features": [
-            "asi_or_feat"
+            "Ability Score Improvement"
           ]
         },
         {
           "level": 17,
           "proficiencyBonus": 6,
-          "features": []
+          "features": [
+            "Action Surge (two uses)",
+            "Indomitable (three uses)"
+          ]
         },
         {
           "level": 18,
           "proficiencyBonus": 6,
-          "features": []
+          "features": [
+            "Subclass feature"
+          ]
         },
         {
           "level": 19,
           "proficiencyBonus": 6,
           "features": [
-            "asi_or_feat"
+            "Epic Boon"
           ]
         },
         {
           "level": 20,
           "proficiencyBonus": 6,
-          "features": []
+          "features": [
+            "Three Extra Attacks"
+          ]
         }
       ]
     },
@@ -1233,115 +1502,149 @@
           "level": 1,
           "proficiencyBonus": 2,
           "features": [
-            "Monk"
+            "Martial Arts",
+            "Unarmored Defense"
           ]
         },
         {
           "level": 2,
           "proficiencyBonus": 2,
-          "features": []
+          "features": [
+            "Monk's Focus",
+            "Unarmored Movement",
+            "Uncanny Metabolism"
+          ]
         },
         {
           "level": 3,
           "proficiencyBonus": 2,
           "features": [
-            "subclass"
+            "Deflect Attacks",
+            "Monk Subclass"
           ]
         },
         {
           "level": 4,
           "proficiencyBonus": 2,
           "features": [
-            "asi_or_feat"
+            "Ability Score Improvement",
+            "Slow Fall"
           ]
         },
         {
           "level": 5,
           "proficiencyBonus": 3,
-          "features": []
+          "features": [
+            "Extra Attack",
+            "Stunning Strike"
+          ]
         },
         {
           "level": 6,
           "proficiencyBonus": 3,
-          "features": []
+          "features": [
+            "Empowered Strikes",
+            "Subclass feature"
+          ]
         },
         {
           "level": 7,
           "proficiencyBonus": 3,
-          "features": []
+          "features": [
+            "Evasion"
+          ]
         },
         {
           "level": 8,
           "proficiencyBonus": 3,
           "features": [
-            "asi_or_feat"
+            "Ability Score Improvement"
           ]
         },
         {
           "level": 9,
           "proficiencyBonus": 4,
-          "features": []
+          "features": [
+            "Acrobatic Movement"
+          ]
         },
         {
           "level": 10,
           "proficiencyBonus": 4,
-          "features": []
+          "features": [
+            "Heightened Focus",
+            "Self-Restoration"
+          ]
         },
         {
           "level": 11,
           "proficiencyBonus": 4,
-          "features": []
+          "features": [
+            "Subclass feature"
+          ]
         },
         {
           "level": 12,
           "proficiencyBonus": 4,
           "features": [
-            "asi_or_feat"
+            "Ability Score Improvement"
           ]
         },
         {
           "level": 13,
           "proficiencyBonus": 5,
-          "features": []
+          "features": [
+            "Deflect Energy"
+          ]
         },
         {
           "level": 14,
           "proficiencyBonus": 5,
-          "features": []
+          "features": [
+            "Disciplined Survivor"
+          ]
         },
         {
           "level": 15,
           "proficiencyBonus": 5,
-          "features": []
+          "features": [
+            "Perfect Focus"
+          ]
         },
         {
           "level": 16,
           "proficiencyBonus": 5,
           "features": [
-            "asi_or_feat"
+            "Ability Score Improvement"
           ]
         },
         {
           "level": 17,
           "proficiencyBonus": 6,
-          "features": []
+          "features": [
+            "Subclass feature"
+          ]
         },
         {
           "level": 18,
           "proficiencyBonus": 6,
-          "features": []
+          "features": [
+            "Superior Defense"
+          ]
         },
         {
           "level": 19,
           "proficiencyBonus": 6,
           "features": [
-            "asi_or_feat"
+            "Epic Boon"
           ]
         },
         {
           "level": 20,
           "proficiencyBonus": 6,
-          "features": []
+          "features": [
+            "Body and Mind"
+          ]
         }
       ]
     },
@@ -1379,217 +1682,276 @@
         ]
       },
       "caster": "half",
-      "spellAbility": "cha",
+      "spellAbility": "str",
+      "spellProgression": {
+        "mode": "prepared"
+      },
       "weaponMastery": true,
       "levels": [
         {
           "level": 1,
           "proficiencyBonus": 2,
           "features": [
-            "Paladin",
-            "weapon_mastery",
-            "spellcasting"
-          ]
+            "Lay On Hands",
+            "Spellcasting",
+            "Weapon Mastery"
+          ],
+          "spellSlots": {
+            "1": 2
+          },
+          "preparedSpells": 2
         },
         {
           "level": 2,
           "proficiencyBonus": 2,
-          "features": [],
+          "features": [
+            "Fighting Style",
+            "Paladin's Smite"
+          ],
           "spellSlots": {
             "1": 2
-          }
+          },
+          "preparedSpells": 3
         },
         {
           "level": 3,
           "proficiencyBonus": 2,
           "features": [
-            "subclass"
+            "Channel Divinity",
+            "Paladin Subclass"
           ],
           "spellSlots": {
-            "1": 2
-          }
+            "1": 3
+          },
+          "preparedSpells": 4
         },
         {
           "level": 4,
           "proficiencyBonus": 2,
           "features": [
-            "asi_or_feat"
+            "Ability Score Improvement"
           ],
           "spellSlots": {
             "1": 3
-          }
+          },
+          "preparedSpells": 5
         },
         {
           "level": 5,
           "proficiencyBonus": 3,
-          "features": [],
+          "features": [
+            "Extra Attack",
+            "Faithful Steed"
+          ],
           "spellSlots": {
-            "1": 3
-          }
+            "1": 4,
+            "2": 2
+          },
+          "preparedSpells": 6
         },
         {
           "level": 6,
           "proficiencyBonus": 3,
-          "features": [],
+          "features": [
+            "Aura of Protection"
+          ],
           "spellSlots": {
             "1": 4,
             "2": 2
-          }
+          },
+          "preparedSpells": 6
         },
         {
           "level": 7,
           "proficiencyBonus": 3,
-          "features": [],
+          "features": [
+            "Subclass feature"
+          ],
           "spellSlots": {
             "1": 4,
-            "2": 2
-          }
+            "2": 3
+          },
+          "preparedSpells": 7
         },
         {
           "level": 8,
           "proficiencyBonus": 3,
           "features": [
-            "asi_or_feat"
+            "Ability Score Improvement"
           ],
           "spellSlots": {
             "1": 4,
             "2": 3
-          }
+          },
+          "preparedSpells": 7
         },
         {
           "level": 9,
           "proficiencyBonus": 4,
-          "features": [],
+          "features": [
+            "Abjure Foes"
+          ],
           "spellSlots": {
             "1": 4,
-            "2": 3
-          }
+            "2": 3,
+            "3": 2
+          },
+          "preparedSpells": 9
         },
         {
           "level": 10,
           "proficiencyBonus": 4,
-          "features": [],
+          "features": [
+            "Aura of Courage"
+          ],
           "spellSlots": {
             "1": 4,
             "2": 3,
             "3": 2
-          }
+          },
+          "preparedSpells": 9
         },
         {
           "level": 11,
           "proficiencyBonus": 4,
-          "features": [],
+          "features": [
+            "Radiant Strikes"
+          ],
           "spellSlots": {
             "1": 4,
             "2": 3,
-            "3": 2
-          }
+            "3": 3
+          },
+          "preparedSpells": 10
         },
         {
           "level": 12,
           "proficiencyBonus": 4,
           "features": [
-            "asi_or_feat"
+            "Ability Score Improvement"
           ],
           "spellSlots": {
             "1": 4,
             "2": 3,
             "3": 3
-          }
+          },
+          "preparedSpells": 10
         },
         {
           "level": 13,
           "proficiencyBonus": 5,
-          "features": [],
+          "features": [
+            "—"
+          ],
           "spellSlots": {
             "1": 4,
             "2": 3,
-            "3": 3
-          }
+            "3": 3,
+            "4": 1
+          },
+          "preparedSpells": 11
         },
         {
           "level": 14,
           "proficiencyBonus": 5,
-          "features": [],
+          "features": [
+            "Restoring Touch"
+          ],
           "spellSlots": {
             "1": 4,
             "2": 3,
             "3": 3,
             "4": 1
-          }
+          },
+          "preparedSpells": 11
         },
         {
           "level": 15,
           "proficiencyBonus": 5,
-          "features": [],
+          "features": [
+            "Subclass feature"
+          ],
           "spellSlots": {
             "1": 4,
             "2": 3,
             "3": 3,
-            "4": 1
-          }
+            "4": 2
+          },
+          "preparedSpells": 12
         },
         {
           "level": 16,
           "proficiencyBonus": 5,
           "features": [
-            "asi_or_feat"
+            "Ability Score Improvement"
           ],
           "spellSlots": {
             "1": 4,
             "2": 3,
             "3": 3,
             "4": 2
-          }
+          },
+          "preparedSpells": 12
         },
         {
           "level": 17,
           "proficiencyBonus": 6,
-          "features": [],
-          "spellSlots": {
-            "1": 4,
-            "2": 3,
-            "3": 3,
-            "4": 2
-          }
-        },
-        {
-          "level": 18,
-          "proficiencyBonus": 6,
-          "features": [],
+          "features": [
+            "—"
+          ],
           "spellSlots": {
             "1": 4,
             "2": 3,
             "3": 3,
             "4": 3,
             "5": 1
-          }
+          },
+          "preparedSpells": 14
+        },
+        {
+          "level": 18,
+          "proficiencyBonus": 6,
+          "features": [
+            "Aura Expansion"
+          ],
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 1
+          },
+          "preparedSpells": 14
         },
         {
           "level": 19,
           "proficiencyBonus": 6,
           "features": [
-            "asi_or_feat"
+            "Epic Boon"
           ],
-          "spellSlots": {
-            "1": 4,
-            "2": 3,
-            "3": 3,
-            "4": 3,
-            "5": 1
-          }
-        },
-        {
-          "level": 20,
-          "proficiencyBonus": 6,
-          "features": [],
           "spellSlots": {
             "1": 4,
             "2": 3,
             "3": 3,
             "4": 3,
             "5": 2
-          }
+          },
+          "preparedSpells": 15
+        },
+        {
+          "level": 20,
+          "proficiencyBonus": 6,
+          "features": [
+            "Subclass feature"
+          ],
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2
+          },
+          "preparedSpells": 15
         }
       ]
     },
@@ -1629,217 +1991,274 @@
         ]
       },
       "caster": "half",
-      "spellAbility": "wis",
+      "spellAbility": "dex",
+      "spellProgression": {
+        "mode": "prepared"
+      },
       "weaponMastery": true,
       "levels": [
         {
           "level": 1,
           "proficiencyBonus": 2,
           "features": [
-            "Ranger",
-            "weapon_mastery",
-            "spellcasting"
-          ]
+            "Spellcasting",
+            "Favored Enemy",
+            "Weapon Mastery"
+          ],
+          "spellSlots": {
+            "1": 2
+          },
+          "preparedSpells": 2
         },
         {
           "level": 2,
           "proficiencyBonus": 2,
-          "features": [],
+          "features": [
+            "Deft Explorer",
+            "Fighting Style"
+          ],
           "spellSlots": {
             "1": 2
-          }
+          },
+          "preparedSpells": 3
         },
         {
           "level": 3,
           "proficiencyBonus": 2,
           "features": [
-            "subclass"
+            "Ranger Subclass"
           ],
           "spellSlots": {
-            "1": 2
-          }
+            "1": 3
+          },
+          "preparedSpells": 4
         },
         {
           "level": 4,
           "proficiencyBonus": 2,
           "features": [
-            "asi_or_feat"
+            "Ability Score Improvement"
           ],
           "spellSlots": {
             "1": 3
-          }
+          },
+          "preparedSpells": 5
         },
         {
           "level": 5,
           "proficiencyBonus": 3,
-          "features": [],
+          "features": [
+            "Extra Attack"
+          ],
           "spellSlots": {
-            "1": 3
-          }
+            "1": 4,
+            "2": 2
+          },
+          "preparedSpells": 6
         },
         {
           "level": 6,
           "proficiencyBonus": 3,
-          "features": [],
+          "features": [
+            "Roving"
+          ],
           "spellSlots": {
             "1": 4,
             "2": 2
-          }
+          },
+          "preparedSpells": 6
         },
         {
           "level": 7,
           "proficiencyBonus": 3,
-          "features": [],
+          "features": [
+            "Subclass feature"
+          ],
           "spellSlots": {
             "1": 4,
-            "2": 2
-          }
+            "2": 3
+          },
+          "preparedSpells": 7
         },
         {
           "level": 8,
           "proficiencyBonus": 3,
           "features": [
-            "asi_or_feat"
+            "Ability Score Improvement"
           ],
           "spellSlots": {
             "1": 4,
             "2": 3
-          }
+          },
+          "preparedSpells": 7
         },
         {
           "level": 9,
           "proficiencyBonus": 4,
-          "features": [],
+          "features": [
+            "Expertise"
+          ],
           "spellSlots": {
             "1": 4,
-            "2": 3
-          }
+            "2": 3,
+            "3": 2
+          },
+          "preparedSpells": 9
         },
         {
           "level": 10,
           "proficiencyBonus": 4,
-          "features": [],
+          "features": [
+            "Tireless"
+          ],
           "spellSlots": {
             "1": 4,
             "2": 3,
             "3": 2
-          }
+          },
+          "preparedSpells": 9
         },
         {
           "level": 11,
           "proficiencyBonus": 4,
-          "features": [],
+          "features": [
+            "Subclass feature"
+          ],
           "spellSlots": {
             "1": 4,
             "2": 3,
-            "3": 2
-          }
+            "3": 3
+          },
+          "preparedSpells": 10
         },
         {
           "level": 12,
           "proficiencyBonus": 4,
           "features": [
-            "asi_or_feat"
+            "Ability Score Improvement"
           ],
           "spellSlots": {
             "1": 4,
             "2": 3,
             "3": 3
-          }
+          },
+          "preparedSpells": 10
         },
         {
           "level": 13,
           "proficiencyBonus": 5,
-          "features": [],
+          "features": [
+            "Relentless Hunter"
+          ],
           "spellSlots": {
             "1": 4,
             "2": 3,
-            "3": 3
-          }
+            "3": 3,
+            "4": 1
+          },
+          "preparedSpells": 11
         },
         {
           "level": 14,
           "proficiencyBonus": 5,
-          "features": [],
+          "features": [
+            "Nature’s Veil"
+          ],
           "spellSlots": {
             "1": 4,
             "2": 3,
             "3": 3,
             "4": 1
-          }
+          },
+          "preparedSpells": 11
         },
         {
           "level": 15,
           "proficiencyBonus": 5,
-          "features": [],
+          "features": [
+            "Subclass feature"
+          ],
           "spellSlots": {
             "1": 4,
             "2": 3,
             "3": 3,
-            "4": 1
-          }
+            "4": 2
+          },
+          "preparedSpells": 12
         },
         {
           "level": 16,
           "proficiencyBonus": 5,
           "features": [
-            "asi_or_feat"
+            "Ability Score Improvement"
           ],
           "spellSlots": {
             "1": 4,
             "2": 3,
             "3": 3,
             "4": 2
-          }
+          },
+          "preparedSpells": 12
         },
         {
           "level": 17,
           "proficiencyBonus": 6,
-          "features": [],
-          "spellSlots": {
-            "1": 4,
-            "2": 3,
-            "3": 3,
-            "4": 2
-          }
-        },
-        {
-          "level": 18,
-          "proficiencyBonus": 6,
-          "features": [],
+          "features": [
+            "Precise Hunter"
+          ],
           "spellSlots": {
             "1": 4,
             "2": 3,
             "3": 3,
             "4": 3,
             "5": 1
-          }
+          },
+          "preparedSpells": 14
+        },
+        {
+          "level": 18,
+          "proficiencyBonus": 6,
+          "features": [
+            "Feral Senses"
+          ],
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 1
+          },
+          "preparedSpells": 14
         },
         {
           "level": 19,
           "proficiencyBonus": 6,
           "features": [
-            "asi_or_feat"
+            "Epic Boon"
           ],
-          "spellSlots": {
-            "1": 4,
-            "2": 3,
-            "3": 3,
-            "4": 3,
-            "5": 1
-          }
-        },
-        {
-          "level": 20,
-          "proficiencyBonus": 6,
-          "features": [],
           "spellSlots": {
             "1": 4,
             "2": 3,
             "3": 3,
             "4": 3,
             "5": 2
-          }
+          },
+          "preparedSpells": 15
+        },
+        {
+          "level": 20,
+          "proficiencyBonus": 6,
+          "features": [
+            "Foe Slayer"
+          ],
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2
+          },
+          "preparedSpells": 15
         }
       ]
     },
@@ -1876,121 +2295,153 @@
         ]
       },
       "caster": "none",
-      "weaponMastery": false,
+      "weaponMastery": true,
       "levels": [
         {
           "level": 1,
           "proficiencyBonus": 2,
           "features": [
-            "Rogue"
+            "Expertise",
+            "Sneak Attack",
+            "Thieves' Cant",
+            "Weapon Mastery"
           ]
         },
         {
           "level": 2,
           "proficiencyBonus": 2,
-          "features": []
+          "features": [
+            "Cunning Action"
+          ]
         },
         {
           "level": 3,
           "proficiencyBonus": 2,
           "features": [
-            "subclass"
+            "Rogue Subclass",
+            "Steady Aim"
           ]
         },
         {
           "level": 4,
           "proficiencyBonus": 2,
           "features": [
-            "asi_or_feat"
+            "Ability Score Improvement"
           ]
         },
         {
           "level": 5,
           "proficiencyBonus": 3,
-          "features": []
+          "features": [
+            "Cunning Strike",
+            "Uncanny Dodge"
+          ]
         },
         {
           "level": 6,
           "proficiencyBonus": 3,
-          "features": []
+          "features": [
+            "Expertise"
+          ]
         },
         {
           "level": 7,
           "proficiencyBonus": 3,
-          "features": []
+          "features": [
+            "Evasion",
+            "Reliable Talent"
+          ]
         },
         {
           "level": 8,
           "proficiencyBonus": 3,
           "features": [
-            "asi_or_feat"
+            "Ability Score Improvement"
           ]
         },
         {
           "level": 9,
           "proficiencyBonus": 4,
-          "features": []
+          "features": [
+            "Subclass feature"
+          ]
         },
         {
           "level": 10,
           "proficiencyBonus": 4,
-          "features": []
+          "features": [
+            "Ability Score Improvement"
+          ]
         },
         {
           "level": 11,
           "proficiencyBonus": 4,
-          "features": []
+          "features": [
+            "Improved Cunning Strike"
+          ]
         },
         {
           "level": 12,
           "proficiencyBonus": 4,
           "features": [
-            "asi_or_feat"
+            "Ability Score Improvement"
           ]
         },
         {
           "level": 13,
           "proficiencyBonus": 5,
-          "features": []
+          "features": [
+            "Subclass feature"
+          ]
         },
         {
           "level": 14,
           "proficiencyBonus": 5,
-          "features": []
+          "features": [
+            "Devious Strikes"
+          ]
         },
         {
           "level": 15,
           "proficiencyBonus": 5,
-          "features": []
+          "features": [
+            "Slippery Mind"
+          ]
         },
         {
           "level": 16,
           "proficiencyBonus": 5,
           "features": [
-            "asi_or_feat"
+            "Ability Score Improvement"
           ]
         },
         {
           "level": 17,
           "proficiencyBonus": 6,
-          "features": []
+          "features": [
+            "Subclass feature"
+          ]
         },
         {
           "level": 18,
           "proficiencyBonus": 6,
-          "features": []
+          "features": [
+            "Elusive"
+          ]
         },
         {
           "level": 19,
           "proficiencyBonus": 6,
           "features": [
-            "asi_or_feat"
+            "Epic Boon"
           ]
         },
         {
           "level": 20,
           "proficiencyBonus": 6,
-          "features": []
+          "features": [
+            "Stroke of Luck"
+          ]
         }
       ]
     },
@@ -2024,121 +2475,159 @@
       },
       "caster": "full",
       "spellAbility": "cha",
+      "spellProgression": {
+        "mode": "prepared"
+      },
       "weaponMastery": false,
       "levels": [
         {
           "level": 1,
           "proficiencyBonus": 2,
           "features": [
-            "Sorcerer",
-            "spellcasting"
+            "Spellcasting",
+            "Innate Sorcery"
           ],
           "spellSlots": {
             "1": 2
-          }
+          },
+          "cantrips": 4,
+          "preparedSpells": 2
         },
         {
           "level": 2,
           "proficiencyBonus": 2,
-          "features": [],
+          "features": [
+            "Font of Magic",
+            "Metamagic"
+          ],
           "spellSlots": {
             "1": 3
-          }
+          },
+          "cantrips": 4,
+          "preparedSpells": 4
         },
         {
           "level": 3,
           "proficiencyBonus": 2,
           "features": [
-            "subclass"
+            "Sorcerer Subclass"
           ],
           "spellSlots": {
             "1": 4,
             "2": 2
-          }
+          },
+          "cantrips": 4,
+          "preparedSpells": 6
         },
         {
           "level": 4,
           "proficiencyBonus": 2,
           "features": [
-            "asi_or_feat"
+            "Ability Score Improvement"
           ],
           "spellSlots": {
             "1": 4,
             "2": 3
-          }
+          },
+          "cantrips": 5,
+          "preparedSpells": 7
         },
         {
           "level": 5,
           "proficiencyBonus": 3,
-          "features": [],
+          "features": [
+            "Sorcerous Restoration"
+          ],
           "spellSlots": {
             "1": 4,
             "2": 3,
             "3": 2
-          }
+          },
+          "cantrips": 5,
+          "preparedSpells": 9
         },
         {
           "level": 6,
           "proficiencyBonus": 3,
-          "features": [],
+          "features": [
+            "Subclass feature"
+          ],
           "spellSlots": {
             "1": 4,
             "2": 3,
             "3": 3
-          }
+          },
+          "cantrips": 5,
+          "preparedSpells": 10
         },
         {
           "level": 7,
           "proficiencyBonus": 3,
-          "features": [],
+          "features": [
+            "Sorcery Incarnate"
+          ],
           "spellSlots": {
             "1": 4,
             "2": 3,
             "3": 3,
             "4": 1
-          }
+          },
+          "cantrips": 5,
+          "preparedSpells": 11
         },
         {
           "level": 8,
           "proficiencyBonus": 3,
           "features": [
-            "asi_or_feat"
+            "Ability Score Improvement"
           ],
           "spellSlots": {
             "1": 4,
             "2": 3,
             "3": 3,
             "4": 2
-          }
+          },
+          "cantrips": 5,
+          "preparedSpells": 12
         },
         {
           "level": 9,
           "proficiencyBonus": 4,
-          "features": [],
+          "features": [
+            "—"
+          ],
           "spellSlots": {
             "1": 4,
             "2": 3,
             "3": 3,
             "4": 3,
             "5": 1
-          }
+          },
+          "cantrips": 5,
+          "preparedSpells": 14
         },
         {
           "level": 10,
           "proficiencyBonus": 4,
-          "features": [],
+          "features": [
+            "Metamagic"
+          ],
           "spellSlots": {
             "1": 4,
             "2": 3,
             "3": 3,
             "4": 3,
             "5": 2
-          }
+          },
+          "cantrips": 6,
+          "preparedSpells": 15
         },
         {
           "level": 11,
           "proficiencyBonus": 4,
-          "features": [],
+          "features": [
+            "—"
+          ],
           "spellSlots": {
             "1": 4,
             "2": 3,
@@ -2146,13 +2635,15 @@
             "4": 3,
             "5": 2,
             "6": 1
-          }
+          },
+          "cantrips": 6,
+          "preparedSpells": 16
         },
         {
           "level": 12,
           "proficiencyBonus": 4,
           "features": [
-            "asi_or_feat"
+            "Ability Score Improvement"
           ],
           "spellSlots": {
             "1": 4,
@@ -2161,12 +2652,16 @@
             "4": 3,
             "5": 2,
             "6": 1
-          }
+          },
+          "cantrips": 6,
+          "preparedSpells": 16
         },
         {
           "level": 13,
           "proficiencyBonus": 5,
-          "features": [],
+          "features": [
+            "—"
+          ],
           "spellSlots": {
             "1": 4,
             "2": 3,
@@ -2175,12 +2670,16 @@
             "5": 2,
             "6": 1,
             "7": 1
-          }
+          },
+          "cantrips": 6,
+          "preparedSpells": 17
         },
         {
           "level": 14,
           "proficiencyBonus": 5,
-          "features": [],
+          "features": [
+            "Subclass feature"
+          ],
           "spellSlots": {
             "1": 4,
             "2": 3,
@@ -2189,28 +2688,15 @@
             "5": 2,
             "6": 1,
             "7": 1
-          }
+          },
+          "cantrips": 6,
+          "preparedSpells": 17
         },
         {
           "level": 15,
           "proficiencyBonus": 5,
-          "features": [],
-          "spellSlots": {
-            "1": 4,
-            "2": 3,
-            "3": 3,
-            "4": 3,
-            "5": 2,
-            "6": 1,
-            "7": 1,
-            "8": 1
-          }
-        },
-        {
-          "level": 16,
-          "proficiencyBonus": 5,
           "features": [
-            "asi_or_feat"
+            "—"
           ],
           "spellSlots": {
             "1": 4,
@@ -2221,12 +2707,35 @@
             "6": 1,
             "7": 1,
             "8": 1
-          }
+          },
+          "cantrips": 6,
+          "preparedSpells": 18
+        },
+        {
+          "level": 16,
+          "proficiencyBonus": 5,
+          "features": [
+            "Ability Score Improvement"
+          ],
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2,
+            "6": 1,
+            "7": 1,
+            "8": 1
+          },
+          "cantrips": 6,
+          "preparedSpells": 18
         },
         {
           "level": 17,
           "proficiencyBonus": 6,
-          "features": [],
+          "features": [
+            "Metamagic"
+          ],
           "spellSlots": {
             "1": 4,
             "2": 3,
@@ -2237,12 +2746,16 @@
             "7": 1,
             "8": 1,
             "9": 1
-          }
+          },
+          "cantrips": 6,
+          "preparedSpells": 19
         },
         {
           "level": 18,
           "proficiencyBonus": 6,
-          "features": [],
+          "features": [
+            "Subclass feature"
+          ],
           "spellSlots": {
             "1": 4,
             "2": 3,
@@ -2253,13 +2766,15 @@
             "7": 1,
             "8": 1,
             "9": 1
-          }
+          },
+          "cantrips": 6,
+          "preparedSpells": 20
         },
         {
           "level": 19,
           "proficiencyBonus": 6,
           "features": [
-            "asi_or_feat"
+            "Epic Boon"
           ],
           "spellSlots": {
             "1": 4,
@@ -2271,12 +2786,16 @@
             "7": 1,
             "8": 1,
             "9": 1
-          }
+          },
+          "cantrips": 6,
+          "preparedSpells": 21
         },
         {
           "level": 20,
           "proficiencyBonus": 6,
-          "features": [],
+          "features": [
+            "Arcane Apotheosis"
+          ],
           "spellSlots": {
             "1": 4,
             "2": 3,
@@ -2287,7 +2806,9 @@
             "7": 2,
             "8": 1,
             "9": 1
-          }
+          },
+          "cantrips": 6,
+          "preparedSpells": 22
         }
       ]
     },
@@ -2322,202 +2843,271 @@
       },
       "caster": "pact",
       "spellAbility": "cha",
+      "spellProgression": {
+        "mode": "pact"
+      },
       "weaponMastery": false,
       "levels": [
         {
           "level": 1,
           "proficiencyBonus": 2,
           "features": [
-            "Warlock",
-            "spellcasting"
+            "Eldritch Invocations",
+            "Pact Magic"
           ],
           "pactSlots": {
             "slotLevel": 1,
             "count": 1
-          }
+          },
+          "cantrips": 2,
+          "preparedSpells": 2
         },
         {
           "level": 2,
           "proficiencyBonus": 2,
-          "features": [],
+          "features": [
+            "Magical Cunning"
+          ],
           "pactSlots": {
             "slotLevel": 1,
             "count": 2
-          }
+          },
+          "cantrips": 2,
+          "preparedSpells": 3
         },
         {
           "level": 3,
           "proficiencyBonus": 2,
           "features": [
-            "subclass"
+            "Warlock Subclass"
           ],
           "pactSlots": {
             "slotLevel": 2,
             "count": 2
-          }
+          },
+          "cantrips": 2,
+          "preparedSpells": 4
         },
         {
           "level": 4,
           "proficiencyBonus": 2,
           "features": [
-            "asi_or_feat"
+            "Ability Score Improvement"
           ],
           "pactSlots": {
             "slotLevel": 2,
             "count": 2
-          }
+          },
+          "cantrips": 3,
+          "preparedSpells": 5
         },
         {
           "level": 5,
           "proficiencyBonus": 3,
-          "features": [],
+          "features": [
+            "—"
+          ],
           "pactSlots": {
             "slotLevel": 3,
             "count": 2
-          }
+          },
+          "cantrips": 3,
+          "preparedSpells": 6
         },
         {
           "level": 6,
           "proficiencyBonus": 3,
-          "features": [],
+          "features": [
+            "Subclass feature"
+          ],
           "pactSlots": {
             "slotLevel": 3,
             "count": 2
-          }
+          },
+          "cantrips": 3,
+          "preparedSpells": 7
         },
         {
           "level": 7,
           "proficiencyBonus": 3,
-          "features": [],
+          "features": [
+            "—"
+          ],
           "pactSlots": {
             "slotLevel": 4,
             "count": 2
-          }
+          },
+          "cantrips": 3,
+          "preparedSpells": 8
         },
         {
           "level": 8,
           "proficiencyBonus": 3,
           "features": [
-            "asi_or_feat"
+            "Ability Score Improvement"
           ],
           "pactSlots": {
             "slotLevel": 4,
             "count": 2
-          }
+          },
+          "cantrips": 3,
+          "preparedSpells": 9
         },
         {
           "level": 9,
           "proficiencyBonus": 4,
-          "features": [],
+          "features": [
+            "Contact Patron"
+          ],
           "pactSlots": {
             "slotLevel": 5,
             "count": 2
-          }
+          },
+          "cantrips": 3,
+          "preparedSpells": 10
         },
         {
           "level": 10,
           "proficiencyBonus": 4,
-          "features": [],
+          "features": [
+            "Subclass feature"
+          ],
           "pactSlots": {
             "slotLevel": 5,
             "count": 2
-          }
+          },
+          "cantrips": 4,
+          "preparedSpells": 10
         },
         {
           "level": 11,
           "proficiencyBonus": 4,
-          "features": [],
+          "features": [
+            "Mystic Arcanum (level 6 spell)"
+          ],
           "pactSlots": {
             "slotLevel": 5,
             "count": 3
-          }
+          },
+          "cantrips": 4,
+          "preparedSpells": 11
         },
         {
           "level": 12,
           "proficiencyBonus": 4,
           "features": [
-            "asi_or_feat"
+            "Ability Score Improvement"
           ],
           "pactSlots": {
             "slotLevel": 5,
             "count": 3
-          }
+          },
+          "cantrips": 4,
+          "preparedSpells": 11
         },
         {
           "level": 13,
           "proficiencyBonus": 5,
-          "features": [],
+          "features": [
+            "Mystic Arcanum (level 7 spell)"
+          ],
           "pactSlots": {
             "slotLevel": 5,
             "count": 3
-          }
+          },
+          "cantrips": 4,
+          "preparedSpells": 12
         },
         {
           "level": 14,
           "proficiencyBonus": 5,
-          "features": [],
+          "features": [
+            "Subclass feature"
+          ],
           "pactSlots": {
             "slotLevel": 5,
             "count": 3
-          }
+          },
+          "cantrips": 4,
+          "preparedSpells": 12
         },
         {
           "level": 15,
           "proficiencyBonus": 5,
-          "features": [],
+          "features": [
+            "Mystic Arcanum (level 8 spell)"
+          ],
           "pactSlots": {
             "slotLevel": 5,
             "count": 3
-          }
+          },
+          "cantrips": 4,
+          "preparedSpells": 13
         },
         {
           "level": 16,
           "proficiencyBonus": 5,
           "features": [
-            "asi_or_feat"
+            "Ability Score Improvement"
           ],
           "pactSlots": {
             "slotLevel": 5,
             "count": 3
-          }
+          },
+          "cantrips": 4,
+          "preparedSpells": 13
         },
         {
           "level": 17,
           "proficiencyBonus": 6,
-          "features": [],
+          "features": [
+            "Mystic Arcanum (level 9 spell)"
+          ],
           "pactSlots": {
             "slotLevel": 5,
             "count": 4
-          }
+          },
+          "cantrips": 4,
+          "preparedSpells": 14
         },
         {
           "level": 18,
           "proficiencyBonus": 6,
-          "features": [],
+          "features": [
+            "—"
+          ],
           "pactSlots": {
             "slotLevel": 5,
             "count": 4
-          }
+          },
+          "cantrips": 4,
+          "preparedSpells": 14
         },
         {
           "level": 19,
           "proficiencyBonus": 6,
           "features": [
-            "asi_or_feat"
+            "Epic Boon"
           ],
           "pactSlots": {
             "slotLevel": 5,
             "count": 4
-          }
+          },
+          "cantrips": 4,
+          "preparedSpells": 15
         },
         {
           "level": 20,
           "proficiencyBonus": 6,
-          "features": [],
+          "features": [
+            "Eldritch Master"
+          ],
           "pactSlots": {
             "slotLevel": 5,
             "count": 4
-          }
+          },
+          "cantrips": 4,
+          "preparedSpells": 15
         }
       ]
     },
@@ -2536,6 +3126,7 @@
         "insight",
         "investigation",
         "medicine",
+        "nature",
         "religion"
       ],
       "primary": [
@@ -2551,121 +3142,159 @@
       },
       "caster": "full",
       "spellAbility": "int",
+      "spellProgression": {
+        "mode": "prepared"
+      },
       "weaponMastery": false,
       "levels": [
         {
           "level": 1,
           "proficiencyBonus": 2,
           "features": [
-            "Wizard",
-            "spellcasting"
+            "Spellcasting",
+            "Ritual Adept",
+            "Arcane Recovery"
           ],
           "spellSlots": {
             "1": 2
-          }
+          },
+          "cantrips": 3,
+          "preparedSpells": 4
         },
         {
           "level": 2,
           "proficiencyBonus": 2,
-          "features": [],
+          "features": [
+            "Scholar"
+          ],
           "spellSlots": {
             "1": 3
-          }
+          },
+          "cantrips": 3,
+          "preparedSpells": 5
         },
         {
           "level": 3,
           "proficiencyBonus": 2,
           "features": [
-            "subclass"
+            "Wizard Subclass"
           ],
           "spellSlots": {
             "1": 4,
             "2": 2
-          }
+          },
+          "cantrips": 3,
+          "preparedSpells": 6
         },
         {
           "level": 4,
           "proficiencyBonus": 2,
           "features": [
-            "asi_or_feat"
+            "Ability Score Improvement"
           ],
           "spellSlots": {
             "1": 4,
             "2": 3
-          }
+          },
+          "cantrips": 4,
+          "preparedSpells": 7
         },
         {
           "level": 5,
           "proficiencyBonus": 3,
-          "features": [],
+          "features": [
+            "Memorize Spell"
+          ],
           "spellSlots": {
             "1": 4,
             "2": 3,
             "3": 2
-          }
+          },
+          "cantrips": 4,
+          "preparedSpells": 9
         },
         {
           "level": 6,
           "proficiencyBonus": 3,
-          "features": [],
+          "features": [
+            "Subclass feature"
+          ],
           "spellSlots": {
             "1": 4,
             "2": 3,
             "3": 3
-          }
+          },
+          "cantrips": 4,
+          "preparedSpells": 10
         },
         {
           "level": 7,
           "proficiencyBonus": 3,
-          "features": [],
+          "features": [
+            "—"
+          ],
           "spellSlots": {
             "1": 4,
             "2": 3,
             "3": 3,
             "4": 1
-          }
+          },
+          "cantrips": 4,
+          "preparedSpells": 11
         },
         {
           "level": 8,
           "proficiencyBonus": 3,
           "features": [
-            "asi_or_feat"
+            "Ability Score Improvement"
           ],
           "spellSlots": {
             "1": 4,
             "2": 3,
             "3": 3,
             "4": 2
-          }
+          },
+          "cantrips": 4,
+          "preparedSpells": 12
         },
         {
           "level": 9,
           "proficiencyBonus": 4,
-          "features": [],
+          "features": [
+            "—"
+          ],
           "spellSlots": {
             "1": 4,
             "2": 3,
             "3": 3,
             "4": 3,
             "5": 1
-          }
+          },
+          "cantrips": 4,
+          "preparedSpells": 14
         },
         {
           "level": 10,
           "proficiencyBonus": 4,
-          "features": [],
+          "features": [
+            "Subclass feature"
+          ],
           "spellSlots": {
             "1": 4,
             "2": 3,
             "3": 3,
             "4": 3,
             "5": 2
-          }
+          },
+          "cantrips": 5,
+          "preparedSpells": 15
         },
         {
           "level": 11,
           "proficiencyBonus": 4,
-          "features": [],
+          "features": [
+            "—"
+          ],
           "spellSlots": {
             "1": 4,
             "2": 3,
@@ -2673,13 +3302,15 @@
             "4": 3,
             "5": 2,
             "6": 1
-          }
+          },
+          "cantrips": 5,
+          "preparedSpells": 16
         },
         {
           "level": 12,
           "proficiencyBonus": 4,
           "features": [
-            "asi_or_feat"
+            "Ability Score Improvement"
           ],
           "spellSlots": {
             "1": 4,
@@ -2688,12 +3319,16 @@
             "4": 3,
             "5": 2,
             "6": 1
-          }
+          },
+          "cantrips": 5,
+          "preparedSpells": 16
         },
         {
           "level": 13,
           "proficiencyBonus": 5,
-          "features": [],
+          "features": [
+            "—"
+          ],
           "spellSlots": {
             "1": 4,
             "2": 3,
@@ -2702,12 +3337,16 @@
             "5": 2,
             "6": 1,
             "7": 1
-          }
+          },
+          "cantrips": 5,
+          "preparedSpells": 17
         },
         {
           "level": 14,
           "proficiencyBonus": 5,
-          "features": [],
+          "features": [
+            "Subclass feature"
+          ],
           "spellSlots": {
             "1": 4,
             "2": 3,
@@ -2716,28 +3355,15 @@
             "5": 2,
             "6": 1,
             "7": 1
-          }
+          },
+          "cantrips": 5,
+          "preparedSpells": 18
         },
         {
           "level": 15,
           "proficiencyBonus": 5,
-          "features": [],
-          "spellSlots": {
-            "1": 4,
-            "2": 3,
-            "3": 3,
-            "4": 3,
-            "5": 2,
-            "6": 1,
-            "7": 1,
-            "8": 1
-          }
-        },
-        {
-          "level": 16,
-          "proficiencyBonus": 5,
           "features": [
-            "asi_or_feat"
+            "—"
           ],
           "spellSlots": {
             "1": 4,
@@ -2748,12 +3374,35 @@
             "6": 1,
             "7": 1,
             "8": 1
-          }
+          },
+          "cantrips": 5,
+          "preparedSpells": 19
+        },
+        {
+          "level": 16,
+          "proficiencyBonus": 5,
+          "features": [
+            "Ability Score Improvement"
+          ],
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2,
+            "6": 1,
+            "7": 1,
+            "8": 1
+          },
+          "cantrips": 5,
+          "preparedSpells": 21
         },
         {
           "level": 17,
           "proficiencyBonus": 6,
-          "features": [],
+          "features": [
+            "—"
+          ],
           "spellSlots": {
             "1": 4,
             "2": 3,
@@ -2764,12 +3413,16 @@
             "7": 1,
             "8": 1,
             "9": 1
-          }
+          },
+          "cantrips": 5,
+          "preparedSpells": 22
         },
         {
           "level": 18,
           "proficiencyBonus": 6,
-          "features": [],
+          "features": [
+            "Spell Mastery"
+          ],
           "spellSlots": {
             "1": 4,
             "2": 3,
@@ -2780,13 +3433,15 @@
             "7": 1,
             "8": 1,
             "9": 1
-          }
+          },
+          "cantrips": 5,
+          "preparedSpells": 23
         },
         {
           "level": 19,
           "proficiencyBonus": 6,
           "features": [
-            "asi_or_feat"
+            "Epic Boon"
           ],
           "spellSlots": {
             "1": 4,
@@ -2798,12 +3453,16 @@
             "7": 1,
             "8": 1,
             "9": 1
-          }
+          },
+          "cantrips": 5,
+          "preparedSpells": 24
         },
         {
           "level": 20,
           "proficiencyBonus": 6,
-          "features": [],
+          "features": [
+            "Signature Spells"
+          ],
           "spellSlots": {
             "1": 4,
             "2": 3,
@@ -2814,7 +3473,9 @@
             "7": 2,
             "8": 1,
             "9": 1
-          }
+          },
+          "cantrips": 5,
+          "preparedSpells": 25
         }
       ]
     }

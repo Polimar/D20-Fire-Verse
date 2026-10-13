@@ -6,15 +6,17 @@
       "skills": [
         "insight",
         "religion"
-      ]
+      ],
+      "feat": "magic_initiate_cleric_see_feats"
     },
     {
       "id": "criminal",
       "name": "Criminal",
       "skills": [
-        "deception",
+        "sleight_of_hand",
         "stealth"
-      ]
+      ],
+      "feat": "alert_see_feats"
     },
     {
       "id": "sage",
@@ -22,7 +24,8 @@
       "skills": [
         "arcana",
         "history"
-      ]
+      ],
+      "feat": "magic_initiate_wizard_see_feats"
     },
     {
       "id": "soldier",
@@ -30,23 +33,8 @@
       "skills": [
         "athletics",
         "intimidation"
-      ]
-    },
-    {
-      "id": "entertainer",
-      "name": "Entertainer",
-      "skills": [
-        "acrobatics",
-        "performance"
-      ]
-    },
-    {
-      "id": "hermit",
-      "name": "Hermit",
-      "skills": [
-        "medicine",
-        "religion"
-      ]
+      ],
+      "feat": "savage_attacker_see_feats"
     }
   ]
 }

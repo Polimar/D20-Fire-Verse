@@ -1,0 +1,13 @@
+{
+  "ambiguities": [],
+  "unparsedFields": [],
+  "kind": "spell",
+  "id": "true_resurrection",
+  "status": "auto_ok",
+  "confidence": "high",
+  "usage": "Level-up spell list for the listed classes. Combat only if a wired ability uses this id.",
+  "srd": {
+    "components": "V, S, M (diamonds worth 25,000+ GP, which the spell consumes)",
+    "line": "Level 9 Necromancy (Cleric, Druid)"
+  }
+}

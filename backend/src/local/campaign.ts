@@ -185,8 +185,19 @@ export function listPregens(viewerUserId?: string | null): Pregen[] {
   return [...Object.values(pack().pregens), ...listCustomCharacters(viewerUserId)];
 }
 
+/** Old oneshot ids still resolve so existing tests and seats find the V2 sheets. */
+const PREGEN_REMAP: Record<string, string> = {
+  brenna_ironveal: "fv_brenna",
+  quill_ashmere: "fv_quill",
+  mira_softstep: "fv_mira",
+  torin_emberhand: "fv_torin",
+};
+
 export function getPregen(id: string): Pregen | undefined {
-  return pack().pregens[id] ?? getCustomCharacter(id);
+  const canonical = PREGEN_REMAP[id] ?? id;
+  const found = pack().pregens[canonical] ?? getCustomCharacter(canonical);
+  if (!found) return undefined;
+  return canonical === id ? found : { ...found, id };
 }
 
 /** Built-in heroes are shared; a custom one is only for its owner. */

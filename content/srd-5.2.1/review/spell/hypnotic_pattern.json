@@ -1,0 +1,13 @@
+{
+  "ambiguities": [],
+  "unparsedFields": [],
+  "kind": "spell",
+  "id": "hypnotic_pattern",
+  "status": "auto_ok",
+  "confidence": "high",
+  "usage": "Level-up spell list for the listed classes. Combat only if a wired ability uses this id.",
+  "srd": {
+    "components": "S, M (a pinch of confetti)",
+    "line": "Level 3 Illusion (Bard, Sorcerer, Warlock, Wizard)"
+  }
+}

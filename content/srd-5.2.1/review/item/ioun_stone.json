@@ -1,0 +1,12 @@
+{
+  "ambiguities": [],
+  "unparsedFields": [],
+  "kind": "item",
+  "id": "ioun_stone",
+  "status": "auto_ok",
+  "confidence": "high",
+  "usage": "Vendor, loot, and stash. Typed effects change AC, attack, and damage.",
+  "srd": {
+    "line": "Wondrous Item, Rarity Varies (Requires Attunement)"
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "ambiguities": [],
+  "unparsedFields": [],
+  "kind": "item",
+  "id": "bracers_of_defense",
+  "status": "auto_ok",
+  "confidence": "high",
+  "usage": "Vendor, loot, and stash. Typed effects change AC, attack, and damage.",
+  "srd": {
+    "line": "Wondrous Item, Rare (Requires Attunement)"
+  }
+}

@@ -2,7 +2,7 @@
 
 import { modeXp, xpAfterLoss, type RewardMode } from "@d20-fireverse/rules";
 import { accountElo, setAccountElo } from "./arena-queue.js";
-import { addXp, applyLevelUp, getHero, noteMilestone } from "./hero.js";
+import { addXp, getHero, heroPending, noteMilestone } from "./hero.js";
 import { rollLoot } from "./loot.js";
 import { xpThresholds } from "./content-catalog.js";
 import { accountDb } from "./auth.js";
@@ -46,7 +46,7 @@ export function settleHero(input: {
     setAccountElo(hero.userId, elo + (input.won ? 15 : -15));
   }
   addXp(hero.id, gained, input.mode);
-  const leveled = applyLevelUp(hero.id, input.picks);
+  const leveled = getHero(hero.id) ?? hero;
   if (input.won) noteMilestone(hero.id, "wins_10", 10);
   noteMilestone(hero.id, "games_10", 10);
   if (input.mode !== "story") {

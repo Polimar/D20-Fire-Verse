@@ -1,0 +1,13 @@
+{
+  "ambiguities": [],
+  "unparsedFields": [],
+  "kind": "spell",
+  "id": "true_polymorph",
+  "status": "auto_ok",
+  "confidence": "high",
+  "usage": "Level-up spell list for the listed classes. Combat only if a wired ability uses this id.",
+  "srd": {
+    "components": "V, S, M (a drop of mercury, a dollop of gum arabic, and a wisp of smoke)",
+    "line": "Level 9 Transmutation (Bard, Warlock, Wizard)"
+  }
+}

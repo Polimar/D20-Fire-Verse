@@ -1,0 +1,12 @@
+{
+  "ambiguities": [],
+  "unparsedFields": [],
+  "kind": "item",
+  "id": "defender",
+  "status": "auto_ok",
+  "confidence": "high",
+  "usage": "Vendor, loot, and stash. Typed effects change AC, attack, and damage.",
+  "srd": {
+    "line": "Weapon (Any Melee Weapon), Legendary (Requires Attunement)"
+  }
+}

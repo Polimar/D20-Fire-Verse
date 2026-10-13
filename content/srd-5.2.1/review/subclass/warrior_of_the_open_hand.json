@@ -1,0 +1,9 @@
+{
+  "ambiguities": [],
+  "unparsedFields": [],
+  "kind": "subclass",
+  "id": "warrior_of_the_open_hand",
+  "status": "auto_ok",
+  "confidence": "high",
+  "usage": "Chosen at the subclass level. Feature names are sheet labels until combat wires them."
+}

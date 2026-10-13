@@ -1,0 +1,14 @@
+{
+  "ambiguities": [],
+  "unparsedFields": [
+    "trait:Brave",
+    "trait:Halfling Nimbleness",
+    "trait:Luck",
+    "trait:Naturally Stealthy"
+  ],
+  "kind": "species",
+  "id": "halfling",
+  "status": "auto_ok",
+  "confidence": "medium",
+  "usage": "Chargen species. Unparsed trait numbers count as 0 until you fill them in the wizard."
+}

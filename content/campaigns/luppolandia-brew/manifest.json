@@ -20,10 +20,10 @@
   },
   "startNodeId": "hook_notice",
   "pregenIds": [
-    "brenna_ironveal",
-    "quill_ashmere",
-    "mira_softstep",
-    "torin_emberhand"
+    "fv_brenna",
+    "fv_quill",
+    "fv_mira",
+    "fv_torin"
   ],
   "cast": {
     "glowkindle": {

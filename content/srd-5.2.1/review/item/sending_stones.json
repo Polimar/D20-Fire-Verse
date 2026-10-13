@@ -1,0 +1,28 @@
+{
+  "ambiguities": [
+    {
+      "field": "effects",
+      "summary": "No typed effect matched the item text.",
+      "options": [
+        {
+          "label": "Leave effects empty",
+          "patch": {
+            "effects": []
+          }
+        }
+      ],
+      "parserChoice": 0
+    }
+  ],
+  "unparsedFields": [
+    "effects"
+  ],
+  "kind": "item",
+  "id": "sending_stones",
+  "status": "needs_review",
+  "confidence": "low",
+  "usage": "Vendor, loot, and stash. Typed effects change AC, attack, and damage.",
+  "srd": {
+    "line": "Wondrous Item, Uncommon"
+  }
+}

@@ -310,7 +310,33 @@ function ensureProgressTables(databaseHandle: DatabaseSync): void {
       cosmetic_id TEXT NOT NULL,
       PRIMARY KEY (user_id, cosmetic_id)
     );
+    CREATE TABLE IF NOT EXISTS content_resolutions (
+      kind TEXT NOT NULL,
+      entry_id TEXT NOT NULL,
+      status TEXT NOT NULL,
+      patch_json TEXT NOT NULL DEFAULT '{}',
+      admin_note TEXT NOT NULL DEFAULT '',
+      updated_at TEXT NOT NULL,
+      PRIMARY KEY (kind, entry_id)
+    );
+    CREATE TABLE IF NOT EXISTS content_playbook (
+      step_id TEXT PRIMARY KEY,
+      done INTEGER NOT NULL DEFAULT 0,
+      updated_at TEXT NOT NULL
+    );
+    CREATE TABLE IF NOT EXISTS content_custom (
+      kind TEXT NOT NULL,
+      entry_id TEXT NOT NULL,
+      body_json TEXT NOT NULL,
+      PRIMARY KEY (kind, entry_id)
+    );
   `);
+  const heroCols = new Set(
+    (databaseHandle.prepare("PRAGMA table_info(heroes)").all() as Array<{ name: string }>).map((column) => column.name),
+  );
+  if (!heroCols.has("sheet_json")) databaseHandle.exec("ALTER TABLE heroes ADD COLUMN sheet_json TEXT");
+  if (!heroCols.has("pending_choices_json")) databaseHandle.exec("ALTER TABLE heroes ADD COLUMN pending_choices_json TEXT NOT NULL DEFAULT '[]'");
+  if (!heroCols.has("hp_current")) databaseHandle.exec("ALTER TABLE heroes ADD COLUMN hp_current INTEGER");
 }
 
 export type LoginResult =

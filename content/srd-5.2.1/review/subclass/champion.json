@@ -1,0 +1,9 @@
+{
+  "ambiguities": [],
+  "unparsedFields": [],
+  "kind": "subclass",
+  "id": "champion",
+  "status": "auto_ok",
+  "confidence": "high",
+  "usage": "Chosen at the subclass level. Feature names are sheet labels until combat wires them."
+}

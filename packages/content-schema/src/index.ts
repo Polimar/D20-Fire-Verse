@@ -72,6 +72,9 @@ export const classLevel = z
     features: z.array(z.string()),
     spellSlots: z.record(z.string(), z.number().int().nonnegative()).optional(),
     pactSlots: z.object({ slotLevel: z.number().int(), count: z.number().int() }).strict().optional(),
+    cantrips: z.number().int().nonnegative().optional(),
+    preparedSpells: z.number().int().nonnegative().optional(),
+    spellsKnown: z.number().int().nonnegative().optional(),
   })
   .strict();
 
@@ -92,6 +95,10 @@ export const classDef = z
       .strict(),
     caster: z.enum(["none", "full", "half", "pact", "third"]),
     spellAbility: abilityKey.optional(),
+    spellProgression: z
+      .object({ mode: z.enum(["prepared", "known", "pact"]) })
+      .strict()
+      .optional(),
     weaponMastery: z.boolean(),
     levels: z.array(classLevel).length(20),
   })
@@ -105,6 +112,9 @@ export const subclassDef = z
     name: z.string().min(1),
     level: z.number().int().min(1).max(20),
     features: z.array(z.string()),
+    featuresByLevel: z
+      .array(z.object({ level: z.number().int(), features: z.array(z.string()) }).strict())
+      .optional(),
   })
   .strict();
 export type SubclassDef = z.infer<typeof subclassDef>;
@@ -116,6 +126,8 @@ export const speciesDef = z
     speedFt: z.number().int().positive(),
     size: z.enum(["small", "medium"]),
     traits: z.array(z.string()),
+    effects: z.array(effectDef).optional(),
+    hpPerLevel: z.number().int().optional(),
   })
   .strict();
 export type SpeciesDef = z.infer<typeof speciesDef>;
@@ -151,6 +163,7 @@ export const featDef = z
     name: z.string().min(1),
     repeatable: z.boolean(),
     description: z.string().min(1),
+    prerequisites: z.array(z.string()).optional(),
   })
   .strict();
 
@@ -231,6 +244,32 @@ export const campaignManifest = z
       .strict(),
   })
   .passthrough();
+
+export const contentReviewBundle = z
+  .object({
+    kind: z.string(),
+    id: z.string(),
+    status: z.enum(["auto_ok", "needs_review", "resolved", "rejected"]),
+    confidence: z.enum(["high", "medium", "low"]),
+    unparsedFields: z.array(z.string()).default([]),
+    usage: z.string(),
+    srd: z.record(z.string(), z.unknown()).optional(),
+    ambiguities: z
+      .array(
+        z
+          .object({
+            field: z.string(),
+            summary: z.string(),
+            options: z.array(z.object({ label: z.string(), patch: z.record(z.string(), z.unknown()) }).strict()),
+            parserChoice: z.number().int().optional(),
+          })
+          .strict(),
+      )
+      .default([]),
+    adminNote: z.string().optional(),
+    resolvedPatch: z.record(z.string(), z.unknown()).optional(),
+  })
+  .strict();
 
 export const pendingEntry = z
   .object({

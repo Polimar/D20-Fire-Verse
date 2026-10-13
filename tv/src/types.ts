@@ -201,6 +201,7 @@ export type RoomState = {
   savePrompt: boolean;
   autosaveId: string | null;
   localPlayerId: string | null;
+  levelUp?: { heroId: string; playerId: string } | null;
   rest?: {
     offer: boolean;
     budget: number;

@@ -1390,6 +1390,27 @@ async function routeNow() {
 
 function onRoomState(next: RoomState) {
   state = next;
+  if (next.levelUp && next.levelUp.playerId === playerId) {
+    const existing = document.getElementById("levelUpLive");
+    if (!existing) {
+      const panel = document.createElement("section");
+      panel.id = "levelUpLive";
+      panel.className = "chargen-panel is-open";
+      panel.innerHTML = `<div class="chargen-frame"><h2>Level up</h2><p class="meta">Choose on this screen. The table will not seat this hero again until the choice is made.</p>
+        <label class="admin-field"><span>Class id</span><input id="lvClassLive" /></label>
+        <button type="button" class="primary" id="lvGo">Confirm</button></div>`;
+      document.body.appendChild(panel);
+      panel.querySelector("#lvGo")?.addEventListener("click", () => {
+        const classId = panel.querySelector<HTMLInputElement>("#lvClassLive")?.value.trim();
+        void fetch(`/api/heroes/${next.levelUp!.heroId}/level-up`, {
+          method: "POST",
+          credentials: "same-origin",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(classId ? { kind: "class", classId } : { kind: "class", classId: "fighter" }),
+        }).then(() => panel.remove());
+      });
+    }
+  }
   pendingTable = null;
   tableError = null;
   const queuedHero = pendingHeroId;

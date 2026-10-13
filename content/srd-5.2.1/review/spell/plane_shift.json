@@ -1,0 +1,13 @@
+{
+  "ambiguities": [],
+  "unparsedFields": [],
+  "kind": "spell",
+  "id": "plane_shift",
+  "status": "auto_ok",
+  "confidence": "high",
+  "usage": "Level-up spell list for the listed classes. Combat only if a wired ability uses this id.",
+  "srd": {
+    "components": "V, S, M (a forked, metal rod worth 250+ GP and attuned to a plane of existence)",
+    "line": "Level 7 Conjuration (Cleric, Druid, Sorcerer, Warlock, Wizard)"
+  }
+}

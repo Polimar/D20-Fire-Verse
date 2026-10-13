@@ -101,7 +101,6 @@ test("a hero starts with no gold, a locked stash, and a level that waits until t
     ["species", "human"],
     ["background", "soldier"],
     ["item", "longsword"],
-    ["item", "longsword_plus_1"],
     ["subclass", "champion"],
   ] as const) {
     setContentEnabled(kind, id, true);
@@ -134,10 +133,9 @@ test("a hero starts with no gold, a locked stash, and a level that waits until t
     const admin = login("admin", "admin");
     assert.ok(admin);
     const content = await fetch(`http://127.0.0.1:${port}/api/admin/content`, { headers: { cookie: `fv_session=${admin.token}` } });
-    const body = (await content.json()) as { entries: Array<{ id: string; valid: boolean; enabled: boolean }> };
-    const broken = body.entries.find((entry) => entry.id === "broken_spell");
+    const body = (await content.json()) as { entries: Array<{ id: string; reviewStatus: string; enabled: boolean }> };
+    const broken = body.entries.find((entry) => entry.reviewStatus === "needs_review");
     assert.ok(broken);
-    assert.equal(broken.valid, false);
     assert.equal(broken.enabled, false);
     const shop = await fetch(`http://127.0.0.1:${port}/api/vendor`, { headers: { cookie: `fv_session=${admin.token}` } });
     const sold = (await shop.json()) as { payToWin: string; slots: unknown[] };

@@ -1,0 +1,13 @@
+{
+  "ambiguities": [],
+  "unparsedFields": [],
+  "kind": "spell",
+  "id": "circle_of_death",
+  "status": "auto_ok",
+  "confidence": "high",
+  "usage": "Level-up spell list for the listed classes. Combat only if a wired ability uses this id.",
+  "srd": {
+    "components": "V, S, M (the powder of a crushed black pearl worth 500+ GP)",
+    "line": "Level 6 Necromancy (Sorcerer, Warlock, Wizard)"
+  }
+}

@@ -38,4 +38,6 @@ Content hotfix after launch, SQLite backup, CI/CD, a wider admin, a real profani
 
 ## Hackathon
 
-The October video is recorded from this same `main` line. V1 play still uses the oneshot pregens. V2 content stays off until an admin enables it, so an empty catalog cannot crash a table.
+The October video is recorded from this same `main` line. The showcase is V2: the four campaign pregens (`fv_brenna`, `fv_quill`, `fv_mira`, `fv_torin`) or an account hero in the arena. The old chargen catalog is not the filmed path. SRD rows stay off until an admin enables them at `/admin`. Enable classes, then subclasses, then feats, then spells. A class with no imported spell progression does not offer spell choices. The admin can still grant XP after matches award it.
+
+Playbook, stored for every admin: classes, subclasses, feats, spells. Checking a box does not enable the row.

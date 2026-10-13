@@ -34,6 +34,10 @@ export type CatalogRow = {
   valid: boolean;
   issues: string[];
   inPlay: boolean;
+  reviewStatus: "auto_ok" | "needs_review" | "resolved" | "rejected" | "none";
+  confidence: "high" | "medium" | "low" | "none";
+  unparsedFields: string[];
+  usage: string;
 };
 
 type Bucket = "class" | "subclass" | "species" | "background" | "spell" | "feat" | "item" | "monster";
@@ -135,6 +139,46 @@ export function reloadCatalog(): void {
   cache = null;
 }
 
+type ReviewFile = {
+  status?: CatalogRow["reviewStatus"];
+  confidence?: CatalogRow["confidence"];
+  unparsedFields?: string[];
+  usage?: string;
+  srd?: Record<string, unknown>;
+  ambiguities?: unknown[];
+  adminNote?: string;
+};
+
+function reviewFile(kind: string, id: string): ReviewFile | undefined {
+  const file = path.join(ROOT, "review", kind, `${id}.json`);
+  if (!fs.existsSync(file)) return undefined;
+  return JSON.parse(fs.readFileSync(file, "utf8")) as ReviewFile;
+}
+
+function resolution(kind: string, id: string): { status: string; patch: Record<string, unknown>; note: string } | undefined {
+  const row = accountDb()
+    .prepare("SELECT status, patch_json, admin_note FROM content_resolutions WHERE kind = ? AND entry_id = ?")
+    .get(kind, id) as { status: string; patch_json: string; admin_note: string } | undefined;
+  if (!row) return undefined;
+  return { status: row.status, patch: JSON.parse(row.patch_json) as Record<string, unknown>, note: row.admin_note };
+}
+
+function reviewOf(kind: string, id: string): Pick<CatalogRow, "reviewStatus" | "confidence" | "unparsedFields" | "usage"> {
+  const file = reviewFile(kind, id);
+  const saved = resolution(kind, id);
+  const status = (saved?.status as CatalogRow["reviewStatus"]) || file?.status || "none";
+  return {
+    reviewStatus: status,
+    confidence: file?.confidence ?? "none",
+    unparsedFields: file?.unparsedFields ?? [],
+    usage: file?.usage ?? "",
+  };
+}
+
+function reviewAllowsPlay(status: CatalogRow["reviewStatus"]): boolean {
+  return status === "auto_ok" || status === "resolved" || status === "none";
+}
+
 function enabledSet(): Set<string> {
   const rows = accountDb().prepare("SELECT kind, entry_id, enabled FROM content_flags").all() as Array<{
     kind: string;
@@ -148,6 +192,7 @@ export function listCatalog(): CatalogRow[] {
   const on = enabledSet();
   return load().map((row) => {
     const enabled = on.has(`${row.kind}:${row.id}`);
+    const review = reviewOf(row.kind, row.id);
     return {
       kind: row.kind,
       id: row.id,
@@ -155,12 +200,14 @@ export function listCatalog(): CatalogRow[] {
       enabled,
       valid: row.valid,
       issues: row.issues,
-      inPlay: enabled && row.valid,
+      ...review,
+      inPlay: enabled && row.valid && reviewAllowsPlay(review.reviewStatus),
     };
   });
 }
 
 export function setContentEnabled(kind: string, id: string, enabled: boolean): CatalogRow {
+  if (enabled && !reviewAllowsPlay(reviewOf(kind, id).reviewStatus)) throw new Error("REVIEW_OPEN");
   accountDb()
     .prepare(
       `INSERT INTO content_flags (kind, entry_id, enabled) VALUES (?, ?, ?)
@@ -173,9 +220,9 @@ export function setContentEnabled(kind: string, id: string, enabled: boolean): C
 }
 
 function inPlay<T>(kind: Bucket): T[] {
-  const on = enabledSet();
+  const allowed = new Set(listCatalog().filter((row) => row.kind === kind && row.inPlay).map((row) => row.id));
   return load()
-    .filter((row) => row.kind === kind && row.valid && on.has(`${kind}:${row.id}`))
+    .filter((row) => row.kind === kind && allowed.has(row.id))
     .map((row) => row.raw as T);
 }
 
@@ -204,6 +251,66 @@ export function xpThresholds(): number[] {
   const parsed = xpTable.safeParse(readJson(file));
   if (!parsed.success) return [0];
   return parsed.data.levels;
+}
+
+export function contentDetail(kind: string, id: string): Record<string, unknown> {
+  const row = listCatalog().find((entry) => entry.kind === kind && entry.id === id);
+  if (!row) throw new Error("BAD_CONTENT");
+  const stored = load().find((entry) => entry.kind === kind && entry.id === id);
+  const file = reviewFile(kind, id);
+  const saved = resolution(kind, id);
+  return {
+    ...row,
+    game: stored?.raw ?? null,
+    srd: file?.srd ?? {},
+    ambiguities: file?.ambiguities ?? [],
+    adminNote: saved?.note ?? file?.adminNote ?? "",
+    patch: saved?.patch ?? {},
+  };
+}
+
+export function resolveContent(kind: string, id: string, input: { optionIndex?: number; patch?: Record<string, unknown>; adminNote?: string; reject?: boolean }): CatalogRow {
+  const file = reviewFile(kind, id);
+  const option = file?.ambiguities?.[input.optionIndex ?? -1] as { patch?: Record<string, unknown> } | undefined;
+  const patch = input.patch ?? option?.patch ?? {};
+  const status = input.reject ? "rejected" : "resolved";
+  accountDb()
+    .prepare(
+      `INSERT INTO content_resolutions (kind, entry_id, status, patch_json, admin_note, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?)
+       ON CONFLICT(kind, entry_id) DO UPDATE SET status = excluded.status, patch_json = excluded.patch_json, admin_note = excluded.admin_note, updated_at = excluded.updated_at`,
+    )
+    .run(kind, id, status, JSON.stringify(patch), input.adminNote ?? "", new Date().toISOString());
+  reloadCatalog();
+  const row = listCatalog().find((entry) => entry.kind === kind && entry.id === id);
+  if (!row) throw new Error("BAD_CONTENT");
+  return row;
+}
+
+export function saveCustomEntry(kind: string, id: string, body: unknown): void {
+  accountDb()
+    .prepare(
+      `INSERT INTO content_custom (kind, entry_id, body_json) VALUES (?, ?, ?)
+       ON CONFLICT(kind, entry_id) DO UPDATE SET body_json = excluded.body_json`,
+    )
+    .run(kind, id, JSON.stringify(body));
+  reloadCatalog();
+}
+
+export function playbook(): Array<{ id: string; done: boolean }> {
+  const steps = ["classes", "subclasses", "feats", "spells"];
+  const rows = accountDb().prepare("SELECT step_id, done FROM content_playbook").all() as Array<{ step_id: string; done: number }>;
+  const done = new Map(rows.map((row) => [row.step_id, row.done === 1]));
+  return steps.map((id) => ({ id, done: done.get(id) ?? false }));
+}
+
+export function setPlaybook(stepId: string, done: boolean): void {
+  accountDb()
+    .prepare(
+      `INSERT INTO content_playbook (step_id, done, updated_at) VALUES (?, ?, ?)
+       ON CONFLICT(step_id) DO UPDATE SET done = excluded.done, updated_at = excluded.updated_at`,
+    )
+    .run(stepId, done ? 1 : 0, new Date().toISOString());
 }
 
 export function savePending(id: string, body: unknown): void {

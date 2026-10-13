@@ -1,0 +1,13 @@
+{
+  "ambiguities": [],
+  "unparsedFields": [],
+  "kind": "spell",
+  "id": "teleportation_circle",
+  "status": "auto_ok",
+  "confidence": "high",
+  "usage": "Level-up spell list for the listed classes. Combat only if a wired ability uses this id.",
+  "srd": {
+    "components": "V, M (rare inks worth 50+ GP, which the spell consumes)",
+    "line": "Level 5 Conjuration (Bard, Sorcerer, Warlock, Wizard)"
+  }
+}

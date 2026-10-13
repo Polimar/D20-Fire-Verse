@@ -1,0 +1,13 @@
+{
+  "ambiguities": [],
+  "unparsedFields": [],
+  "kind": "spell",
+  "id": "find_the_path",
+  "status": "auto_ok",
+  "confidence": "high",
+  "usage": "Level-up spell list for the listed classes. Combat only if a wired ability uses this id.",
+  "srd": {
+    "components": "V, S, M (a set of divination tools—such as cards or runes—worth 100+ GP)",
+    "line": "Level 6 Divination (Bard, Cleric, Druid)"
+  }
+}

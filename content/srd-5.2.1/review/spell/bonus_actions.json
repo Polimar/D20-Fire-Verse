@@ -1,0 +1,16 @@
+{
+  "ambiguities": [],
+  "unparsedFields": [
+    "level",
+    "school"
+  ],
+  "kind": "spell",
+  "id": "bonus_actions",
+  "status": "needs_review",
+  "confidence": "low",
+  "usage": "Level-up spell list for the listed classes. Combat only if a wired ability uses this id.",
+  "srd": {
+    "components": "",
+    "line": "Venomous Spew (Centipede Only). Constitution Saving Throw:"
+  }
+}

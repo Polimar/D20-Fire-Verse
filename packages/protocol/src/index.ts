@@ -283,6 +283,10 @@ const ERROR_TEXT: Record<string, string> = {
   LEGACY_CHARACTER: "That hero is from an earlier version. You can look at the sheet, not play it.",
   MULTICLASS_LEVEL: "A second class is chosen when you level up.",
   MULTICLASS_PREREQ: "That class needs higher ability scores.",
+  REVIEW_OPEN: "Resolve that entry in the content wizard before it can enter play.",
+  LEVEL_CHOICE: "Choose the next level-up step before anything else.",
+  RESPEC_DISABLED: "Respec is turned off until progression is finished.",
+  LEVEL_UP_PENDING: "Finish this hero's level-up before they sit down. Another hero can still play.",
 };
 
 /** Player-facing sentence for a server error code. Never shows a raw code. */

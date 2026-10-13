@@ -1,0 +1,13 @@
+{
+  "ambiguities": [],
+  "unparsedFields": [],
+  "kind": "spell",
+  "id": "summon_dragon",
+  "status": "auto_ok",
+  "confidence": "high",
+  "usage": "Level-up spell list for the listed classes. Combat only if a wired ability uses this id.",
+  "srd": {
+    "components": "V, S, M (an object with the image of a dragon engraved on it worth 500+ GP)",
+    "line": "Level 5 Conjuration (Wizard)"
+  }
+}

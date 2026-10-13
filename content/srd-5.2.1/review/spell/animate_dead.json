@@ -1,0 +1,13 @@
+{
+  "ambiguities": [],
+  "unparsedFields": [],
+  "kind": "spell",
+  "id": "animate_dead",
+  "status": "auto_ok",
+  "confidence": "high",
+  "usage": "Level-up spell list for the listed classes. Combat only if a wired ability uses this id.",
+  "srd": {
+    "components": "V, S, M (a drop of blood, a piece of flesh, and a pinch of bone dust)",
+    "line": "Level 3 Necromancy (Cleric, Wizard)"
+  }
+}

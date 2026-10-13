@@ -412,6 +412,9 @@ function onMessage(msg: { eventType?: string; payload?: any }): void {
       view = msg.payload as CompanionState;
       if (mode !== "paired") setMode("paired");
       render();
+      if (view.room && (view.room as { levelUp?: { heroId?: string } | null }).levelUp?.heroId) {
+        toast("Level up is open on the TV. Finish it before that hero sits again.", "ok");
+      }
       return;
     case "UNPAIRED":
       unpaired(UNPAIRED_NOTE[String(msg.payload?.reason ?? "expired")] ?? UNPAIRED_NOTE.expired!);

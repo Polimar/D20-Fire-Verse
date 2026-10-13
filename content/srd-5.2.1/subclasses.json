@@ -1,12 +1,41 @@
 {
   "entries": [
     {
-      "id": "berserker",
+      "id": "path_of_the_berserker",
       "classId": "barbarian",
-      "name": "Berserker",
+      "name": "Path of the Berserker",
       "level": 3,
       "features": [
-        "Berserker"
+        "Frenzy",
+        "Mindless Rage",
+        "Retaliation",
+        "Intimidating Presence"
+      ],
+      "featuresByLevel": [
+        {
+          "level": 3,
+          "features": [
+            "Frenzy"
+          ]
+        },
+        {
+          "level": 6,
+          "features": [
+            "Mindless Rage"
+          ]
+        },
+        {
+          "level": 10,
+          "features": [
+            "Retaliation"
+          ]
+        },
+        {
+          "level": 14,
+          "features": [
+            "Intimidating Presence"
+          ]
+        }
       ]
     },
     {
@@ -15,7 +44,36 @@
       "name": "College of Lore",
       "level": 3,
       "features": [
-        "College of Lore"
+        "Bonus Proficiencies",
+        "Cutting Words",
+        "Magical Discoveries",
+        "Peerless Skill"
+      ],
+      "featuresByLevel": [
+        {
+          "level": 3,
+          "features": [
+            "Bonus Proficiencies"
+          ]
+        },
+        {
+          "level": 3,
+          "features": [
+            "Cutting Words"
+          ]
+        },
+        {
+          "level": 6,
+          "features": [
+            "Magical Discoveries"
+          ]
+        },
+        {
+          "level": 14,
+          "features": [
+            "Peerless Skill"
+          ]
+        }
       ]
     },
     {
@@ -24,7 +82,43 @@
       "name": "Life Domain",
       "level": 3,
       "features": [
-        "Life Domain"
+        "Disciple of Life",
+        "Life Domain Spells",
+        "Preserve Life",
+        "Blessed Healer",
+        "Supreme Healing"
+      ],
+      "featuresByLevel": [
+        {
+          "level": 3,
+          "features": [
+            "Disciple of Life"
+          ]
+        },
+        {
+          "level": 3,
+          "features": [
+            "Life Domain Spells"
+          ]
+        },
+        {
+          "level": 3,
+          "features": [
+            "Preserve Life"
+          ]
+        },
+        {
+          "level": 6,
+          "features": [
+            "Blessed Healer"
+          ]
+        },
+        {
+          "level": 17,
+          "features": [
+            "Supreme Healing"
+          ]
+        }
       ]
     },
     {
@@ -33,7 +127,43 @@
       "name": "Circle of the Land",
       "level": 3,
       "features": [
-        "Circle of the Land"
+        "Circle of the Land Spells",
+        "Land's Aid",
+        "Natural Recovery",
+        "Nature's Ward",
+        "Nature's Sanctuary"
+      ],
+      "featuresByLevel": [
+        {
+          "level": 3,
+          "features": [
+            "Circle of the Land Spells"
+          ]
+        },
+        {
+          "level": 3,
+          "features": [
+            "Land's Aid"
+          ]
+        },
+        {
+          "level": 6,
+          "features": [
+            "Natural Recovery"
+          ]
+        },
+        {
+          "level": 10,
+          "features": [
+            "Nature's Ward"
+          ]
+        },
+        {
+          "level": 14,
+          "features": [
+            "Nature's Sanctuary"
+          ]
+        }
       ]
     },
     {
@@ -42,7 +172,50 @@
       "name": "Champion",
       "level": 3,
       "features": [
-        "Champion"
+        "Improved Critical",
+        "Remarkable Athlete",
+        "Additional Fighting Style",
+        "Heroic Warrior",
+        "Superior Critical",
+        "Survivor"
+      ],
+      "featuresByLevel": [
+        {
+          "level": 3,
+          "features": [
+            "Improved Critical"
+          ]
+        },
+        {
+          "level": 3,
+          "features": [
+            "Remarkable Athlete"
+          ]
+        },
+        {
+          "level": 7,
+          "features": [
+            "Additional Fighting Style"
+          ]
+        },
+        {
+          "level": 10,
+          "features": [
+            "Heroic Warrior"
+          ]
+        },
+        {
+          "level": 15,
+          "features": [
+            "Superior Critical"
+          ]
+        },
+        {
+          "level": 18,
+          "features": [
+            "Survivor"
+          ]
+        }
       ]
     },
     {
@@ -51,7 +224,36 @@
       "name": "Warrior of the Open Hand",
       "level": 3,
       "features": [
-        "Warrior of the Open Hand"
+        "Open Hand Technique",
+        "Wholeness of Body",
+        "Fleet Step",
+        "Quivering Palm"
+      ],
+      "featuresByLevel": [
+        {
+          "level": 3,
+          "features": [
+            "Open Hand Technique"
+          ]
+        },
+        {
+          "level": 6,
+          "features": [
+            "Wholeness of Body"
+          ]
+        },
+        {
+          "level": 11,
+          "features": [
+            "Fleet Step"
+          ]
+        },
+        {
+          "level": 17,
+          "features": [
+            "Quivering Palm"
+          ]
+        }
       ]
     },
     {
@@ -60,7 +262,43 @@
       "name": "Oath of Devotion",
       "level": 3,
       "features": [
-        "Oath of Devotion"
+        "Oath of Devotion Spells",
+        "Sacred Weapon",
+        "Aura of Devotion",
+        "Smite of Protection",
+        "Holy Nimbus"
+      ],
+      "featuresByLevel": [
+        {
+          "level": 3,
+          "features": [
+            "Oath of Devotion Spells"
+          ]
+        },
+        {
+          "level": 3,
+          "features": [
+            "Sacred Weapon"
+          ]
+        },
+        {
+          "level": 7,
+          "features": [
+            "Aura of Devotion"
+          ]
+        },
+        {
+          "level": 15,
+          "features": [
+            "Smite of Protection"
+          ]
+        },
+        {
+          "level": 20,
+          "features": [
+            "Holy Nimbus"
+          ]
+        }
       ]
     },
     {
@@ -69,7 +307,43 @@
       "name": "Hunter",
       "level": 3,
       "features": [
-        "Hunter"
+        "Hunter's Lore",
+        "Hunter's Prey",
+        "Defensive Tactics",
+        "Superior Hunter's Prey",
+        "Superior Hunter's Defense"
+      ],
+      "featuresByLevel": [
+        {
+          "level": 3,
+          "features": [
+            "Hunter's Lore"
+          ]
+        },
+        {
+          "level": 3,
+          "features": [
+            "Hunter's Prey"
+          ]
+        },
+        {
+          "level": 7,
+          "features": [
+            "Defensive Tactics"
+          ]
+        },
+        {
+          "level": 11,
+          "features": [
+            "Superior Hunter's Prey"
+          ]
+        },
+        {
+          "level": 15,
+          "features": [
+            "Superior Hunter's Defense"
+          ]
+        }
       ]
     },
     {
@@ -78,7 +352,43 @@
       "name": "Thief",
       "level": 3,
       "features": [
-        "Thief"
+        "Fast Hands",
+        "Second-Story Work",
+        "Supreme Sneak",
+        "Use Magic Device",
+        "Thief's Reflexes"
+      ],
+      "featuresByLevel": [
+        {
+          "level": 3,
+          "features": [
+            "Fast Hands"
+          ]
+        },
+        {
+          "level": 3,
+          "features": [
+            "Second-Story Work"
+          ]
+        },
+        {
+          "level": 9,
+          "features": [
+            "Supreme Sneak"
+          ]
+        },
+        {
+          "level": 13,
+          "features": [
+            "Use Magic Device"
+          ]
+        },
+        {
+          "level": 17,
+          "features": [
+            "Thief's Reflexes"
+          ]
+        }
       ]
     },
     {
@@ -87,7 +397,43 @@
       "name": "Draconic Sorcery",
       "level": 3,
       "features": [
-        "Draconic Sorcery"
+        "Draconic Resilience",
+        "Draconic Spells",
+        "Elemental Affinity",
+        "Dragon Wings",
+        "Dragon Companion"
+      ],
+      "featuresByLevel": [
+        {
+          "level": 3,
+          "features": [
+            "Draconic Resilience"
+          ]
+        },
+        {
+          "level": 3,
+          "features": [
+            "Draconic Spells"
+          ]
+        },
+        {
+          "level": 6,
+          "features": [
+            "Elemental Affinity"
+          ]
+        },
+        {
+          "level": 14,
+          "features": [
+            "Dragon Wings"
+          ]
+        },
+        {
+          "level": 18,
+          "features": [
+            "Dragon Companion"
+          ]
+        }
       ]
     },
     {
@@ -96,7 +442,43 @@
       "name": "Fiend Patron",
       "level": 3,
       "features": [
-        "Fiend Patron"
+        "Dark One's Blessing",
+        "Fiend Spells",
+        "Dark One's Own Luck",
+        "Fiendish Resilience",
+        "Hurl Through Hell"
+      ],
+      "featuresByLevel": [
+        {
+          "level": 3,
+          "features": [
+            "Dark One's Blessing"
+          ]
+        },
+        {
+          "level": 3,
+          "features": [
+            "Fiend Spells"
+          ]
+        },
+        {
+          "level": 6,
+          "features": [
+            "Dark One's Own Luck"
+          ]
+        },
+        {
+          "level": 10,
+          "features": [
+            "Fiendish Resilience"
+          ]
+        },
+        {
+          "level": 14,
+          "features": [
+            "Hurl Through Hell"
+          ]
+        }
       ]
     },
     {
@@ -105,7 +487,43 @@
       "name": "Evoker",
       "level": 3,
       "features": [
-        "Evoker"
+        "Evocation Savant",
+        "Potent Cantrip",
+        "Sculpt Spells",
+        "Empowered Evocation",
+        "Overchannel"
+      ],
+      "featuresByLevel": [
+        {
+          "level": 3,
+          "features": [
+            "Evocation Savant"
+          ]
+        },
+        {
+          "level": 3,
+          "features": [
+            "Potent Cantrip"
+          ]
+        },
+        {
+          "level": 6,
+          "features": [
+            "Sculpt Spells"
+          ]
+        },
+        {
+          "level": 10,
+          "features": [
+            "Empowered Evocation"
+          ]
+        },
+        {
+          "level": 14,
+          "features": [
+            "Overchannel"
+          ]
+        }
       ]
     }
   ]

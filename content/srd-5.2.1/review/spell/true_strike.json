@@ -1,0 +1,13 @@
+{
+  "ambiguities": [],
+  "unparsedFields": [],
+  "kind": "spell",
+  "id": "true_strike",
+  "status": "auto_ok",
+  "confidence": "high",
+  "usage": "Level-up spell list for the listed classes. Combat only if a wired ability uses this id.",
+  "srd": {
+    "components": "S, M (a weapon with which you have proficiency and that is worth 1+ CP)",
+    "line": "Divination Cantrip (Bard, Sorcerer, Warlock, Wizard)"
+  }
+}

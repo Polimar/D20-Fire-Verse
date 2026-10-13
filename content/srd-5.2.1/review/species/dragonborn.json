@@ -1,0 +1,15 @@
+{
+  "ambiguities": [],
+  "unparsedFields": [
+    "trait:Draconic Ancestry",
+    "trait:Breath Weapon",
+    "trait:Damage Resistance",
+    "trait:Darkvision",
+    "trait:Draconic Flight"
+  ],
+  "kind": "species",
+  "id": "dragonborn",
+  "status": "auto_ok",
+  "confidence": "medium",
+  "usage": "Chargen species. Unparsed trait numbers count as 0 until you fill them in the wizard."
+}

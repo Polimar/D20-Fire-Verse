@@ -1,0 +1,13 @@
+{
+  "ambiguities": [],
+  "unparsedFields": [],
+  "kind": "item",
+  "id": "hand_crossbow",
+  "status": "auto_ok",
+  "confidence": "high",
+  "usage": "Vendor, loot, and stash. Typed effects change AC, attack, and damage.",
+  "srd": {
+    "damage": "1d6 Piercing",
+    "properties": "Ammunition (Range 30/120; Bolt), Light, Loading"
+  }
+}

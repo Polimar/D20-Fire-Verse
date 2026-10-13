@@ -1,0 +1,13 @@
+{
+  "ambiguities": [],
+  "unparsedFields": [
+    "trait:Darkvision",
+    "trait:Gnomish Cunning",
+    "trait:Gnomish Lineage"
+  ],
+  "kind": "species",
+  "id": "gnome",
+  "status": "auto_ok",
+  "confidence": "medium",
+  "usage": "Chargen species. Unparsed trait numbers count as 0 until you fill them in the wizard."
+}

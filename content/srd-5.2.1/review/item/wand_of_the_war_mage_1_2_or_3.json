@@ -1,0 +1,28 @@
+{
+  "ambiguities": [
+    {
+      "field": "effects",
+      "summary": "No typed effect matched the item text.",
+      "options": [
+        {
+          "label": "Leave effects empty",
+          "patch": {
+            "effects": []
+          }
+        }
+      ],
+      "parserChoice": 0
+    }
+  ],
+  "unparsedFields": [
+    "effects"
+  ],
+  "kind": "item",
+  "id": "wand_of_the_war_mage_1_2_or_3",
+  "status": "needs_review",
+  "confidence": "low",
+  "usage": "Vendor, loot, and stash. Typed effects change AC, attack, and damage.",
+  "srd": {
+    "line": "Wand, Uncommon (+1), Rare (+2), or Very Rare (+3) (Requires Attunement by a Spellcaster)"
+  }
+}

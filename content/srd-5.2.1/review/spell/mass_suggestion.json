@@ -1,0 +1,13 @@
+{
+  "ambiguities": [],
+  "unparsedFields": [],
+  "kind": "spell",
+  "id": "mass_suggestion",
+  "status": "auto_ok",
+  "confidence": "high",
+  "usage": "Level-up spell list for the listed classes. Combat only if a wired ability uses this id.",
+  "srd": {
+    "components": "V, M (a snake's tongue)",
+    "line": "Level 6 Enchantment (Bard, Sorcerer, Wizard)"
+  }
+}

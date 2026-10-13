@@ -1,24 +1,407 @@
 {
   "entries": [
     {
-      "id": "longsword_plus_1",
-      "name": "+1 Longsword",
+      "id": "adamantine_armor",
+      "name": "Adamantine Armor",
       "rarity": "uncommon",
+      "slot": "armor",
+      "effects": []
+    },
+    {
+      "id": "ammunition_1_2_or_3",
+      "name": "Ammunition, +1, +2, or +3",
+      "rarity": "very_rare",
       "slot": "mainhand",
-      "weaponId": "longsword",
-      "weaponMastery": "sap",
+      "effects": []
+    },
+    {
+      "id": "ammunition_of_slaying",
+      "name": "Ammunition of Slaying",
+      "rarity": "very_rare",
+      "slot": "mainhand",
+      "effects": []
+    },
+    {
+      "id": "amulet_of_health",
+      "name": "Amulet of Health",
+      "rarity": "rare",
+      "slot": "trinket",
+      "requires": {
+        "attunement": true
+      },
+      "effects": []
+    },
+    {
+      "id": "amulet_of_proof_against_detection_and_location",
+      "name": "Amulet of Proof against Detection and Location",
+      "rarity": "uncommon",
+      "slot": "trinket",
+      "requires": {
+        "attunement": true
+      },
+      "effects": []
+    },
+    {
+      "id": "amulet_of_the_planes",
+      "name": "Amulet of the Planes",
+      "rarity": "very_rare",
+      "slot": "trinket",
+      "requires": {
+        "attunement": true
+      },
+      "effects": []
+    },
+    {
+      "id": "animated_shield",
+      "name": "Animated Shield",
+      "rarity": "very_rare",
+      "slot": "armor",
+      "requires": {
+        "attunement": true
+      },
+      "effects": []
+    },
+    {
+      "id": "apparatus_of_the_crab",
+      "name": "Apparatus of the Crab",
+      "rarity": "legendary",
+      "slot": "trinket",
+      "effects": []
+    },
+    {
+      "id": "armor_1_2_or_3",
+      "name": "Armor, +1, +2, or +3",
+      "rarity": "very_rare",
+      "slot": "armor",
+      "effects": []
+    },
+    {
+      "id": "armor_of_invulnerability",
+      "name": "Armor of Invulnerability",
+      "rarity": "legendary",
+      "slot": "armor",
+      "requires": {
+        "attunement": true
+      },
+      "effects": []
+    },
+    {
+      "id": "armor_of_resistance",
+      "name": "Armor of Resistance",
+      "rarity": "rare",
+      "slot": "armor",
+      "requires": {
+        "attunement": true
+      },
+      "effects": []
+    },
+    {
+      "id": "armor_of_vulnerability",
+      "name": "Armor of Vulnerability",
+      "rarity": "rare",
+      "slot": "armor",
+      "requires": {
+        "attunement": true
+      },
+      "effects": []
+    },
+    {
+      "id": "arrow_catching_shield",
+      "name": "Arrow-Catching Shield",
+      "rarity": "rare",
+      "slot": "armor",
+      "requires": {
+        "attunement": true
+      },
       "effects": [
         {
-          "kind": "attack_bonus",
-          "amount": 1
-        },
-        {
-          "kind": "damage_bonus",
-          "amount": 1,
-          "damageType": "slashing"
+          "kind": "ac_bonus",
+          "amount": 2
         }
-      ],
-      "priceGold": 500
+      ]
+    },
+    {
+      "id": "bag_of_beans",
+      "name": "Bag of Beans",
+      "rarity": "rare",
+      "slot": "trinket",
+      "effects": []
+    },
+    {
+      "id": "bag_of_devouring",
+      "name": "Bag of Devouring",
+      "rarity": "very_rare",
+      "slot": "trinket",
+      "effects": []
+    },
+    {
+      "id": "bag_of_holding",
+      "name": "Bag of Holding",
+      "rarity": "uncommon",
+      "slot": "trinket",
+      "effects": []
+    },
+    {
+      "id": "bag_of_tricks",
+      "name": "Bag of Tricks",
+      "rarity": "uncommon",
+      "slot": "trinket",
+      "effects": []
+    },
+    {
+      "id": "bead_of_force",
+      "name": "Bead of Force",
+      "rarity": "rare",
+      "slot": "trinket",
+      "effects": []
+    },
+    {
+      "id": "bead_of_nourishment",
+      "name": "Bead of Nourishment",
+      "rarity": "common",
+      "slot": "trinket",
+      "effects": []
+    },
+    {
+      "id": "belt_of_dwarvenkind",
+      "name": "Belt of Dwarvenkind",
+      "rarity": "rare",
+      "slot": "trinket",
+      "requires": {
+        "attunement": true
+      },
+      "effects": [
+        {
+          "kind": "resistance",
+          "damageType": "poison"
+        }
+      ]
+    },
+    {
+      "id": "belt_of_giant_strength",
+      "name": "Belt of Giant Strength",
+      "rarity": "common",
+      "slot": "trinket",
+      "requires": {
+        "attunement": true
+      },
+      "effects": []
+    },
+    {
+      "id": "berserker_axe",
+      "name": "Berserker Axe",
+      "rarity": "rare",
+      "slot": "mainhand",
+      "requires": {
+        "attunement": true
+      },
+      "effects": []
+    },
+    {
+      "id": "boots_of_elvenkind",
+      "name": "Boots of Elvenkind",
+      "rarity": "uncommon",
+      "slot": "trinket",
+      "effects": []
+    },
+    {
+      "id": "boots_of_levitation",
+      "name": "Boots of Levitation",
+      "rarity": "rare",
+      "slot": "trinket",
+      "requires": {
+        "attunement": true
+      },
+      "effects": []
+    },
+    {
+      "id": "boots_of_speed",
+      "name": "Boots of Speed",
+      "rarity": "rare",
+      "slot": "trinket",
+      "requires": {
+        "attunement": true
+      },
+      "effects": []
+    },
+    {
+      "id": "boots_of_striding_and_springing",
+      "name": "Boots of Striding and Springing",
+      "rarity": "uncommon",
+      "slot": "trinket",
+      "requires": {
+        "attunement": true
+      },
+      "effects": []
+    },
+    {
+      "id": "boots_of_the_winterlands",
+      "name": "Boots of the Winterlands",
+      "rarity": "uncommon",
+      "slot": "trinket",
+      "requires": {
+        "attunement": true
+      },
+      "effects": [
+        {
+          "kind": "resistance",
+          "damageType": "cold"
+        }
+      ]
+    },
+    {
+      "id": "bowl_of_commanding_water_elementals",
+      "name": "Bowl of Commanding Water Elementals",
+      "rarity": "rare",
+      "slot": "trinket",
+      "effects": []
+    },
+    {
+      "id": "bracers_of_archery",
+      "name": "Bracers of Archery",
+      "rarity": "uncommon",
+      "slot": "trinket",
+      "requires": {
+        "attunement": true
+      },
+      "effects": []
+    },
+    {
+      "id": "bracers_of_defense",
+      "name": "Bracers of Defense",
+      "rarity": "rare",
+      "slot": "trinket",
+      "requires": {
+        "attunement": true
+      },
+      "effects": [
+        {
+          "kind": "ac_bonus",
+          "amount": 2
+        }
+      ]
+    },
+    {
+      "id": "brazier_of_commanding_fire_elementals",
+      "name": "Brazier of Commanding Fire Elementals",
+      "rarity": "rare",
+      "slot": "trinket",
+      "effects": []
+    },
+    {
+      "id": "brooch_of_shielding",
+      "name": "Brooch of Shielding",
+      "rarity": "uncommon",
+      "slot": "trinket",
+      "requires": {
+        "attunement": true
+      },
+      "effects": [
+        {
+          "kind": "resistance",
+          "damageType": "force"
+        }
+      ]
+    },
+    {
+      "id": "broom_of_flying",
+      "name": "Broom of Flying",
+      "rarity": "uncommon",
+      "slot": "trinket",
+      "requires": {
+        "attunement": true
+      },
+      "effects": []
+    },
+    {
+      "id": "candle_of_invocation",
+      "name": "Candle of Invocation",
+      "rarity": "very_rare",
+      "slot": "trinket",
+      "requires": {
+        "attunement": true
+      },
+      "effects": []
+    },
+    {
+      "id": "cape_of_the_mountebank",
+      "name": "Cape of the Mountebank",
+      "rarity": "rare",
+      "slot": "trinket",
+      "effects": []
+    },
+    {
+      "id": "carpet_of_flying",
+      "name": "Carpet of Flying",
+      "rarity": "very_rare",
+      "slot": "trinket",
+      "effects": []
+    },
+    {
+      "id": "censer_of_controlling_air_elementals",
+      "name": "Censer of Controlling Air Elementals",
+      "rarity": "rare",
+      "slot": "trinket",
+      "effects": []
+    },
+    {
+      "id": "chime_of_opening",
+      "name": "Chime of Opening",
+      "rarity": "rare",
+      "slot": "trinket",
+      "effects": []
+    },
+    {
+      "id": "circlet_of_blasting",
+      "name": "Circlet of Blasting",
+      "rarity": "uncommon",
+      "slot": "trinket",
+      "effects": []
+    },
+    {
+      "id": "cloak_of_arachnida",
+      "name": "Cloak of Arachnida",
+      "rarity": "very_rare",
+      "slot": "trinket",
+      "requires": {
+        "attunement": true
+      },
+      "effects": [
+        {
+          "kind": "resistance",
+          "damageType": "poison"
+        }
+      ]
+    },
+    {
+      "id": "cloak_of_displacement",
+      "name": "Cloak of Displacement",
+      "rarity": "rare",
+      "slot": "trinket",
+      "requires": {
+        "attunement": true
+      },
+      "effects": []
+    },
+    {
+      "id": "cloak_of_elvenkind",
+      "name": "Cloak of Elvenkind",
+      "rarity": "uncommon",
+      "slot": "trinket",
+      "requires": {
+        "attunement": true
+      },
+      "effects": []
+    },
+    {
+      "id": "cloak_of_invisibility",
+      "name": "Cloak of Invisibility",
+      "rarity": "legendary",
+      "slot": "trinket",
+      "requires": {
+        "attunement": true
+      },
+      "effects": []
     },
     {
       "id": "cloak_of_protection",
@@ -33,40 +416,1954 @@
           "kind": "ac_bonus",
           "amount": 1
         }
-      ],
-      "priceGold": 500
+      ]
     },
     {
-      "id": "armor_plus_2",
-      "name": "+2 Armor",
+      "id": "cloak_of_the_bat",
+      "name": "Cloak of the Bat",
       "rarity": "rare",
+      "slot": "trinket",
+      "requires": {
+        "attunement": true
+      },
+      "effects": []
+    },
+    {
+      "id": "cloak_of_the_manta_ray",
+      "name": "Cloak of the Manta Ray",
+      "rarity": "uncommon",
+      "slot": "trinket",
+      "requires": {
+        "attunement": true
+      },
+      "effects": []
+    },
+    {
+      "id": "crystal_ball",
+      "name": "Crystal Ball",
+      "rarity": "very_rare",
+      "slot": "trinket",
+      "requires": {
+        "attunement": true
+      },
+      "effects": []
+    },
+    {
+      "id": "crystal_ball_of_mind_reading",
+      "name": "Crystal Ball of Mind Reading",
+      "rarity": "legendary",
+      "slot": "trinket",
+      "requires": {
+        "attunement": true
+      },
+      "effects": []
+    },
+    {
+      "id": "crystal_ball_of_telepathy",
+      "name": "Crystal Ball of Telepathy",
+      "rarity": "legendary",
+      "slot": "trinket",
+      "requires": {
+        "attunement": true
+      },
+      "effects": []
+    },
+    {
+      "id": "crystal_ball_of_true_seeing",
+      "name": "Crystal Ball of True Seeing",
+      "rarity": "legendary",
+      "slot": "trinket",
+      "requires": {
+        "attunement": true
+      },
+      "effects": []
+    },
+    {
+      "id": "cube_of_force",
+      "name": "Cube of Force",
+      "rarity": "rare",
+      "slot": "trinket",
+      "requires": {
+        "attunement": true
+      },
+      "effects": []
+    },
+    {
+      "id": "cubic_gate",
+      "name": "Cubic Gate",
+      "rarity": "legendary",
+      "slot": "trinket",
+      "effects": []
+    },
+    {
+      "id": "dagger_of_venom",
+      "name": "Dagger of Venom",
+      "rarity": "rare",
+      "slot": "mainhand",
+      "effects": []
+    },
+    {
+      "id": "dancing_sword",
+      "name": "Dancing Sword",
+      "rarity": "very_rare",
+      "slot": "mainhand",
+      "requires": {
+        "attunement": true
+      },
+      "effects": []
+    },
+    {
+      "id": "decanter_of_endless_water",
+      "name": "Decanter of Endless Water",
+      "rarity": "uncommon",
+      "slot": "trinket",
+      "effects": []
+    },
+    {
+      "id": "deck_of_illusions",
+      "name": "Deck of Illusions",
+      "rarity": "uncommon",
+      "slot": "trinket",
+      "effects": []
+    },
+    {
+      "id": "defender",
+      "name": "Defender",
+      "rarity": "legendary",
+      "slot": "mainhand",
+      "requires": {
+        "attunement": true
+      },
+      "effects": [
+        {
+          "kind": "ac_bonus",
+          "amount": 2
+        }
+      ]
+    },
+    {
+      "id": "demon_armor",
+      "name": "Demon Armor",
+      "rarity": "very_rare",
+      "slot": "armor",
+      "requires": {
+        "attunement": true
+      },
+      "effects": [
+        {
+          "kind": "ac_bonus",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "id": "dimensional_shackles",
+      "name": "Dimensional Shackles",
+      "rarity": "rare",
+      "slot": "trinket",
+      "effects": []
+    },
+    {
+      "id": "dragon_orb",
+      "name": "Dragon Orb",
+      "rarity": "common",
+      "slot": "trinket",
+      "requires": {
+        "attunement": true
+      },
+      "effects": []
+    },
+    {
+      "id": "dragon_scale_mail",
+      "name": "Dragon Scale Mail",
+      "rarity": "very_rare",
+      "slot": "armor",
+      "requires": {
+        "attunement": true
+      },
+      "effects": [
+        {
+          "kind": "ac_bonus",
+          "amount": 1
+        },
+        {
+          "kind": "resistance",
+          "damageType": "one"
+        }
+      ]
+    },
+    {
+      "id": "dragon_slayer",
+      "name": "Dragon Slayer",
+      "rarity": "rare",
+      "slot": "mainhand",
+      "effects": []
+    },
+    {
+      "id": "dust_of_disappearance",
+      "name": "Dust of Disappearance",
+      "rarity": "uncommon",
+      "slot": "trinket",
+      "effects": []
+    },
+    {
+      "id": "dust_of_dryness",
+      "name": "Dust of Dryness",
+      "rarity": "uncommon",
+      "slot": "trinket",
+      "effects": []
+    },
+    {
+      "id": "dust_of_sneezing_and_choking",
+      "name": "Dust of Sneezing and Choking",
+      "rarity": "uncommon",
+      "slot": "trinket",
+      "effects": []
+    },
+    {
+      "id": "dwarven_plate",
+      "name": "Dwarven Plate",
+      "rarity": "very_rare",
       "slot": "armor",
       "effects": [
         {
           "kind": "ac_bonus",
           "amount": 2
         }
-      ],
-      "priceGold": 3000
+      ]
+    },
+    {
+      "id": "dwarven_thrower",
+      "name": "Dwarven Thrower",
+      "rarity": "very_rare",
+      "slot": "mainhand",
+      "requires": {
+        "attunement": true
+      },
+      "effects": []
+    },
+    {
+      "id": "efficient_quiver",
+      "name": "Efficient Quiver",
+      "rarity": "uncommon",
+      "slot": "trinket",
+      "effects": []
+    },
+    {
+      "id": "efreeti_bottle",
+      "name": "Efreeti Bottle",
+      "rarity": "very_rare",
+      "slot": "trinket",
+      "effects": []
+    },
+    {
+      "id": "elemental_gem",
+      "name": "Elemental Gem",
+      "rarity": "uncommon",
+      "slot": "trinket",
+      "effects": []
+    },
+    {
+      "id": "elixir_of_health",
+      "name": "Elixir of Health",
+      "rarity": "rare",
+      "slot": "consumable",
+      "effects": []
+    },
+    {
+      "id": "elven_chain",
+      "name": "Elven Chain",
+      "rarity": "rare",
+      "slot": "armor",
+      "effects": [
+        {
+          "kind": "ac_bonus",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "id": "energy_bow",
+      "name": "Energy Bow",
+      "rarity": "very_rare",
+      "slot": "mainhand",
+      "requires": {
+        "attunement": true
+      },
+      "effects": []
+    },
+    {
+      "id": "eversmoking_bottle",
+      "name": "Eversmoking Bottle",
+      "rarity": "uncommon",
+      "slot": "trinket",
+      "effects": []
+    },
+    {
+      "id": "eyes_of_charming",
+      "name": "Eyes of Charming",
+      "rarity": "uncommon",
+      "slot": "trinket",
+      "requires": {
+        "attunement": true
+      },
+      "effects": []
+    },
+    {
+      "id": "eyes_of_minute_seeing",
+      "name": "Eyes of Minute Seeing",
+      "rarity": "uncommon",
+      "slot": "trinket",
+      "effects": []
+    },
+    {
+      "id": "eyes_of_the_eagle",
+      "name": "Eyes of the Eagle",
+      "rarity": "uncommon",
+      "slot": "trinket",
+      "effects": []
+    },
+    {
+      "id": "feather_token",
+      "name": "Feather Token",
+      "rarity": "common",
+      "slot": "trinket",
+      "effects": []
+    },
+    {
+      "id": "figurine_of_wondrous_power",
+      "name": "Figurine of Wondrous Power",
+      "rarity": "common",
+      "slot": "trinket",
+      "effects": []
     },
     {
       "id": "flame_tongue",
       "name": "Flame Tongue",
       "rarity": "rare",
       "slot": "mainhand",
-      "weaponId": "longsword",
-      "weaponMastery": "sap",
+      "requires": {
+        "attunement": true
+      },
+      "effects": []
+    },
+    {
+      "id": "folding_boat",
+      "name": "Folding Boat",
+      "rarity": "rare",
+      "slot": "trinket",
+      "effects": []
+    },
+    {
+      "id": "frost_brand",
+      "name": "Frost Brand",
+      "rarity": "very_rare",
+      "slot": "mainhand",
       "requires": {
         "attunement": true
       },
       "effects": [
         {
-          "kind": "on_hit_rider",
-          "damage": "2d6",
+          "kind": "resistance",
           "damageType": "fire"
         }
-      ],
-      "priceGold": 3000
+      ]
+    },
+    {
+      "id": "gauntlets_of_ogre_power",
+      "name": "Gauntlets of Ogre Power",
+      "rarity": "uncommon",
+      "slot": "trinket",
+      "requires": {
+        "attunement": true
+      },
+      "effects": []
+    },
+    {
+      "id": "gem_of_brightness",
+      "name": "Gem of Brightness",
+      "rarity": "uncommon",
+      "slot": "trinket",
+      "effects": []
+    },
+    {
+      "id": "gem_of_seeing",
+      "name": "Gem of Seeing",
+      "rarity": "rare",
+      "slot": "trinket",
+      "requires": {
+        "attunement": true
+      },
+      "effects": []
+    },
+    {
+      "id": "giant_slayer",
+      "name": "Giant Slayer",
+      "rarity": "rare",
+      "slot": "mainhand",
+      "effects": []
+    },
+    {
+      "id": "glamoured_studded_leather",
+      "name": "Glamoured Studded Leather",
+      "rarity": "rare",
+      "slot": "armor",
+      "effects": [
+        {
+          "kind": "ac_bonus",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "id": "gloves_of_missile_snaring",
+      "name": "Gloves of Missile Snaring",
+      "rarity": "uncommon",
+      "slot": "trinket",
+      "requires": {
+        "attunement": true
+      },
+      "effects": []
+    },
+    {
+      "id": "gloves_of_swimming_and_climbing",
+      "name": "Gloves of Swimming and Climbing",
+      "rarity": "uncommon",
+      "slot": "trinket",
+      "requires": {
+        "attunement": true
+      },
+      "effects": []
+    },
+    {
+      "id": "gloves_of_thievery",
+      "name": "Gloves of Thievery",
+      "rarity": "uncommon",
+      "slot": "trinket",
+      "effects": []
+    },
+    {
+      "id": "goggles_of_night",
+      "name": "Goggles of Night",
+      "rarity": "uncommon",
+      "slot": "trinket",
+      "effects": []
+    },
+    {
+      "id": "hammer_of_thunderbolts",
+      "name": "Hammer of Thunderbolts",
+      "rarity": "legendary",
+      "slot": "mainhand",
+      "requires": {
+        "attunement": true
+      },
+      "effects": []
+    },
+    {
+      "id": "handy_haversack",
+      "name": "Handy Haversack",
+      "rarity": "rare",
+      "slot": "trinket",
+      "effects": []
+    },
+    {
+      "id": "hat_of_disguise",
+      "name": "Hat of Disguise",
+      "rarity": "uncommon",
+      "slot": "trinket",
+      "requires": {
+        "attunement": true
+      },
+      "effects": []
+    },
+    {
+      "id": "hat_of_many_spells",
+      "name": "Hat of Many Spells",
+      "rarity": "very_rare",
+      "slot": "trinket",
+      "requires": {
+        "attunement": true
+      },
+      "effects": []
+    },
+    {
+      "id": "headband_of_intellect",
+      "name": "Headband of Intellect",
+      "rarity": "uncommon",
+      "slot": "trinket",
+      "requires": {
+        "attunement": true
+      },
+      "effects": []
+    },
+    {
+      "id": "helm_of_brilliance",
+      "name": "Helm of Brilliance",
+      "rarity": "very_rare",
+      "slot": "trinket",
+      "requires": {
+        "attunement": true
+      },
+      "effects": [
+        {
+          "kind": "resistance",
+          "damageType": "fire"
+        }
+      ]
+    },
+    {
+      "id": "helm_of_comprehending_languages",
+      "name": "Helm of Comprehending Languages",
+      "rarity": "uncommon",
+      "slot": "trinket",
+      "effects": []
+    },
+    {
+      "id": "helm_of_telepathy",
+      "name": "Helm of Telepathy",
+      "rarity": "uncommon",
+      "slot": "trinket",
+      "requires": {
+        "attunement": true
+      },
+      "effects": []
+    },
+    {
+      "id": "helm_of_teleportation",
+      "name": "Helm of Teleportation",
+      "rarity": "rare",
+      "slot": "trinket",
+      "requires": {
+        "attunement": true
+      },
+      "effects": []
+    },
+    {
+      "id": "holy_avenger",
+      "name": "Holy Avenger",
+      "rarity": "legendary",
+      "slot": "mainhand",
+      "requires": {
+        "attunement": true
+      },
+      "effects": []
+    },
+    {
+      "id": "horn_of_blasting",
+      "name": "Horn of Blasting",
+      "rarity": "rare",
+      "slot": "trinket",
+      "effects": []
+    },
+    {
+      "id": "horn_of_valhalla",
+      "name": "Horn of Valhalla",
+      "rarity": "very_rare",
+      "slot": "trinket",
+      "effects": []
+    },
+    {
+      "id": "horseshoes_of_a_zephyr",
+      "name": "Horseshoes of a Zephyr",
+      "rarity": "very_rare",
+      "slot": "trinket",
+      "effects": []
+    },
+    {
+      "id": "horseshoes_of_speed",
+      "name": "Horseshoes of Speed",
+      "rarity": "rare",
+      "slot": "trinket",
+      "effects": []
+    },
+    {
+      "id": "immovable_rod",
+      "name": "Immovable Rod",
+      "rarity": "uncommon",
+      "slot": "trinket",
+      "effects": []
+    },
+    {
+      "id": "instant_fortress",
+      "name": "Instant Fortress",
+      "rarity": "rare",
+      "slot": "trinket",
+      "requires": {
+        "attunement": true
+      },
+      "effects": []
+    },
+    {
+      "id": "ioun_stone",
+      "name": "Ioun Stone",
+      "rarity": "common",
+      "slot": "trinket",
+      "requires": {
+        "attunement": true
+      },
+      "effects": [
+        {
+          "kind": "ac_bonus",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "id": "iron_bands",
+      "name": "Iron Bands",
+      "rarity": "rare",
+      "slot": "trinket",
+      "effects": []
+    },
+    {
+      "id": "iron_flask",
+      "name": "Iron Flask",
+      "rarity": "legendary",
+      "slot": "trinket",
+      "effects": []
+    },
+    {
+      "id": "javelin_of_lightning",
+      "name": "Javelin of Lightning",
+      "rarity": "uncommon",
+      "slot": "mainhand",
+      "effects": []
+    },
+    {
+      "id": "lantern_of_revealing",
+      "name": "Lantern of Revealing",
+      "rarity": "uncommon",
+      "slot": "trinket",
+      "effects": []
+    },
+    {
+      "id": "luck_blade",
+      "name": "Luck Blade",
+      "rarity": "legendary",
+      "slot": "mainhand",
+      "requires": {
+        "attunement": true
+      },
+      "effects": []
+    },
+    {
+      "id": "mace_of_disruption",
+      "name": "Mace of Disruption",
+      "rarity": "rare",
+      "slot": "mainhand",
+      "requires": {
+        "attunement": true
+      },
+      "effects": []
+    },
+    {
+      "id": "mace_of_smiting",
+      "name": "Mace of Smiting",
+      "rarity": "rare",
+      "slot": "mainhand",
+      "effects": []
+    },
+    {
+      "id": "mace_of_terror",
+      "name": "Mace of Terror",
+      "rarity": "rare",
+      "slot": "mainhand",
+      "requires": {
+        "attunement": true
+      },
+      "effects": []
+    },
+    {
+      "id": "mantle_of_spell_resistance",
+      "name": "Mantle of Spell Resistance",
+      "rarity": "rare",
+      "slot": "trinket",
+      "requires": {
+        "attunement": true
+      },
+      "effects": []
+    },
+    {
+      "id": "manual_of_bodily_health",
+      "name": "Manual of Bodily Health",
+      "rarity": "very_rare",
+      "slot": "trinket",
+      "effects": []
+    },
+    {
+      "id": "manual_of_gainful_exercise",
+      "name": "Manual of Gainful Exercise",
+      "rarity": "very_rare",
+      "slot": "trinket",
+      "effects": []
+    },
+    {
+      "id": "manual_of_golems",
+      "name": "Manual of Golems",
+      "rarity": "very_rare",
+      "slot": "trinket",
+      "effects": []
+    },
+    {
+      "id": "manual_of_quickness_of_action",
+      "name": "Manual of Quickness of Action",
+      "rarity": "very_rare",
+      "slot": "trinket",
+      "effects": []
+    },
+    {
+      "id": "marvelous_pigments",
+      "name": "Marvelous Pigments",
+      "rarity": "very_rare",
+      "slot": "trinket",
+      "effects": []
+    },
+    {
+      "id": "medallion_of_thoughts",
+      "name": "Medallion of Thoughts",
+      "rarity": "uncommon",
+      "slot": "trinket",
+      "requires": {
+        "attunement": true
+      },
+      "effects": []
+    },
+    {
+      "id": "mirror_of_life_trapping",
+      "name": "Mirror of Life Trapping",
+      "rarity": "very_rare",
+      "slot": "trinket",
+      "effects": []
+    },
+    {
+      "id": "mithral_armor",
+      "name": "Mithral Armor",
+      "rarity": "uncommon",
+      "slot": "armor",
+      "effects": []
+    },
+    {
+      "id": "mysterious_deck",
+      "name": "Mysterious Deck",
+      "rarity": "legendary",
+      "slot": "trinket",
+      "effects": []
+    },
+    {
+      "id": "necklace_of_adaptation",
+      "name": "Necklace of Adaptation",
+      "rarity": "uncommon",
+      "slot": "trinket",
+      "requires": {
+        "attunement": true
+      },
+      "effects": []
+    },
+    {
+      "id": "necklace_of_fireballs",
+      "name": "Necklace of Fireballs",
+      "rarity": "rare",
+      "slot": "trinket",
+      "effects": []
+    },
+    {
+      "id": "necklace_of_prayer_beads",
+      "name": "Necklace of Prayer Beads",
+      "rarity": "rare",
+      "slot": "trinket",
+      "requires": {
+        "attunement": true
+      },
+      "effects": []
+    },
+    {
+      "id": "nine_lives_stealer",
+      "name": "Nine Lives Stealer",
+      "rarity": "very_rare",
+      "slot": "mainhand",
+      "requires": {
+        "attunement": true
+      },
+      "effects": []
+    },
+    {
+      "id": "oathbow",
+      "name": "Oathbow",
+      "rarity": "very_rare",
+      "slot": "mainhand",
+      "requires": {
+        "attunement": true
+      },
+      "effects": []
+    },
+    {
+      "id": "oil_of_etherealness",
+      "name": "Oil of Etherealness",
+      "rarity": "rare",
+      "slot": "consumable",
+      "effects": []
+    },
+    {
+      "id": "oil_of_sharpness",
+      "name": "Oil of Sharpness",
+      "rarity": "very_rare",
+      "slot": "consumable",
+      "effects": []
+    },
+    {
+      "id": "oil_of_slipperiness",
+      "name": "Oil of Slipperiness",
+      "rarity": "uncommon",
+      "slot": "consumable",
+      "effects": []
+    },
+    {
+      "id": "pearl_of_power",
+      "name": "Pearl of Power",
+      "rarity": "uncommon",
+      "slot": "trinket",
+      "requires": {
+        "attunement": true
+      },
+      "effects": []
+    },
+    {
+      "id": "periapt_of_health",
+      "name": "Periapt of Health",
+      "rarity": "uncommon",
+      "slot": "trinket",
+      "requires": {
+        "attunement": true
+      },
+      "effects": []
+    },
+    {
+      "id": "periapt_of_proof_against_poison",
+      "name": "Periapt of Proof against Poison",
+      "rarity": "rare",
+      "slot": "trinket",
+      "requires": {
+        "attunement": true
+      },
+      "effects": []
+    },
+    {
+      "id": "periapt_of_wound_closure",
+      "name": "Periapt of Wound Closure",
+      "rarity": "uncommon",
+      "slot": "trinket",
+      "requires": {
+        "attunement": true
+      },
+      "effects": []
+    },
+    {
+      "id": "philter_of_love",
+      "name": "Philter of Love",
+      "rarity": "uncommon",
+      "slot": "consumable",
+      "effects": []
+    },
+    {
+      "id": "pipes_of_haunting",
+      "name": "Pipes of Haunting",
+      "rarity": "uncommon",
+      "slot": "trinket",
+      "effects": []
+    },
+    {
+      "id": "pipes_of_the_sewers",
+      "name": "Pipes of the Sewers",
+      "rarity": "uncommon",
+      "slot": "trinket",
+      "requires": {
+        "attunement": true
+      },
+      "effects": []
+    },
+    {
+      "id": "plate_armor_of_etherealness",
+      "name": "Plate Armor of Etherealness",
+      "rarity": "legendary",
+      "slot": "armor",
+      "requires": {
+        "attunement": true
+      },
+      "effects": []
+    },
+    {
+      "id": "portable_hole",
+      "name": "Portable Hole",
+      "rarity": "rare",
+      "slot": "trinket",
+      "effects": []
+    },
+    {
+      "id": "potion_of_animal_friendship",
+      "name": "Potion of Animal Friendship",
+      "rarity": "uncommon",
+      "slot": "consumable",
+      "effects": []
+    },
+    {
+      "id": "potion_of_clairvoyance",
+      "name": "Potion of Clairvoyance",
+      "rarity": "rare",
+      "slot": "consumable",
+      "effects": []
+    },
+    {
+      "id": "potion_of_climbing",
+      "name": "Potion of Climbing",
+      "rarity": "common",
+      "slot": "consumable",
+      "effects": []
+    },
+    {
+      "id": "potion_of_diminution",
+      "name": "Potion of Diminution",
+      "rarity": "rare",
+      "slot": "consumable",
+      "effects": []
+    },
+    {
+      "id": "potion_of_flying",
+      "name": "Potion of Flying",
+      "rarity": "very_rare",
+      "slot": "consumable",
+      "effects": []
+    },
+    {
+      "id": "potion_of_gaseous_form",
+      "name": "Potion of Gaseous Form",
+      "rarity": "rare",
+      "slot": "consumable",
+      "effects": []
+    },
+    {
+      "id": "potion_of_giant_strength",
+      "name": "Potion of Giant Strength",
+      "rarity": "common",
+      "slot": "consumable",
+      "effects": []
+    },
+    {
+      "id": "potion_of_growth",
+      "name": "Potion of Growth",
+      "rarity": "uncommon",
+      "slot": "consumable",
+      "effects": []
+    },
+    {
+      "id": "potions_of_healing",
+      "name": "Potions of Healing",
+      "rarity": "common",
+      "slot": "consumable",
+      "effects": []
+    },
+    {
+      "id": "potion_of_heroism",
+      "name": "Potion of Heroism",
+      "rarity": "rare",
+      "slot": "consumable",
+      "effects": []
+    },
+    {
+      "id": "potion_of_invisibility",
+      "name": "Potion of Invisibility",
+      "rarity": "rare",
+      "slot": "consumable",
+      "effects": []
+    },
+    {
+      "id": "potion_of_invulnerability",
+      "name": "Potion of Invulnerability",
+      "rarity": "rare",
+      "slot": "consumable",
+      "effects": [
+        {
+          "kind": "resistance",
+          "damageType": "all"
+        }
+      ]
+    },
+    {
+      "id": "potion_of_longevity",
+      "name": "Potion of Longevity",
+      "rarity": "very_rare",
+      "slot": "consumable",
+      "effects": []
+    },
+    {
+      "id": "potion_of_mind_reading",
+      "name": "Potion of Mind Reading",
+      "rarity": "rare",
+      "slot": "consumable",
+      "effects": []
+    },
+    {
+      "id": "potion_of_poison",
+      "name": "Potion of Poison",
+      "rarity": "uncommon",
+      "slot": "consumable",
+      "effects": []
+    },
+    {
+      "id": "potion_of_resistance",
+      "name": "Potion of Resistance",
+      "rarity": "uncommon",
+      "slot": "consumable",
+      "effects": []
+    },
+    {
+      "id": "potion_of_speed",
+      "name": "Potion of Speed",
+      "rarity": "very_rare",
+      "slot": "consumable",
+      "effects": []
+    },
+    {
+      "id": "potion_of_vitality",
+      "name": "Potion of Vitality",
+      "rarity": "very_rare",
+      "slot": "consumable",
+      "effects": []
+    },
+    {
+      "id": "potion_of_water_breathing",
+      "name": "Potion of Water Breathing",
+      "rarity": "uncommon",
+      "slot": "consumable",
+      "effects": []
+    },
+    {
+      "id": "quarterstaff_of_the_acrobat",
+      "name": "Quarterstaff of the Acrobat",
+      "rarity": "very_rare",
+      "slot": "mainhand",
+      "requires": {
+        "attunement": true
+      },
+      "effects": []
+    },
+    {
+      "id": "ring_of_animal_influence",
+      "name": "Ring of Animal Influence",
+      "rarity": "rare",
+      "slot": "trinket",
+      "effects": []
+    },
+    {
+      "id": "ring_of_djinni_summoning",
+      "name": "Ring of Djinni Summoning",
+      "rarity": "legendary",
+      "slot": "trinket",
+      "requires": {
+        "attunement": true
+      },
+      "effects": []
+    },
+    {
+      "id": "ring_of_elemental_command",
+      "name": "Ring of Elemental Command",
+      "rarity": "legendary",
+      "slot": "trinket",
+      "requires": {
+        "attunement": true
+      },
+      "effects": [
+        {
+          "kind": "resistance",
+          "damageType": "lightning"
+        }
+      ]
+    },
+    {
+      "id": "ring_of_evasion",
+      "name": "Ring of Evasion",
+      "rarity": "rare",
+      "slot": "trinket",
+      "requires": {
+        "attunement": true
+      },
+      "effects": []
+    },
+    {
+      "id": "ring_of_feather_falling",
+      "name": "Ring of Feather Falling",
+      "rarity": "rare",
+      "slot": "trinket",
+      "requires": {
+        "attunement": true
+      },
+      "effects": []
+    },
+    {
+      "id": "ring_of_free_action",
+      "name": "Ring of Free Action",
+      "rarity": "rare",
+      "slot": "trinket",
+      "requires": {
+        "attunement": true
+      },
+      "effects": []
+    },
+    {
+      "id": "ring_of_invisibility",
+      "name": "Ring of Invisibility",
+      "rarity": "legendary",
+      "slot": "trinket",
+      "requires": {
+        "attunement": true
+      },
+      "effects": []
+    },
+    {
+      "id": "ring_of_jumping",
+      "name": "Ring of Jumping",
+      "rarity": "uncommon",
+      "slot": "trinket",
+      "requires": {
+        "attunement": true
+      },
+      "effects": []
+    },
+    {
+      "id": "ring_of_mind_shielding",
+      "name": "Ring of Mind Shielding",
+      "rarity": "uncommon",
+      "slot": "trinket",
+      "requires": {
+        "attunement": true
+      },
+      "effects": []
+    },
+    {
+      "id": "ring_of_protection",
+      "name": "Ring of Protection",
+      "rarity": "rare",
+      "slot": "trinket",
+      "requires": {
+        "attunement": true
+      },
+      "effects": [
+        {
+          "kind": "ac_bonus",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "id": "ring_of_regeneration",
+      "name": "Ring of Regeneration",
+      "rarity": "very_rare",
+      "slot": "trinket",
+      "requires": {
+        "attunement": true
+      },
+      "effects": []
+    },
+    {
+      "id": "ring_of_resistance",
+      "name": "Ring of Resistance",
+      "rarity": "rare",
+      "slot": "trinket",
+      "effects": [
+        {
+          "kind": "resistance",
+          "damageType": "one"
+        }
+      ]
+    },
+    {
+      "id": "ring_of_shooting_stars",
+      "name": "Ring of Shooting Stars",
+      "rarity": "very_rare",
+      "slot": "trinket",
+      "requires": {
+        "attunement": true
+      },
+      "effects": []
+    },
+    {
+      "id": "ring_of_spell_storing",
+      "name": "Ring of Spell Storing",
+      "rarity": "rare",
+      "slot": "trinket",
+      "requires": {
+        "attunement": true
+      },
+      "effects": []
+    },
+    {
+      "id": "ring_of_spell_turning",
+      "name": "Ring of Spell Turning",
+      "rarity": "legendary",
+      "slot": "trinket",
+      "requires": {
+        "attunement": true
+      },
+      "effects": []
+    },
+    {
+      "id": "ring_of_swimming",
+      "name": "Ring of Swimming",
+      "rarity": "uncommon",
+      "slot": "trinket",
+      "effects": []
+    },
+    {
+      "id": "ring_of_telekinesis",
+      "name": "Ring of Telekinesis",
+      "rarity": "very_rare",
+      "slot": "trinket",
+      "requires": {
+        "attunement": true
+      },
+      "effects": []
+    },
+    {
+      "id": "ring_of_the_ram",
+      "name": "Ring of the Ram",
+      "rarity": "rare",
+      "slot": "trinket",
+      "requires": {
+        "attunement": true
+      },
+      "effects": []
+    },
+    {
+      "id": "ring_of_three_wishes",
+      "name": "Ring of Three Wishes",
+      "rarity": "legendary",
+      "slot": "trinket",
+      "effects": []
+    },
+    {
+      "id": "ring_of_warmth",
+      "name": "Ring of Warmth",
+      "rarity": "uncommon",
+      "slot": "trinket",
+      "requires": {
+        "attunement": true
+      },
+      "effects": []
+    },
+    {
+      "id": "ring_of_water_walking",
+      "name": "Ring of Water Walking",
+      "rarity": "uncommon",
+      "slot": "trinket",
+      "effects": []
+    },
+    {
+      "id": "ring_of_x_ray_vision",
+      "name": "Ring of X-ray Vision",
+      "rarity": "rare",
+      "slot": "trinket",
+      "requires": {
+        "attunement": true
+      },
+      "effects": []
+    },
+    {
+      "id": "robe_of_eyes",
+      "name": "Robe of Eyes",
+      "rarity": "rare",
+      "slot": "trinket",
+      "requires": {
+        "attunement": true
+      },
+      "effects": []
+    },
+    {
+      "id": "robe_of_scintillating_colors",
+      "name": "Robe of Scintillating Colors",
+      "rarity": "very_rare",
+      "slot": "trinket",
+      "requires": {
+        "attunement": true
+      },
+      "effects": []
+    },
+    {
+      "id": "robe_of_stars",
+      "name": "Robe of Stars",
+      "rarity": "very_rare",
+      "slot": "trinket",
+      "requires": {
+        "attunement": true
+      },
+      "effects": []
+    },
+    {
+      "id": "robe_of_the_archmagi",
+      "name": "Robe of the Archmagi",
+      "rarity": "legendary",
+      "slot": "trinket",
+      "requires": {
+        "attunement": true
+      },
+      "effects": []
+    },
+    {
+      "id": "robe_of_useful_items",
+      "name": "Robe of Useful Items",
+      "rarity": "uncommon",
+      "slot": "trinket",
+      "effects": []
+    },
+    {
+      "id": "rod_of_absorption",
+      "name": "Rod of Absorption",
+      "rarity": "very_rare",
+      "slot": "trinket",
+      "requires": {
+        "attunement": true
+      },
+      "effects": []
+    },
+    {
+      "id": "rod_of_alertness",
+      "name": "Rod of Alertness",
+      "rarity": "very_rare",
+      "slot": "trinket",
+      "requires": {
+        "attunement": true
+      },
+      "effects": [
+        {
+          "kind": "ac_bonus",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "id": "rod_of_lordly_might",
+      "name": "Rod of Lordly Might",
+      "rarity": "legendary",
+      "slot": "trinket",
+      "requires": {
+        "attunement": true
+      },
+      "effects": []
+    },
+    {
+      "id": "rod_of_resurrection",
+      "name": "Rod of Resurrection",
+      "rarity": "legendary",
+      "slot": "trinket",
+      "requires": {
+        "attunement": true
+      },
+      "effects": []
+    },
+    {
+      "id": "rod_of_rulership",
+      "name": "Rod of Rulership",
+      "rarity": "rare",
+      "slot": "trinket",
+      "requires": {
+        "attunement": true
+      },
+      "effects": []
+    },
+    {
+      "id": "rod_of_security",
+      "name": "Rod of Security",
+      "rarity": "very_rare",
+      "slot": "trinket",
+      "effects": []
+    },
+    {
+      "id": "rope_of_climbing",
+      "name": "Rope of Climbing",
+      "rarity": "uncommon",
+      "slot": "trinket",
+      "effects": []
+    },
+    {
+      "id": "rope_of_entanglement",
+      "name": "Rope of Entanglement",
+      "rarity": "rare",
+      "slot": "trinket",
+      "effects": []
+    },
+    {
+      "id": "scarab_of_protection",
+      "name": "Scarab of Protection",
+      "rarity": "legendary",
+      "slot": "trinket",
+      "requires": {
+        "attunement": true
+      },
+      "effects": [
+        {
+          "kind": "ac_bonus",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "id": "scimitar_of_speed",
+      "name": "Scimitar of Speed",
+      "rarity": "very_rare",
+      "slot": "mainhand",
+      "requires": {
+        "attunement": true
+      },
+      "effects": []
+    },
+    {
+      "id": "sending_stones",
+      "name": "Sending Stones",
+      "rarity": "uncommon",
+      "slot": "trinket",
+      "effects": []
+    },
+    {
+      "id": "sentinel_shield",
+      "name": "Sentinel Shield",
+      "rarity": "uncommon",
+      "slot": "armor",
+      "effects": []
+    },
+    {
+      "id": "shield_1_2_or_3",
+      "name": "Shield, +1, +2, or +3",
+      "rarity": "very_rare",
+      "slot": "armor",
+      "effects": []
+    },
+    {
+      "id": "shield_of_missile_attraction",
+      "name": "Shield of Missile Attraction",
+      "rarity": "rare",
+      "slot": "armor",
+      "requires": {
+        "attunement": true
+      },
+      "effects": []
+    },
+    {
+      "id": "shield_of_the_cavalier",
+      "name": "Shield of the Cavalier",
+      "rarity": "very_rare",
+      "slot": "armor",
+      "requires": {
+        "attunement": true
+      },
+      "effects": [
+        {
+          "kind": "ac_bonus",
+          "amount": 2
+        }
+      ]
+    },
+    {
+      "id": "slippers_of_spider_climbing",
+      "name": "Slippers of Spider Climbing",
+      "rarity": "uncommon",
+      "slot": "trinket",
+      "requires": {
+        "attunement": true
+      },
+      "effects": []
+    },
+    {
+      "id": "sovereign_glue",
+      "name": "Sovereign Glue",
+      "rarity": "legendary",
+      "slot": "trinket",
+      "effects": []
+    },
+    {
+      "id": "spellguard_shield",
+      "name": "Spellguard Shield",
+      "rarity": "very_rare",
+      "slot": "armor",
+      "requires": {
+        "attunement": true
+      },
+      "effects": []
+    },
+    {
+      "id": "spell_scroll",
+      "name": "Spell Scroll",
+      "rarity": "common",
+      "slot": "consumable",
+      "effects": []
+    },
+    {
+      "id": "sphere_of_annihilation",
+      "name": "Sphere of Annihilation",
+      "rarity": "legendary",
+      "slot": "trinket",
+      "effects": []
+    },
+    {
+      "id": "staff_of_charming",
+      "name": "Staff of Charming",
+      "rarity": "rare",
+      "slot": "trinket",
+      "requires": {
+        "attunement": true
+      },
+      "effects": []
+    },
+    {
+      "id": "staff_of_fire",
+      "name": "Staff of Fire",
+      "rarity": "very_rare",
+      "slot": "trinket",
+      "requires": {
+        "attunement": true
+      },
+      "effects": [
+        {
+          "kind": "resistance",
+          "damageType": "fire"
+        }
+      ]
+    },
+    {
+      "id": "staff_of_frost",
+      "name": "Staff of Frost",
+      "rarity": "very_rare",
+      "slot": "trinket",
+      "requires": {
+        "attunement": true
+      },
+      "effects": [
+        {
+          "kind": "resistance",
+          "damageType": "cold"
+        }
+      ]
+    },
+    {
+      "id": "staff_of_healing",
+      "name": "Staff of Healing",
+      "rarity": "rare",
+      "slot": "trinket",
+      "requires": {
+        "attunement": true
+      },
+      "effects": []
+    },
+    {
+      "id": "staff_of_power",
+      "name": "Staff of Power",
+      "rarity": "very_rare",
+      "slot": "trinket",
+      "requires": {
+        "attunement": true
+      },
+      "effects": [
+        {
+          "kind": "ac_bonus",
+          "amount": 2
+        }
+      ]
+    },
+    {
+      "id": "staff_of_striking",
+      "name": "Staff of Striking",
+      "rarity": "very_rare",
+      "slot": "trinket",
+      "requires": {
+        "attunement": true
+      },
+      "effects": []
+    },
+    {
+      "id": "staff_of_swarming_insects",
+      "name": "Staff of Swarming Insects",
+      "rarity": "rare",
+      "slot": "trinket",
+      "requires": {
+        "attunement": true
+      },
+      "effects": []
+    },
+    {
+      "id": "staff_of_the_magi",
+      "name": "Staff of the Magi",
+      "rarity": "legendary",
+      "slot": "trinket",
+      "requires": {
+        "attunement": true
+      },
+      "effects": []
+    },
+    {
+      "id": "staff_of_the_python",
+      "name": "Staff of the Python",
+      "rarity": "uncommon",
+      "slot": "trinket",
+      "requires": {
+        "attunement": true
+      },
+      "effects": []
+    },
+    {
+      "id": "staff_of_the_woodlands",
+      "name": "Staff of the Woodlands",
+      "rarity": "rare",
+      "slot": "trinket",
+      "requires": {
+        "attunement": true
+      },
+      "effects": []
+    },
+    {
+      "id": "staff_of_thunder_and_lightning",
+      "name": "Staff of Thunder and Lightning",
+      "rarity": "very_rare",
+      "slot": "trinket",
+      "requires": {
+        "attunement": true
+      },
+      "effects": []
+    },
+    {
+      "id": "staff_of_withering",
+      "name": "Staff of Withering",
+      "rarity": "rare",
+      "slot": "trinket",
+      "requires": {
+        "attunement": true
+      },
+      "effects": []
+    },
+    {
+      "id": "stone_of_controlling_earth_elementals",
+      "name": "Stone of Controlling Earth Elementals",
+      "rarity": "rare",
+      "slot": "trinket",
+      "effects": []
+    },
+    {
+      "id": "stone_of_good_luck_luckstone",
+      "name": "Stone of Good Luck (Luckstone)",
+      "rarity": "uncommon",
+      "slot": "trinket",
+      "requires": {
+        "attunement": true
+      },
+      "effects": []
+    },
+    {
+      "id": "sun_blade",
+      "name": "Sun Blade",
+      "rarity": "rare",
+      "slot": "mainhand",
+      "requires": {
+        "attunement": true
+      },
+      "effects": []
+    },
+    {
+      "id": "sword_of_life_stealing",
+      "name": "Sword of Life Stealing",
+      "rarity": "rare",
+      "slot": "mainhand",
+      "requires": {
+        "attunement": true
+      },
+      "effects": []
+    },
+    {
+      "id": "sword_of_sharpness",
+      "name": "Sword of Sharpness",
+      "rarity": "very_rare",
+      "slot": "mainhand",
+      "requires": {
+        "attunement": true
+      },
+      "effects": []
+    },
+    {
+      "id": "sword_of_wounding",
+      "name": "Sword of Wounding",
+      "rarity": "rare",
+      "slot": "mainhand",
+      "requires": {
+        "attunement": true
+      },
+      "effects": []
+    },
+    {
+      "id": "talisman_of_pure_good",
+      "name": "Talisman of Pure Good",
+      "rarity": "legendary",
+      "slot": "trinket",
+      "requires": {
+        "attunement": true
+      },
+      "effects": []
+    },
+    {
+      "id": "talisman_of_the_sphere",
+      "name": "Talisman of the Sphere",
+      "rarity": "legendary",
+      "slot": "trinket",
+      "requires": {
+        "attunement": true
+      },
+      "effects": []
+    },
+    {
+      "id": "talisman_of_ultimate_evil",
+      "name": "Talisman of Ultimate Evil",
+      "rarity": "legendary",
+      "slot": "trinket",
+      "requires": {
+        "attunement": true
+      },
+      "effects": []
+    },
+    {
+      "id": "thunderous_greatclub",
+      "name": "Thunderous Greatclub",
+      "rarity": "very_rare",
+      "slot": "mainhand",
+      "requires": {
+        "attunement": true
+      },
+      "effects": []
+    },
+    {
+      "id": "tome_of_clear_thought",
+      "name": "Tome of Clear Thought",
+      "rarity": "very_rare",
+      "slot": "trinket",
+      "effects": []
+    },
+    {
+      "id": "tome_of_leadership_and_influence",
+      "name": "Tome of Leadership and Influence",
+      "rarity": "very_rare",
+      "slot": "trinket",
+      "effects": []
+    },
+    {
+      "id": "tome_of_understanding",
+      "name": "Tome of Understanding",
+      "rarity": "very_rare",
+      "slot": "trinket",
+      "effects": []
+    },
+    {
+      "id": "trident_of_fish_command",
+      "name": "Trident of Fish Command",
+      "rarity": "uncommon",
+      "slot": "mainhand",
+      "requires": {
+        "attunement": true
+      },
+      "effects": []
+    },
+    {
+      "id": "universal_solvent",
+      "name": "Universal Solvent",
+      "rarity": "legendary",
+      "slot": "trinket",
+      "effects": []
+    },
+    {
+      "id": "vicious_weapon",
+      "name": "Vicious Weapon",
+      "rarity": "rare",
+      "slot": "mainhand",
+      "effects": []
+    },
+    {
+      "id": "vorpal_sword",
+      "name": "Vorpal Sword",
+      "rarity": "legendary",
+      "slot": "mainhand",
+      "requires": {
+        "attunement": true
+      },
+      "effects": [
+        {
+          "kind": "resistance",
+          "damageType": "slashing"
+        }
+      ]
+    },
+    {
+      "id": "wand_of_binding",
+      "name": "Wand of Binding",
+      "rarity": "rare",
+      "slot": "trinket",
+      "requires": {
+        "attunement": true
+      },
+      "effects": []
+    },
+    {
+      "id": "wand_of_enemy_detection",
+      "name": "Wand of Enemy Detection",
+      "rarity": "rare",
+      "slot": "trinket",
+      "requires": {
+        "attunement": true
+      },
+      "effects": []
+    },
+    {
+      "id": "wand_of_fear",
+      "name": "Wand of Fear",
+      "rarity": "rare",
+      "slot": "trinket",
+      "requires": {
+        "attunement": true
+      },
+      "effects": []
+    },
+    {
+      "id": "wand_of_fireballs",
+      "name": "Wand of Fireballs",
+      "rarity": "rare",
+      "slot": "trinket",
+      "requires": {
+        "attunement": true
+      },
+      "effects": []
+    },
+    {
+      "id": "wand_of_lightning_bolts",
+      "name": "Wand of Lightning Bolts",
+      "rarity": "rare",
+      "slot": "trinket",
+      "requires": {
+        "attunement": true
+      },
+      "effects": []
+    },
+    {
+      "id": "wand_of_magic_detection",
+      "name": "Wand of Magic Detection",
+      "rarity": "uncommon",
+      "slot": "trinket",
+      "effects": []
+    },
+    {
+      "id": "wand_of_magic_missiles",
+      "name": "Wand of Magic Missiles",
+      "rarity": "uncommon",
+      "slot": "trinket",
+      "effects": []
+    },
+    {
+      "id": "wand_of_paralysis",
+      "name": "Wand of Paralysis",
+      "rarity": "rare",
+      "slot": "trinket",
+      "requires": {
+        "attunement": true
+      },
+      "effects": []
+    },
+    {
+      "id": "wand_of_polymorph",
+      "name": "Wand of Polymorph",
+      "rarity": "very_rare",
+      "slot": "trinket",
+      "requires": {
+        "attunement": true
+      },
+      "effects": []
+    },
+    {
+      "id": "wand_of_secrets",
+      "name": "Wand of Secrets",
+      "rarity": "uncommon",
+      "slot": "trinket",
+      "effects": []
+    },
+    {
+      "id": "wand_of_the_war_mage_1_2_or_3",
+      "name": "Wand of the War Mage, +1, +2, or +3",
+      "rarity": "very_rare",
+      "slot": "trinket",
+      "requires": {
+        "attunement": true
+      },
+      "effects": []
+    },
+    {
+      "id": "wand_of_web",
+      "name": "Wand of Web",
+      "rarity": "uncommon",
+      "slot": "trinket",
+      "requires": {
+        "attunement": true
+      },
+      "effects": []
+    },
+    {
+      "id": "wand_of_wonder",
+      "name": "Wand of Wonder",
+      "rarity": "rare",
+      "slot": "trinket",
+      "requires": {
+        "attunement": true
+      },
+      "effects": []
+    },
+    {
+      "id": "weapon_1_2_or_3",
+      "name": "Weapon, +1, +2, or +3",
+      "rarity": "very_rare",
+      "slot": "mainhand",
+      "effects": []
+    },
+    {
+      "id": "weapon_of_warning",
+      "name": "Weapon of Warning",
+      "rarity": "uncommon",
+      "slot": "mainhand",
+      "requires": {
+        "attunement": true
+      },
+      "effects": []
+    },
+    {
+      "id": "well_of_many_worlds",
+      "name": "Well of Many Worlds",
+      "rarity": "legendary",
+      "slot": "trinket",
+      "effects": []
+    },
+    {
+      "id": "wind_fan",
+      "name": "Wind Fan",
+      "rarity": "uncommon",
+      "slot": "trinket",
+      "effects": []
+    },
+    {
+      "id": "winged_boots",
+      "name": "Winged Boots",
+      "rarity": "uncommon",
+      "slot": "trinket",
+      "requires": {
+        "attunement": true
+      },
+      "effects": []
+    },
+    {
+      "id": "wings_of_flying",
+      "name": "Wings of Flying",
+      "rarity": "rare",
+      "slot": "trinket",
+      "requires": {
+        "attunement": true
+      },
+      "effects": []
     }
   ]
 }

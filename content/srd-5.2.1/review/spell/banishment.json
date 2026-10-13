@@ -1,0 +1,13 @@
+{
+  "ambiguities": [],
+  "unparsedFields": [],
+  "kind": "spell",
+  "id": "banishment",
+  "status": "auto_ok",
+  "confidence": "high",
+  "usage": "Level-up spell list for the listed classes. Combat only if a wired ability uses this id.",
+  "srd": {
+    "components": "V, S, M (a pentacle)",
+    "line": "Level 4 Abjuration (Cleric, Paladin, Sorcerer, Warlock, Wizard)"
+  }
+}

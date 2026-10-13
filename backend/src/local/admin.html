@@ -43,12 +43,14 @@
           <button type="button" class="ghost" data-tab="rooms">Stanze</button>
           <button type="button" class="ghost" data-tab="saves">Salvataggi</button>
           <button type="button" class="ghost" data-tab="camps">Campagne</button>
+          <button type="button" class="ghost" data-tab="content">Contenuto</button>
           <button type="button" class="ghost" id="logout">Esci</button>
         </nav>
         <div id="users"></div>
         <div id="rooms" hidden></div>
         <div id="saves" hidden></div>
         <div id="camps" hidden></div>
+        <div id="content" hidden></div>
       </section>
     </main>
     <script>
@@ -67,7 +69,7 @@
       let tab = "users";
       function show(name) {
         tab = name;
-        for (const id of ["users", "rooms", "saves", "camps"]) $(id).hidden = id !== name;
+        for (const id of ["users", "rooms", "saves", "camps", "content"]) $(id).hidden = id !== name;
       }
       document.querySelectorAll("[data-tab]").forEach((b) => b.addEventListener("click", () => { show(b.dataset.tab); refresh(); }));
       $("logout").addEventListener("click", async () => { await api("/api/logout", { method: "POST" }); location.reload(); });
@@ -93,6 +95,7 @@
         if (tab === "rooms") await renderRooms();
         if (tab === "saves") await renderSaves();
         if (tab === "camps") await renderCamps();
+        if (tab === "content") await renderContent();
       }
       async function renderUsers() {
         const { users } = await api("/api/admin/users");
@@ -259,6 +262,38 @@
         };
         $("nodePick").addEventListener("change", load);
         await load();
+      }
+      async function renderContent() {
+        const stats = await api("/api/admin/content/stats");
+        const queue = await api("/api/admin/content?reviewStatus=needs_review");
+        const book = stats.playbook.map((step) => `<label><input type="checkbox" data-step="${esc(step.id)}" ${step.done ? "checked" : ""}/> ${esc(step.id)}</label>`).join(" ");
+        const rows = queue.entries.slice(0, 30).map((entry) => `<tr><td>${esc(entry.kind)}</td><td>${esc(entry.name)}</td><td>${esc(entry.confidence)}</td><td><button type="button" data-open="${esc(entry.kind)}:${esc(entry.id)}">Apri</button></td></tr>`).join("");
+        $("content").innerHTML = `<div class="card"><h2>Catalogo</h2><p>${stats.total} voci, ${stats.inPlay} in gioco, ${stats.needsReview} da rivedere.</p><p>${book}</p>
+          <h3>Coda</h3><table><tr><th>Tipo</th><th>Nome</th><th></th><th></th></tr>${rows || "<tr><td colspan=4>Niente in coda.</td></tr>"}</table>
+          <h3>Nuova voce</h3><div class="row"><label><span>Tipo</span><input id="ck" value="feat"/></label><label><span>Id</span><input id="cid"/></label></div>
+          <label><span>JSON</span><textarea id="cbody">{}</textarea></label><button type="button" id="cSave">Salva voce</button>
+          <h3>XP admin</h3><div class="row"><label><span>Eroe</span><input id="xpHero"/></label><label><span>XP</span><input id="xpAmt" value="300"/></label></div><button type="button" id="xpGo">Dai XP</button>
+          <p class="err" id="cErr"></p><div id="cDetail"></div></div>`;
+        $("content").querySelectorAll("[data-step]").forEach((box) => box.addEventListener("change", () => {
+          api(`/api/admin/content/playbook/${box.dataset.step}`, { method: "POST", body: JSON.stringify({ done: box.checked }) }).catch((err) => { $("cErr").textContent = err.message; });
+        }));
+        $("cSave").addEventListener("click", async () => {
+          try { await api(`/api/admin/content/${$("ck").value}/${$("cid").value}`, { method: "PUT", body: $("cbody").value }); $("cErr").textContent = "Salvata."; }
+          catch (err) { $("cErr").textContent = err.message; }
+        });
+        $("xpGo").addEventListener("click", async () => {
+          try { await api(`/api/admin/heroes/${$("xpHero").value}/xp`, { method: "POST", body: JSON.stringify({ amount: Number($("xpAmt").value) }) }); $("cErr").textContent = "XP aggiunti."; }
+          catch (err) { $("cErr").textContent = err.message; }
+        });
+        $("content").querySelectorAll("[data-open]").forEach((button) => button.addEventListener("click", async () => {
+          const [kind, id] = button.dataset.open.split(":");
+          const detail = await api(`/api/admin/content/${kind}/${id}`);
+          const empty = (detail.unparsedFields || []).map((field) => `<li class="err">${esc(field)} — vuoto dal parser</li>`).join("");
+          $("cDetail").innerHTML = `<div class="card"><h3>${esc(detail.name)}</h3><p>${esc(detail.usage)}</p><ul>${empty || "<li>Nessun campo vuoto.</li>"}</ul>
+            <button type="button" id="cEn">Abilita</button> <button type="button" class="ghost" id="cRe">Rifiuta</button></div>`;
+          $("cEn").addEventListener("click", () => api(`/api/admin/content/${kind}/${id}`, { method: "POST", body: JSON.stringify({ enabled: true }) }).then(() => renderContent()).catch((err) => { $("cErr").textContent = err.message; }));
+          $("cRe").addEventListener("click", () => api(`/api/admin/content/${kind}/${id}/resolve`, { method: "POST", body: JSON.stringify({ reject: true, adminNote: "rejected" }) }).then(() => renderContent()));
+        }));
       }
       api("/api/me").then((me) => { if (me.user?.role === "admin") { $("login").hidden = true; $("app").hidden = false; $("who").textContent = me.user.username; refresh(); } }).catch(() => {});
     </script>

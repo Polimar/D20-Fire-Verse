@@ -1,0 +1,13 @@
+{
+  "ambiguities": [],
+  "unparsedFields": [],
+  "kind": "spell",
+  "id": "enlarge_reduce",
+  "status": "auto_ok",
+  "confidence": "high",
+  "usage": "Level-up spell list for the listed classes. Combat only if a wired ability uses this id.",
+  "srd": {
+    "components": "V, S, M (a pinch of powdered iron)",
+    "line": "Level 2 Transmutation (Bard, Druid, Sorcerer, Wizard)"
+  }
+}
