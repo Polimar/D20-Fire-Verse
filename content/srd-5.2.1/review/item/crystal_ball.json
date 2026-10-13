@@ -23,6 +23,7 @@
   "confidence": "low",
   "usage": "Vendor, loot, and stash. Typed effects change AC, attack, and damage.",
   "srd": {
-    "line": "Wondrous Item, Very Rare (Requires Attunement)"
+    "line": "Wondrous Item, Very Rare (Requires Attunement)",
+    "text": "_Wondrous Item, Very Rare (Requires Attunement)_\n\nWhile touching this crystal orb, you can cast _Scrying_ (save DC 17) with it."
   }
 }

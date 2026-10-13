@@ -4,6 +4,7 @@ import http from "node:http";
 import { before, test } from "node:test";
 import { createUser, login, openAuth } from "../src/local/auth.js";
 import { mountAccountRoutes, mountAdminRoutes } from "../src/local/admin-http.js";
+import { mountAdminPortalRoutes } from "../src/local/admin-portal-http.js";
 import { mountV2Routes } from "../src/local/v2-http.js";
 import { setContentEnabled } from "../src/local/content-catalog.js";
 import { createHero, deleteHero, equip, listHeroes, stashView, wallet } from "../src/local/hero.js";
@@ -124,6 +125,7 @@ test("a hero starts with no gold, a locked stash, and a level that waits until t
   const app = express();
   app.use(express.json());
   mountAccountRoutes(app);
+  mountAdminPortalRoutes(app);
   mountAdminRoutes(app);
   mountV2Routes(app);
   const server = http.createServer(app);
@@ -132,11 +134,18 @@ test("a hero starts with no gold, a locked stash, and a level that waits until t
   try {
     const admin = login("admin", "admin");
     assert.ok(admin);
-    const content = await fetch(`http://127.0.0.1:${port}/api/admin/content`, { headers: { cookie: `fv_session=${admin.token}` } });
-    const body = (await content.json()) as { entries: Array<{ id: string; reviewStatus: string; enabled: boolean }> };
-    const broken = body.entries.find((entry) => entry.reviewStatus === "needs_review");
-    assert.ok(broken);
-    assert.equal(broken.enabled, false);
+    const content = await fetch(`http://127.0.0.1:${port}/api/admin/content?status=needs_review&pageSize=10`, { headers: { cookie: `fv_session=${admin.token}` } });
+    const body = (await content.json()) as { rows: Array<{ kind: string; id: string; reviewStatus: string; enabled: boolean }>; total: number };
+    assert.ok(body.total > body.rows.length);
+    assert.ok(body.rows.every((entry) => entry.reviewStatus === "needs_review" && !entry.enabled));
+    const broken = body.rows[0]!;
+    const enable = await fetch(`http://127.0.0.1:${port}/api/admin/content/${broken.kind}/${broken.id}/enabled`, {
+      method: "POST",
+      headers: { cookie: `fv_session=${admin.token}`, "content-type": "application/json" },
+      body: JSON.stringify({ enabled: true }),
+    });
+    assert.equal(enable.status, 400);
+    assert.equal(((await enable.json()) as { error: string }).error, "REVIEW_OPEN");
     const shop = await fetch(`http://127.0.0.1:${port}/api/vendor`, { headers: { cookie: `fv_session=${admin.token}` } });
     const sold = (await shop.json()) as { payToWin: string; slots: unknown[] };
     assert.match(sold.payToWin, /pay-to-win/);

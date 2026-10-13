@@ -23,6 +23,7 @@
   "confidence": "low",
   "usage": "Vendor, loot, and stash. Typed effects change AC, attack, and damage.",
   "srd": {
-    "line": "Wondrous Item, Uncommon (Requires Attunement)"
+    "line": "Wondrous Item, Uncommon (Requires Attunement)",
+    "text": "_Wondrous Item, Uncommon (Requires Attunement)_\n\nWhile wearing this cloak, you can breathe underwater, and you have a Swim Speed of 60 feet."
   }
 }

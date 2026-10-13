@@ -7,6 +7,7 @@
   "confidence": "high",
   "usage": "Vendor, loot, and stash. Typed effects change AC, attack, and damage.",
   "srd": {
-    "line": "Ring, Rare"
+    "line": "Ring, Rare",
+    "text": "_Ring, Rare_\n\nYou have Resistance to one damage type while wearing this ring. The gemstone in the ring indicates the type, which the GM chooses or determines randomly by rolling on the following table.\n\n<table>\n  <thead>\n    <tr>\n      <th>1d10</th>\n      <th>Damage Type</th>\n      <th>Gemstone</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <td>1</td>\n      <td>Acid</td>\n      <td>Pearl</td>\n    </tr>\n    <tr>\n      <td>2</td>\n      <td>Cold</td>\n      <td>Tourmaline</td>\n    </tr>\n    <tr>\n      <td>3</td>\n      <td>Fire</td>\n      <td>Garnet</td>\n    </tr>\n    <tr>\n      <td>4</td>\n      <td>Force</td>\n      <td>Sapphire</td>\n    </tr>\n    <tr>\n      <td>5</td>\n      <td>Lightning</td>\n      <td>Citrine</td>\n    </tr>\n    <tr>\n      <td>6</td>\n      <td>Necrotic</td>\n      <td>Jet</td>\n    </tr>\n    <tr>\n      <td>7</td>\n      <td>Poison</td>\n      <td>Amethyst</td>\n    </tr>\n    <tr>\n      <td>8</td>\n      <td>Psychic</td>\n      <td>Jade</td>\n    </tr>\n    <tr>\n      <td>9</td>\n      <td>Radiant</td>\n      <td>Topaz</td>\n    </tr>\n    <tr>\n      <td>10</td>\n      <td>Thunder</td>\n      <td>Spinel</td>\n    </tr>\n  </tbody>\n</table>"
   }
 }

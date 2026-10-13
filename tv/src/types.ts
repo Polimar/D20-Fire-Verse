@@ -2,6 +2,7 @@
 
 import type { DungeonRoomId } from "./dungeon-map";
 import type { PcSheet } from "./pc-sheet";
+import type { SceneOverride } from "./scenes";
 
 export type DiceOutcome = "hit" | "miss" | "crit" | "fumble" | "success" | "fail";
 
@@ -150,6 +151,7 @@ export type RoomState = {
   nodeId: string;
   nodeType: string;
   alexaScene?: string;
+  scene?: SceneOverride | null;
   narration?: string;
   narrationSeq: number;
   /** Speaking characters by id, for nameplates and subtitles. */

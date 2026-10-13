@@ -28,7 +28,6 @@ import { puzzleBack, puzzleKindForNode, renderInteractivePuzzle } from "./puzzle
 import { chapterCard, mountScenes, setScene } from "./scenefx";
 import { ART, sceneForNode } from "./scenes";
 import { clearSession, loadSession, saveSession, type Session, type SessionMode } from "./session";
-import { adminOpen, closeAdmin, handleAdminKey, openAdmin } from "./admin-ui";
 import { arenaEditorOpen, closeArenaEditor, handleArenaEditorKey, openArenaEditor } from "./arena-editor-ui";
 import { closeSettings, openSettings, settingsOpen } from "./settings-ui";
 import { onSettings, settings } from "./settings";
@@ -371,7 +370,7 @@ function musicFor(s: RoomState): MusicTrack {
     return s.combat.tokens.some((t) => t.boss && !t.dead) ? "boss" : "combat";
   }
   if (s.nodeId === "END_WIN" || s.nodeId === "epilogue") return "victory";
-  switch (sceneForNode(s.nodeId).tone) {
+  switch (sceneForNode(s.nodeId, s.scene).tone) {
     case "warm":
       return "tavern";
     case "ember":
@@ -386,7 +385,7 @@ function musicFor(s: RoomState): MusicTrack {
 }
 
 function roomScene(s: RoomState): RoomScene {
-  const scene = sceneForNode(s.nodeId);
+  const scene = sceneForNode(s.nodeId, s.scene);
   if (s.combat) return s.combat.tokens.some((t) => t.boss) ? "boss" : "combat";
   return normalizeScene(s.alexaScene, scene.tone === "victory" ? "victory" : scene.tone === "warm" ? "tavern" : "explore");
 }
@@ -564,7 +563,6 @@ function closeLeaveModal(playSound = true) {
 function leaveToTitle() {
   closeLeaveModal(false);
   if (settingsOpen()) closeSettings();
-  if (adminOpen()) closeAdmin();
   stopNarration();
   $("defeatModal").hidden = true;
   spectating = false;
@@ -583,6 +581,14 @@ $("btnLeaveStay").addEventListener("click", () => closeLeaveModal());
 
 function openTableSettings() {
   openSettings(undefined, inPlay() ? { onSave: saveGame, onLeave: openLeaveModal } : undefined);
+}
+
+/** The portal is a desktop tool; a TV WebView that blocks new tabs navigates in place. */
+function openAdminPortal() {
+  sfx("uiConfirm");
+  const tab = window.open("/admin", "_blank");
+  if (tab) tab.opener = null;
+  else location.assign("/admin");
 }
 
 // ------------------------------------------------------------------ home
@@ -640,7 +646,7 @@ function renderHome() {
       <button type="button" id="btnModeArena">Arena</button>
       ${account ? `<button type="button" id="btnModeArenaEditor">Arena editor</button>` : ""}
       <button type="button" class="ghost" id="btnSettings">Settings</button>
-      ${account?.role === "admin" ? `<button type="button" class="ghost" id="btnAdmin">Manage the table</button>` : ""}`;
+      ${account?.role === "admin" ? `<button type="button" class="ghost" id="btnAdmin">Admin portal</button>` : ""}`;
     $("btnModeCampaign").addEventListener("click", () => {
       homeView = "campaign";
       renderHome();
@@ -657,7 +663,7 @@ function renderHome() {
     <button type="button" class="ghost" id="btnLoad">Load a save code</button>
     <button type="button" class="ghost" id="btnHomeBack">↩ Modes</button>
     <button type="button" class="ghost" id="btnSettings">Settings</button>
-    ${account?.role === "admin" ? `<button type="button" class="ghost" id="btnAdmin">Manage the table</button>` : ""}`;
+    ${account?.role === "admin" ? `<button type="button" class="ghost" id="btnAdmin">Admin portal</button>` : ""}`;
     $("btnContinue")?.addEventListener("click", () => continueSession("campaign"));
     $("btnNew").addEventListener("click", () => {
       sfx("uiConfirm");
@@ -837,7 +843,7 @@ function renderHome() {
   }
   $("btnSettings")?.addEventListener("click", () => openTableSettings());
   $("btnMenuSettings").addEventListener("click", () => openTableSettings());
-  $("btnAdmin")?.addEventListener("click", () => openAdmin());
+  $("btnAdmin")?.addEventListener("click", openAdminPortal);
   reportView();
 }
 
@@ -1253,7 +1259,7 @@ function renderChoices(s: RoomState) {
 
 async function renderStory(s: RoomState) {
   showPage("story");
-  const scene = sceneForNode(s.nodeId);
+  const scene = sceneForNode(s.nodeId, s.scene);
   setScene(scene.art, scene.tone);
   setMusic(musicFor(s));
   $("storyChapter").textContent = scene.chapter;
@@ -1366,7 +1372,7 @@ async function routeNow() {
     return;
   }
   if (s.combat) {
-    const scene = sceneForNode(s.nodeId);
+    const scene = sceneForNode(s.nodeId, s.scene);
     showPage("combat");
     setScene(scene.art, "ember");
     setMusic(musicFor(s));
@@ -1429,7 +1435,7 @@ function onRoomState(next: RoomState) {
       place:
         mode === "arena"
           ? next.arena?.name || next.arena?.formatLabel || next.roomCode
-          : sceneForNode(next.nodeId).title,
+          : sceneForNode(next.nodeId, next.scene).title,
       autosaveId: next.autosaveId,
     });
   }
@@ -1596,11 +1602,6 @@ function handleBack(): boolean {
     closeArenaEditor();
     return true;
   }
-  if (adminOpen() && handleAdminKey("back")) return true;
-  if (adminOpen()) {
-    closeAdmin();
-    return true;
-  }
   if (!$("leaveModal").hidden) {
     closeLeaveModal();
     return true;
@@ -1666,17 +1667,12 @@ window.addEventListener("keydown", (e) => {
   if (key === "menu") {
     e.preventDefault();
     if (arenaEditorOpen()) closeArenaEditor();
-    else if (adminOpen()) closeAdmin();
     else if (!$("leaveModal").hidden) closeLeaveModal();
     else if (settingsOpen()) closeSettings();
     else openTableSettings();
     return;
   }
   if (arenaEditorOpen() && handleArenaEditorKey(key)) {
-    e.preventDefault();
-    return;
-  }
-  if (adminOpen() && handleAdminKey(key)) {
     e.preventDefault();
     return;
   }

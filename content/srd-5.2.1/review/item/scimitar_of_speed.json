@@ -1,28 +1,13 @@
 {
-  "ambiguities": [
-    {
-      "field": "effects",
-      "summary": "No typed effect matched the item text.",
-      "options": [
-        {
-          "label": "Leave effects empty",
-          "patch": {
-            "effects": []
-          }
-        }
-      ],
-      "parserChoice": 0
-    }
-  ],
-  "unparsedFields": [
-    "effects"
-  ],
+  "ambiguities": [],
+  "unparsedFields": [],
   "kind": "item",
   "id": "scimitar_of_speed",
-  "status": "needs_review",
-  "confidence": "low",
+  "status": "auto_ok",
+  "confidence": "high",
   "usage": "Vendor, loot, and stash. Typed effects change AC, attack, and damage.",
   "srd": {
-    "line": "Weapon (Scimitar), Very Rare (Requires Attunement)"
+    "line": "Weapon (Scimitar), Very Rare (Requires Attunement)",
+    "text": "_Weapon (Scimitar), Very Rare (Requires Attunement)_\n\nYou gain a +2 bonus to attack rolls and damage rolls made with this magic weapon. In addition, you can make one attack with it as a Bonus Action on each of your turns."
   }
 }

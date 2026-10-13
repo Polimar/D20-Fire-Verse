@@ -23,6 +23,7 @@
   "confidence": "low",
   "usage": "Vendor, loot, and stash. Typed effects change AC, attack, and damage.",
   "srd": {
-    "line": "Armor (Half Plate Armor or Plate Armor), Legendary (Requires Attunement)"
+    "line": "Armor (Half Plate Armor or Plate Armor), Legendary (Requires Attunement)",
+    "text": "_Armor (Half Plate Armor or Plate Armor), Legendary (Requires Attunement)_\n\nWhile you're wearing this armor, you can take a Magic action and use a command word to gain the effect of the _Etherealness_ spell. The spell ends immediately if you remove the armor or take a Magic action to repeat the command word. This property of the armor can't be used again until the next dawn."
   }
 }

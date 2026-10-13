@@ -1,28 +1,13 @@
 {
-  "ambiguities": [
-    {
-      "field": "effects",
-      "summary": "No typed effect matched the item text.",
-      "options": [
-        {
-          "label": "Leave effects empty",
-          "patch": {
-            "effects": []
-          }
-        }
-      ],
-      "parserChoice": 0
-    }
-  ],
-  "unparsedFields": [
-    "effects"
-  ],
+  "ambiguities": [],
+  "unparsedFields": [],
   "kind": "item",
   "id": "dwarven_thrower",
-  "status": "needs_review",
-  "confidence": "low",
+  "status": "auto_ok",
+  "confidence": "high",
   "usage": "Vendor, loot, and stash. Typed effects change AC, attack, and damage.",
   "srd": {
-    "line": "Weapon (Warhammer), Very Rare (Requires Attunement by a Dwarf or a Creature Attuned to a Belt of Dwarvenkind)"
+    "line": "Weapon (Warhammer), Very Rare (Requires Attunement by a Dwarf or a Creature Attuned to a Belt of Dwarvenkind)",
+    "text": "_Weapon (Warhammer), Very Rare (Requires Attunement by a Dwarf or a Creature Attuned to a Belt of Dwarvenkind)_\n\nYou gain a +3 bonus to attack rolls and damage rolls made with this magic weapon. It has the Thrown property with a normal range of 20 feet and a long range of 60 feet. When you hit with a ranged attack using this weapon, it deals an extra 1d8 Force damage, or an extra 2d8 Force damage if the target is a Giant. Immediately after hitting or missing, the weapon flies back to your hand."
   }
 }

@@ -23,6 +23,7 @@
   "confidence": "low",
   "usage": "Vendor, loot, and stash. Typed effects change AC, attack, and damage.",
   "srd": {
-    "line": "Wondrous Item, Uncommon"
+    "line": "Wondrous Item, Uncommon",
+    "text": "_Wondrous Item, Uncommon_\n\nThese gloves are imperceptible while worn. While wearing them, you gain a +5 bonus to Dexterity (Sleight of Hand) checks."
   }
 }

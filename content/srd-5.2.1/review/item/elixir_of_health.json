@@ -23,6 +23,7 @@
   "confidence": "low",
   "usage": "Vendor, loot, and stash. Typed effects change AC, attack, and damage.",
   "srd": {
-    "line": "Potion, Rare"
+    "line": "Potion, Rare",
+    "text": "_Potion, Rare_\n\nWhen you drink this potion, you are cured of all magical contagions. In addition, the following conditions end on you: Blinded, Deafened, Paralyzed, and Poisoned.\n\nThe clear, red liquid has tiny bubbles of light in it."
   }
 }

@@ -11,6 +11,7 @@ import path from "node:path";
 import type { AbilityDef, EncounterDef, Manifest, MapDef, MonsterDef, Pregen, StoryNode } from "./campaign.js";
 import type { CellRect } from "./map-grid.js";
 import { CAMPAIGN_DIR, CONTENT_ROOT, DATA_DIR, readJson } from "./paths.js";
+import { HUB_EXITS, ROUTED_EXITS } from "./hub-exits.js";
 import { mergeSrdInto } from "./srd-monsters.js";
 
 export type CampaignRef = { campaignId: string; campaignVersion?: number };
@@ -133,27 +134,198 @@ function readPackDir(dir: string, version: number): Snapshot {
   return snap;
 }
 
-function validate(snap: Snapshot): void {
-  if (!snap.nodes[snap.manifest.startNodeId]) throw new Error("BAD_START_NODE");
+/** Every reason publish would refuse, plus nodes nobody can reach. Validate stops at the first. */
+export function draftProblems(snap: Snapshot): Array<{ nodeId?: string; level: "error" | "warning"; code: string; detail: string }> {
+  const out: Array<{ nodeId?: string; level: "error" | "warning"; code: string; detail: string }> = [];
   const nodes = snap.nodes;
-  const known = (id: string | undefined, label: string) => {
-    if (id && !nodes[id]) throw new Error(`DANGLING_${label}`);
+  if (!nodes[snap.manifest.startNodeId]) {
+    out.push({ level: "error", code: "BAD_START_NODE", detail: `Start node "${snap.manifest.startNodeId}" does not exist.` });
+  }
+  const link = (from: string, to: string | undefined, what: string) => {
+    if (to && !nodes[to] && to !== "END_SAVE" && to !== "END_WIN") {
+      out.push({ nodeId: from, level: "error", code: "DANGLING_NEXT", detail: `${what} points to "${to}", which does not exist.` });
+    }
   };
   for (const node of Object.values(nodes)) {
-    for (const choice of node.choices ?? []) known(choice.next, "NEXT");
-    known(node.onSuccess?.next, "NEXT");
-    known(node.onFailure?.next, "NEXT");
-    known(node.onVictory, "NEXT");
-    if (node.encounterId && !snap.encounters[node.encounterId]) throw new Error("BAD_ENCOUNTER");
+    for (const choice of node.choices ?? []) link(node.id, choice.next, `Choice "${choice.label}"`);
+    link(node.id, node.onSuccess?.next, "Success");
+    link(node.id, node.onFailure?.next, "Failure");
+    link(node.id, node.onVictory, "After victory");
+    if (node.type === "encounter" && !node.encounterId) {
+      out.push({ nodeId: node.id, level: "error", code: "BAD_ENCOUNTER", detail: "Encounter node without an encounter id." });
+    }
+    if (node.encounterId && !snap.encounters[node.encounterId]) {
+      out.push({ nodeId: node.id, level: "error", code: "BAD_ENCOUNTER", detail: `Encounter "${node.encounterId}" does not exist.` });
+    }
+    if (node.type === "skill_check" && (!node.check?.ability || !Number.isFinite(node.check?.dc))) {
+      out.push({ nodeId: node.id, level: "error", code: "BAD_CHECK", detail: "Skill check needs an ability and a DC." });
+    }
+    if (node.type === "puzzle" && !(node.puzzle?.solution?.length && node.puzzle.options?.length)) {
+      out.push({ nodeId: node.id, level: "error", code: "BAD_PUZZLE", detail: "Puzzle needs options and a solution." });
+    }
+    if (!node.narration?.text?.trim() && node.type !== "hub") {
+      out.push({ nodeId: node.id, level: "warning", code: "NO_TEXT", detail: "No narration text." });
+    }
   }
   for (const encounter of Object.values(snap.encounters)) {
-    if (!snap.maps[encounter.mapId]) throw new Error("BAD_MAP");
+    if (!snap.maps[encounter.mapId]) {
+      out.push({ level: "error", code: "BAD_MAP", detail: `Encounter "${encounter.id}" uses map "${encounter.mapId}", which does not exist.` });
+    }
     for (const groups of Object.values(encounter.scaling)) {
       for (const group of groups) {
-        if (!snap.monsters[group.monsterId]) throw new Error("BAD_MONSTER");
+        if (!snap.monsters[group.monsterId]) {
+          out.push({ level: "error", code: "BAD_MONSTER", detail: `Encounter "${encounter.id}" uses monster "${group.monsterId}", which does not exist.` });
+        }
       }
     }
   }
+  const reached = reachableNodes(snap);
+  for (const id of Object.keys(nodes)) {
+    if (!reached.has(id)) out.push({ nodeId: id, level: "warning", code: "UNREACHABLE", detail: "No choice, check, or fight leads here from the start node." });
+  }
+  return out;
+}
+
+/** Authored links plus the ones the server adds for hubs and redirects. */
+export function nodeLinks(node: StoryNode): Array<{ to: string; via: "choice" | "success" | "failure" | "victory" | "hub" | "routed"; label: string }> {
+  const out: Array<{ to: string; via: "choice" | "success" | "failure" | "victory" | "hub" | "routed"; label: string }> = [];
+  for (const c of node.choices ?? []) out.push({ to: c.next, via: "choice", label: c.label });
+  if (node.onSuccess?.next) out.push({ to: node.onSuccess.next, via: "success", label: "Success" });
+  if (node.onFailure?.next) out.push({ to: node.onFailure.next, via: "failure", label: "Failure" });
+  if (node.onVictory) out.push({ to: node.onVictory, via: "victory", label: "After victory" });
+  if (node.type === "hub" || node.hubId === "corridor") {
+    for (const exit of HUB_EXITS) out.push({ to: exit.next, via: "hub", label: `${exit.label} (${exit.when})` });
+  }
+  for (const link of [...out]) {
+    for (const routed of ROUTED_EXITS[link.to] ?? []) out.push({ to: routed, via: "routed", label: `Server routes "${link.to}" here` });
+  }
+  return out;
+}
+
+function reachableNodes(snap: Snapshot): Set<string> {
+  const seen = new Set<string>();
+  const queue = [snap.manifest.startNodeId];
+  while (queue.length) {
+    const id = queue.pop()!;
+    const node = snap.nodes[id];
+    if (seen.has(id) || !node) continue;
+    seen.add(id);
+    for (const link of nodeLinks(node)) queue.push(link.to);
+  }
+  return seen;
+}
+
+export function draftChanged(id: string): boolean {
+  initCatalog();
+  const draft = drafts.get(id);
+  const version = published.get(id);
+  if (!draft) return false;
+  if (version == null) return true;
+  const live = snapshots.get(key(id, version));
+  if (!live) return true;
+  const sig = (s: Snapshot) => JSON.stringify([s.manifest, s.nodes, s.encounters, s.maps, s.monsters]);
+  return sig(draft) !== sig(live) || listDraftArt(id).some((f) => !live.artDir || !fs.existsSync(path.join(live.artDir, f.name)));
+}
+
+export function createDraftNode(id: string, node: StoryNode): Snapshot {
+  const draft = ensureDraft(id);
+  if (!/^[a-z0-9_]{2,60}$/.test(node.id ?? "")) throw new Error("BAD_NODE_ID");
+  if (draft.nodes[node.id]) throw new Error("NODE_EXISTS");
+  draft.nodes[node.id] = node;
+  writePack(draftDir(id), draft);
+  return draft;
+}
+
+/** Refuses while another node still links here, so publish never meets a dangling link it did not see. */
+export function deleteDraftNode(id: string, nodeId: string): Snapshot {
+  const draft = ensureDraft(id);
+  if (!draft.nodes[nodeId]) throw new Error("BAD_NODE");
+  if (draft.manifest.startNodeId === nodeId) throw new Error("NODE_IS_START");
+  const users = Object.values(draft.nodes).filter(
+    (n) => n.id !== nodeId && nodeLinks(n).some((l) => l.to === nodeId && l.via !== "hub" && l.via !== "routed"),
+  );
+  if (users.length) throw new Error(`NODE_IN_USE:${users.map((n) => n.id).join(",")}`);
+  delete draft.nodes[nodeId];
+  writePack(draftDir(id), draft);
+  return draft;
+}
+
+export function updateDraftManifest(id: string, patch: { title?: string; startNodeId?: string }): Snapshot {
+  const draft = ensureDraft(id);
+  if (patch.title !== undefined) {
+    const title = patch.title.trim();
+    if (!title || title.length > 80) throw new Error("BAD_TITLE");
+    draft.manifest.title = title;
+  }
+  if (patch.startNodeId !== undefined) {
+    if (!draft.nodes[patch.startNodeId]) throw new Error("BAD_START_NODE");
+    draft.manifest.startNodeId = patch.startNodeId;
+  }
+  writePack(draftDir(id), draft);
+  return draft;
+}
+
+/** Throws the draft away and starts again from the published version. */
+export function discardDraft(id: string): Snapshot {
+  initCatalog();
+  if (published.get(id) == null) throw new Error("NOTHING_PUBLISHED");
+  drafts.delete(id);
+  fs.rmSync(draftDir(id), { recursive: true, force: true });
+  return ensureDraft(id);
+}
+
+const ART_EXT: Record<string, string> = { "image/png": ".png", "image/jpeg": ".jpg", "image/webp": ".webp" };
+
+function draftArtDir(id: string): string {
+  return path.join(draftDir(id), "art");
+}
+
+export function listDraftArt(id: string): Array<{ name: string; url: string; bytes: number }> {
+  const dir = draftArtDir(id);
+  if (!fs.existsSync(dir)) return [];
+  return fs
+    .readdirSync(dir)
+    .filter((name) => /\.(png|jpe?g|webp)$/i.test(name))
+    .sort()
+    .map((name) => ({ name, url: `/campaigns/${id}/art/${name}`, bytes: fs.statSync(path.join(dir, name)).size }));
+}
+
+export function saveDraftArt(id: string, rawName: string, buf: Buffer, mime: string): { name: string; url: string; bytes: number } {
+  const draft = ensureDraft(id);
+  const ext = ART_EXT[mime.split(";")[0]!.trim().toLowerCase()];
+  if (!ext) throw new Error("BAD_IMAGE");
+  if (buf.length < 64 || buf.length > 8 * 1024 * 1024) throw new Error("BAD_IMAGE");
+  const stem = rawName.replace(/\.[a-z0-9]+$/i, "").toLowerCase().replace(/[^a-z0-9_-]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 48) || "scene";
+  const dir = draftArtDir(id);
+  fs.mkdirSync(dir, { recursive: true });
+  const name = `${stem}${ext}`;
+  fs.writeFileSync(path.join(dir, name), buf);
+  draft.artDir = dir;
+  return { name, url: `/campaigns/${id}/art/${name}`, bytes: buf.length };
+}
+
+export function deleteDraftArt(id: string, name: string): void {
+  ensureDraft(id);
+  if (!/^[a-z0-9_-]+\.(png|jpe?g|webp)$/i.test(name)) throw new Error("BAD_IMAGE");
+  const file = path.join(draftArtDir(id), name);
+  if (!fs.existsSync(file)) throw new Error("BAD_IMAGE");
+  fs.unlinkSync(file);
+}
+
+/** Published art first, then the draft, so the editor previews an upload before publishing. */
+export function artFileFor(id: string, rel: string): string | undefined {
+  initCatalog();
+  const dirs = [artDirFor(id), drafts.has(id) ? draftArtDir(id) : undefined].filter((d): d is string => Boolean(d));
+  for (const dir of dirs) {
+    const file = path.resolve(dir, rel);
+    if (file.startsWith(path.resolve(dir) + path.sep) && fs.existsSync(file) && fs.statSync(file).isFile()) return file;
+  }
+  return undefined;
+}
+
+function validate(snap: Snapshot): void {
+  const first = draftProblems(snap).find((p) => p.level === "error");
+  if (first) throw new Error(first.code);
 }
 
 function remember(snap: Snapshot): void {

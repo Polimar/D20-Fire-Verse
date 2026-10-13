@@ -18,8 +18,12 @@ export function currentSeason(now = new Date()): Season {
   if (open) return map(open);
   const start = now;
   const end = new Date(start.getTime() + SEASON_MS);
-  const id = `season_${start.toISOString().slice(0, 10)}`;
-  accountDb().prepare("INSERT OR IGNORE INTO seasons (id, starts_at, ends_at) VALUES (?, ?, ?)").run(id, start.toISOString(), end.toISOString());
+  let id = `season_${start.toISOString().slice(0, 10)}`;
+  const inserted = accountDb().prepare("INSERT OR IGNORE INTO seasons (id, starts_at, ends_at) VALUES (?, ?, ?)").run(id, start.toISOString(), end.toISOString());
+  if (inserted.changes === 0) {
+    id = `${id}_${start.getTime().toString(36)}`;
+    accountDb().prepare("INSERT INTO seasons (id, starts_at, ends_at) VALUES (?, ?, ?)").run(id, start.toISOString(), end.toISOString());
+  }
   return { id, startsAt: start.toISOString(), endsAt: end.toISOString() };
 }
 
@@ -33,6 +37,19 @@ export function closeSeasonIfDue(now = new Date()): Season {
   const id = `season_${start.toISOString().slice(0, 10)}_${start.getTime().toString(36)}`;
   accountDb().prepare("INSERT INTO seasons (id, starts_at, ends_at) VALUES (?, ?, ?)").run(id, start.toISOString(), end.toISOString());
   return { id, startsAt: start.toISOString(), endsAt: end.toISOString() };
+}
+
+/** Admin override: ends the running season now, resets ELO and pass XP, and opens the next one. */
+export function closeSeasonNow(now = new Date()): { closed: Season; opened: Season } {
+  const closed = currentSeason(now);
+  const iso = now.toISOString();
+  const db = accountDb();
+  db.prepare("UPDATE seasons SET ends_at = ? WHERE id = ?").run(iso, closed.id);
+  softResetElos();
+  db.prepare("UPDATE season_pass SET xp = 0 WHERE season_id = ?").run(closed.id);
+  const opened = { id: `season_${iso.slice(0, 10)}_${now.getTime().toString(36)}`, startsAt: iso, endsAt: new Date(now.getTime() + SEASON_MS).toISOString() };
+  db.prepare("INSERT INTO seasons (id, starts_at, ends_at) VALUES (?, ?, ?)").run(opened.id, opened.startsAt, opened.endsAt);
+  return { closed: { ...closed, endsAt: iso }, opened };
 }
 
 export function grantPassXp(userId: string, amount: number, now = new Date()): number {

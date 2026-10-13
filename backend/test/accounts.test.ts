@@ -8,6 +8,7 @@ import path from "node:path";
 import { test } from "node:test";
 import { actionNeedsAuth, createUser, login, openAuth } from "../src/local/auth.js";
 import { handleCampaignImport, mountAccountRoutes, mountAdminRoutes } from "../src/local/admin-http.js";
+import { mountAdminPortalRoutes } from "../src/local/admin-portal-http.js";
 import {
   importCampaignZip,
   publishCampaign,
@@ -34,6 +35,7 @@ test("admin can sign in, a bad password cannot, and a player cannot manage users
   app.post("/api/admin/campaigns/import", express.raw({ type: () => true, limit: "2mb" }), handleCampaignImport);
   app.use(express.json());
   mountAccountRoutes(app);
+  mountAdminPortalRoutes(app);
   mountAdminRoutes(app);
   const server = http.createServer(app);
   await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", () => resolve()));
@@ -50,8 +52,34 @@ test("admin can sign in, a bad password cannot, and a player cannot manage users
       headers: { cookie: `fv_session=${admin.token}` },
     });
     assert.equal(asAdmin.status, 200);
-    const body = (await asAdmin.json()) as { users: Array<{ username: string }> };
-    assert.ok(body.users.some((u) => u.username === "admin"));
+    const body = (await asAdmin.json()) as { rows: Array<{ username: string }>; total: number };
+    assert.ok(body.rows.some((u) => u.username === "admin"));
+
+    const call = (method: string, url: string, json?: unknown) =>
+      fetch(`${base}${url}`, {
+        method,
+        headers: { cookie: `fv_session=${admin.token}`, "content-type": "application/json" },
+        ...(json === undefined ? {} : { body: JSON.stringify(json) }),
+      });
+    const found = (await (await call("GET", "/api/admin/users?q=ada")).json()) as { rows: Array<{ id: string }>; total: number };
+    assert.equal(found.total, 1);
+    assert.equal(found.rows[0]?.id, player.id);
+
+    const demote = await call("PATCH", `/api/admin/users/${admin.user.id}`, { role: "player" });
+    assert.equal(demote.status, 400);
+    assert.match(((await demote.json()) as { error: string }).error, /SELF_LOCKOUT|LAST_ADMIN/);
+
+    const clear = await call("POST", "/api/admin/saves/clear", { confirm: "DELETE 999" });
+    assert.equal(clear.status, 400);
+    assert.match(((await clear.json()) as { error: string }).error, /^CONFIRM_MISMATCH:\d+$/);
+
+    assert.equal((await call("DELETE", `/api/admin/users/${player.id}`)).status, 200);
+    assert.equal(login("ada", "password"), null);
+    const log = (await (await call("GET", "/api/admin/activity?q=user.delete")).json()) as { rows: Array<{ action: string; target: string; by: string }> };
+    assert.deepEqual(
+      log.rows.map((r) => [r.action, r.target, r.by]),
+      [["user.delete", player.id, "admin"]],
+    );
   } finally {
     await new Promise<void>((resolve) => server.close(() => resolve()));
   }

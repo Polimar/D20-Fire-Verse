@@ -23,6 +23,7 @@
   "confidence": "low",
   "usage": "Vendor, loot, and stash. Typed effects change AC, attack, and damage.",
   "srd": {
-    "line": "Wondrous Item, Uncommon (Requires Attunement)"
+    "line": "Wondrous Item, Uncommon (Requires Attunement)",
+    "text": "_Wondrous Item, Uncommon (Requires Attunement)_\n\nThe medallion has 5 charges. While wearing it, you can expend 1 charge to cast _Detect Thoughts_ (save DC 13) from it. The medallion regains 1d4 expended charges daily at dawn."
   }
 }

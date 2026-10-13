@@ -4,6 +4,7 @@
  */
 
 import { cropStyle, DUNGEON_ROOMS, roomForMapId } from "./dungeon-map";
+import "./map-editor.css";
 import type { RemoteKey } from "./nav";
 import { sfx } from "./sfx";
 

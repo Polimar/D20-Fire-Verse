@@ -23,6 +23,7 @@
   "confidence": "low",
   "usage": "Vendor, loot, and stash. Typed effects change AC, attack, and damage.",
   "srd": {
-    "line": "Wondrous Item, Rare (Requires Attunement)"
+    "line": "Wondrous Item, Rare (Requires Attunement)",
+    "text": "_Wondrous Item, Rare (Requires Attunement)_\n\nThis cube is about an inch across. Each face has a distinct marking on it. You can press one of those faces, expend the number of charges required for it, and thereby cast the spell associated with it (save DC 17), as shown in the Cube of Force Faces table.\n\nThe cube starts with 10 charges, and it regains 1d6 expended charges daily at dawn.\n\n**Cube of Force Faces**\n\n<table>\n  <thead>\n    <tr>\n      <th>Spell</th>\n      <th>Charge Cost</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <td>Mage Armor</td>\n      <td>1</td>\n    </tr>\n    <tr>\n      <td>Shield</td>\n      <td>1</td>\n    </tr>\n    <tr>\n      <td>Tiny Hut</td>\n      <td>3</td>\n    </tr>\n    <tr>\n      <td>Private Sanctum</td>\n      <td>4</td>\n    </tr>\n    <tr>\n      <td>Resilient Sphere</td>\n      <td>4</td>\n    </tr>\n    <tr>\n      <td>Wall of Force</td>\n      <td>5</td>\n    </tr>\n  </tbody>\n</table>"
   }
 }

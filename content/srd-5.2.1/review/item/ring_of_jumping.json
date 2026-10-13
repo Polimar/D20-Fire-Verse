@@ -23,6 +23,7 @@
   "confidence": "low",
   "usage": "Vendor, loot, and stash. Typed effects change AC, attack, and damage.",
   "srd": {
-    "line": "Ring, Uncommon (Requires Attunement)"
+    "line": "Ring, Uncommon (Requires Attunement)",
+    "text": "_Ring, Uncommon (Requires Attunement)_\n\nWhile wearing this ring, you can cast _Jump_ from it, but can target only yourself when you do so."
   }
 }

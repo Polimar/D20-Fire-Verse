@@ -23,6 +23,7 @@
   "confidence": "low",
   "usage": "Vendor, loot, and stash. Typed effects change AC, attack, and damage.",
   "srd": {
-    "line": "Wondrous Item, Uncommon (Requires Attunement by a Spellcaster)"
+    "line": "Wondrous Item, Uncommon (Requires Attunement by a Spellcaster)",
+    "text": "_Wondrous Item, Uncommon (Requires Attunement by a Spellcaster)_\n\nWhile this pearl is on your person, you can take a Magic action to regain one expended spell slot of level 3 or lower. Once you use the pearl, it can't be used again until the next dawn."
   }
 }

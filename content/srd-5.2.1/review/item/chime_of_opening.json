@@ -23,6 +23,7 @@
   "confidence": "low",
   "usage": "Vendor, loot, and stash. Typed effects change AC, attack, and damage.",
   "srd": {
-    "line": "Wondrous Item, Rare"
+    "line": "Wondrous Item, Rare",
+    "text": "_Wondrous Item, Rare_\n\nThis hollow metal tube measures about 1 foot long and weighs 1 pound. As a Magic action, you can strike the chime to cast _Knock_. The spell's customary knocking sound is replaced by the clear, ringing tone of the chime, which is audible out to 300 feet.\n\nThe chime can be used 10 times. After the tenth time, it cracks and becomes useless."
   }
 }

@@ -349,6 +349,15 @@ export function clearArenaMapArt(id: string): ArenaMapDef {
   return writeArenaMap(map);
 }
 
+/** Custom maps disappear; built-in ones drop their painted override and return to the generated layout. */
+export function deleteArenaMapFile(id: string): "deleted" | "reset" {
+  const builtin = isBuiltinArenaId(id);
+  if (!builtin && !readArenaFile(id)) throw new Error("BAD_MAP");
+  unlinkCustomArt(id);
+  if (fs.existsSync(mapFile(id))) fs.unlinkSync(mapFile(id));
+  return builtin ? "reset" : "deleted";
+}
+
 export function publicCustomMap(map: ArenaMapDef): {
   id: string;
   name: string;

@@ -308,7 +308,10 @@ const BY_NODE: Record<string, SceneArt> = {
   },
 };
 
-export function sceneForNode(nodeId: string | undefined | null): SceneArt {
+export type SceneOverride = Partial<Pick<SceneArt, "title" | "chapter" | "art" | "tone">>;
+
+/** Built-in art per node, with the campaign editor's override on top when the node has one. */
+export function sceneForNode(nodeId: string | undefined | null, override?: SceneOverride | null): SceneArt {
   if (!nodeId) {
     return {
       id: "unknown",
@@ -318,15 +321,21 @@ export function sceneForNode(nodeId: string | undefined | null): SceneArt {
       tone: "warm",
     };
   }
-  return (
-    BY_NODE[nodeId] ?? {
-      id: nodeId,
-      title: nodeId.replace(/_/g, " "),
-      chapter: "Campaign",
-      art: ART.cellar,
-      tone: "cool",
-    }
-  );
+  const base = BY_NODE[nodeId] ?? {
+    id: nodeId,
+    title: nodeId.replace(/_/g, " "),
+    chapter: "Campaign",
+    art: ART.cellar,
+    tone: "cool",
+  };
+  if (!override) return base;
+  return {
+    id: base.id,
+    title: override.title?.trim() || base.title,
+    chapter: override.chapter?.trim() || base.chapter,
+    art: override.art?.startsWith("/") ? override.art : base.art,
+    tone: override.tone ?? base.tone,
+  };
 }
 
 export { ART };

@@ -7,6 +7,7 @@
   "confidence": "high",
   "usage": "Vendor, loot, and stash. Typed effects change AC, attack, and damage.",
   "srd": {
-    "line": "Staff, Very Rare (Requires Attunement by a Druid, Sorcerer, Warlock, or Wizard)"
+    "line": "Staff, Very Rare (Requires Attunement by a Druid, Sorcerer, Warlock, or Wizard)",
+    "text": "_Staff, Very Rare (Requires Attunement by a Druid, Sorcerer, Warlock, or Wizard)_\n\nYou have Resistance to Fire damage while you hold this staff.\n\n_Spells._ The staff has 10 charges. While holding the staff, you can cast one of the spells on the following table from it, using your spell save DC. The table indicates how many charges you must expend to cast the spell.\n\n<table>\n  <thead>\n    <tr>\n      <th>Spell</th>\n      <th>Charge Cost</th>\n      <th>Spell</th>\n      <th>Charge Cost</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <td>*Burning Hands*</td>\n      <td>1</td>\n      <td>*Wall of Fire*</td>\n      <td>4</td>\n    </tr>\n    <tr>\n      <td>*Fireball*</td>\n      <td>3</td>\n      <td></td>\n      <td></td>\n    </tr>\n  </tbody>\n</table>\n\n_Regaining Charges._ The staff regains 1d6 + 4 expended charges daily at dawn. If you expend the last charge, roll 1d20. On a 1, the staff crumbles into cinders and is destroyed."
   }
 }

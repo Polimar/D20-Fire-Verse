@@ -70,6 +70,15 @@ export type StoryNode = {
   savePrompt?: boolean;
   /** Who is speaking this beat — portrait on the TV. */
   speaker?: { id: string; name: string };
+  /** Overrides the TV's built-in scene art and titles for this node. */
+  scene?: SceneOverride;
+};
+
+export type SceneOverride = {
+  title?: string;
+  chapter?: string;
+  art?: string;
+  tone?: "warm" | "cool" | "ember" | "victory";
 };
 
 export type Pregen = {

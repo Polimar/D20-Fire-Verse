@@ -23,6 +23,7 @@
   "confidence": "low",
   "usage": "Vendor, loot, and stash. Typed effects change AC, attack, and damage.",
   "srd": {
-    "line": "Wondrous Item, Legendary (Requires Attunement by a Sorcerer, Warlock, or Wizard)"
+    "line": "Wondrous Item, Legendary (Requires Attunement by a Sorcerer, Warlock, or Wizard)",
+    "text": "_Wondrous Item, Legendary (Requires Attunement by a Sorcerer, Warlock, or Wizard)_\n\nThis elegant garment is made from exquisite cloth and adorned with runes.\n\nYou gain these benefits while wearing the robe.\n\n_Armor._ If you aren't wearing armor, your base Armor Class is 15 plus your Dexterity modifier.\n\n_Magic Resistance._ You have Advantage on saving throws against spells and other magical effects.\n\n_War Mage._ Your spell save DC and spell attack bonus each increase by 2."
   }
 }

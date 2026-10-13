@@ -23,6 +23,7 @@
   "confidence": "low",
   "usage": "Vendor, loot, and stash. Typed effects change AC, attack, and damage.",
   "srd": {
-    "line": "Wondrous Item, Uncommon"
+    "line": "Wondrous Item, Uncommon",
+    "text": "_Wondrous Item, Uncommon_\n\nWhile wearing these dark lenses, you have Darkvision out to 60 feet. If you already have Darkvision, wearing the goggles increases its range by 60 feet."
   }
 }

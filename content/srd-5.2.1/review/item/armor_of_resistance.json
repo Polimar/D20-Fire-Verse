@@ -23,6 +23,7 @@
   "confidence": "low",
   "usage": "Vendor, loot, and stash. Typed effects change AC, attack, and damage.",
   "srd": {
-    "line": "Armor (Any Light, Medium, or Heavy), Rare (Requires Attunement)"
+    "line": "Armor (Any Light, Medium, or Heavy), Rare (Requires Attunement)",
+    "text": "_Armor (Any Light, Medium, or Heavy), Rare (Requires Attunement)_\n\nYou have Resistance to one type of damage while you wear this armor. The GM chooses the type or determines it randomly by rolling on the following table.\n\n<table>\n  <thead>\n    <tr>\n      <th>1d10</th>\n      <th>Damage Type</th>\n      <th>1d10</th>\n      <th>Damage Type</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <td>1</td>\n      <td>Acid</td>\n      <td>6</td>\n      <td>Necrotic</td>\n    </tr>\n    <tr>\n      <td>2</td>\n      <td>Cold</td>\n      <td>7</td>\n      <td>Poison</td>\n    </tr>\n    <tr>\n      <td>3</td>\n      <td>Fire</td>\n      <td>8</td>\n      <td>Psychic</td>\n    </tr>\n    <tr>\n      <td>4</td>\n      <td>Force</td>\n      <td>9</td>\n      <td>Radiant</td>\n    </tr>\n    <tr>\n      <td>5</td>\n      <td>Lightning</td>\n      <td>10</td>\n      <td>Thunder</td>\n    </tr>\n  </tbody>\n</table>"
   }
 }

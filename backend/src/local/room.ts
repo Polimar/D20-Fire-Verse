@@ -758,6 +758,7 @@ function publicStateBody(room: Room, viewerPlayerId?: string, viewerUserId?: str
     nodeId: room.nodeId,
     nodeType: room.mode === "arena" ? "arena" : (node?.type ?? "end"),
     alexaScene: publishedScene(room, node),
+    scene: node?.scene ?? null,
     narration: room.lastNarration,
     narrationSeq: seq,
     cast: publicCast(),
@@ -1940,7 +1941,9 @@ export function listRooms(): Array<{
   campaignVersion?: number;
   nodeId: string;
   ownerUserId?: string;
-  players: Array<{ name: string; userId?: string }>;
+  mode: "campaign" | "arena";
+  inCombat: boolean;
+  players: Array<{ name: string; userId?: string; player: string }>;
   updatedAt: string;
 }> {
   return [...rooms.values()].map((room) => ({
@@ -1949,7 +1952,9 @@ export function listRooms(): Array<{
     campaignVersion: room.campaignVersion,
     nodeId: room.nodeId,
     ownerUserId: room.ownerUserId,
-    players: room.players.map((p) => ({ name: p.characterName, userId: p.userId })),
+    mode: room.mode === "arena" ? "arena" : "campaign",
+    inCombat: Boolean(room.combat),
+    players: room.players.map((p) => ({ name: p.characterName, userId: p.userId, player: p.displayName })),
     updatedAt: room.updatedAt,
   }));
 }
@@ -1971,34 +1976,73 @@ export function closeRoom(roomCode: string): void {
 
 export type SaveSummary = {
   saveId: string;
+  kind: "auto" | "manual";
   ownerUserId?: string;
   campaignId: string;
   nodeId: string;
   updatedAt?: string;
   players: string[];
+  playerUserIds: string[];
+  archived: boolean;
+  bytes: number;
+  broken?: boolean;
 };
 
+function savesDir(): string {
+  return path.join(DATA_DIR, "saves");
+}
+
 export function listSaves(): SaveSummary[] {
-  const dir = path.join(DATA_DIR, "saves");
+  const dir = savesDir();
   if (!fs.existsSync(dir)) return [];
   const out: SaveSummary[] = [];
   for (const name of fs.readdirSync(dir)) {
     if (!name.endsWith(".json")) continue;
+    const saveId = name.replace(/\.json$/, "");
+    const file = path.join(dir, name);
+    const stat = fs.statSync(file);
+    const kind = saveId.startsWith("auto-") ? "auto" : "manual";
     try {
-      const room = JSON.parse(fs.readFileSync(path.join(dir, name), "utf8")) as Room;
+      const room = JSON.parse(fs.readFileSync(file, "utf8")) as Room;
       out.push({
-        saveId: name.replace(/\.json$/, ""),
+        saveId,
+        kind,
         ownerUserId: room.ownerUserId,
         campaignId: room.campaignId,
         nodeId: room.nodeId,
-        updatedAt: room.updatedAt,
+        updatedAt: room.updatedAt ?? stat.mtime.toISOString(),
         players: room.players.map((p) => p.characterName),
+        playerUserIds: room.players.map((p) => p.userId).filter((id): id is string => Boolean(id)),
+        archived: Boolean(room.archived),
+        bytes: stat.size,
       });
     } catch {
-      /* skip a torn file */
+      out.push({
+        saveId,
+        kind,
+        campaignId: "",
+        nodeId: "",
+        updatedAt: stat.mtime.toISOString(),
+        players: [],
+        playerUserIds: [],
+        archived: false,
+        bytes: stat.size,
+        broken: true,
+      });
     }
   }
   return out.sort((a, b) => (b.updatedAt ?? "").localeCompare(a.updatedAt ?? ""));
+}
+
+/** Removes the file. An open table that came from this save keeps playing. */
+export function deleteSave(saveId: string): void {
+  if (!/^[\w-]+$/.test(saveId)) throw new Error("SAVE_NOT_FOUND");
+  const file = path.join(savesDir(), `${saveId}.json`);
+  if (!fs.existsSync(file)) throw new Error("SAVE_NOT_FOUND");
+  fs.unlinkSync(file);
+  for (const room of rooms.values()) {
+    if (room.autosaveId === saveId) room.autosaveId = undefined;
+  }
 }
 
 export function playerDisconnect(roomCode: string, playerId: string): Room | undefined {

@@ -23,6 +23,7 @@
   "confidence": "low",
   "usage": "Vendor, loot, and stash. Typed effects change AC, attack, and damage.",
   "srd": {
-    "line": "Wondrous Item, Uncommon (Requires Attunement)"
+    "line": "Wondrous Item, Uncommon (Requires Attunement)",
+    "text": "_Wondrous Item, Uncommon (Requires Attunement)_\n\nThese crystal lenses fit over the eyes. They have 3 charges. While wearing them, you can expend 1 or more charges to cast _Charm Person_ (save DC 13). For 1 charge, you cast the level 1 version of the spell. You increase the spell's level by one for each additional charge you expend. The lenses regain all expended charges daily at dawn."
   }
 }

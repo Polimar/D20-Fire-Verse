@@ -7,6 +7,7 @@
   "confidence": "high",
   "usage": "Vendor, loot, and stash. Typed effects change AC, attack, and damage.",
   "srd": {
-    "line": "Ring, Rare (Requires Attunement)"
+    "line": "Ring, Rare (Requires Attunement)",
+    "text": "_Ring, Rare (Requires Attunement)_\n\nYou gain a +1 bonus to Armor Class and saving throws while wearing this ring."
   }
 }

@@ -23,6 +23,7 @@
   "confidence": "low",
   "usage": "Vendor, loot, and stash. Typed effects change AC, attack, and damage.",
   "srd": {
-    "line": "Wondrous Item, Rare (Requires Attunement)"
+    "line": "Wondrous Item, Rare (Requires Attunement)",
+    "text": "_Wondrous Item, Rare (Requires Attunement)_\n\nWhile you wear this cloak, it magically projects an illusion that makes you appear to be standing in a place near your actual location, causing any creature to have Disadvantage on attack rolls against you. If you take damage, the property ceases to function until the start of your next turn. This property is suppressed while your Speed is 0."
   }
 }

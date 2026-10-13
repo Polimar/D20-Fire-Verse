@@ -27,10 +27,10 @@ import {
   unequip,
   wallet,
 } from "./hero.js";
-import { contentDetail, listCatalog, playbook, resolveContent, saveCustomEntry, savePending, setContentEnabled, setPlaybook } from "./content-catalog.js";
+import { contentDetail, listCatalog, playbook, savePending, setPlaybook } from "./content-catalog.js";
 import { buyVendorSlot, declarePayToWin, vendorStock } from "./vendor.js";
 import { enqueue, leaderboard, takeMatch, type ArenaMode } from "./arena-queue.js";
-import { buyPremium, closeSeasonIfDue, currentSeason, skipPassTier } from "./seasons.js";
+import { buyPremium, closeSeasonNow, currentSeason, skipPassTier } from "./seasons.js";
 import { createCampaignHero, listCampaignHeroes } from "./campaign-hero.js";
 import { addGold } from "./stash-mut.js";
 import { recordEvent } from "./events.js";
@@ -39,6 +39,16 @@ function user(req: Request): SessionUser {
   const found = requestUser(req);
   if (!found) throw new Error("AUTH_REQUIRED");
   return found;
+}
+
+function admin(req: Request): SessionUser {
+  const found = user(req);
+  if (found.role !== "admin") throw new Error("FORBIDDEN");
+  return found;
+}
+
+function audit(actor: SessionUser, action: string, target: string, detail: Record<string, unknown> = {}): void {
+  recordEvent(actor.id, null, "admin", { action, target, by: actor.username, ...detail });
 }
 
 function fail(res: Response, err: unknown): void {
@@ -119,8 +129,11 @@ export function mountV2Routes(app: Express): void {
 
   app.post("/api/admin/heroes/:id/xp", (req, res) => {
     try {
-      if (user(req).role !== "admin") throw new Error("FORBIDDEN");
-      res.json({ hero: addXp(req.params.id, Number(req.body?.amount ?? 0), "admin") });
+      const actor = admin(req);
+      const amount = Number(req.body?.amount ?? 0);
+      const hero = addXp(req.params.id, amount, "admin");
+      audit(actor, "hero.xp", req.params.id, { amount });
+      res.json({ hero });
     } catch (err) {
       fail(res, err);
     }
@@ -281,22 +294,10 @@ export function mountV2Routes(app: Express): void {
 
   app.post("/api/admin/season/close", (req, res) => {
     try {
-      if (user(req).role !== "admin") throw new Error("FORBIDDEN");
-      res.json({ season: closeSeasonIfDue(new Date(Date.now() + 61 * 24 * 60 * 60 * 1000)) });
-    } catch (err) {
-      fail(res, err);
-    }
-  });
-
-  app.get("/api/admin/content", (req, res) => {
-    try {
-      if (user(req).role !== "admin") throw new Error("FORBIDDEN");
-      const status = String(req.query.reviewStatus ?? "");
-      const kind = String(req.query.kind ?? "");
-      let entries = listCatalog();
-      if (status) entries = entries.filter((entry) => entry.reviewStatus === status);
-      if (kind) entries = entries.filter((entry) => entry.kind === kind);
-      res.json({ entries });
+      const actor = admin(req);
+      const out = closeSeasonNow();
+      audit(actor, "season.close", out.closed.id, { opened: out.opened.id });
+      res.json({ season: out.opened, closed: out.closed });
     } catch (err) {
       fail(res, err);
     }
@@ -317,16 +318,6 @@ export function mountV2Routes(app: Express): void {
     }
   });
 
-  app.post("/api/admin/content/playbook/:id", (req, res) => {
-    try {
-      if (user(req).role !== "admin") throw new Error("FORBIDDEN");
-      setPlaybook(req.params.id, Boolean(req.body?.done));
-      res.json({ playbook: playbook() });
-    } catch (err) {
-      fail(res, err);
-    }
-  });
-
   app.get("/api/admin/content/:kind/:id", (req, res) => {
     try {
       if (user(req).role !== "admin") throw new Error("FORBIDDEN");
@@ -336,27 +327,12 @@ export function mountV2Routes(app: Express): void {
     }
   });
 
-  app.post("/api/admin/content/:kind/:id/resolve", (req, res) => {
+  app.post("/api/admin/content/playbook/:id", (req, res) => {
     try {
-      if (user(req).role !== "admin") throw new Error("FORBIDDEN");
-      res.json({
-        entry: resolveContent(req.params.kind, req.params.id, {
-          optionIndex: req.body?.optionIndex == null ? undefined : Number(req.body.optionIndex),
-          patch: req.body?.patch,
-          adminNote: req.body?.adminNote ? String(req.body.adminNote) : undefined,
-          reject: Boolean(req.body?.reject),
-        }),
-      });
-    } catch (err) {
-      fail(res, err);
-    }
-  });
-
-  app.put("/api/admin/content/:kind/:id", (req, res) => {
-    try {
-      if (user(req).role !== "admin") throw new Error("FORBIDDEN");
-      saveCustomEntry(req.params.kind, req.params.id, req.body ?? {});
-      res.json({ ok: true });
+      const actor = admin(req);
+      setPlaybook(req.params.id, Boolean(req.body?.done));
+      audit(actor, "content.checklist", req.params.id, { done: Boolean(req.body?.done) });
+      res.json({ playbook: playbook() });
     } catch (err) {
       fail(res, err);
     }
@@ -367,15 +343,6 @@ export function mountV2Routes(app: Express): void {
       if (user(req).role !== "admin") throw new Error("FORBIDDEN");
       savePending(req.params.id, req.body ?? {});
       res.json({ ok: true });
-    } catch (err) {
-      fail(res, err);
-    }
-  });
-
-  app.post("/api/admin/content/:kind/:id", (req, res) => {
-    try {
-      if (user(req).role !== "admin") throw new Error("FORBIDDEN");
-      res.json({ entry: setContentEnabled(req.params.kind, req.params.id, Boolean(req.body?.enabled)) });
     } catch (err) {
       fail(res, err);
     }
@@ -457,8 +424,10 @@ export function mountV2Routes(app: Express): void {
 
   app.post("/api/admin/archive-v1", (req, res) => {
     try {
-      if (user(req).role !== "admin") throw new Error("FORBIDDEN");
-      res.json(archiveV1Once());
+      const actor = admin(req);
+      const out = archiveV1Once();
+      audit(actor, "archive.v1", "legacy", out);
+      res.json(out);
     } catch (err) {
       fail(res, err);
     }

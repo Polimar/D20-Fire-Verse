@@ -23,6 +23,7 @@
   "confidence": "low",
   "usage": "Vendor, loot, and stash. Typed effects change AC, attack, and damage.",
   "srd": {
-    "line": "Wondrous Item, Common"
+    "line": "Wondrous Item, Common",
+    "text": "_Wondrous Item, Common_\n\nThis flavorless, gelatinous bead dissolves on your tongue and provides as much nourishment as 1 day of Rations."
   }
 }

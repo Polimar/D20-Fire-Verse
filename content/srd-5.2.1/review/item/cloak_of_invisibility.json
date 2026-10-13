@@ -23,6 +23,7 @@
   "confidence": "low",
   "usage": "Vendor, loot, and stash. Typed effects change AC, attack, and damage.",
   "srd": {
-    "line": "Wondrous Item, Legendary (Requires Attunement)"
+    "line": "Wondrous Item, Legendary (Requires Attunement)",
+    "text": "_Wondrous Item, Legendary (Requires Attunement)_\n\nThis cloak has 3 charges and regains 1d3 expended charges daily at dawn. While wearing the cloak, you can take a Magic action to pull its hood over your\nhead and expend 1 charge to give yourself the Invisible condition for 1 hour. The effect ends early if you pull the hood down (no action required) or cease wearing the cloak."
   }
 }

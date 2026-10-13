@@ -1,8 +1,5 @@
 import type { Express, Request, Response } from "express";
 import { randomBytes } from "node:crypto";
-import fs from "node:fs";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
 import {
   acceptFriend,
   arenaLeaderboard,
@@ -10,9 +7,7 @@ import {
   clearSessionCookie,
   authenticate,
   confirmRegistration,
-  createUser,
   listFriends,
-  listUsers,
   logout,
   registerPlayer,
   resendConfirmation,
@@ -21,9 +16,7 @@ import {
   requestFriend,
   sessionCookie,
   signInWithAmazon,
-  updateUser,
   userFromToken,
-  type Role,
   type SessionUser,
 } from "./auth.js";
 import { archiveV1Once } from "./hero.js";
@@ -39,25 +32,20 @@ import {
   writeAmazon,
 } from "./amazon.js";
 import {
-  artDirFor,
-  draftSnapshot,
   getBuiltinMap,
   importCampaignZip,
   listBuiltinMaps,
-  listCampaigns,
   listPublished,
   publishCampaign,
   saveBuiltinCampaignMap,
   unpublishCampaign,
-  updateDraftEncounter,
-  updateDraftNode,
 } from "./catalog.js";
-import type { EncounterDef, StoryNode } from "./campaign.js";
 import {
   ARENA_THEMES,
   assertCanEditArenaMap,
   clearArenaMapArt,
   createArenaMapFile,
+  deleteArenaMapFile,
   ensureArenaMapFile,
   getArenaMap,
   listAdminArenaMaps,
@@ -70,9 +58,8 @@ import {
 import { isArenaSize, isArenaTheme } from "./arena.js";
 import { compactRects, parseCellGrid, parseCellPoints } from "./map-grid.js";
 import { brevoStatus, readBrevo, sendMail, writeBrevo } from "./mail.js";
-import { closeRoom, getRoom, listRooms, listSaves } from "./room.js";
-
-const page = fs.readFileSync(path.join(path.dirname(fileURLToPath(import.meta.url)), "admin.html"), "utf8");
+import { recordEvent } from "./events.js";
+import { closeRoom, getRoom } from "./room.js";
 
 function secure(req: Request): boolean {
   return req.secure || req.headers["x-forwarded-proto"] === "https";
@@ -123,6 +110,11 @@ function fail(res: Response, err: unknown): void {
   res.status(status).json({ error: code });
 }
 
+/** Same trail as the portal routes: the Activity page lists every admin write. */
+function audit(actor: SessionUser, action: string, target: string, detail: Record<string, unknown> = {}): void {
+  recordEvent(actor.id, null, "admin", { action, target, by: actor.username, ...detail });
+}
+
 function parseCampaignSpawn(
   raw: unknown,
   width: number,
@@ -146,7 +138,7 @@ function needUser(req: Request): SessionUser {
   return user;
 }
 
-function arenaListRow(map: { id: string; name: string; width: number; height: number; size?: string; createdBy?: { userId: string; username: string } }) {
+function arenaListRow(map: { id: string; name: string; width: number; height: number; size?: string; theme?: string; createdBy?: { userId: string; username: string } }) {
   return {
     source: "arena" as const,
     id: map.id,
@@ -154,6 +146,7 @@ function arenaListRow(map: { id: string; name: string; width: number; height: nu
     width: map.width,
     height: map.height,
     size: map.size,
+    theme: map.theme,
     createdBy: map.createdBy ? { username: map.createdBy.username, userId: map.createdBy.userId } : null,
   };
 }
@@ -221,7 +214,9 @@ export function handleArenaArt(req: Request, res: Response): void {
     }
     const buf = Buffer.isBuffer(req.body) ? req.body : Buffer.from(req.body ?? []);
     const mime = String(req.headers["content-type"] ?? "");
-    res.json(arenaPaintJson(saveArenaMapArt(id, buf, mime)));
+    const out = arenaPaintJson(saveArenaMapArt(id, buf, mime));
+    if (adminPath) audit(user, "map.art.upload", `arena/${id}`, { bytes: buf.length });
+    res.json(out);
   } catch (err) {
     fail(res, err);
   }
@@ -510,28 +505,15 @@ export function mountAccountRoutes(app: Express): void {
     res.json({ campaigns: listPublished() });
   });
 
-  app.use("/campaigns/:id/art", (req, res, next) => {
-    const dir = artDirFor(String(req.params.id));
-    if (!dir) {
-      next();
-      return;
-    }
-    const rel = req.path.replace(/^\/+/, "");
-    const file = path.resolve(dir, rel);
-    if (!file.startsWith(path.resolve(dir)) || !fs.existsSync(file) || !fs.statSync(file).isFile()) {
-      res.status(404).end();
-      return;
-    }
-    res.sendFile(file);
-  });
 }
 
 export function handleCampaignImport(req: Request, res: Response): void {
   try {
-    assertAdmin(requestUser(req));
+    const actor = assertAdmin(requestUser(req));
     const buf = req.body;
     if (!Buffer.isBuffer(buf) || buf.length < 22) throw new Error("BAD_ZIP");
     const draft = importCampaignZip(buf);
+    audit(actor, "campaign.import", draft.id, { bytes: buf.length });
     res.json({ id: draft.id, title: draft.manifest.title });
   } catch (err) {
     fail(res, err);
@@ -539,10 +521,6 @@ export function handleCampaignImport(req: Request, res: Response): void {
 }
 
 export function mountAdminRoutes(app: Express): void {
-  app.get("/admin", (_req, res) => {
-    res.type("html").send(page);
-  });
-
   app.get("/api/admin/brevo", (req, res) => {
     try {
       assertAdmin(requestUser(req));
@@ -554,12 +532,13 @@ export function mountAdminRoutes(app: Express): void {
 
   app.post("/api/admin/brevo", (req, res) => {
     try {
-      assertAdmin(requestUser(req));
+      const actor = assertAdmin(requestUser(req));
       writeBrevo({
         apiKey: String(req.body?.apiKey ?? ""),
         senderEmail: String(req.body?.senderEmail ?? ""),
         senderName: String(req.body?.senderName ?? ""),
       });
+      audit(actor, "settings.mail", "brevo", { keyChanged: Boolean(String(req.body?.apiKey ?? "").trim()) });
       res.json(brevoStatus());
     } catch (err) {
       fail(res, err);
@@ -605,7 +584,7 @@ export function mountAdminRoutes(app: Express): void {
 
   app.post("/api/admin/amazon", (req, res) => {
     try {
-      assertAdmin(requestUser(req));
+      const actor = assertAdmin(requestUser(req));
       if (req.body?.off === true) clearAmazon();
       else {
         writeAmazon({
@@ -613,48 +592,8 @@ export function mountAdminRoutes(app: Express): void {
           clientSecret: String(req.body?.clientSecret ?? ""),
         });
       }
+      audit(actor, req.body?.off === true ? "settings.amazon.off" : "settings.amazon", "login-with-amazon");
       res.json(amazonStatus());
-    } catch (err) {
-      fail(res, err);
-    }
-  });
-
-  app.get("/api/admin/users", (req, res) => {
-    try {
-      assertAdmin(requestUser(req));
-      res.json({ users: listUsers() });
-    } catch (err) {
-      fail(res, err);
-    }
-  });
-
-  app.post("/api/admin/users", (req, res) => {
-    try {
-      assertAdmin(requestUser(req));
-      const role = (req.body?.role === "admin" ? "admin" : "player") as Role;
-      res.json({ user: createUser(String(req.body?.username ?? ""), String(req.body?.password ?? ""), role) });
-    } catch (err) {
-      fail(res, err);
-    }
-  });
-
-  app.post("/api/admin/users/:id", (req, res) => {
-    try {
-      assertAdmin(requestUser(req));
-      const patch: { password?: string; role?: Role; disabled?: boolean } = {};
-      if (typeof req.body?.password === "string" && req.body.password) patch.password = req.body.password;
-      if (req.body?.role === "admin" || req.body?.role === "player") patch.role = req.body.role;
-      if (typeof req.body?.disabled === "boolean") patch.disabled = req.body.disabled;
-      res.json({ user: updateUser(String(req.params.id), patch) });
-    } catch (err) {
-      fail(res, err);
-    }
-  });
-
-  app.get("/api/admin/rooms", (req, res) => {
-    try {
-      assertAdmin(requestUser(req));
-      res.json({ rooms: listRooms() });
     } catch (err) {
       fail(res, err);
     }
@@ -662,70 +601,9 @@ export function mountAdminRoutes(app: Express): void {
 
   app.post("/api/admin/rooms/:code/close", (req, res) => {
     try {
-      assertAdmin(requestUser(req));
+      const actor = assertAdmin(requestUser(req));
       closeRoom(String(req.params.code));
-      res.json({ ok: true });
-    } catch (err) {
-      fail(res, err);
-    }
-  });
-
-  app.get("/api/admin/saves", (req, res) => {
-    try {
-      assertAdmin(requestUser(req));
-      res.json({ saves: listSaves() });
-    } catch (err) {
-      fail(res, err);
-    }
-  });
-
-  app.get("/api/admin/campaigns", (req, res) => {
-    try {
-      assertAdmin(requestUser(req));
-      res.json({ campaigns: listCampaigns() });
-    } catch (err) {
-      fail(res, err);
-    }
-  });
-
-  app.get("/api/admin/campaigns/:id", (req, res) => {
-    try {
-      assertAdmin(requestUser(req));
-      const draft = draftSnapshot(String(req.params.id));
-      res.json({
-        id: draft.id,
-        manifest: draft.manifest,
-        nodes: Object.values(draft.nodes).map((n) => ({ id: n.id, type: n.type })),
-        encounters: Object.values(draft.encounters).map((e) => ({ id: e.id, name: e.name })),
-      });
-    } catch (err) {
-      fail(res, err);
-    }
-  });
-
-  app.get("/api/admin/campaigns/:id/nodes/:nodeId", (req, res) => {
-    try {
-      assertAdmin(requestUser(req));
-      const draft = draftSnapshot(String(req.params.id));
-      const node = draft.nodes[String(req.params.nodeId)];
-      if (!node) {
-        res.status(404).json({ error: "BAD_NODE" });
-        return;
-      }
-      const encounter = node.encounterId ? draft.encounters[node.encounterId] : undefined;
-      res.json({ node, encounter: encounter ?? null });
-    } catch (err) {
-      fail(res, err);
-    }
-  });
-
-  app.put("/api/admin/campaigns/:id/nodes/:nodeId", (req, res) => {
-    try {
-      assertAdmin(requestUser(req));
-      const node = req.body?.node as StoryNode;
-      if (!node || node.id !== req.params.nodeId) throw new Error("BAD_NODE");
-      updateDraftNode(String(req.params.id), node);
-      if (req.body?.encounter) updateDraftEncounter(String(req.params.id), req.body.encounter as EncounterDef);
+      audit(actor, "room.close", String(req.params.code));
       res.json({ ok: true });
     } catch (err) {
       fail(res, err);
@@ -734,8 +612,9 @@ export function mountAdminRoutes(app: Express): void {
 
   app.post("/api/admin/campaigns/:id/publish", (req, res) => {
     try {
-      assertAdmin(requestUser(req));
+      const actor = assertAdmin(requestUser(req));
       const snap = publishCampaign(String(req.params.id));
+      audit(actor, "campaign.publish", snap.id, { version: snap.version });
       res.json({ id: snap.id, version: snap.version });
     } catch (err) {
       fail(res, err);
@@ -744,8 +623,9 @@ export function mountAdminRoutes(app: Express): void {
 
   app.post("/api/admin/campaigns/:id/unpublish", (req, res) => {
     try {
-      assertAdmin(requestUser(req));
+      const actor = assertAdmin(requestUser(req));
       unpublishCampaign(String(req.params.id));
+      audit(actor, "campaign.unpublish", String(req.params.id));
       res.json({ ok: true });
     } catch (err) {
       fail(res, err);
@@ -818,6 +698,7 @@ export function mountAdminRoutes(app: Express): void {
         name: String(req.body?.name ?? ""),
         owner: { userId: user.id, username: user.username },
       });
+      audit(user, "map.create", `arena/${map.id}`, { size, theme: map.theme });
       res.json(arenaPaintJson(map));
     } catch (err) {
       fail(res, err);
@@ -848,6 +729,7 @@ export function mountAdminRoutes(app: Express): void {
           parseCampaignSpawn(req.body?.spawn, camp.width, camp.height, camp.spawn),
           parseLabels(req.body?.labels, camp.width, camp.height, camp.labels),
         );
+        audit(user, "map.save", `campaign/${id}`);
         res.json({
           source,
           id: saved.id,
@@ -862,7 +744,9 @@ export function mountAdminRoutes(app: Express): void {
         return;
       }
       if (source !== "arena") throw new Error("BAD_MAP");
-      res.json(arenaPaintJson(paintArenaMap(id, req.body, user, true)));
+      const out = arenaPaintJson(paintArenaMap(id, req.body, user, true));
+      audit(user, "map.save", `arena/${id}`);
+      res.json(out);
     } catch (err) {
       fail(res, err);
     }
@@ -876,7 +760,22 @@ export function mountAdminRoutes(app: Express): void {
       const map = isBuiltinId(id) ? ensureArenaMapFile(id) : getArenaMap(id);
       if (!map) throw new Error("BAD_MAP");
       assertCanEditArenaMap(map, user, true);
-      res.json(arenaPaintJson(clearArenaMapArt(id)));
+      const out = arenaPaintJson(clearArenaMapArt(id));
+      audit(user, "map.art.clear", `arena/${id}`);
+      res.json(out);
+    } catch (err) {
+      fail(res, err);
+    }
+  });
+
+  app.delete("/api/admin/maps/arena/:id", (req, res) => {
+    try {
+      const user = assertAdmin(requestUser(req));
+      const id = String(req.params.id);
+      const before = isBuiltinId(id) ? null : getArenaMap(id);
+      const outcome = deleteArenaMapFile(id);
+      audit(user, outcome === "reset" ? "map.reset" : "map.delete", `arena/${id}`, { name: before?.name, createdBy: before?.createdBy?.username });
+      res.json({ outcome });
     } catch (err) {
       fail(res, err);
     }

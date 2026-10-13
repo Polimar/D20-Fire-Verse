@@ -23,6 +23,7 @@
   "confidence": "low",
   "usage": "Vendor, loot, and stash. Typed effects change AC, attack, and damage.",
   "srd": {
-    "line": "Potion, Uncommon"
+    "line": "Potion, Uncommon",
+    "text": "_Potion, Uncommon_\n\nYou can breathe underwater for 24 hours after drinking this potion.\nThis potion's cloudy green fluid smells of the sea and has a jellyfish-like bubble floating in it."
   }
 }

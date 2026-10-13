@@ -23,6 +23,7 @@
   "confidence": "low",
   "usage": "Vendor, loot, and stash. Typed effects change AC, attack, and damage.",
   "srd": {
-    "line": "Wondrous Item, Rare (Requires Attunement)"
+    "line": "Wondrous Item, Rare (Requires Attunement)",
+    "text": "_Wondrous Item, Rare (Requires Attunement)_\n\nThis helm has 3 charges. While wearing it, you can expend 1 charge to cast _Teleport_ from it. The helm regains 1d3 expended charges daily at dawn."
   }
 }

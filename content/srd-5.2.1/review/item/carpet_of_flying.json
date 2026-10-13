@@ -23,6 +23,7 @@
   "confidence": "low",
   "usage": "Vendor, loot, and stash. Typed effects change AC, attack, and damage.",
   "srd": {
-    "line": "Wondrous Item, Very Rare"
+    "line": "Wondrous Item, Very Rare",
+    "text": "_Wondrous Item, Very Rare_\n\nYou can make this carpet hover and fly by taking a Magic action and using the carpet's command word. It moves according to your directions if you are within 30 feet of it.\n\nFour sizes of _Carpet of Flying_ exist. The GM chooses the size of a given carpet or determines it randomly by rolling on the following table. A carpet can carry up to twice the weight shown on the table, but its Fly Speed is halved if it carries more than its normal capacity.\n\n<table>\n  <thead>\n    <tr>\n      <th>1d100</th>\n      <th>Size</th>\n      <th>Capacity</th>\n      <th>Fly Speed</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <td>01–20</td>\n      <td>3 ft. × 5 ft.</td>\n      <td>200 lb.</td>\n      <td>80 feet</td>\n    </tr>\n    <tr>\n      <td>21–55</td>\n      <td>4 ft. × 6 ft.</td>\n      <td>400 lb.</td>\n      <td>60 feet</td>\n    </tr>\n    <tr>\n      <td>56–80</td>\n      <td>5 ft. × 7 ft.</td>\n      <td>600 lb.</td>\n      <td>40 feet</td>\n    </tr>\n    <tr>\n      <td>81–00</td>\n      <td>6 ft. × 9 ft.</td>\n      <td>800 lb.</td>\n      <td>30 feet</td>\n    </tr>\n  </tbody>\n</table>"
   }
 }

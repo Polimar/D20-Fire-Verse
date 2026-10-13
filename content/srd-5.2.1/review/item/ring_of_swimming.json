@@ -23,6 +23,7 @@
   "confidence": "low",
   "usage": "Vendor, loot, and stash. Typed effects change AC, attack, and damage.",
   "srd": {
-    "line": "Ring, Uncommon"
+    "line": "Ring, Uncommon",
+    "text": "_Ring, Uncommon_\n\nYou have a Swim Speed of 40 feet while wearing this ring."
   }
 }

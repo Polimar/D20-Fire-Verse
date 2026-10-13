@@ -157,7 +157,15 @@ function bundle(partial: Omit<ReviewBundle, "ambiguities" | "unparsedFields"> & 
 function parseSpells(markdown: string, reviews: ReviewBundle[]): unknown[] {
   const section = markdown.slice(markdown.indexOf("## Spell Descriptions"));
   const entries = [];
+  const spellLine = /^_[^_\n]*(Level \d+|Cantrip)[^_\n]*_/im;
+  const spellChunks: Array<{ title: string; body: string }> = [];
   for (const chunk of chunks(section, 4)) {
+    const last = spellChunks.at(-1);
+    // Summon stat blocks carry their own "#### Traits" / "#### Actions" headings.
+    if (last && !spellLine.test(chunk.body)) last.body += `\n\n**${chunk.title}.**\n${chunk.body}`;
+    else spellChunks.push({ ...chunk });
+  }
+  for (const chunk of spellChunks) {
     const id = slug(chunk.title);
     const line = chunk.body.match(/^_([^_\n]+)_/m)?.[1] ?? "";
     const levelMatch = /Level (\d+)/i.exec(line);
@@ -425,7 +433,7 @@ function parseMagic(markdown: string, reviews: ReviewBundle[]): unknown[] {
     const effects: unknown[] = [];
     const plus = chunk.body.match(/\+(\d) bonus to (?:Armor Class|AC)/i);
     if (plus) effects.push({ kind: "ac_bonus", amount: Number(plus[1]) });
-    const weapon = chunk.body.match(/you have a \+(\d) bonus to attack and damage rolls/i);
+    const weapon = chunk.body.match(/(?:have|gain) a \+(\d) bonus to attack(?: rolls)? and damage rolls/i);
     if (weapon) {
       effects.push({ kind: "attack_bonus", amount: Number(weapon[1]) });
       effects.push({ kind: "damage_bonus", amount: Number(weapon[1]) });
@@ -449,7 +457,7 @@ function parseMagic(markdown: string, reviews: ReviewBundle[]): unknown[] {
       confidence: needs ? "low" : "high",
       unparsedFields: needs ? ["effects"] : [],
       usage: USAGE.item,
-      srd: { line },
+      srd: { line, text: chunk.body.trim().slice(0, 6000) },
       ambiguities: needs
         ? [{ field: "effects", summary: "No typed effect matched the item text.", options: [{ label: "Leave effects empty", patch: { effects: [] } }], parserChoice: 0 }]
         : [],

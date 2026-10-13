@@ -23,6 +23,7 @@
   "confidence": "low",
   "usage": "Vendor, loot, and stash. Typed effects change AC, attack, and damage.",
   "srd": {
-    "line": "Wondrous Item, Uncommon"
+    "line": "Wondrous Item, Uncommon",
+    "text": "_Wondrous Item, Uncommon_\n\nWhile wearing this helm, you can cast _Comprehend Languages_ from it."
   }
 }

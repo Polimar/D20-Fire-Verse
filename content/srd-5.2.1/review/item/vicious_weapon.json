@@ -23,6 +23,7 @@
   "confidence": "low",
   "usage": "Vendor, loot, and stash. Typed effects change AC, attack, and damage.",
   "srd": {
-    "line": "Weapon (Any Simple or Martial), Rare"
+    "line": "Weapon (Any Simple or Martial), Rare",
+    "text": "_Weapon (Any Simple or Martial), Rare_\n\nThis magic weapon deals an extra 2d6 damage to any creature it hits. This extra damage is of the same type as the weapon's normal damage."
   }
 }

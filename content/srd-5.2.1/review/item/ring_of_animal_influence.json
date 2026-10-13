@@ -23,6 +23,7 @@
   "confidence": "low",
   "usage": "Vendor, loot, and stash. Typed effects change AC, attack, and damage.",
   "srd": {
-    "line": "Ring, Rare"
+    "line": "Ring, Rare",
+    "text": "_Ring, Rare_\n\nThis ring has 3 charges, and it regains 1d3 expended charges daily at dawn. While wearing the ring, you can expend 1 charge to cast one of the following spells (save DC 13) from it:\n\n- _Animal Friendship_\n- _Fear_ (affects Beasts only)\n- _Speak with Animals_"
   }
 }

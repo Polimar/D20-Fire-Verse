@@ -7,6 +7,7 @@
   "confidence": "high",
   "usage": "Vendor, loot, and stash. Typed effects change AC, attack, and damage.",
   "srd": {
-    "line": "Armor (Chain Mail or Chain Shirt), Rare"
+    "line": "Armor (Chain Mail or Chain Shirt), Rare",
+    "text": "_Armor (Chain Mail or Chain Shirt), Rare_\n\nYou gain a +1 bonus to Armor Class while you wear this armor. You are considered trained with this armor even if you lack training with Medium or Heavy armor."
   }
 }

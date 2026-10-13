@@ -23,6 +23,7 @@
   "confidence": "low",
   "usage": "Vendor, loot, and stash. Typed effects change AC, attack, and damage.",
   "srd": {
-    "line": "Staff, Rare (Requires Attunement by a Bard, Cleric, or Druid)"
+    "line": "Staff, Rare (Requires Attunement by a Bard, Cleric, or Druid)",
+    "text": "_Staff, Rare (Requires Attunement by a Bard, Cleric, or Druid)_\n\nThis staff has 10 charges. While holding the staff, you can cast one of the spells on the following table from it, using your spellcasting ability modifier. The table indicates how many charges you must expend to cast the spell.\n\n<table>\n  <thead>\n    <tr>\n      <th>Spell</th>\n      <th>Charge Cost</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <td>*Cure Wounds*</td>\n      <td>1 charge per spell level (maximum 4 for a level 4 spell)</td>\n    </tr>\n    <tr>\n      <td>*Lesser Restoration*</td>\n      <td>2</td>\n    </tr>\n    <tr>\n      <td>*Mass Cure Wounds*</td>\n      <td>5</td>\n    </tr>\n  </tbody>\n</table>\n\n_Regaining Charges._ The staff regains 1d6 + 4 expended charges daily at dawn. If you expend the last charge, roll 1d20. On a 1, the staff vanishes in a flash of light, lost forever."
   }
 }

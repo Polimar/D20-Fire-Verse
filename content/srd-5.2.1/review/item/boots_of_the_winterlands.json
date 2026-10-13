@@ -7,6 +7,7 @@
   "confidence": "high",
   "usage": "Vendor, loot, and stash. Typed effects change AC, attack, and damage.",
   "srd": {
-    "line": "Wondrous Item, Uncommon (Requires Attunement)"
+    "line": "Wondrous Item, Uncommon (Requires Attunement)",
+    "text": "_Wondrous Item, Uncommon (Requires Attunement)_\n\nThese furred boots are snug and feel warm. While wearing them, you gain the following benefits.\n\n_Cold Resistance._ You have Resistance to Cold damage and can tolerate temperatures of 0 degrees Fahrenheit or lower without any additional protection.\n\n_Winter Strider._ You ignore Difficult Terrain created by ice or snow."
   }
 }

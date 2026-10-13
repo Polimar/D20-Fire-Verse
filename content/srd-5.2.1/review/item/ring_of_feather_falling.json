@@ -23,6 +23,7 @@
   "confidence": "low",
   "usage": "Vendor, loot, and stash. Typed effects change AC, attack, and damage.",
   "srd": {
-    "line": "Ring, Rare (Requires Attunement)"
+    "line": "Ring, Rare (Requires Attunement)",
+    "text": "_Ring, Rare (Requires Attunement)_\n\nWhen you fall while wearing this ring, you descend 60 feet per round and take no damage from falling."
   }
 }

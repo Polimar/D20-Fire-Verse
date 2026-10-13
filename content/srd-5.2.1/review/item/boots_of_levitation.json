@@ -23,6 +23,7 @@
   "confidence": "low",
   "usage": "Vendor, loot, and stash. Typed effects change AC, attack, and damage.",
   "srd": {
-    "line": "Wondrous Item, Rare (Requires Attunement)"
+    "line": "Wondrous Item, Rare (Requires Attunement)",
+    "text": "_Wondrous Item, Rare (Requires Attunement)_\n\nWhile you wear these boots, you can cast _Levitate_ on yourself."
   }
 }

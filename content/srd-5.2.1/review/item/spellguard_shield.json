@@ -23,6 +23,7 @@
   "confidence": "low",
   "usage": "Vendor, loot, and stash. Typed effects change AC, attack, and damage.",
   "srd": {
-    "line": "Armor (Shield), Very Rare (Requires Attunement)"
+    "line": "Armor (Shield), Very Rare (Requires Attunement)",
+    "text": "_Armor (Shield), Very Rare (Requires Attunement)_\n\nWhile holding this Shield, you have Advantage on saving throws against spells and other magical effects, and spell attack rolls have Disadvantage against you."
   }
 }

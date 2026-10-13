@@ -1,28 +1,13 @@
 {
-  "ambiguities": [
-    {
-      "field": "effects",
-      "summary": "No typed effect matched the item text.",
-      "options": [
-        {
-          "label": "Leave effects empty",
-          "patch": {
-            "effects": []
-          }
-        }
-      ],
-      "parserChoice": 0
-    }
-  ],
-  "unparsedFields": [
-    "effects"
-  ],
+  "ambiguities": [],
+  "unparsedFields": [],
   "kind": "item",
   "id": "dragon_slayer",
-  "status": "needs_review",
-  "confidence": "low",
+  "status": "auto_ok",
+  "confidence": "high",
   "usage": "Vendor, loot, and stash. Typed effects change AC, attack, and damage.",
   "srd": {
-    "line": "Weapon (Any Simple or Martial), Rare"
+    "line": "Weapon (Any Simple or Martial), Rare",
+    "text": "_Weapon (Any Simple or Martial), Rare_\n\nYou gain a +1 bonus to attack rolls and damage rolls made with this magic weapon.\n\nThe weapon deals an extra 3d6 damage of the weapon's type if the target is a Dragon."
   }
 }

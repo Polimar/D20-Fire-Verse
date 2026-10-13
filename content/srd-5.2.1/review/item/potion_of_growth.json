@@ -23,6 +23,7 @@
   "confidence": "low",
   "usage": "Vendor, loot, and stash. Typed effects change AC, attack, and damage.",
   "srd": {
-    "line": "Potion, Uncommon"
+    "line": "Potion, Uncommon",
+    "text": "_Potion, Uncommon_\n\nWhen you drink this potion, you gain the \"enlarge\" effect of the _Enlarge/Reduce_ spell for 10 minutes (no Concentration required).\n\nThe red in the potion's liquid continuously expands from a tiny bead to color the clear liquid around it and then contracts. Shaking the bottle fails to interrupt this process."
   }
 }

@@ -129,6 +129,28 @@ const ERROR_TEXT: Record<string, string> = {
   BAD_ROLE: "The role must be player or admin.",
   USERNAME_TAKEN: "That username is already in use.",
   USER_NOT_FOUND: "That account no longer exists.",
+  SELF_LOCKOUT: "You cannot remove your own admin access or delete your own account.",
+  LAST_ADMIN: "This is the last active admin. Make another admin first.",
+  NOTHING_TO_SAVE: "Nothing changed, so nothing was saved.",
+  BAD_ACTION: "That bulk action is not available.",
+  BAD_NODE_ID: "Node ids use 2 to 60 lowercase letters, numbers, and underscores.",
+  BAD_NODE_TYPE: "Pick a node type: story, skill check, encounter, puzzle, or hub.",
+  NODE_EXISTS: "A node with that id already exists in this campaign.",
+  NODE_NOT_FOUND: "That node is not in this campaign.",
+  NODE_IS_START: "This is the start node. Pick another start node first.",
+  NODE_IN_USE: "Other nodes still link here. Change those links first.",
+  DANGLING_NEXT: "A link points to a node that does not exist.",
+  BAD_CHECK: "A skill check needs an ability and a DC.",
+  BAD_PUZZLE: "A puzzle needs options and a solution.",
+  BAD_TITLE: "The title needs 1 to 80 characters.",
+  NOTHING_PUBLISHED: "This campaign has no published version to go back to.",
+  BAD_IMAGE: "Use a PNG, JPEG, or WebP image under 8 MB.",
+  CONFIRM_MISMATCH: "The confirmation text did not match. Nothing was deleted.",
+  CONTENT_INVALID: "This entry fails the schema. Fix it before you enable it.",
+  BAD_CONTENT_KIND: "That content kind does not exist.",
+  BAD_CONTENT_ID: "Content ids use 2 to 64 lowercase letters, numbers, and underscores.",
+  BAD_CONTENT_BODY: "The entry must be a JSON object.",
+  NOT_EDITED: "This entry has no admin edit to revert.",
   FRIEND_SELF: "You cannot add yourself as a friend.",
   BAD_ABILITY_EFFECT: "That ability uses an effect the table does not know.",
   BAD_CAMPAIGN_ID: "The campaign id may use lowercase letters, numbers, and dashes.",
@@ -292,7 +314,7 @@ const ERROR_TEXT: Record<string, string> = {
 /** Player-facing sentence for a server error code. Never shows a raw code. */
 export function describeError(code: string | undefined | null): string {
   if (!code) return "Something went wrong at the table. Try again.";
-  const known = ERROR_TEXT[code];
+  const known = ERROR_TEXT[code] ?? ERROR_TEXT[code.split(":")[0]!];
   if (known) return known;
   const need = code.match(/^NEED_(\d+)_(CLASS_SKILLS|CANTRIPS|SPELLS)$/);
   if (need) {

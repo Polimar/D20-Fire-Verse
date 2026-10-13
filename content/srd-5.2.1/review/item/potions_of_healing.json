@@ -23,6 +23,7 @@
   "confidence": "low",
   "usage": "Vendor, loot, and stash. Typed effects change AC, attack, and damage.",
   "srd": {
-    "line": "Potion, Rarity Varies"
+    "line": "Potion, Rarity Varies",
+    "text": "_Potion, Rarity Varies_\n\nYou regain Hit Points when you drink this potion. The number of Hit Points depends on the potion's rarity, as shown in the table below.\n\nWhatever its potency, the potion's red liquid glimmers when agitated.\n\n<table>\n  <thead>\n    <tr>\n      <th>Potion</th>\n      <th>HP Regained</th>\n      <th>Rarity</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <td>Potion of Healing</td>\n      <td>2d4 + 2</td>\n      <td>Common</td>\n    </tr>\n    <tr>\n      <td>Potion of Healing (greater)</td>\n      <td>4d4 + 4</td>\n      <td>Uncommon</td>\n    </tr>\n    <tr>\n      <td>Potion of Healing (superior)</td>\n      <td>8d4 + 8</td>\n      <td>Rare</td>\n    </tr>\n    <tr>\n      <td>Potion of Healing (supreme)</td>\n      <td>10d4 + 20</td>\n      <td>Very Rare</td>\n    </tr>\n  </tbody>\n</table>"
   }
 }

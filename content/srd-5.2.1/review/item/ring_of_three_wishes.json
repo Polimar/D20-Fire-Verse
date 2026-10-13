@@ -23,6 +23,7 @@
   "confidence": "low",
   "usage": "Vendor, loot, and stash. Typed effects change AC, attack, and damage.",
   "srd": {
-    "line": "Ring, Legendary"
+    "line": "Ring, Legendary",
+    "text": "_Ring, Legendary_\n\nWhile wearing this ring, you can expend 1 of its 3 charges to cast _Wish_ from it. The ring becomes nonmagical when you use the last charge."
   }
 }

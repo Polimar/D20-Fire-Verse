@@ -23,6 +23,7 @@
   "confidence": "low",
   "usage": "Vendor, loot, and stash. Typed effects change AC, attack, and damage.",
   "srd": {
-    "line": "Ring, Very Rare (Requires Attunement)"
+    "line": "Ring, Very Rare (Requires Attunement)",
+    "text": "_Ring, Very Rare (Requires Attunement)_\n\nWhile wearing this ring, you can cast _Telekinesis_ from it."
   }
 }

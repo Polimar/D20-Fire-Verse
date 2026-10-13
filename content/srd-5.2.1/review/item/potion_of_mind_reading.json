@@ -23,6 +23,7 @@
   "confidence": "low",
   "usage": "Vendor, loot, and stash. Typed effects change AC, attack, and damage.",
   "srd": {
-    "line": "Potion, Rare"
+    "line": "Potion, Rare",
+    "text": "_Potion, Rare_\n\nWhen you drink this potion, you gain the effect of the _Detect Thoughts_ spell (save DC 13) for 10 minutes (no Concentration required).\n\nThis potion's dense, purple liquid has an ovoid cloud of pink floating in it."
   }
 }

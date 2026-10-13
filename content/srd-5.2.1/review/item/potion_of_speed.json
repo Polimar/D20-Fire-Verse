@@ -23,6 +23,7 @@
   "confidence": "low",
   "usage": "Vendor, loot, and stash. Typed effects change AC, attack, and damage.",
   "srd": {
-    "line": "Potion, Very Rare"
+    "line": "Potion, Very Rare",
+    "text": "_Potion, Very Rare_\n\nWhen you drink this potion, you gain the effect of the _Haste_ spell for 1 minute (no Concentration required) without suffering the wave of lethargy that typically occurs when the effect ends.\n\nThis potion's yellow fluid is streaked with black and swirls on its own."
   }
 }

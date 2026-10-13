@@ -7,6 +7,7 @@
   "confidence": "high",
   "usage": "Vendor, loot, and stash. Typed effects change AC, attack, and damage.",
   "srd": {
-    "line": "Wondrous Item, Rare (Requires Attunement)"
+    "line": "Wondrous Item, Rare (Requires Attunement)",
+    "text": "_Wondrous Item, Rare (Requires Attunement)_\n\nWhile wearing these bracers, you gain a +2 bonus to Armor Class if you are wearing no armor and using no Shield."
   }
 }

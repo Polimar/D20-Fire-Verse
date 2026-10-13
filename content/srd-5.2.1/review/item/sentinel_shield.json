@@ -23,6 +23,7 @@
   "confidence": "low",
   "usage": "Vendor, loot, and stash. Typed effects change AC, attack, and damage.",
   "srd": {
-    "line": "Armor (Shield), Uncommon"
+    "line": "Armor (Shield), Uncommon",
+    "text": "_Armor (Shield), Uncommon_\n\nWhile holding this Shield, you have Advantage on Initiative rolls and Wisdom (Perception) checks. The Shield is emblazoned with a symbol of an eye."
   }
 }

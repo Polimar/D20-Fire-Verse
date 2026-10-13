@@ -195,7 +195,16 @@
       "requires": {
         "attunement": true
       },
-      "effects": []
+      "effects": [
+        {
+          "kind": "attack_bonus",
+          "amount": 1
+        },
+        {
+          "kind": "damage_bonus",
+          "amount": 1
+        }
+      ]
     },
     {
       "id": "boots_of_elvenkind",
@@ -500,7 +509,16 @@
       "name": "Dagger of Venom",
       "rarity": "rare",
       "slot": "mainhand",
-      "effects": []
+      "effects": [
+        {
+          "kind": "attack_bonus",
+          "amount": 1
+        },
+        {
+          "kind": "damage_bonus",
+          "amount": 1
+        }
+      ]
     },
     {
       "id": "dancing_sword",
@@ -538,6 +556,14 @@
         {
           "kind": "ac_bonus",
           "amount": 2
+        },
+        {
+          "kind": "attack_bonus",
+          "amount": 3
+        },
+        {
+          "kind": "damage_bonus",
+          "amount": 3
         }
       ]
     },
@@ -597,7 +623,16 @@
       "name": "Dragon Slayer",
       "rarity": "rare",
       "slot": "mainhand",
-      "effects": []
+      "effects": [
+        {
+          "kind": "attack_bonus",
+          "amount": 1
+        },
+        {
+          "kind": "damage_bonus",
+          "amount": 1
+        }
+      ]
     },
     {
       "id": "dust_of_disappearance",
@@ -640,7 +675,16 @@
       "requires": {
         "attunement": true
       },
-      "effects": []
+      "effects": [
+        {
+          "kind": "attack_bonus",
+          "amount": 3
+        },
+        {
+          "kind": "damage_bonus",
+          "amount": 3
+        }
+      ]
     },
     {
       "id": "efficient_quiver",
@@ -690,7 +734,16 @@
       "requires": {
         "attunement": true
       },
-      "effects": []
+      "effects": [
+        {
+          "kind": "attack_bonus",
+          "amount": 1
+        },
+        {
+          "kind": "damage_bonus",
+          "amount": 1
+        }
+      ]
     },
     {
       "id": "eversmoking_bottle",
@@ -801,7 +854,16 @@
       "name": "Giant Slayer",
       "rarity": "rare",
       "slot": "mainhand",
-      "effects": []
+      "effects": [
+        {
+          "kind": "attack_bonus",
+          "amount": 1
+        },
+        {
+          "kind": "damage_bonus",
+          "amount": 1
+        }
+      ]
     },
     {
       "id": "glamoured_studded_leather",
@@ -857,7 +919,16 @@
       "requires": {
         "attunement": true
       },
-      "effects": []
+      "effects": [
+        {
+          "kind": "attack_bonus",
+          "amount": 1
+        },
+        {
+          "kind": "damage_bonus",
+          "amount": 1
+        }
+      ]
     },
     {
       "id": "handy_haversack",
@@ -946,7 +1017,16 @@
       "requires": {
         "attunement": true
       },
-      "effects": []
+      "effects": [
+        {
+          "kind": "attack_bonus",
+          "amount": 3
+        },
+        {
+          "kind": "damage_bonus",
+          "amount": 3
+        }
+      ]
     },
     {
       "id": "horn_of_blasting",
@@ -1044,7 +1124,16 @@
       "requires": {
         "attunement": true
       },
-      "effects": []
+      "effects": [
+        {
+          "kind": "attack_bonus",
+          "amount": 1
+        },
+        {
+          "kind": "damage_bonus",
+          "amount": 1
+        }
+      ]
     },
     {
       "id": "mace_of_disruption",
@@ -1061,7 +1150,16 @@
       "name": "Mace of Smiting",
       "rarity": "rare",
       "slot": "mainhand",
-      "effects": []
+      "effects": [
+        {
+          "kind": "attack_bonus",
+          "amount": 1
+        },
+        {
+          "kind": "damage_bonus",
+          "amount": 1
+        }
+      ]
     },
     {
       "id": "mace_of_terror",
@@ -1184,7 +1282,16 @@
       "requires": {
         "attunement": true
       },
-      "effects": []
+      "effects": [
+        {
+          "kind": "attack_bonus",
+          "amount": 2
+        },
+        {
+          "kind": "damage_bonus",
+          "amount": 2
+        }
+      ]
     },
     {
       "id": "oathbow",
@@ -1444,7 +1551,16 @@
       "requires": {
         "attunement": true
       },
-      "effects": []
+      "effects": [
+        {
+          "kind": "attack_bonus",
+          "amount": 2
+        },
+        {
+          "kind": "damage_bonus",
+          "amount": 2
+        }
+      ]
     },
     {
       "id": "ring_of_animal_influence",
@@ -1812,7 +1928,16 @@
       "requires": {
         "attunement": true
       },
-      "effects": []
+      "effects": [
+        {
+          "kind": "attack_bonus",
+          "amount": 2
+        },
+        {
+          "kind": "damage_bonus",
+          "amount": 2
+        }
+      ]
     },
     {
       "id": "sending_stones",
@@ -2061,7 +2186,16 @@
       "requires": {
         "attunement": true
       },
-      "effects": []
+      "effects": [
+        {
+          "kind": "attack_bonus",
+          "amount": 2
+        },
+        {
+          "kind": "damage_bonus",
+          "amount": 2
+        }
+      ]
     },
     {
       "id": "sword_of_life_stealing",
@@ -2187,6 +2321,14 @@
         "attunement": true
       },
       "effects": [
+        {
+          "kind": "attack_bonus",
+          "amount": 3
+        },
+        {
+          "kind": "damage_bonus",
+          "amount": 3
+        },
         {
           "kind": "resistance",
           "damageType": "slashing"

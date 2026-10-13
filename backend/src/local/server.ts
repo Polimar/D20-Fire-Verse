@@ -6,6 +6,7 @@ import express from "express";
 import { actionNeedsAuth, activeUserById, type SessionUser } from "./auth.js";
 import { handleArenaArt, handleCampaignImport, mountAccountRoutes, mountAdminRoutes, requestUser } from "./admin-http.js";
 import { mountV2Routes } from "./v2-http.js";
+import { handleCampaignArt, mountAdminPortalRoutes } from "./admin-portal-http.js";
 import { announceScene } from "./alexa.js";
 import {
   armGrace,
@@ -177,8 +178,10 @@ app.disable("x-powered-by");
 app.post("/api/admin/campaigns/import", express.raw({ type: () => true, limit: "32mb" }), handleCampaignImport);
 app.post("/api/admin/maps/arena/:id/art", express.raw({ type: () => true, limit: "8mb" }), handleArenaArt);
 app.post("/api/me/arena-maps/:id/art", express.raw({ type: () => true, limit: "8mb" }), handleArenaArt);
+app.post("/api/admin/campaigns/:id/art", express.raw({ type: () => true, limit: "8mb" }), handleCampaignArt);
 app.use(express.json({ limit: "2mb" }));
 mountAccountRoutes(app);
+mountAdminPortalRoutes(app);
 mountAdminRoutes(app);
 mountV2Routes(app);
 app.use((_req, res, next) => {
@@ -195,6 +198,12 @@ app.use("/art", express.static(path.join(REPO_ROOT, "tv", "public", "art"), { ma
 if (companionBuilt) {
   app.use("/companion", express.static(companionDist));
 }
+app.get(["/admin", "/admin/"], (_req, res) => {
+  const page = path.join(tvDist, "admin.html");
+  res.setHeader("Cache-Control", "no-store");
+  if (fs.existsSync(page)) res.sendFile(page);
+  else res.status(503).type("text").send("The admin portal is not built. Run npm run build:tv.");
+});
 if (fs.existsSync(path.join(tvDist, "index.html"))) {
   app.use(express.static(tvDist, {
     setHeaders: (res, filePath) => {

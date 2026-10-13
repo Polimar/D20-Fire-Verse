@@ -1,28 +1,13 @@
 {
-  "ambiguities": [
-    {
-      "field": "effects",
-      "summary": "No typed effect matched the item text.",
-      "options": [
-        {
-          "label": "Leave effects empty",
-          "patch": {
-            "effects": []
-          }
-        }
-      ],
-      "parserChoice": 0
-    }
-  ],
-  "unparsedFields": [
-    "effects"
-  ],
+  "ambiguities": [],
+  "unparsedFields": [],
   "kind": "item",
   "id": "nine_lives_stealer",
-  "status": "needs_review",
-  "confidence": "low",
+  "status": "auto_ok",
+  "confidence": "high",
   "usage": "Vendor, loot, and stash. Typed effects change AC, attack, and damage.",
   "srd": {
-    "line": "Weapon (Any Simple or Martial), Very Rare (Requires Attunement)"
+    "line": "Weapon (Any Simple or Martial), Very Rare (Requires Attunement)",
+    "text": "_Weapon (Any Simple or Martial), Very Rare (Requires Attunement)_\n\nYou gain a +2 bonus to attack rolls and damage rolls made with this magic weapon.\n\n**_Life Stealing._** The weapon has 1d8 + 1 charges. When you attack a creature that has fewer than 100 Hit Points with this weapon and roll a 20 on the d20 for the attack roll, the creature must succeed on a DC 15 Constitution saving throw or be slain instantly as the sword tears its life force from its body. Constructs and Undead succeed on the save automatically. The weapon loses 1 charge if the creature is slain. When the weapon has no charges remaining, it loses this property."
   }
 }

@@ -23,6 +23,7 @@
   "confidence": "low",
   "usage": "Vendor, loot, and stash. Typed effects change AC, attack, and damage.",
   "srd": {
-    "line": "Potion, Rare"
+    "line": "Potion, Rare",
+    "text": "_Potion, Rare_\n\nOne vial of this oil can cover one Medium or smaller creature, along with the equipment it's wearing and carrying (one additional vial is required for each size category above Medium). Applying the oil takes 10 minutes. The affected creature then gains the effect of the _Etherealness_ spell for 1 hour.\n\nBeads of this cloudy, gray oil form on the outside of its container and quickly evaporate."
   }
 }

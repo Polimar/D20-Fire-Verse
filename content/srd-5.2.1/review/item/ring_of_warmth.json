@@ -23,6 +23,7 @@
   "confidence": "low",
   "usage": "Vendor, loot, and stash. Typed effects change AC, attack, and damage.",
   "srd": {
-    "line": "Ring, Uncommon (Requires Attunement)"
+    "line": "Ring, Uncommon (Requires Attunement)",
+    "text": "_Ring, Uncommon (Requires Attunement)_\n\nIf you take Cold damage while wearing this ring, the ring reduces the damage you take by 2d8.\n\nIn addition, while wearing this ring, you and everything you wear and carry are unharmed by temperatures of 0 degrees Fahrenheit or lower."
   }
 }

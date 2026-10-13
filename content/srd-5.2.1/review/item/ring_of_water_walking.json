@@ -23,6 +23,7 @@
   "confidence": "low",
   "usage": "Vendor, loot, and stash. Typed effects change AC, attack, and damage.",
   "srd": {
-    "line": "Ring, Uncommon"
+    "line": "Ring, Uncommon",
+    "text": "_Ring, Uncommon_\n\nWhile wearing this ring, you cast _Water Walk_ from it, targeting only yourself."
   }
 }

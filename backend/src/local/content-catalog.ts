@@ -1,6 +1,7 @@
 /**
- * SRD 5.2.1 files on disk. Nothing is in play until an admin enables it.
+ * SRD 5.2.1 files on disk plus the admin's edits in sqlite. Nothing is in play until an admin enables it.
  * A file Zod rejects is listed and skipped; it does not stop the table.
+ * An admin edit (content_custom) replaces the parsed entry with the same kind and id, or adds a new one.
  */
 
 import fs from "node:fs";
@@ -26,6 +27,8 @@ import { CONTENT_ROOT } from "./paths.js";
 
 const ROOT = path.join(CONTENT_ROOT, "srd-5.2.1");
 
+export type ReviewStatus = "auto_ok" | "needs_review" | "resolved" | "rejected" | "none";
+
 export type CatalogRow = {
   kind: string;
   id: string;
@@ -34,32 +37,95 @@ export type CatalogRow = {
   valid: boolean;
   issues: string[];
   inPlay: boolean;
-  reviewStatus: "auto_ok" | "needs_review" | "resolved" | "rejected" | "none";
+  reviewStatus: ReviewStatus;
   confidence: "high" | "medium" | "low" | "none";
   unparsedFields: string[];
   usage: string;
+  source: "srd" | "custom" | "queue";
+  edited: boolean;
 };
 
-type Bucket = "class" | "subclass" | "species" | "background" | "spell" | "feat" | "item" | "monster";
+export const CONTENT_KINDS = ["class", "subclass", "species", "background", "spell", "feat", "item", "monster"] as const;
+type Bucket = (typeof CONTENT_KINDS)[number];
 
-const FILES: Array<{ file: string; kind: Bucket; schema: ZodTypeAny }> = [
-  { file: "classes.json", kind: "class", schema: classDef },
-  { file: "subclasses.json", kind: "subclass", schema: subclassDef },
-  { file: "species.json", kind: "species", schema: speciesDef },
-  { file: "backgrounds.json", kind: "background", schema: backgroundDef },
-  { file: "spells.json", kind: "spell", schema: spellDef },
-  { file: "feats.json", kind: "feat", schema: featDef },
-  { file: "items/gear.json", kind: "item", schema: itemDef },
-  { file: "items/magic.json", kind: "item", schema: itemDef },
-  { file: "monsters.json", kind: "monster", schema: monsterDef },
+const SCHEMA: Record<Bucket, ZodTypeAny> = {
+  class: classDef,
+  subclass: subclassDef,
+  species: speciesDef,
+  background: backgroundDef,
+  spell: spellDef,
+  feat: featDef,
+  item: itemDef,
+  monster: monsterDef,
+};
+
+const FILES: Array<{ file: string; kind: Bucket }> = [
+  { file: "classes.json", kind: "class" },
+  { file: "subclasses.json", kind: "subclass" },
+  { file: "species.json", kind: "species" },
+  { file: "backgrounds.json", kind: "background" },
+  { file: "spells.json", kind: "spell" },
+  { file: "feats.json", kind: "feat" },
+  { file: "items/gear.json", kind: "item" },
+  { file: "items/magic.json", kind: "item" },
+  { file: "monsters.json", kind: "monster" },
 ];
 
-type Stored = { kind: Bucket; id: string; name: string; valid: boolean; issues: string[]; raw: unknown };
+type ReviewFile = {
+  status?: ReviewStatus;
+  confidence?: CatalogRow["confidence"];
+  unparsedFields?: string[];
+  usage?: string;
+  srd?: Record<string, unknown>;
+  ambiguities?: unknown[];
+  adminNote?: string;
+};
+
+type Stored = {
+  kind: Bucket;
+  id: string;
+  name: string;
+  valid: boolean;
+  issues: string[];
+  raw: unknown;
+  parsed: unknown;
+  source: CatalogRow["source"];
+  edited: boolean;
+  review?: ReviewFile;
+};
 
 let cache: Stored[] | null = null;
+let index: Map<string, Stored> | null = null;
+
+function isBucket(kind: string): kind is Bucket {
+  return (CONTENT_KINDS as readonly string[]).includes(kind);
+}
 
 function readJson(file: string): unknown {
   return JSON.parse(fs.readFileSync(file, "utf8")) as unknown;
+}
+
+function check(kind: Bucket, entry: unknown): Pick<Stored, "valid" | "issues" | "parsed"> {
+  const parsed = SCHEMA[kind].safeParse(entry);
+  return parsed.success
+    ? { valid: true, issues: [], parsed: parsed.data }
+    : { valid: false, issues: parsed.error.issues.map((issue) => `${issue.path.join(".") || "(root)"}: ${issue.message}`), parsed: null };
+}
+
+function nameOf(entry: unknown, fallback: string): string {
+  const name = (entry as { name?: unknown } | null)?.name;
+  return typeof name === "string" && name.trim() ? name : fallback;
+}
+
+function idOf(entry: unknown, fallback: string): string {
+  const id = (entry as { id?: unknown } | null)?.id;
+  return typeof id === "string" && id ? id : fallback;
+}
+
+function reviewFile(kind: string, id: string): ReviewFile | undefined {
+  const file = path.join(ROOT, "review", kind, `${id}.json`);
+  if (!fs.existsSync(file)) return undefined;
+  return readJson(file) as ReviewFile;
 }
 
 function load(): Stored[] {
@@ -79,40 +145,23 @@ function load(): Stored[] {
         valid: false,
         issues: [err instanceof Error ? err.message : "bad json"],
         raw: null,
+        parsed: null,
+        source: "srd",
+        edited: false,
       });
       continue;
     }
-    const entries = (data as { entries?: unknown[] }).entries ?? [];
-    for (const entry of entries) {
-      const parsed = spec.schema.safeParse(entry);
-      const id = typeof (entry as { id?: string }).id === "string" ? (entry as { id: string }).id : "unknown";
-      const name = typeof (entry as { name?: string }).name === "string" ? (entry as { name: string }).name : id;
+    for (const entry of (data as { entries?: unknown[] }).entries ?? []) {
+      const id = idOf(entry, "unknown");
       rows.push({
         kind: spec.kind,
         id,
-        name,
-        valid: parsed.success,
-        issues: parsed.success ? [] : parsed.error.issues.map((issue) => `${issue.path.join(".")}: ${issue.message}`),
-        raw: parsed.success ? parsed.data : entry,
-      });
-    }
-  }
-  const review = path.join(ROOT, "review");
-  if (fs.existsSync(review)) {
-    for (const name of fs.readdirSync(review)) {
-      if (!name.endsWith(".json")) continue;
-      const data = readJson(path.join(review, name)) as { kind?: string; entry?: unknown };
-      const schema = FILES.find((spec) => spec.kind === data.kind)?.schema;
-      const entry = data.entry ?? {};
-      const id = typeof (entry as { id?: string }).id === "string" ? (entry as { id: string }).id : name;
-      const parsed = schema ? schema.safeParse(entry) : { success: false as const, error: { issues: [{ path: [], message: "unknown kind" }] } };
-      rows.push({
-        kind: (data.kind as Bucket) || "spell",
-        id,
-        name: typeof (entry as { name?: string }).name === "string" ? (entry as { name: string }).name : id,
-        valid: parsed.success,
-        issues: parsed.success ? [] : parsed.error.issues.map((issue) => `${issue.path.join(".") || "(root)"}: ${issue.message}`),
+        name: nameOf(entry, id),
+        ...check(spec.kind, entry),
         raw: entry,
+        source: "srd",
+        edited: false,
+        review: reviewFile(spec.kind, id),
       });
     }
   }
@@ -121,109 +170,213 @@ function load(): Stored[] {
     for (const name of fs.readdirSync(queue)) {
       if (!name.endsWith(".json")) continue;
       const data = readJson(path.join(queue, name)) as { id?: string; reason?: string; kind?: string };
+      const kind = data.kind && isBucket(data.kind) ? data.kind : "spell";
       rows.push({
-        kind: (data.kind as Bucket) || "spell",
+        kind,
         id: data.id || name,
         name: data.id || name,
         valid: false,
         issues: [data.reason || "queued"],
         raw: data,
+        parsed: null,
+        source: "queue",
+        edited: false,
+        review: { status: "needs_review", confidence: "none", unparsedFields: [] },
       });
     }
   }
+  const byKey = new Map(rows.map((row) => [`${row.kind}:${row.id}`, row]));
+  const custom = accountDb().prepare("SELECT kind, entry_id, body_json FROM content_custom").all() as Array<{
+    kind: string;
+    entry_id: string;
+    body_json: string;
+  }>;
+  for (const row of custom) {
+    if (!isBucket(row.kind)) continue;
+    let body: unknown;
+    try {
+      body = JSON.parse(row.body_json);
+    } catch {
+      continue;
+    }
+    const existing = byKey.get(`${row.kind}:${row.entry_id}`);
+    const next: Stored = {
+      kind: row.kind,
+      id: row.entry_id,
+      name: nameOf(body, row.entry_id),
+      ...check(row.kind, body),
+      raw: body,
+      source: existing && existing.source !== "custom" ? existing.source : "custom",
+      edited: true,
+      review: existing?.review,
+    };
+    if (existing) Object.assign(existing, next);
+    else {
+      rows.push(next);
+      byKey.set(`${row.kind}:${row.entry_id}`, next);
+    }
+  }
   cache = rows;
+  index = byKey;
   return rows;
+}
+
+function stored(kind: string, id: string): Stored | undefined {
+  load();
+  return index?.get(`${kind}:${id}`);
 }
 
 export function reloadCatalog(): void {
   cache = null;
+  index = null;
 }
 
-type ReviewFile = {
-  status?: CatalogRow["reviewStatus"];
-  confidence?: CatalogRow["confidence"];
-  unparsedFields?: string[];
-  usage?: string;
-  srd?: Record<string, unknown>;
-  ambiguities?: unknown[];
-  adminNote?: string;
-};
+type Resolution = { status: string; patch: Record<string, unknown>; note: string; updatedAt: string };
 
-function reviewFile(kind: string, id: string): ReviewFile | undefined {
-  const file = path.join(ROOT, "review", kind, `${id}.json`);
-  if (!fs.existsSync(file)) return undefined;
-  return JSON.parse(fs.readFileSync(file, "utf8")) as ReviewFile;
+function resolutions(): Map<string, Resolution> {
+  const rows = accountDb().prepare("SELECT kind, entry_id, status, patch_json, admin_note, updated_at FROM content_resolutions").all() as Array<{
+    kind: string;
+    entry_id: string;
+    status: string;
+    patch_json: string;
+    admin_note: string;
+    updated_at: string;
+  }>;
+  return new Map(
+    rows.map((r) => [
+      `${r.kind}:${r.entry_id}`,
+      { status: r.status, patch: JSON.parse(r.patch_json) as Record<string, unknown>, note: r.admin_note, updatedAt: r.updated_at },
+    ]),
+  );
 }
 
-function resolution(kind: string, id: string): { status: string; patch: Record<string, unknown>; note: string } | undefined {
-  const row = accountDb()
-    .prepare("SELECT status, patch_json, admin_note FROM content_resolutions WHERE kind = ? AND entry_id = ?")
-    .get(kind, id) as { status: string; patch_json: string; admin_note: string } | undefined;
-  if (!row) return undefined;
-  return { status: row.status, patch: JSON.parse(row.patch_json) as Record<string, unknown>, note: row.admin_note };
-}
-
-function reviewOf(kind: string, id: string): Pick<CatalogRow, "reviewStatus" | "confidence" | "unparsedFields" | "usage"> {
-  const file = reviewFile(kind, id);
-  const saved = resolution(kind, id);
-  const status = (saved?.status as CatalogRow["reviewStatus"]) || file?.status || "none";
-  return {
-    reviewStatus: status,
-    confidence: file?.confidence ?? "none",
-    unparsedFields: file?.unparsedFields ?? [],
-    usage: file?.usage ?? "",
-  };
-}
-
-function reviewAllowsPlay(status: CatalogRow["reviewStatus"]): boolean {
+function reviewAllowsPlay(status: ReviewStatus): boolean {
   return status === "auto_ok" || status === "resolved" || status === "none";
 }
 
 function enabledSet(): Set<string> {
-  const rows = accountDb().prepare("SELECT kind, entry_id, enabled FROM content_flags").all() as Array<{
+  const rows = accountDb().prepare("SELECT kind, entry_id FROM content_flags WHERE enabled = 1").all() as Array<{
     kind: string;
     entry_id: string;
-    enabled: number;
   }>;
-  return new Set(rows.filter((row) => row.enabled === 1).map((row) => `${row.kind}:${row.entry_id}`));
+  return new Set(rows.map((row) => `${row.kind}:${row.entry_id}`));
+}
+
+function toRow(row: Stored, on: Set<string>, saved: Map<string, Resolution>): CatalogRow {
+  const key = `${row.kind}:${row.id}`;
+  const enabled = on.has(key);
+  const status = (saved.get(key)?.status as ReviewStatus | undefined) || row.review?.status || "none";
+  return {
+    kind: row.kind,
+    id: row.id,
+    name: row.name,
+    enabled,
+    valid: row.valid,
+    issues: row.issues,
+    reviewStatus: status,
+    confidence: row.review?.confidence ?? "none",
+    unparsedFields: row.edited ? [] : (row.review?.unparsedFields ?? []),
+    usage: row.review?.usage ?? "",
+    source: row.source,
+    edited: row.edited,
+    inPlay: enabled && row.valid && reviewAllowsPlay(status),
+  };
 }
 
 export function listCatalog(): CatalogRow[] {
   const on = enabledSet();
-  return load().map((row) => {
-    const enabled = on.has(`${row.kind}:${row.id}`);
-    const review = reviewOf(row.kind, row.id);
-    return {
-      kind: row.kind,
-      id: row.id,
-      name: row.name,
-      enabled,
-      valid: row.valid,
-      issues: row.issues,
-      ...review,
-      inPlay: enabled && row.valid && reviewAllowsPlay(review.reviewStatus),
-    };
-  });
+  const saved = resolutions();
+  return load().map((row) => toRow(row, on, saved));
+}
+
+function rowFor(kind: string, id: string): CatalogRow {
+  const row = stored(kind, id);
+  if (!row) throw new Error("BAD_CONTENT");
+  return toRow(row, enabledSet(), resolutions());
+}
+
+export type CatalogQuery = {
+  q?: string;
+  kind?: string;
+  status?: string;
+  enabled?: string;
+  valid?: string;
+  source?: string;
+  sort?: string;
+  dir?: string;
+  page?: number;
+  pageSize?: number;
+};
+
+export function queryCatalog(query: CatalogQuery) {
+  const all = listCatalog();
+  const q = (query.q ?? "").trim().toLowerCase();
+  const matches = (row: CatalogRow, skip: "kind" | "status" | null) => {
+    if (q && !row.name.toLowerCase().includes(q) && !row.id.includes(q)) return false;
+    if (skip !== "kind" && query.kind && row.kind !== query.kind) return false;
+    if (skip !== "status" && query.status && row.reviewStatus !== query.status) return false;
+    if (query.enabled === "on" && !row.enabled) return false;
+    if (query.enabled === "off" && row.enabled) return false;
+    if (query.enabled === "in_play" && !row.inPlay) return false;
+    if (query.valid === "yes" && !row.valid) return false;
+    if (query.valid === "no" && row.valid) return false;
+    if (query.source === "edited" && !row.edited) return false;
+    if (query.source === "custom" && row.source !== "custom") return false;
+    if (query.source === "queue" && row.source !== "queue") return false;
+    return true;
+  };
+  const kinds: Record<string, number> = {};
+  const statuses: Record<string, number> = {};
+  for (const row of all) {
+    if (matches(row, "kind")) kinds[row.kind] = (kinds[row.kind] ?? 0) + 1;
+    if (matches(row, "status")) statuses[row.reviewStatus] = (statuses[row.reviewStatus] ?? 0) + 1;
+  }
+  const rows = all.filter((row) => matches(row, null));
+  const dir = query.dir === "desc" ? -1 : 1;
+  const sorters: Record<string, (a: CatalogRow, b: CatalogRow) => number> = {
+    name: (a, b) => a.name.localeCompare(b.name),
+    kind: (a, b) => a.kind.localeCompare(b.kind) || a.name.localeCompare(b.name),
+    status: (a, b) => a.reviewStatus.localeCompare(b.reviewStatus) || a.name.localeCompare(b.name),
+    enabled: (a, b) => Number(b.enabled) - Number(a.enabled) || a.name.localeCompare(b.name),
+  };
+  rows.sort((a, b) => (sorters[query.sort ?? ""] ?? sorters.kind!)(a, b) * dir);
+  const pageSize = Math.min(200, Math.max(10, Math.floor(query.pageSize ?? 50)));
+  const page = Math.max(1, Math.floor(query.page ?? 1));
+  return {
+    rows: rows.slice((page - 1) * pageSize, page * pageSize),
+    total: rows.length,
+    page,
+    pageSize,
+    facets: { kinds, statuses },
+    totals: {
+      all: all.length,
+      inPlay: all.filter((r) => r.inPlay).length,
+      needsReview: all.filter((r) => r.reviewStatus === "needs_review").length,
+      invalid: all.filter((r) => !r.valid).length,
+      edited: all.filter((r) => r.edited).length,
+    },
+  };
 }
 
 export function setContentEnabled(kind: string, id: string, enabled: boolean): CatalogRow {
-  if (enabled && !reviewAllowsPlay(reviewOf(kind, id).reviewStatus)) throw new Error("REVIEW_OPEN");
+  const current = rowFor(kind, id);
+  if (enabled && !reviewAllowsPlay(current.reviewStatus)) throw new Error("REVIEW_OPEN");
+  if (enabled && !current.valid) throw new Error("CONTENT_INVALID");
   accountDb()
     .prepare(
       `INSERT INTO content_flags (kind, entry_id, enabled) VALUES (?, ?, ?)
        ON CONFLICT(kind, entry_id) DO UPDATE SET enabled = excluded.enabled`,
     )
     .run(kind, id, enabled ? 1 : 0);
-  const row = listCatalog().find((entry) => entry.kind === kind && entry.id === id);
-  if (!row) throw new Error("BAD_CONTENT");
-  return row;
+  return rowFor(kind, id);
 }
 
 function inPlay<T>(kind: Bucket): T[] {
-  const allowed = new Set(listCatalog().filter((row) => row.kind === kind && row.inPlay).map((row) => row.id));
+  const on = enabledSet();
+  const saved = resolutions();
   return load()
-    .filter((row) => row.kind === kind && allowed.has(row.id))
-    .map((row) => row.raw as T);
+    .filter((row) => row.kind === kind && toRow(row, on, saved).inPlay)
+    .map((row) => row.parsed as T);
 }
 
 export function enabledClasses(): ClassDef[] {
@@ -243,7 +396,9 @@ export function enabledMonsters(): MonsterDef[] {
 }
 
 export function enabledById<T>(kind: Bucket, id: string): T | undefined {
-  return inPlay<T>(kind).find((row) => (row as { id: string }).id === id);
+  const row = stored(kind, id);
+  if (!row) return undefined;
+  return toRow(row, enabledSet(), resolutions()).inPlay ? (row.parsed as T) : undefined;
 }
 
 export function xpThresholds(): number[] {
@@ -254,25 +409,47 @@ export function xpThresholds(): number[] {
 }
 
 export function contentDetail(kind: string, id: string): Record<string, unknown> {
-  const row = listCatalog().find((entry) => entry.kind === kind && entry.id === id);
-  if (!row) throw new Error("BAD_CONTENT");
-  const stored = load().find((entry) => entry.kind === kind && entry.id === id);
-  const file = reviewFile(kind, id);
-  const saved = resolution(kind, id);
+  const row = rowFor(kind, id);
+  const entry = stored(kind, id)!;
+  const saved = resolutions().get(`${kind}:${id}`);
+  const original = entry.edited && entry.source === "srd" ? srdOriginal(kind, id) : null;
   return {
     ...row,
-    game: stored?.raw ?? null,
-    srd: file?.srd ?? {},
-    ambiguities: file?.ambiguities ?? [],
-    adminNote: saved?.note ?? file?.adminNote ?? "",
-    patch: saved?.patch ?? {},
+    game: entry.raw ?? null,
+    original,
+    srd: entry.review?.srd ?? {},
+    ambiguities: entry.review?.ambiguities ?? [],
+    parsedUnparsedFields: entry.review?.unparsedFields ?? [],
+    adminNote: saved?.note ?? entry.review?.adminNote ?? "",
+    reviewedAt: saved?.updatedAt ?? null,
+    fileStatus: entry.review?.status ?? "none",
   };
 }
 
-export function resolveContent(kind: string, id: string, input: { optionIndex?: number; patch?: Record<string, unknown>; adminNote?: string; reject?: boolean }): CatalogRow {
-  const file = reviewFile(kind, id);
-  const option = file?.ambiguities?.[input.optionIndex ?? -1] as { patch?: Record<string, unknown> } | undefined;
-  const patch = input.patch ?? option?.patch ?? {};
+function srdOriginal(kind: string, id: string): unknown {
+  for (const spec of FILES) {
+    if (spec.kind !== kind) continue;
+    const full = path.join(ROOT, spec.file);
+    if (!fs.existsSync(full)) continue;
+    const found = ((readJson(full) as { entries?: unknown[] }).entries ?? []).find((e) => idOf(e, "") === id);
+    if (found) return found;
+  }
+  return null;
+}
+
+/** Approve (resolved), reject, or apply one of the parser's options as an edit and approve. */
+export function resolveContent(
+  kind: string,
+  id: string,
+  input: { optionIndex?: number; patch?: Record<string, unknown>; adminNote?: string; reject?: boolean },
+): CatalogRow {
+  const entry = stored(kind, id);
+  if (!entry) throw new Error("BAD_CONTENT");
+  const option = entry.review?.ambiguities?.[input.optionIndex ?? -1] as { options?: Array<{ patch?: Record<string, unknown> }>; patch?: Record<string, unknown> } | undefined;
+  const patch = input.patch ?? option?.options?.[0]?.patch ?? option?.patch ?? {};
+  if (Object.keys(patch).length && !input.reject) {
+    saveCustomEntry(kind, id, { ...(entry.raw as Record<string, unknown>), ...patch });
+  }
   const status = input.reject ? "rejected" : "resolved";
   accountDb()
     .prepare(
@@ -281,20 +458,59 @@ export function resolveContent(kind: string, id: string, input: { optionIndex?: 
        ON CONFLICT(kind, entry_id) DO UPDATE SET status = excluded.status, patch_json = excluded.patch_json, admin_note = excluded.admin_note, updated_at = excluded.updated_at`,
     )
     .run(kind, id, status, JSON.stringify(patch), input.adminNote ?? "", new Date().toISOString());
-  reloadCatalog();
-  const row = listCatalog().find((entry) => entry.kind === kind && entry.id === id);
-  if (!row) throw new Error("BAD_CONTENT");
+  if (input.reject) {
+    accountDb().prepare("UPDATE content_flags SET enabled = 0 WHERE kind = ? AND entry_id = ?").run(kind, id);
+  }
+  return rowFor(kind, id);
+}
+
+/** Drops the admin decision; the entry goes back to what the parser said. Disables it if that blocks play. */
+export function reopenContent(kind: string, id: string): CatalogRow {
+  rowFor(kind, id);
+  accountDb().prepare("DELETE FROM content_resolutions WHERE kind = ? AND entry_id = ?").run(kind, id);
+  const row = rowFor(kind, id);
+  if (row.enabled && !reviewAllowsPlay(row.reviewStatus)) return setContentEnabled(kind, id, false);
   return row;
 }
 
-export function saveCustomEntry(kind: string, id: string, body: unknown): void {
+/** Writes the admin's version of an entry. Invalid JSON for the schema is saved but stays out of play. */
+export function saveCustomEntry(kind: string, id: string, body: unknown): CatalogRow {
+  if (!isBucket(kind)) throw new Error("BAD_CONTENT_KIND");
+  if (!/^[a-z0-9_]{2,64}$/.test(id)) throw new Error("BAD_CONTENT_ID");
+  if (!body || typeof body !== "object" || Array.isArray(body)) throw new Error("BAD_CONTENT_BODY");
+  const entry = { ...(body as Record<string, unknown>), id };
   accountDb()
     .prepare(
       `INSERT INTO content_custom (kind, entry_id, body_json) VALUES (?, ?, ?)
        ON CONFLICT(kind, entry_id) DO UPDATE SET body_json = excluded.body_json`,
     )
-    .run(kind, id, JSON.stringify(body));
+    .run(kind, id, JSON.stringify(entry));
   reloadCatalog();
+  const row = rowFor(kind, id);
+  if (row.enabled && !row.valid) return setContentEnabled(kind, id, false);
+  return row;
+}
+
+/** Removes the admin edit. A parsed entry goes back to the SRD version; a custom one is gone. */
+export function revertContent(kind: string, id: string): CatalogRow | null {
+  const before = stored(kind, id);
+  if (!before?.edited) throw new Error("NOT_EDITED");
+  accountDb().prepare("DELETE FROM content_custom WHERE kind = ? AND entry_id = ?").run(kind, id);
+  reloadCatalog();
+  if (!stored(kind, id)) {
+    accountDb().prepare("DELETE FROM content_flags WHERE kind = ? AND entry_id = ?").run(kind, id);
+    accountDb().prepare("DELETE FROM content_resolutions WHERE kind = ? AND entry_id = ?").run(kind, id);
+    return null;
+  }
+  return rowFor(kind, id);
+}
+
+/** A valid entry of the same kind with the name cleared, so a new entry starts schema-shaped. */
+export function contentTemplate(kind: string): Record<string, unknown> {
+  if (!isBucket(kind)) throw new Error("BAD_CONTENT_KIND");
+  const sample = load().find((row) => row.kind === kind && row.valid && row.source === "srd")?.raw as Record<string, unknown> | undefined;
+  const { id: _id, ...rest } = sample ?? {};
+  return { ...rest, name: "" };
 }
 
 export function playbook(): Array<{ id: string; done: boolean }> {
