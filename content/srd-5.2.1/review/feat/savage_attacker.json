@@ -5,5 +5,8 @@
   "id": "savage_attacker",
   "status": "auto_ok",
   "confidence": "high",
-  "usage": "Chosen at an ASI level or as an Epic Boon when the class table says so."
+  "usage": "Chosen at an ASI level or as an Epic Boon when the class table says so.",
+  "srd": {
+    "text": "_Origin Feat_\n\nYou've trained to deal particularly damaging strikes. Once per turn when you hit a target with a weapon, you can roll the weapon's damage dice twice and use either roll against the target."
+  }
 }

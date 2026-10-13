@@ -2,10 +2,10 @@
   "ambiguities": [
     {
       "field": "effects",
-      "summary": "No typed effect matched the item text.",
+      "summary": "No typed effect matches this item. The rules listed under Not modeled stay text only.",
       "options": [
         {
-          "label": "Leave effects empty",
+          "label": "Approve with no typed effects",
           "patch": {
             "effects": []
           }
@@ -21,9 +21,13 @@
   "id": "ring_of_evasion",
   "status": "needs_review",
   "confidence": "low",
-  "usage": "Vendor, loot, and stash. Typed effects change AC, attack, and damage.",
+  "usage": "Vendor, loot, and stash. Equipped effects are listed on the sheet; no fight applies them yet.",
   "srd": {
     "line": "Ring, Rare (Requires Attunement)",
     "text": "_Ring, Rare (Requires Attunement)_\n\nThis ring has 3 charges, and it regains 1d3 expended charges daily at dawn. When you fail a Dexterity saving throw while wearing the ring, you can take a Reaction to expend 1 charge to succeed on that save instead."
-  }
+  },
+  "notModeled": [
+    "This ring has 3 charges, and it regains 1d3 expended charges daily at dawn.",
+    "When you fail a Dexterity saving throw while wearing the ring, you can take a Reaction to expend 1 charge to succeed on that save instead."
+  ]
 }

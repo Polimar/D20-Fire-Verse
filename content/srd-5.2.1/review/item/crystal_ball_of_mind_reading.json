@@ -1,27 +1,11 @@
 {
-  "ambiguities": [
-    {
-      "field": "effects",
-      "summary": "No typed effect matched the item text.",
-      "options": [
-        {
-          "label": "Leave effects empty",
-          "patch": {
-            "effects": []
-          }
-        }
-      ],
-      "parserChoice": 0
-    }
-  ],
-  "unparsedFields": [
-    "effects"
-  ],
+  "ambiguities": [],
+  "unparsedFields": [],
   "kind": "item",
   "id": "crystal_ball_of_mind_reading",
-  "status": "needs_review",
-  "confidence": "low",
-  "usage": "Vendor, loot, and stash. Typed effects change AC, attack, and damage.",
+  "status": "auto_ok",
+  "confidence": "high",
+  "usage": "Vendor, loot, and stash. Equipped effects are listed on the sheet; no fight applies them yet.",
   "srd": {
     "line": "Wondrous Item, Legendary (Requires Attunement)",
     "text": "_Wondrous Item, Legendary (Requires Attunement)_\n\nWhile touching this crystal orb, you can cast _Scrying_ (save DC 17) with it. In addition, you can cast _Detect Thoughts_ (save DC 17) targeting creatures you can see within 30 feet of the spell's sensor. You don't need to concentrate on this _Detect Thoughts_ spell to maintain it during its duration, but it ends if the _Scrying_ spell ends."

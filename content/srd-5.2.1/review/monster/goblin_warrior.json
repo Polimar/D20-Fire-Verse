@@ -1,0 +1,13 @@
+{
+  "ambiguities": [],
+  "unparsedFields": [],
+  "kind": "monster",
+  "id": "goblin_warrior",
+  "status": "auto_ok",
+  "confidence": "high",
+  "usage": "Encounters and arena fights. The engine runs the actions it can compile from the stat block.",
+  "srd": {
+    "engineId": "srd_goblin_warrior",
+    "text": "_Small Fey (Goblinoid), Chaotic Neutral_\n\n**AC** 15 **Initiative** +2 (12)\n\n**HP** 10 (3d6)\n\n**Speed** 30 ft.\n\n|  |  | MOD | SAVE |  |  | MOD | SAVE |  |  | MOD | SAVE |\n| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |\n| **STR** | 8 | −1 | −1 | **DEX** | 15 | +2 | +2 | **CON** | 10 | +0 | +0 |\n| **INT** | 10 | +0 | +0 | **WIS** | 8 | −1 | −1 | **CHA** | 8 | −1 | −1 |\n\n**Skills** Stealth +6\n\n**Gear** Leather Armor, Scimitar, Shield, Shortbow\n\n**Senses** Darkvision 60 ft.; Passive Perception 9\n\n**Languages** Common, Goblin\n\n**CR** 1/4 (XP 50; PB +2)\n\n#### Actions\n\n**_Scimitar._** _Melee Attack Roll:_ +4, reach 5 ft. _Hit:_ 5 (1d6 + 2) Slashing damage, plus 2 (1d4) Slashing damage if the attack roll had Advantage.\n\n**_Shortbow._** _Ranged Attack Roll:_ +4, range 80/320 ft. _Hit:_ 5 (1d6 + 2) Piercing damage, plus 2 (1d4) Piercing damage if the attack roll had Advantage.\n\n#### Bonus Actions\n\n**_Nimble Escape._** The goblin takes the Disengage or Hide action."
+  }
+}

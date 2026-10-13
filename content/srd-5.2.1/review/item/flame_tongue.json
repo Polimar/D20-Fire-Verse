@@ -2,12 +2,24 @@
   "ambiguities": [
     {
       "field": "effects",
-      "summary": "No typed effect matched the item text.",
+      "summary": "Conditional extra damage: “While the weapon is ablaze, it deals an extra 2d6 Fire damage on a hit.” The engine cannot check the condition.",
       "options": [
         {
-          "label": "Leave effects empty",
+          "label": "Leave the extra damage out",
           "patch": {
             "effects": []
+          }
+        },
+        {
+          "label": "Apply 2d6 fire on every hit",
+          "patch": {
+            "effects": [
+              {
+                "kind": "on_hit_rider",
+                "damage": "2d6",
+                "damageType": "fire"
+              }
+            ]
           }
         }
       ],
@@ -21,9 +33,13 @@
   "id": "flame_tongue",
   "status": "needs_review",
   "confidence": "low",
-  "usage": "Vendor, loot, and stash. Typed effects change AC, attack, and damage.",
+  "usage": "Vendor, loot, and stash. Equipped effects are listed on the sheet; no fight applies them yet.",
   "srd": {
     "line": "Weapon (Any Melee Weapon), Rare (Requires Attunement)",
     "text": "_Weapon (Any Melee Weapon), Rare (Requires Attunement)_\n\nWhile holding this magic weapon, you can take a Bonus Action and use a command word to cause flames to engulf the damage-dealing part of the weapon. These flames shed Bright Light in a 40-foot radius and Dim Light for an additional 40 feet. While the weapon is ablaze, it deals an extra 2d6 Fire damage on a hit. The flames last until you take a Bonus Action to issue the command again or until you drop, stow, or sheathe the weapon."
-  }
+  },
+  "notModeled": [
+    "While holding this magic weapon, you can take a Bonus Action and use a command word to cause flames to engulf the damage-dealing part of the weapon.",
+    "The flames last until you take a Bonus Action to issue the command again or until you drop, stow, or sheathe the weapon."
+  ]
 }

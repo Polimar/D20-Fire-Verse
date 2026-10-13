@@ -5,9 +5,9 @@
   "id": "locate_animals_or_plants",
   "status": "auto_ok",
   "confidence": "high",
-  "usage": "Level-up spell list for the listed classes. Combat only if a wired ability uses this id.",
+  "usage": "Level-up spell list for the listed classes. Combat runs it only when a wired ability has the same id.",
   "srd": {
-    "components": "V, S, M (fur from a bloodhound)",
-    "line": "Level 2 Divination (Bard, Druid, Ranger)"
+    "line": "Level 2 Divination (Bard, Druid, Ranger)",
+    "text": "_Level 2 Divination (Bard, Druid, Ranger)_\n\n**Casting Time:** Action or Ritual\n**Range:** Self\n**Components:** V, S, M (fur from a bloodhound)\n**Duration:** Instantaneous\n\nDescribe or name a specific kind of Beast, Plant creature, or nonmagical plant. You learn the direction and distance to the closest creature or plant of that kind within 5 miles, if any are present."
   }
 }

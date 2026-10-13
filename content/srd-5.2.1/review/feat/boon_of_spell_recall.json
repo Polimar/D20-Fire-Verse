@@ -5,5 +5,8 @@
   "id": "boon_of_spell_recall",
   "status": "auto_ok",
   "confidence": "high",
-  "usage": "Chosen at an ASI level or as an Epic Boon when the class table says so."
+  "usage": "Chosen at an ASI level or as an Epic Boon when the class table says so.",
+  "srd": {
+    "text": "_Epic Boon Feat (Prerequisite: Level 19+, Spellcasting Feature)_\n\nYou gain the following benefits.\n\n_Ability Score Increase._ Increase your Intelligence, Wisdom, or Charisma score by 1, to a maximum of 30.\n\n_Free Casting._ Whenever you cast a spell with a level 1–4 spell slot, roll 1d4. If the number you roll is the same as the slot's level, the slot isn't expended."
+  }
 }

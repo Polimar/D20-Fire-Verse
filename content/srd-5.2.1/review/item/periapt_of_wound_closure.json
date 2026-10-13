@@ -2,10 +2,10 @@
   "ambiguities": [
     {
       "field": "effects",
-      "summary": "No typed effect matched the item text.",
+      "summary": "No typed effect matches this item. The rules listed under Not modeled stay text only.",
       "options": [
         {
-          "label": "Leave effects empty",
+          "label": "Approve with no typed effects",
           "patch": {
             "effects": []
           }
@@ -21,9 +21,12 @@
   "id": "periapt_of_wound_closure",
   "status": "needs_review",
   "confidence": "low",
-  "usage": "Vendor, loot, and stash. Typed effects change AC, attack, and damage.",
+  "usage": "Vendor, loot, and stash. Equipped effects are listed on the sheet; no fight applies them yet.",
   "srd": {
     "line": "Wondrous Item, Uncommon (Requires Attunement)",
     "text": "_Wondrous Item, Uncommon (Requires Attunement)_\n\nWhile wearing this pendant, you gain the following benefits.\n\n**_Life Preservation._** Whenever you make a Death Saving Throw, you can change a roll of 9 or lower to a 10, turning a failed save into a successful one.\n\n**_Natural Healing Boost._** Whenever you roll a Hit Point Die to regain Hit Points, double the number of Hit Points it restores."
-  }
+  },
+  "notModeled": [
+    "Natural Healing Boost. Whenever you roll a Hit Point Die to regain Hit Points, double the number of Hit Points it restores."
+  ]
 }

@@ -5,9 +5,9 @@
   "id": "sacred_flame",
   "status": "auto_ok",
   "confidence": "high",
-  "usage": "Level-up spell list for the listed classes. Combat only if a wired ability uses this id.",
+  "usage": "Level-up spell list for the listed classes. Combat runs it only when a wired ability has the same id.",
   "srd": {
-    "components": "V, S",
-    "line": "Evocation Cantrip (Cleric)"
+    "line": "Evocation Cantrip (Cleric)",
+    "text": "_Evocation Cantrip (Cleric)_\n\n**Casting Time:** Action\n**Range:** 60 feet\n**Components:** V, S\n**Duration:** Instantaneous\n\nFlame-like radiance descends on a creature that you can see within range. The target must succeed on a Dexterity saving throw or take 1d8 Radiant damage. The target gains no benefit from Half Cover or Three-Quarters Cover for this save.\n\n_Cantrip Upgrade._ The damage increases by 1d8 when you reach levels 5 (2d8), 11 (3d8), and 17 (4d8)."
   }
 }

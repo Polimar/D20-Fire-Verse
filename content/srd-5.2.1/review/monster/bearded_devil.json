@@ -5,5 +5,9 @@
   "id": "bearded_devil",
   "status": "auto_ok",
   "confidence": "high",
-  "usage": "Encounters when enabled. Combat uses a wired ability with the same id when one exists."
+  "usage": "Encounters and arena fights. The engine runs the actions it can compile from the stat block.",
+  "srd": {
+    "engineId": "srd_bearded_devil",
+    "text": "_Medium Fiend (Devil), Lawful Evil_\n\n**AC** 13 **Initiative** +2 (12)\n\n**HP** 58 (9d8 + 18)\n\n**Speed** 30 ft.\n\n|  |  | MOD | SAVE |  |  | MOD | SAVE |  |  | MOD | SAVE |\n| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |\n| **STR** | 16 | +3 | +5 | **DEX** | 15 | +2 | +2 | **CON** | 15 | +2 | +4 |\n| **INT** | 9 | −1 | −1 | **WIS** | 11 | +0 | +0 | **CHA** | 14 | +2 | +4 |\n\n**Resistances** Cold\n\n**Immunities** Fire, Poison; Frightened, Poisoned\n\n**Senses** Darkvision 120 ft. (unimpeded by magical Darkness); Passive Perception 10\n\n**Languages** Infernal; telepathy 120 ft.\n\n**CR** 3 (XP 700; PB +2)\n\n#### Traits\n\n**_Magic Resistance._** The devil has Advantage on saving throws against spells and other magical effects.\n\n#### Actions\n\n**_Multiattack._** The devil makes one Beard attack and one Infernal Glaive attack.\n\n**_Beard._** _Melee Attack Roll:_ +5, reach 5 ft. _Hit:_ 7 (1d8 + 3) Piercing damage, and the target has the Poisoned condition until the start of the devil's next turn. Until this poison ends, the target can't regain Hit Points.\n\n**_Infernal Glaive._** _Melee Attack Roll:_ +5, reach 10 ft. _Hit:_ 8 (1d10 + 3) Slashing damage. If the target is a creature and doesn't already have an infernal wound, it is subjected to the following effect. _Constitution Saving Throw:_ DC 12. _Failure:_ The target receives an infernal wound. While wounded, the target loses 5 (1d10) Hit Points at the start of each of its turns. The wound closes after 1 minute, after a spell restores Hit Points to the target, or after the target or a creature within 5 feet of it takes an action to stanch the wound, doing so by succeeding on a DC 12 Wisdom (Medicine) check."
+  }
 }

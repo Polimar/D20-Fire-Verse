@@ -1,0 +1,16 @@
+{
+  "ambiguities": [],
+  "unparsedFields": [],
+  "kind": "item",
+  "id": "chain_shirt",
+  "status": "needs_review",
+  "confidence": "medium",
+  "usage": "Vendor, loot, and stash. Equipped effects are listed on the sheet; no fight applies them yet.",
+  "srd": {
+    "line": "Medium armor",
+    "text": "| Armor | AC | Strength | Stealth | Weight | Cost |\n| --- | --- | --- | --- | --- | --- |\n| Chain Shirt | 13 + Dex modifier (max 2) | — | — | 20 lb. | 50 GP |"
+  },
+  "notModeled": [
+    "Base AC 13 + Dex modifier (max 2): the loadout starts from AC 10 and adds bonuses, so the armor's own AC is not used yet."
+  ]
+}

@@ -5,9 +5,9 @@
   "id": "javelin",
   "status": "auto_ok",
   "confidence": "high",
-  "usage": "Vendor, loot, and stash. Typed effects change AC, attack, and damage.",
+  "usage": "Vendor, loot, and stash. Equipped effects are listed on the sheet; no fight applies them yet.",
   "srd": {
-    "damage": "1d6 Piercing",
-    "properties": "Thrown (Range 30/120)"
+    "line": "simple melee weapon",
+    "text": "| Name | Damage | Properties | Mastery | Weight | Cost |\n| --- | --- | --- | --- | --- | --- |\n| Javelin | 1d6 Piercing | Thrown (Range 30/120) | Slow | 2 lb. | 5 SP |"
   }
 }

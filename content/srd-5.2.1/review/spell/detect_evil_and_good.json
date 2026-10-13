@@ -5,9 +5,9 @@
   "id": "detect_evil_and_good",
   "status": "auto_ok",
   "confidence": "high",
-  "usage": "Level-up spell list for the listed classes. Combat only if a wired ability uses this id.",
+  "usage": "Level-up spell list for the listed classes. Combat runs it only when a wired ability has the same id.",
   "srd": {
-    "components": "V, S",
-    "line": "Level 1 Divination (Cleric, Paladin)"
+    "line": "Level 1 Divination (Cleric, Paladin)",
+    "text": "_Level 1 Divination (Cleric, Paladin)_\n\n**Casting Time:** Action\n**Range:** Self\n**Components:** V, S\n**Duration:** Concentration, up to 10 minutes\n\nFor the duration, you sense the location of any Aberration, Celestial, Elemental, Fey, Fiend, or Undead within 30 feet of yourself. You also sense whether the _Hallow_ spell is active there and, if so, where.\n\nThe spell is blocked by 1 foot of stone, dirt, or wood; 1 inch of metal; or a thin sheet of lead."
   }
 }

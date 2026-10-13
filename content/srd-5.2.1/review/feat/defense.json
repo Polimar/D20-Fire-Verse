@@ -5,5 +5,8 @@
   "id": "defense",
   "status": "auto_ok",
   "confidence": "high",
-  "usage": "Chosen at an ASI level or as an Epic Boon when the class table says so."
+  "usage": "Chosen at an ASI level or as an Epic Boon when the class table says so.",
+  "srd": {
+    "text": "_Fighting Style Feat (Prerequisite: Fighting Style Feature)_\n\nWhile you're wearing Light, Medium, or Heavy armor, you gain a +1 bonus to Armor Class."
+  }
 }

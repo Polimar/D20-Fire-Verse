@@ -2,10 +2,10 @@
   "ambiguities": [
     {
       "field": "effects",
-      "summary": "No typed effect matched the item text.",
+      "summary": "No typed effect matches this item. The rules listed under Not modeled stay text only.",
       "options": [
         {
-          "label": "Leave effects empty",
+          "label": "Approve with no typed effects",
           "patch": {
             "effects": []
           }
@@ -21,9 +21,12 @@
   "id": "sentinel_shield",
   "status": "needs_review",
   "confidence": "low",
-  "usage": "Vendor, loot, and stash. Typed effects change AC, attack, and damage.",
+  "usage": "Vendor, loot, and stash. Equipped effects are listed on the sheet; no fight applies them yet.",
   "srd": {
     "line": "Armor (Shield), Uncommon",
     "text": "_Armor (Shield), Uncommon_\n\nWhile holding this Shield, you have Advantage on Initiative rolls and Wisdom (Perception) checks. The Shield is emblazoned with a symbol of an eye."
-  }
+  },
+  "notModeled": [
+    "While holding this Shield, you have Advantage on Initiative rolls and Wisdom (Perception) checks."
+  ]
 }

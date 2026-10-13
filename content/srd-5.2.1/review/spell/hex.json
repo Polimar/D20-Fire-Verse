@@ -5,9 +5,9 @@
   "id": "hex",
   "status": "auto_ok",
   "confidence": "high",
-  "usage": "Level-up spell list for the listed classes. Combat only if a wired ability uses this id.",
+  "usage": "Level-up spell list for the listed classes. Combat runs it only when a wired ability has the same id.",
   "srd": {
-    "components": "V, S, M (the petrified eye of a newt)",
-    "line": "Level 1 Enchantment (Warlock)"
+    "line": "Level 1 Enchantment (Warlock)",
+    "text": "_Level 1 Enchantment (Warlock)_\n\n**Casting Time:** Bonus Action\n**Range:** 90 feet\n**Components:** V, S, M (the petrified eye of a newt)\n**Duration:** Concentration, up to 1 hour\n\nYou place a curse on a creature that you can see within range. Until the spell ends, you deal an extra 1d6 Necrotic damage to the target whenever you hit it with an attack roll. Also, choose one ability when you cast the spell. The target has Disadvantage on ability checks made with the chosen ability.\n\nIf the target drops to 0 Hit Points before this spell ends, you can take a Bonus Action on a later turn to curse a new creature.\n\n_Using a Higher-Level Spell Slot._ Your Concentration can last longer with a spell slot of level 2 (up to 4 hours), 3–4 (up to 8 hours), or 5+ (24 hours)."
   }
 }

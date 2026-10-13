@@ -5,9 +5,9 @@
   "id": "gust_of_wind",
   "status": "auto_ok",
   "confidence": "high",
-  "usage": "Level-up spell list for the listed classes. Combat only if a wired ability uses this id.",
+  "usage": "Level-up spell list for the listed classes. Combat runs it only when a wired ability has the same id.",
   "srd": {
-    "components": "V, S, M (a legume seed)",
-    "line": "Level 2 Evocation (Druid, Ranger, Sorcerer, Wizard)"
+    "line": "Level 2 Evocation (Druid, Ranger, Sorcerer, Wizard)",
+    "text": "_Level 2 Evocation (Druid, Ranger, Sorcerer, Wizard)_\n\n**Casting Time:** Action\n**Range:** Self\n**Components:** V, S, M (a legume seed)\n**Duration:** Concentration, up to 1 minute\n\nA Line of strong wind 60 feet long and 10 feet wide blasts from you in a direction you choose for the duration. Each creature in the Line must succeed on a Strength saving throw or be pushed 15 feet away from you in a direction following the Line. A creature that ends its turn in the Line must make the same save.\n\nAny creature in the Line must spend 2 feet of movement for every 1 foot it moves when moving closer to you.\n\nThe gust disperses gas or vapor, and it extinguishes candles and similar unprotected flames in the area. It causes protected flames, such as those of lanterns, to dance wildly and has a 50 percent chance to extinguish them.\n\nAs a Bonus Action on your later turns, you can change the direction in which the Line blasts from you."
   }
 }

@@ -5,9 +5,9 @@
   "id": "light",
   "status": "auto_ok",
   "confidence": "high",
-  "usage": "Level-up spell list for the listed classes. Combat only if a wired ability uses this id.",
+  "usage": "Level-up spell list for the listed classes. Combat runs it only when a wired ability has the same id.",
   "srd": {
-    "components": "V, M (a firefly or phosphorescent moss)",
-    "line": "Evocation Cantrip (Bard, Cleric, Sorcerer, Wizard)"
+    "line": "Evocation Cantrip (Bard, Cleric, Sorcerer, Wizard)",
+    "text": "_Evocation Cantrip (Bard, Cleric, Sorcerer, Wizard)_\n\n**Casting Time:** Action\n**Range:** Touch\n**Components:** V, M (a firefly or phosphorescent moss)\n**Duration:** 1 hour\n\nYou touch one Large or smaller object that isn't being worn or carried by someone else. Until the spell ends, the object sheds Bright Light in a 20-foot radius and Dim Light for an additional 20 feet. The light can be colored as you like.\n\nCovering the object with something opaque blocks the light. The spell ends if you cast it again."
   }
 }

@@ -5,9 +5,9 @@
   "id": "zone_of_truth",
   "status": "auto_ok",
   "confidence": "high",
-  "usage": "Level-up spell list for the listed classes. Combat only if a wired ability uses this id.",
+  "usage": "Level-up spell list for the listed classes. Combat runs it only when a wired ability has the same id.",
   "srd": {
-    "components": "V, S",
-    "line": "Level 2 Enchantment (Bard, Cleric, Paladin)"
+    "line": "Level 2 Enchantment (Bard, Cleric, Paladin)",
+    "text": "_Level 2 Enchantment (Bard, Cleric, Paladin)_\n\n**Casting Time:** Action\n**Range:** 60 feet\n**Components:** V, S\n**Duration:** 10 minutes\n\nYou create a magical zone that guards against deception in a 15-foot-radius Sphere centered on a point within range. Until the spell ends, a creature that enters the spell's area for the first time on a turn or starts its turn there makes a Charisma saving throw. On a failed save, a creature can't speak a deliberate lie while in the radius. You know whether a creature succeeds or fails on this save.\n\nAn affected creature is aware of the spell and can avoid answering questions to which it would normally respond with a lie. Such a creature can be evasive yet must be truthful."
   }
 }

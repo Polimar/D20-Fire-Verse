@@ -2,10 +2,10 @@
   "ambiguities": [
     {
       "field": "effects",
-      "summary": "No typed effect matched the item text.",
+      "summary": "No typed effect matches this item. The rules listed under Not modeled stay text only.",
       "options": [
         {
-          "label": "Leave effects empty",
+          "label": "Approve with no typed effects",
           "patch": {
             "effects": []
           }
@@ -21,9 +21,13 @@
   "id": "potions_of_healing",
   "status": "needs_review",
   "confidence": "low",
-  "usage": "Vendor, loot, and stash. Typed effects change AC, attack, and damage.",
+  "usage": "Vendor, loot, and stash. Equipped effects are listed on the sheet; no fight applies them yet.",
   "srd": {
     "line": "Potion, Rarity Varies",
-    "text": "_Potion, Rarity Varies_\n\nYou regain Hit Points when you drink this potion. The number of Hit Points depends on the potion's rarity, as shown in the table below.\n\nWhatever its potency, the potion's red liquid glimmers when agitated.\n\n<table>\n  <thead>\n    <tr>\n      <th>Potion</th>\n      <th>HP Regained</th>\n      <th>Rarity</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <td>Potion of Healing</td>\n      <td>2d4 + 2</td>\n      <td>Common</td>\n    </tr>\n    <tr>\n      <td>Potion of Healing (greater)</td>\n      <td>4d4 + 4</td>\n      <td>Uncommon</td>\n    </tr>\n    <tr>\n      <td>Potion of Healing (superior)</td>\n      <td>8d4 + 8</td>\n      <td>Rare</td>\n    </tr>\n    <tr>\n      <td>Potion of Healing (supreme)</td>\n      <td>10d4 + 20</td>\n      <td>Very Rare</td>\n    </tr>\n  </tbody>\n</table>"
-  }
+    "text": "_Potion, Rarity Varies_\n\nYou regain Hit Points when you drink this potion. The number of Hit Points depends on the potion's rarity, as shown in the table below.\n\nWhatever its potency, the potion's red liquid glimmers when agitated.\n\n| Potion | HP Regained | Rarity |\n| --- | --- | --- |\n| Potion of Healing | 2d4 + 2 | Common |\n| Potion of Healing (greater) | 4d4 + 4 | Uncommon |\n| Potion of Healing (superior) | 8d4 + 8 | Rare |\n| Potion of Healing (supreme) | 10d4 + 20 | Very Rare |"
+  },
+  "notModeled": [
+    "You regain Hit Points when you drink this potion.",
+    "The number of Hit Points depends on the potion's rarity, as shown in the table below."
+  ]
 }

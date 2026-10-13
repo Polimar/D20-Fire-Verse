@@ -2,10 +2,10 @@
   "ambiguities": [
     {
       "field": "effects",
-      "summary": "No typed effect matched the item text.",
+      "summary": "No typed effect matches this item. The rules listed under Not modeled stay text only.",
       "options": [
         {
-          "label": "Leave effects empty",
+          "label": "Approve with no typed effects",
           "patch": {
             "effects": []
           }
@@ -21,9 +21,12 @@
   "id": "potion_of_poison",
   "status": "needs_review",
   "confidence": "low",
-  "usage": "Vendor, loot, and stash. Typed effects change AC, attack, and damage.",
+  "usage": "Vendor, loot, and stash. Equipped effects are listed on the sheet; no fight applies them yet.",
   "srd": {
     "line": "Potion, Uncommon",
     "text": "_Potion, Uncommon_\n\nThis concoction looks, smells, and tastes like a _Potion of Healing_ or another beneficial potion. However, it is actually poison masked by illusion magic. _Identify_ reveals its true nature.\n\nIf you drink this potion, you take 4d6 Poison damage and must succeed on a DC 13 Constitution saving throw or have the Poisoned condition for 1 hour."
-  }
+  },
+  "notModeled": [
+    "If you drink this potion, you take 4d6 Poison damage and must succeed on a DC 13 Constitution saving throw or have the Poisoned condition for 1 hour."
+  ]
 }

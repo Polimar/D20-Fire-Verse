@@ -5,9 +5,9 @@
   "id": "hunters_mark",
   "status": "auto_ok",
   "confidence": "high",
-  "usage": "Level-up spell list for the listed classes. Combat only if a wired ability uses this id.",
+  "usage": "Level-up spell list for the listed classes. Combat runs it only when a wired ability has the same id.",
   "srd": {
-    "components": "V",
-    "line": "Level 1 Divination (Ranger)"
+    "line": "Level 1 Divination (Ranger)",
+    "text": "_Level 1 Divination (Ranger)_\n\n**Casting Time:** Bonus Action\n**Range:** 90 feet\n**Components:** V\n**Duration:** Concentration, up to 1 hour\n\nYou magically mark one creature you can see within range as your quarry. Until the spell ends, you deal an extra 1d6 Force damage to the target whenever you hit it with an attack roll. You also have Advantage on any Wisdom (Perception or Survival) check you make to find it.\n\nIf the target drops to 0 Hit Points before this spell ends, you can take a Bonus Action to move the mark to a new creature you can see within range.\n\n_Using a Higher-Level Spell Slot._ Your Concentration can last longer with a spell slot of level 3–4 (up to 8 hours) or 5+ (up to 24 hours)."
   }
 }

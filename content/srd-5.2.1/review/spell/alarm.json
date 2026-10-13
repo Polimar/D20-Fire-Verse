@@ -5,9 +5,9 @@
   "id": "alarm",
   "status": "auto_ok",
   "confidence": "high",
-  "usage": "Level-up spell list for the listed classes. Combat only if a wired ability uses this id.",
+  "usage": "Level-up spell list for the listed classes. Combat runs it only when a wired ability has the same id.",
   "srd": {
-    "components": "V, S, M (a bell and silver wire)",
-    "line": "Level 1 Abjuration (Ranger, Wizard)"
+    "line": "Level 1 Abjuration (Ranger, Wizard)",
+    "text": "_Level 1 Abjuration (Ranger, Wizard)_\n\n**Casting Time:** 1 minute or Ritual\n**Range:** 30 feet\n**Components:** V, S, M (a bell and silver wire)\n**Duration:** 8 hours\n\nYou set an alarm against intrusion. Choose a door, a window, or an area within range that is no larger than a 20-foot Cube. Until the spell ends, an alarm alerts you whenever a creature touches or enters the warded area. When you cast the spell, you can designate creatures that won't set off the alarm. You also choose whether the alarm is audible or mental:\n\n**Audible Alarm.** The alarm produces the sound of a handbell for 10 seconds within 60 feet of the warded area.\n\n**Mental Alarm.** You are alerted by a mental ping if you are within 1 mile of the warded area. This ping awakens you if you're asleep."
   }
 }

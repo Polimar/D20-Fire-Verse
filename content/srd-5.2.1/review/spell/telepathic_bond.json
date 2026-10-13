@@ -5,9 +5,9 @@
   "id": "telepathic_bond",
   "status": "auto_ok",
   "confidence": "high",
-  "usage": "Level-up spell list for the listed classes. Combat only if a wired ability uses this id.",
+  "usage": "Level-up spell list for the listed classes. Combat runs it only when a wired ability has the same id.",
   "srd": {
-    "components": "V, S, M (two eggs)",
-    "line": "Level 5 Divination (Bard, Wizard)"
+    "line": "Level 5 Divination (Bard, Wizard)",
+    "text": "_Level 5 Divination (Bard, Wizard)_\n\n**Casting Time:** Action or Ritual\n**Range:** 30 feet\n**Components:** V, S, M (two eggs)\n**Duration:** 1 hour\n\nYou forge a telepathic link among up to eight willing creatures of your choice within range, psychically linking each creature to all the others for the duration. Creatures that can't communicate in any languages aren't affected by this spell.\n\nUntil the spell ends, the targets can communicate telepathically through the bond whether or not they share a language. The communication is possible over any distance, though it can't extend to other planes of existence."
   }
 }

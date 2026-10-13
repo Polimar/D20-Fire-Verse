@@ -5,9 +5,9 @@
   "id": "whip",
   "status": "auto_ok",
   "confidence": "high",
-  "usage": "Vendor, loot, and stash. Typed effects change AC, attack, and damage.",
+  "usage": "Vendor, loot, and stash. Equipped effects are listed on the sheet; no fight applies them yet.",
   "srd": {
-    "damage": "1d4 Slashing",
-    "properties": "Finesse, Reach"
+    "line": "martial melee weapon",
+    "text": "| Name | Damage | Properties | Mastery | Weight | Cost |\n| --- | --- | --- | --- | --- | --- |\n| Whip | 1d4 Slashing | Finesse, Reach | Slow | 3 lb. | 2 GP |"
   }
 }

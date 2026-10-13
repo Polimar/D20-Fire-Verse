@@ -1,13 +1,59 @@
 {
-  "ambiguities": [],
+  "ambiguities": [
+    {
+      "field": "effects",
+      "summary": "Conditional extra damage: “When you hit a Fiend or an Undead with it, that creature takes an extra 2d10 Radiant damage.” The engine cannot check the condition.",
+      "options": [
+        {
+          "label": "Leave the extra damage out",
+          "patch": {
+            "effects": [
+              {
+                "kind": "attack_bonus",
+                "amount": 3
+              },
+              {
+                "kind": "damage_bonus",
+                "amount": 3
+              }
+            ]
+          }
+        },
+        {
+          "label": "Apply 2d10 radiant on every hit",
+          "patch": {
+            "effects": [
+              {
+                "kind": "attack_bonus",
+                "amount": 3
+              },
+              {
+                "kind": "damage_bonus",
+                "amount": 3
+              },
+              {
+                "kind": "on_hit_rider",
+                "damage": "2d10",
+                "damageType": "radiant"
+              }
+            ]
+          }
+        }
+      ],
+      "parserChoice": 0
+    }
+  ],
   "unparsedFields": [],
   "kind": "item",
   "id": "holy_avenger",
-  "status": "auto_ok",
-  "confidence": "high",
-  "usage": "Vendor, loot, and stash. Typed effects change AC, attack, and damage.",
+  "status": "needs_review",
+  "confidence": "medium",
+  "usage": "Vendor, loot, and stash. Equipped effects are listed on the sheet; no fight applies them yet.",
   "srd": {
     "line": "Weapon (Any Simple or Martial), Legendary (Requires Attunement by a Paladin)",
     "text": "_Weapon (Any Simple or Martial), Legendary (Requires Attunement by a Paladin)_\n\nYou gain a +3 bonus to attack rolls and damage rolls made with this magic weapon. When you hit a Fiend or an Undead with it, that creature takes an extra 2d10 Radiant damage.\n\nWhile you hold the drawn weapon, it creates a 10-foot Emanation originating from you. You and all creatures Friendly to you in the Emanation have Advantage on saving throws against spells and other magical effects. If you have 17 or more levels in the Paladin class, the size of the Emanation increases to 30 feet."
-  }
+  },
+  "notModeled": [
+    "You and all creatures Friendly to you in the Emanation have Advantage on saving throws against spells and other magical effects."
+  ]
 }

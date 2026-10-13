@@ -2,10 +2,10 @@
   "ambiguities": [
     {
       "field": "effects",
-      "summary": "No typed effect matched the item text.",
+      "summary": "No typed effect matches this item. The rules listed under Not modeled stay text only.",
       "options": [
         {
-          "label": "Leave effects empty",
+          "label": "Approve with no typed effects",
           "patch": {
             "effects": []
           }
@@ -21,9 +21,14 @@
   "id": "wings_of_flying",
   "status": "needs_review",
   "confidence": "low",
-  "usage": "Vendor, loot, and stash. Typed effects change AC, attack, and damage.",
+  "usage": "Vendor, loot, and stash. Equipped effects are listed on the sheet; no fight applies them yet.",
   "srd": {
     "line": "Wondrous Item, Rare (Requires Attunement)",
     "text": "_Wondrous Item, Rare (Requires Attunement)_\n\nWhile wearing this cloak, you can take a Magic action to turn the cloak into a pair of wings on your back. The wings lasts for 1 hour or until you end the effect early as a Magic action. The wings give you a Fly Speed of 60 feet. If you are aloft when the wings disappear, you fall. When the wings disappear, you can't use them again for 1d12 hours."
-  }
+  },
+  "notModeled": [
+    "While wearing this cloak, you can take a Magic action to turn the cloak into a pair of wings on your back.",
+    "The wings lasts for 1 hour or until you end the effect early as a Magic action.",
+    "The wings give you a Fly Speed of 60 feet."
+  ]
 }

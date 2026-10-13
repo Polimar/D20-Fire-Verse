@@ -6,7 +6,14 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { monsterFromMarkdown, splitMonsterMarkdown } from "./parse-monsters.js";
+import type { ItemDef, MonsterAction, MonsterDef, SpellDef } from "@d20-fireverse/content-schema";
+import { loadSrdCatalog, srdMonsterId } from "../../../backend/src/local/srd-monsters.js";
+import { parseArmor, parseMagicItems, parseWeapons, type ParsedItem } from "./parse-items.js";
+import { parseMonsterBlock, splitMonsterMarkdown } from "./parse-monsters.js";
+import { parseSpellChunk } from "./parse-spells.js";
+import { plainMarkdown } from "./srd-text.js";
+
+type EngineMonster = { actions: string[]; bonusActions?: string[]; legendaryActions?: string[]; multiattack?: string[]; traits?: string[] };
 
 type Ability = "str" | "dex" | "con" | "int" | "wis" | "cha";
 
@@ -18,19 +25,23 @@ export type ReviewBundle = {
   unparsedFields: string[];
   usage: string;
   srd?: Record<string, unknown>;
+  notModeled?: string[];
   ambiguities: Array<{ field: string; summary: string; options: Array<{ label: string; patch: Record<string, unknown> }>; parserChoice?: number }>;
 };
 
 const USAGE: Record<string, string> = {
-  spell: "Level-up spell list for the listed classes. Combat only if a wired ability uses this id.",
+  spell: "Level-up spell list for the listed classes. Combat runs it only when a wired ability has the same id.",
   class: "Chargen and level-up: hit die, saves, skills, multiclass gates, spell slots.",
   subclass: "Chosen at the subclass level. Feature names are sheet labels until combat wires them.",
   species: "Chargen species. Unparsed trait numbers count as 0 until you fill them in the wizard.",
   background: "Chargen background. Grants the listed skills.",
   feat: "Chosen at an ASI level or as an Epic Boon when the class table says so.",
-  item: "Vendor, loot, and stash. Typed effects change AC, attack, and damage.",
-  monster: "Encounters when enabled. Combat uses a wired ability with the same id when one exists.",
+  item: "Vendor, loot, and stash. Equipped effects are listed on the sheet; no fight applies them yet.",
+  monster: "Encounters and arena fights. The engine runs the actions it can compile from the stat block.",
 };
+
+/** Long class chapters stay readable in the drawer; the vendored markdown keeps the rest. */
+const TEXT_CAP = 60000;
 
 const ABILITIES: Record<string, Ability> = {
   strength: "str",
@@ -112,10 +123,11 @@ export function importCatalog(): { report: Record<string, number> } {
   const reviews: ReviewBundle[] = [];
   const classes = parseClasses(read("classes.md"), reviews);
   const spells = parseSpells(read("spells.md"), reviews);
+  const knownSpells = new Set(spells.map((spell) => spell.id));
   const { species, backgrounds } = parseOrigins(read("character-origins.md"), reviews);
   const feats = parseFeats(read("feats.md"), reviews);
   const gear = parseGear(read("equipment.md"), reviews);
-  const magic = parseMagic(read("magic-items.md"), reviews);
+  const magic = parseMagic(read("magic-items.md"), knownSpells, reviews);
   const monsters = parseMonsters(read("monsters-A-Z.md"), reviews);
 
   writeJson(path.join(out, "classes.json"), { entries: classes.classes });
@@ -145,6 +157,7 @@ export function importCatalog(): { report: Record<string, number> } {
     magic: magic.length,
     monsters: monsters.length,
     needsReview: reviews.filter((row) => row.status === "needs_review").length,
+    notModeled: reviews.filter((row) => row.notModeled?.length).length,
   };
   writeJson(path.join(out, "import-report.json"), { sha, ...report });
   return { report };
@@ -154,9 +167,8 @@ function bundle(partial: Omit<ReviewBundle, "ambiguities" | "unparsedFields"> & 
   return { ambiguities: [], unparsedFields: [], ...partial };
 }
 
-function parseSpells(markdown: string, reviews: ReviewBundle[]): unknown[] {
+function parseSpells(markdown: string, reviews: ReviewBundle[]): SpellDef[] {
   const section = markdown.slice(markdown.indexOf("## Spell Descriptions"));
-  const entries = [];
   const spellLine = /^_[^_\n]*(Level \d+|Cantrip)[^_\n]*_/im;
   const spellChunks: Array<{ title: string; body: string }> = [];
   for (const chunk of chunks(section, 4)) {
@@ -165,40 +177,128 @@ function parseSpells(markdown: string, reviews: ReviewBundle[]): unknown[] {
     if (last && !spellLine.test(chunk.body)) last.body += `\n\n**${chunk.title}.**\n${chunk.body}`;
     else spellChunks.push({ ...chunk });
   }
+  const entries: SpellDef[] = [];
   for (const chunk of spellChunks) {
-    const id = slug(chunk.title);
-    const line = chunk.body.match(/^_([^_\n]+)_/m)?.[1] ?? "";
-    const levelMatch = /Level (\d+)/i.exec(line);
-    const level = /cantrip/i.test(line) ? 0 : levelMatch ? Number(levelMatch[1]) : undefined;
-    const school = (line.match(/(abjuration|conjuration|divination|enchantment|evocation|illusion|necromancy|transmutation)/i)?.[1] ?? "").toLowerCase();
-    const classBlob = line.match(/\(([^)]+)\)/)?.[1] ?? "";
-    const classes = classBlob.split(/,| and /).map((name) => slug(name.trim())).filter((name) => name && name !== "cantrip");
-    const field = (label: string) => chunk.body.match(new RegExp(`\\*\\*${label}:\\*\\*\\s*([^\\n]+)`))?.[1]?.trim();
-    const description = chunk.body.split("\n").filter((row) => row.trim() && !row.startsWith("**") && !row.startsWith("_")).join(" ").trim();
-    const unparsed: string[] = [];
-    if (level == null) unparsed.push("level");
-    if (!school) unparsed.push("school");
-    if (!classes.length) unparsed.push("classes");
-    const game = {
-      id,
-      name: chunk.title,
-      level: level ?? 0,
-      school: school || "evocation",
-      classes: classes.length ? classes : ["wizard"],
-      castingTime: field("Casting Time") || "Action",
-      range: field("Range") || "Self",
-      duration: field("Duration") || "Instantaneous",
-      description: description || chunk.title,
-    };
-    entries.push(game);
+    const parsed = parseSpellChunk(chunk.title, chunk.body);
+    entries.push(parsed.spell);
     reviews.push(bundle({
       kind: "spell",
-      id,
-      status: unparsed.length ? "needs_review" : "auto_ok",
-      confidence: unparsed.length ? "low" : "high",
-      unparsedFields: unparsed,
+      id: parsed.spell.id,
+      status: parsed.missing.length ? "needs_review" : "auto_ok",
+      confidence: parsed.missing.length ? "low" : "high",
+      unparsedFields: parsed.missing,
       usage: USAGE.spell,
-      srd: { components: field("Components") ?? "", line },
+      srd: { line: parsed.line, text: parsed.text },
+    }));
+  }
+  return entries;
+}
+
+function itemReview(parsed: ParsedItem): ReviewBundle {
+  const { item } = parsed;
+  const noEffects = item.effects.length === 0 && parsed.mechanical > 0 && !item.weapon && !item.armor;
+  const open = noEffects || parsed.notModeled.length > 0 || parsed.ambiguities.length > 0;
+  return bundle({
+    kind: "item",
+    id: item.id,
+    status: open ? "needs_review" : "auto_ok",
+    confidence: !open ? "high" : item.effects.length || item.weapon || item.armor ? "medium" : "low",
+    unparsedFields: noEffects ? ["effects"] : [],
+    usage: USAGE.item,
+    srd: { line: parsed.line, text: parsed.text.slice(0, TEXT_CAP) },
+    ...(parsed.notModeled.length ? { notModeled: parsed.notModeled } : {}),
+    ambiguities: parsed.ambiguities.length
+      ? parsed.ambiguities
+      : noEffects
+        ? [{
+            field: "effects",
+            summary: "No typed effect matches this item. The rules listed under Not modeled stay text only.",
+            options: [{ label: "Approve with no typed effects", patch: { effects: [] } }],
+            parserChoice: 0,
+          }]
+        : [],
+  });
+}
+
+function uniqueIds<T extends { item: ItemDef }>(rows: T[]): T[] {
+  const seen = new Map<string, number>();
+  return rows.map((row) => {
+    const n = (seen.get(row.item.id) ?? 0) + 1;
+    seen.set(row.item.id, n);
+    return n === 1 ? row : { ...row, item: { ...row.item, id: `${row.item.id}_${n}`.slice(0, 64) } };
+  });
+}
+
+function parseGear(markdown: string, reviews: ReviewBundle[]): ItemDef[] {
+  const rows = uniqueIds([...parseWeapons(markdown), ...parseArmor(markdown)]);
+  for (const row of rows) reviews.push(itemReview(row));
+  return rows.map((row) => row.item);
+}
+
+function parseMagic(markdown: string, knownSpells: Set<string>, reviews: ReviewBundle[]): ItemDef[] {
+  const rows = uniqueIds(parseMagicItems(markdown, knownSpells));
+  for (const row of rows) reviews.push(itemReview(row));
+  return rows.map((row) => row.item);
+}
+
+/** Same slug the engine uses for ability ids, without the 64-character cap. */
+function engineSlug(name: string): string {
+  return name.toLowerCase().replace(/['’]/g, "").replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "");
+}
+
+function engineGaps(monster: MonsterDef, compiled: EngineMonster | undefined, engineId: string): { gaps: string[]; traits: string[] } {
+  if (!compiled) return { gaps: ["The combat engine skips this stat block: none of its actions compile into an attack or save."], traits: [] };
+  const ran = new Set([...compiled.actions, ...(compiled.bonusActions ?? []), ...(compiled.legendaryActions ?? [])]);
+  const gaps: string[] = [];
+  const check = (label: string, list: MonsterAction[] | undefined) => {
+    for (const action of list ?? []) {
+      const key = engineSlug(action.name);
+      if (key === "multiattack") {
+        if (!compiled.multiattack?.length) gaps.push(`${label} “Multiattack”: the engine could not read the sequence and makes one attack.`);
+        continue;
+      }
+      if (key === "spellcasting") {
+        const spells = compiled.actions.filter((id) => id.startsWith("spell_"));
+        gaps.push(`${label} “Spellcasting”: only spells wired in content/rules/srd51_combat.json run${spells.length ? ` (${spells.join(", ")})` : "; none of these are wired"}.`);
+        continue;
+      }
+      if (!ran.has(`${engineId}:${key}`)) gaps.push(`${label} “${action.name}”: the combat engine does not run it.`);
+    }
+  };
+  check("Action", monster.actions);
+  check("Bonus action", monster.bonusActions);
+  check("Legendary action", monster.legendaryActions);
+  for (const reaction of monster.reactions ?? []) gaps.push(`Reaction “${reaction.name}”: monsters take no reactions in combat.`);
+  const known = new Set(compiled.traits ?? []);
+  const traits = (monster.traits ?? [])
+    .filter((trait) => !known.has(engineSlug(trait.name.replace(/\s*\(.*$/, ""))))
+    .map((trait) => `Trait “${trait.name}”: text only; the engine ignores it.`);
+  return { gaps, traits };
+}
+
+function parseMonsters(markdown: string, reviews: ReviewBundle[]): MonsterDef[] {
+  const engine = loadSrdCatalog();
+  const entries: MonsterDef[] = [];
+  const seen = new Set<string>();
+  for (const block of splitMonsterMarkdown(markdown)) {
+    const parsed = parseMonsterBlock(block);
+    const monster = parsed.monster;
+    if (seen.has(monster.id)) monster.id = `${monster.id}_${engineSlug(block.group)}`.slice(0, 64);
+    seen.add(monster.id);
+    const engineId = srdMonsterId(monster.name);
+    const compiled = engine.monsters[engineId] as EngineMonster | undefined;
+    const { gaps, traits } = engineGaps(monster, compiled, engineId);
+    entries.push(monster);
+    const open = parsed.missing.length > 0 || gaps.length > 0;
+    reviews.push(bundle({
+      kind: "monster",
+      id: monster.id,
+      status: open ? "needs_review" : "auto_ok",
+      confidence: !compiled || parsed.missing.length ? "low" : gaps.length ? "medium" : "high",
+      unparsedFields: parsed.missing,
+      usage: USAGE.monster,
+      srd: { engineId, text: parsed.text },
+      ...(gaps.length || traits.length ? { notModeled: [...gaps, ...traits] } : {}),
     }));
   }
   return entries;
@@ -288,6 +388,7 @@ function parseClasses(markdown: string, reviews: ReviewBundle[]): { classes: unk
       confidence: unparsed.length ? "medium" : "high",
       unparsedFields: unparsed,
       usage: USAGE.class,
+      srd: { text: plainMarkdown(chunk.body).slice(0, TEXT_CAP) },
     }));
     for (const sub of chunks(chunk.body, 3)) {
       const named = sub.title.match(/Subclass:\s*(.+)$/);
@@ -314,6 +415,7 @@ function parseClasses(markdown: string, reviews: ReviewBundle[]): { classes: unk
         confidence: featuresByLevel.length ? "high" : "low",
         unparsedFields: featuresByLevel.length ? [] : ["featuresByLevel"],
         usage: USAGE.subclass,
+        srd: { text: plainMarkdown(sub.body).slice(0, TEXT_CAP) },
       }));
     }
   }
@@ -339,6 +441,7 @@ function parseOrigins(markdown: string, reviews: ReviewBundle[]): { species: unk
       confidence: skills.length ? "high" : "low",
       unparsedFields: skills.length ? [] : ["skills"],
       usage: USAGE.background,
+      srd: { text: plainMarkdown(chunk.body) },
     }));
   }
   for (const chunk of chunks(speciesSection, 4)) {
@@ -363,6 +466,7 @@ function parseOrigins(markdown: string, reviews: ReviewBundle[]): { species: unk
       confidence: unparsed.length ? "medium" : "high",
       unparsedFields: unparsed.map((trait) => `trait:${trait}`),
       usage: USAGE.species,
+      srd: { text: plainMarkdown(chunk.body) },
     }));
   }
   return { species, backgrounds };
@@ -387,97 +491,7 @@ function parseFeats(markdown: string, reviews: ReviewBundle[]): unknown[] {
       status: "auto_ok",
       confidence: "high",
       usage: USAGE.feat,
-    }));
-  }
-  return entries;
-}
-
-const MASTERY = new Set(["cleave", "graze", "nick", "push", "sap", "slow", "topple", "vex"]);
-
-function parseGear(markdown: string, reviews: ReviewBundle[]): unknown[] {
-  const entries = [];
-  for (const table of tables(markdown)) {
-    for (const row of table) {
-      const mastery = (row[3] ?? "").toLowerCase();
-      if (!MASTERY.has(mastery)) continue;
-      const name = row[0];
-      if (!name || name === "Name") continue;
-      const id = slug(name);
-      const game = {
-        id,
-        name,
-        rarity: "common",
-        slot: "mainhand",
-        weaponId: id,
-        weaponMastery: mastery,
-        effects: [],
-        priceGold: num(row[5]?.match(/(\d+)/)?.[1]) ?? 100,
-      };
-      entries.push(game);
-      reviews.push(bundle({ kind: "item", id, status: "auto_ok", confidence: "high", usage: USAGE.item, srd: { damage: row[1], properties: row[2] } }));
-    }
-  }
-  return entries;
-}
-
-function parseMagic(markdown: string, reviews: ReviewBundle[]): unknown[] {
-  const section = markdown.slice(markdown.indexOf("## Magic Item Descriptions"));
-  const source = section.includes("####") ? section : markdown;
-  const entries = [];
-  for (const chunk of chunks(source, 4)) {
-    const line = chunk.body.match(/^_([^_\n]+)_/m)?.[1] ?? "";
-    if (!/common|uncommon|rare|very rare|legendary|artifact/i.test(line) && !/wondrous|weapon|armor|ring|wand|staff|rod|potion|scroll/i.test(line)) continue;
-    const rarity = /very rare/i.test(line) ? "very_rare" : /uncommon/i.test(line) ? "uncommon" : /rare/i.test(line) ? "rare" : /legendary/i.test(line) ? "legendary" : "common";
-    const attune = /attunement/i.test(line);
-    const slot = /armor/i.test(line) ? "armor" : /weapon/i.test(line) ? "mainhand" : /potion|scroll/i.test(line) ? "consumable" : "trinket";
-    const effects: unknown[] = [];
-    const plus = chunk.body.match(/\+(\d) bonus to (?:Armor Class|AC)/i);
-    if (plus) effects.push({ kind: "ac_bonus", amount: Number(plus[1]) });
-    const weapon = chunk.body.match(/(?:have|gain) a \+(\d) bonus to attack(?: rolls)? and damage rolls/i);
-    if (weapon) {
-      effects.push({ kind: "attack_bonus", amount: Number(weapon[1]) });
-      effects.push({ kind: "damage_bonus", amount: Number(weapon[1]) });
-    }
-    const resist = chunk.body.match(/[Rr]esistance to (\w+) damage/);
-    if (resist?.[1]) effects.push({ kind: "resistance", damageType: resist[1].toLowerCase() });
-    const id = slug(chunk.title);
-    const needs = effects.length === 0;
-    entries.push({
-      id,
-      name: chunk.title,
-      rarity,
-      slot,
-      ...(attune ? { requires: { attunement: true } } : {}),
-      effects,
-    });
-    reviews.push(bundle({
-      kind: "item",
-      id,
-      status: needs ? "needs_review" : "auto_ok",
-      confidence: needs ? "low" : "high",
-      unparsedFields: needs ? ["effects"] : [],
-      usage: USAGE.item,
-      srd: { line, text: chunk.body.trim().slice(0, 6000) },
-      ambiguities: needs
-        ? [{ field: "effects", summary: "No typed effect matched the item text.", options: [{ label: "Leave effects empty", patch: { effects: [] } }], parserChoice: 0 }]
-        : [],
-    }));
-  }
-  return entries;
-}
-
-function parseMonsters(markdown: string, reviews: ReviewBundle[]): unknown[] {
-  const entries = [];
-  for (const chunk of splitMonsterMarkdown(markdown)) {
-    const parsed = monsterFromMarkdown(chunk);
-    if (!parsed.monster) continue;
-    entries.push(parsed.monster);
-    reviews.push(bundle({
-      kind: "monster",
-      id: parsed.monster.id,
-      status: "auto_ok",
-      confidence: "high",
-      usage: USAGE.monster,
+      srd: { text: plainMarkdown(chunk.body) },
     }));
   }
   return entries;

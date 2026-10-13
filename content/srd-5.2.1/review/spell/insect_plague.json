@@ -5,9 +5,9 @@
   "id": "insect_plague",
   "status": "auto_ok",
   "confidence": "high",
-  "usage": "Level-up spell list for the listed classes. Combat only if a wired ability uses this id.",
+  "usage": "Level-up spell list for the listed classes. Combat runs it only when a wired ability has the same id.",
   "srd": {
-    "components": "V, S, M (a locust)",
-    "line": "Level 5 Conjuration (Cleric, Druid, Sorcerer)"
+    "line": "Level 5 Conjuration (Cleric, Druid, Sorcerer)",
+    "text": "_Level 5 Conjuration (Cleric, Druid, Sorcerer)_\n\n**Casting Time:** Action\n**Range:** 300 feet\n**Components:** V, S, M (a locust)\n**Duration:** Concentration, up to 10 minutes\n\nSwarming locusts fill a 20-foot-radius Sphere centered on a point you choose within range. The Sphere remains for the duration, and its area is Lightly Obscured and Difficult Terrain.\n\nWhen the swarm appears, each creature in it makes a Constitution saving throw, taking 4d10 Piercing damage on a failed save or half as much damage on a successful one. A creature also makes this save when it enters the spell's area for the first time on a turn or ends its turn there. A creature makes this save only once per turn.\n\n_Using a Higher-Level Spell Slot._ The damage increases by 1d10 for each spell slot level above 5."
   }
 }

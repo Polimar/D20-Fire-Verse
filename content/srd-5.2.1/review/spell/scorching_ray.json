@@ -5,9 +5,9 @@
   "id": "scorching_ray",
   "status": "auto_ok",
   "confidence": "high",
-  "usage": "Level-up spell list for the listed classes. Combat only if a wired ability uses this id.",
+  "usage": "Level-up spell list for the listed classes. Combat runs it only when a wired ability has the same id.",
   "srd": {
-    "components": "V, S",
-    "line": "Level 2 Evocation (Sorcerer, Wizard)"
+    "line": "Level 2 Evocation (Sorcerer, Wizard)",
+    "text": "_Level 2 Evocation (Sorcerer, Wizard)_\n\n**Casting Time:** Action\n**Range:** 120 feet\n**Components:** V, S\n**Duration:** Instantaneous\n\nYou hurl three fiery rays. You can hurl them at one target within range or at several. Make a ranged spell attack for each ray. On a hit, the target takes 2d6 Fire damage.\n\n_Using a Higher-Level Spell Slot._ You create one additional ray for each spell slot level above 2."
   }
 }

@@ -1,0 +1,16 @@
+{
+  "ambiguities": [],
+  "unparsedFields": [],
+  "kind": "monster",
+  "id": "bandit_captain",
+  "status": "needs_review",
+  "confidence": "medium",
+  "usage": "Encounters and arena fights. The engine runs the actions it can compile from the stat block.",
+  "srd": {
+    "engineId": "srd_bandit_captain",
+    "text": "_Medium or Small Humanoid, Neutral_\n\n**AC** 15 **Initiative** +3 (13)\n\n**HP** 52 (8d8 + 16)\n\n**Speed** 30 ft.\n\n|  |  | MOD | SAVE |  |  | MOD | SAVE |  |  | MOD | SAVE |\n| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |\n| **STR** | 15 | +2 | +4 | **DEX** | 16 | +3 | +5 | **CON** | 14 | +2 | +2 |\n| **INT** | 14 | +2 | +2 | **WIS** | 11 | +0 | +2 | **CHA** | 14 | +2 | +2 |\n\n**Skills** Athletics +4, Deception +4\n\n**Gear** Pistol, Scimitar, Studded Leather Armor\n\n**Senses** Passive Perception 10\n\n**Languages** Common, Thieves' Cant\n\n**CR** 2 (XP 450; PB +2)\n\n#### Actions\n\n**_Multiattack._** The bandit makes two attacks, using Scimitar and Pistol in any combination.\n\n**_Scimitar._** _Melee Attack Roll:_ +5, reach 5 ft. _Hit:_ 6 (1d6 + 3) Slashing damage.\n\n**_Pistol._** _Ranged Attack Roll:_ +5, range 30/90 ft. _Hit:_ 8 (1d10 + 3) Piercing damage.\n\n#### Reactions\n\n**_Parry._** _Trigger:_ The bandit is hit by a melee attack roll while holding a weapon. _Response:_ The bandit adds 2 to its AC against that attack, possibly causing it to miss."
+  },
+  "notModeled": [
+    "Reaction “Parry”: monsters take no reactions in combat."
+  ]
+}

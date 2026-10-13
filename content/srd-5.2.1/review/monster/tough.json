@@ -1,0 +1,13 @@
+{
+  "ambiguities": [],
+  "unparsedFields": [],
+  "kind": "monster",
+  "id": "tough",
+  "status": "auto_ok",
+  "confidence": "high",
+  "usage": "Encounters and arena fights. The engine runs the actions it can compile from the stat block.",
+  "srd": {
+    "engineId": "srd_tough",
+    "text": "_Medium or Small Humanoid, Neutral_\n\n**AC** 12 **Initiative** +1 (11)\n\n**HP** 32 (5d8 + 10)\n\n**Speed** 30 ft.\n\n|  |  | MOD | SAVE |  |  | MOD | SAVE |  |  | MOD | SAVE |\n| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |\n| **STR** | 15 | +2 | +2 | **DEX** | 12 | +1 | +1 | **CON** | 14 | +2 | +2 |\n| **INT** | 10 | +0 | +0 | **WIS** | 10 | +0 | +0 | **CHA** | 11 | +0 | +0 |\n\n**Gear** Heavy Crossbow, Leather Armor, Mace\n\n**Senses** Passive Perception 10\n\n**Languages** Common\n\n**CR** 1/2 (XP 100; PB +2)\n\n#### Traits\n\n**_Pack Tactics._** The tough has Advantage on an attack roll against a creature if at least one of the tough's allies is within 5 feet of the creature and the ally doesn't have the Incapacitated condition.\n\n#### Actions\n\n**_Mace._** _Melee Attack Roll:_ +4, reach 5 ft. _Hit:_ 5 (1d6 + 2) Bludgeoning damage.\n\n**_Heavy Crossbow._** _Ranged Attack Roll:_ +3, range 100/400 ft. _Hit:_ 6 (1d10 + 1) Piercing damage."
+  }
+}

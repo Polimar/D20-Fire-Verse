@@ -1,13 +1,174 @@
 {
-  "ambiguities": [],
+  "ambiguities": [
+    {
+      "field": "effects",
+      "summary": "The SRD lets the GM pick one damage type for the Resistance. Pick the one this copy grants.",
+      "options": [
+        {
+          "label": "Resistance to acid",
+          "patch": {
+            "effects": [
+              {
+                "kind": "ac_bonus",
+                "amount": 1
+              },
+              {
+                "kind": "resistance",
+                "damageType": "acid"
+              }
+            ]
+          }
+        },
+        {
+          "label": "Resistance to cold",
+          "patch": {
+            "effects": [
+              {
+                "kind": "ac_bonus",
+                "amount": 1
+              },
+              {
+                "kind": "resistance",
+                "damageType": "cold"
+              }
+            ]
+          }
+        },
+        {
+          "label": "Resistance to fire",
+          "patch": {
+            "effects": [
+              {
+                "kind": "ac_bonus",
+                "amount": 1
+              },
+              {
+                "kind": "resistance",
+                "damageType": "fire"
+              }
+            ]
+          }
+        },
+        {
+          "label": "Resistance to force",
+          "patch": {
+            "effects": [
+              {
+                "kind": "ac_bonus",
+                "amount": 1
+              },
+              {
+                "kind": "resistance",
+                "damageType": "force"
+              }
+            ]
+          }
+        },
+        {
+          "label": "Resistance to lightning",
+          "patch": {
+            "effects": [
+              {
+                "kind": "ac_bonus",
+                "amount": 1
+              },
+              {
+                "kind": "resistance",
+                "damageType": "lightning"
+              }
+            ]
+          }
+        },
+        {
+          "label": "Resistance to necrotic",
+          "patch": {
+            "effects": [
+              {
+                "kind": "ac_bonus",
+                "amount": 1
+              },
+              {
+                "kind": "resistance",
+                "damageType": "necrotic"
+              }
+            ]
+          }
+        },
+        {
+          "label": "Resistance to poison",
+          "patch": {
+            "effects": [
+              {
+                "kind": "ac_bonus",
+                "amount": 1
+              },
+              {
+                "kind": "resistance",
+                "damageType": "poison"
+              }
+            ]
+          }
+        },
+        {
+          "label": "Resistance to psychic",
+          "patch": {
+            "effects": [
+              {
+                "kind": "ac_bonus",
+                "amount": 1
+              },
+              {
+                "kind": "resistance",
+                "damageType": "psychic"
+              }
+            ]
+          }
+        },
+        {
+          "label": "Resistance to radiant",
+          "patch": {
+            "effects": [
+              {
+                "kind": "ac_bonus",
+                "amount": 1
+              },
+              {
+                "kind": "resistance",
+                "damageType": "radiant"
+              }
+            ]
+          }
+        },
+        {
+          "label": "Resistance to thunder",
+          "patch": {
+            "effects": [
+              {
+                "kind": "ac_bonus",
+                "amount": 1
+              },
+              {
+                "kind": "resistance",
+                "damageType": "thunder"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
   "unparsedFields": [],
   "kind": "item",
   "id": "dragon_scale_mail",
-  "status": "auto_ok",
-  "confidence": "high",
-  "usage": "Vendor, loot, and stash. Typed effects change AC, attack, and damage.",
+  "status": "needs_review",
+  "confidence": "medium",
+  "usage": "Vendor, loot, and stash. Equipped effects are listed on the sheet; no fight applies them yet.",
   "srd": {
     "line": "Armor (Scale Mail), Very Rare (Requires Attunement)",
-    "text": "_Armor (Scale Mail), Very Rare (Requires Attunement)_\n\nDragon Scale Mail is made of the scales of one kind of dragon. Sometimes dragons collect their cast-off\nscales and gift them. Other times, hunters carefully preserve the hide of a dead dragon. In either case, _Dragon Scale Mail_ is highly valued.\n\nWhile wearing this armor, you gain a +1 bonus to Armor Class, you have Advantage on saving throws against the breath weapons of Dragons, and you have Resistance to one damage type determined by the kind of dragon that provided the scales (see the accompanying table).\n\nAdditionally, you can focus your senses as a Magic action to discern the distance and direction to the closest dragon within 30 miles of yourself that is of the same type as the armor. This action can't be used again until the next dawn.\n\n<table>\n  <thead>\n    <tr>\n      <th>Dragon</th>\n      <th>Resistance</th>\n      <th>Dragon</th>\n      <th>Resistance</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <td>Black</td>\n      <td>Acid</td>\n      <td>Gold</td>\n      <td>Fire</td>\n    </tr>\n    <tr>\n      <td>Blue</td>\n      <td>Lightning</td>\n      <td>Green</td>\n      <td>Poison</td>\n    </tr>\n    <tr>\n      <td>Brass</td>\n      <td>Fire</td>\n      <td>Red</td>\n      <td>Fire</td>\n    </tr>\n    <tr>\n      <td>Bronze</td>\n      <td>Lightning</td>\n      <td>Silver</td>\n      <td>Cold</td>\n    </tr>\n    <tr>\n      <td>Copper</td>\n      <td>Acid</td>\n      <td>White</td>\n      <td>Cold</td>\n    </tr>\n  </tbody>\n</table>"
-  }
+    "text": "_Armor (Scale Mail), Very Rare (Requires Attunement)_\n\nDragon Scale Mail is made of the scales of one kind of dragon. Sometimes dragons collect their cast-off\nscales and gift them. Other times, hunters carefully preserve the hide of a dead dragon. In either case, _Dragon Scale Mail_ is highly valued.\n\nWhile wearing this armor, you gain a +1 bonus to Armor Class, you have Advantage on saving throws against the breath weapons of Dragons, and you have Resistance to one damage type determined by the kind of dragon that provided the scales (see the accompanying table).\n\nAdditionally, you can focus your senses as a Magic action to discern the distance and direction to the closest dragon within 30 miles of yourself that is of the same type as the armor. This action can't be used again until the next dawn.\n\n| Dragon | Resistance | Dragon | Resistance |\n| --- | --- | --- | --- |\n| Black | Acid | Gold | Fire |\n| Blue | Lightning | Green | Poison |\n| Brass | Fire | Red | Fire |\n| Bronze | Lightning | Silver | Cold |\n| Copper | Acid | White | Cold |"
+  },
+  "notModeled": [
+    "Sometimes dragons collect their cast-off scales and gift them.",
+    "Additionally, you can focus your senses as a Magic action to discern the distance and direction to the closest dragon within 30 miles of yourself that is of the same type as the armor."
+  ]
 }

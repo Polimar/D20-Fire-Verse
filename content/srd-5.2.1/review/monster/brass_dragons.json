@@ -1,9 +1,0 @@
-{
-  "ambiguities": [],
-  "unparsedFields": [],
-  "kind": "monster",
-  "id": "brass_dragons",
-  "status": "auto_ok",
-  "confidence": "high",
-  "usage": "Encounters when enabled. Combat uses a wired ability with the same id when one exists."
-}

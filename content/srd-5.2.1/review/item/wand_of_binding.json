@@ -1,29 +1,19 @@
 {
-  "ambiguities": [
-    {
-      "field": "effects",
-      "summary": "No typed effect matched the item text.",
-      "options": [
-        {
-          "label": "Leave effects empty",
-          "patch": {
-            "effects": []
-          }
-        }
-      ],
-      "parserChoice": 0
-    }
-  ],
-  "unparsedFields": [
-    "effects"
-  ],
+  "ambiguities": [],
+  "unparsedFields": [],
   "kind": "item",
   "id": "wand_of_binding",
   "status": "needs_review",
-  "confidence": "low",
-  "usage": "Vendor, loot, and stash. Typed effects change AC, attack, and damage.",
+  "confidence": "medium",
+  "usage": "Vendor, loot, and stash. Equipped effects are listed on the sheet; no fight applies them yet.",
   "srd": {
     "line": "Wand, Rare (Requires Attunement)",
-    "text": "_Wand, Rare (Requires Attunement)_\n\nThis wand has 7 charges.\n\n_Spells._ While holding the wand, you can cast one of the spells (save DC 17) on the following table from it. The table indicates how many charges you must expend to cast the spell.\n\n<table>\n  <thead>\n    <tr>\n      <th>Spell</th>\n      <th>Charge Cost</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <td>*Hold Monster*</td>\n      <td>5</td>\n    </tr>\n    <tr>\n      <td>*Hold Person*</td>\n      <td>2</td>\n    </tr>\n  </tbody>\n</table>\n\n_Regaining Charges._ The wand regains 1d6 + 1 expended charges daily at dawn. If you expend the wand's last charge, roll 1d20. On a 1, the wand crumbles into ashes and is destroyed."
-  }
+    "text": "_Wand, Rare (Requires Attunement)_\n\nThis wand has 7 charges.\n\n_Spells._ While holding the wand, you can cast one of the spells (save DC 17) on the following table from it. The table indicates how many charges you must expend to cast the spell.\n\n| Spell | Charge Cost |\n| --- | --- |\n| *Hold Monster* | 5 |\n| *Hold Person* | 2 |\n\n_Regaining Charges._ The wand regains 1d6 + 1 expended charges daily at dawn. If you expend the wand's last charge, roll 1d20. On a 1, the wand crumbles into ashes and is destroyed."
+  },
+  "notModeled": [
+    "Spells. While holding the wand, you can cast one of the spells (save DC 17) on the following table from it.",
+    "The table indicates how many charges you must expend to cast the spell.",
+    "Regaining Charges. The wand regains 1d6 + 1 expended charges daily at dawn.",
+    "If you expend the wand's last charge, roll 1d20."
+  ]
 }

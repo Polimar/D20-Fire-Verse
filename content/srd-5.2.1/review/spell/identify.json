@@ -5,9 +5,9 @@
   "id": "identify",
   "status": "auto_ok",
   "confidence": "high",
-  "usage": "Level-up spell list for the listed classes. Combat only if a wired ability uses this id.",
+  "usage": "Level-up spell list for the listed classes. Combat runs it only when a wired ability has the same id.",
   "srd": {
-    "components": "V, S, M (a pearl worth 100+ GP)",
-    "line": "Level 1 Divination (Bard, Wizard)"
+    "line": "Level 1 Divination (Bard, Wizard)",
+    "text": "_Level 1 Divination (Bard, Wizard)_\n\n**Casting Time:** 1 minute or Ritual\n**Range:** Touch\n**Components:** V, S, M (a pearl worth 100+ GP)\n**Duration:** Instantaneous\n\nYou touch an object throughout the spell's casting. If the object is a magic item or some other magical object, you learn its properties and how to use them, whether it requires Attunement, and how many charges it has, if any. You learn whether any ongoing spells are affecting the item and what they are. If the item was created by a spell, you learn that spell's name.\n\nIf you instead touch a creature throughout the casting, you learn which ongoing spells, if any, are currently affecting it."
   }
 }

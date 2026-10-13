@@ -5,9 +5,9 @@
   "id": "longsword",
   "status": "auto_ok",
   "confidence": "high",
-  "usage": "Vendor, loot, and stash. Typed effects change AC, attack, and damage.",
+  "usage": "Vendor, loot, and stash. Equipped effects are listed on the sheet; no fight applies them yet.",
   "srd": {
-    "damage": "1d8 Slashing",
-    "properties": "Versatile (1d10)"
+    "line": "martial melee weapon",
+    "text": "| Name | Damage | Properties | Mastery | Weight | Cost |\n| --- | --- | --- | --- | --- | --- |\n| Longsword | 1d8 Slashing | Versatile (1d10) | Sap | 3 lb. | 15 GP |"
   }
 }

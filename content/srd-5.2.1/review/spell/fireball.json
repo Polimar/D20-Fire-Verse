@@ -5,9 +5,9 @@
   "id": "fireball",
   "status": "auto_ok",
   "confidence": "high",
-  "usage": "Level-up spell list for the listed classes. Combat only if a wired ability uses this id.",
+  "usage": "Level-up spell list for the listed classes. Combat runs it only when a wired ability has the same id.",
   "srd": {
-    "components": "V, S, M (a ball of bat guano and sulfur)",
-    "line": "Level 3 Evocation (Sorcerer, Wizard)"
+    "line": "Level 3 Evocation (Sorcerer, Wizard)",
+    "text": "_Level 3 Evocation (Sorcerer, Wizard)_\n\n**Casting Time:** Action\n**Range:** 150 feet\n**Components:** V, S, M (a ball of bat guano and sulfur)\n**Duration:** Instantaneous\n\nA bright streak flashes from you to a point you choose within range and then blossoms with a low roar into a fiery explosion. Each creature in a 20-foot-radius Sphere centered on that point makes a Dexterity saving throw, taking 8d6 Fire damage on a failed save or half as much damage on a successful one.\n\nFlammable objects in the area that aren't being worn or carried start burning.\n\n_Using a Higher-Level Spell Slot._ The damage increases by 1d6 for each spell slot level above 3."
   }
 }

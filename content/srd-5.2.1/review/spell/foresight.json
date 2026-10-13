@@ -5,9 +5,9 @@
   "id": "foresight",
   "status": "auto_ok",
   "confidence": "high",
-  "usage": "Level-up spell list for the listed classes. Combat only if a wired ability uses this id.",
+  "usage": "Level-up spell list for the listed classes. Combat runs it only when a wired ability has the same id.",
   "srd": {
-    "components": "V, S, M (a hummingbird feather)",
-    "line": "Level 9 Divination (Bard, Druid, Warlock, Wizard)"
+    "line": "Level 9 Divination (Bard, Druid, Warlock, Wizard)",
+    "text": "_Level 9 Divination (Bard, Druid, Warlock, Wizard)_\n\n**Casting Time:** 1 minute\n**Range:** Touch\n**Components:** V, S, M (a hummingbird feather)\n**Duration:** 8 hours\n\nYou touch a willing creature and bestow a limited ability to see into the immediate future. For the duration, the target has Advantage on D20 Tests, and other creatures have Disadvantage on attack rolls against it. The spell ends early if you cast it again."
   }
 }

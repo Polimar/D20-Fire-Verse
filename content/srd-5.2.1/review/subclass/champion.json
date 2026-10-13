@@ -5,5 +5,8 @@
   "id": "champion",
   "status": "auto_ok",
   "confidence": "high",
-  "usage": "Chosen at the subclass level. Feature names are sheet labels until combat wires them."
+  "usage": "Chosen at the subclass level. Feature names are sheet labels until combat wires them.",
+  "srd": {
+    "text": "_Pursue Physical Excellence in Combat_\n\nA Champion focuses on the development of martial prowess in a relentless pursuit of victory. Champions combine rigorous training with physical excellence to deal devastating blows, withstand peril, and garner glory. Whether in athletic contests or bloody battle, Champions strive for the crown of the victor.\n\n#### Level 3: Improved Critical\n\nYour attack rolls with weapons and Unarmed Strikes can score a Critical Hit on a roll of 19 or 20 on the d20.\n\n#### Level 3: Remarkable Athlete\n\nThanks to your athleticism, you have Advantage on Initiative rolls and Strength (Athletics) checks.\n\nIn addition, immediately after you score a Critical Hit, you can move up to half your Speed without provoking Opportunity Attacks.\n\n#### Level 7: Additional Fighting Style\n\nYou gain another Fighting Style feat of your choice.\n\n#### Level 10: Heroic Warrior\n\nThe thrill of battle drives you toward victory. During combat, you can give yourself Heroic Inspiration whenever you start your turn without it.\n\n#### Level 15: Superior Critical\n\nYour attack rolls with weapons and Unarmed Strikes can now score a Critical Hit on a roll of 18–20 on the d20.\n\n#### Level 18: Survivor\n\nYou attain the pinnacle of resilience in battle, giving you these benefits.\n\n_Defy Death._ You have Advantage on Death Saving Throws. Moreover, when you roll 18–20 on a Death Saving Throw, you gain the benefit of rolling a 20 on it.\n\n_Heroic Rally._ At the start of each of your turns, you regain Hit Points equal to 5 plus your Constitution modifier if you are Bloodied and have at least 1 Hit Point."
+  }
 }

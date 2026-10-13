@@ -5,5 +5,8 @@
   "id": "boon_of_irresistible_offense",
   "status": "auto_ok",
   "confidence": "high",
-  "usage": "Chosen at an ASI level or as an Epic Boon when the class table says so."
+  "usage": "Chosen at an ASI level or as an Epic Boon when the class table says so.",
+  "srd": {
+    "text": "_Epic Boon Feat (Prerequisite: Level 19+)_\n\nYou gain the following benefits.\n\n_Ability Score Increase._ Increase your Strength or Dexterity score by 1, to a maximum of 30.\n\n_Overcome Defenses._ The Bludgeoning, Piercing, and Slashing damage you deal always ignores Resistance.\n\n_Overwhelming Strike._ When you roll a 20 on the d20 for an attack roll, you can deal extra damage to the target equal to the ability score increased by this feat. The extra damage's type is the same as the attack's type."
+  }
 }

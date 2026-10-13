@@ -5,9 +5,9 @@
   "id": "arcanists_magic_aura",
   "status": "auto_ok",
   "confidence": "high",
-  "usage": "Level-up spell list for the listed classes. Combat only if a wired ability uses this id.",
+  "usage": "Level-up spell list for the listed classes. Combat runs it only when a wired ability has the same id.",
   "srd": {
-    "components": "V, S, M (a small square of silk)",
-    "line": "Level 2 Illusion (Wizard)"
+    "line": "Level 2 Illusion (Wizard)",
+    "text": "_Level 2 Illusion (Wizard)_\n\n**Casting Time:** Action\n**Range:** Touch\n**Components:** V, S, M (a small square of silk)\n**Duration:** 24 hours\n\nWith a touch, you place an illusion on a willing creature or an object that isn't being worn or carried. A creature gains the Mask effect below, and an object gains the False Aura effect below. The effect lasts for the duration. If you cast the spell on the same target every day for 30 days, the illusion lasts until dispelled.\n\n_Mask (Creature)._ Choose a creature type other than the target's actual type. Spells and other magical effects treat the target as if it were a creature of the chosen type.\n\n_False Aura (Object)._ You change the way the target appears to spells and magical effects that detect magical auras, such as _Detect Magic_. You can make a nonmagical object appear magical, make a magic item appear nonmagical, or change the object's aura so that it appears to belong to a school of magic you choose."
   }
 }

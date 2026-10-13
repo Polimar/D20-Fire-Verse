@@ -5,9 +5,9 @@
   "id": "stone_shape",
   "status": "auto_ok",
   "confidence": "high",
-  "usage": "Level-up spell list for the listed classes. Combat only if a wired ability uses this id.",
+  "usage": "Level-up spell list for the listed classes. Combat runs it only when a wired ability has the same id.",
   "srd": {
-    "components": "V, S, M (soft clay)",
-    "line": "Level 4 Transmutation (Cleric, Druid, Wizard)"
+    "line": "Level 4 Transmutation (Cleric, Druid, Wizard)",
+    "text": "_Level 4 Transmutation (Cleric, Druid, Wizard)_\n\n**Casting Time:** Action\n**Range:** Touch\n**Components:** V, S, M (soft clay)\n**Duration:** Instantaneous\n\nYou touch a stone object of Medium size or smaller or a section of stone no more than 5 feet in any dimension and form it into any shape you like. For example, you could shape a large rock into a weapon, statue, or coffer, or you could make a small passage through a wall that is 5 feet thick. You could also shape a stone door or its frame to seal the door shut. The object you create can have up to two hinges and a latch, but finer mechanical detail isn't possible."
   }
 }

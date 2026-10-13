@@ -5,9 +5,9 @@
   "id": "ice_storm",
   "status": "auto_ok",
   "confidence": "high",
-  "usage": "Level-up spell list for the listed classes. Combat only if a wired ability uses this id.",
+  "usage": "Level-up spell list for the listed classes. Combat runs it only when a wired ability has the same id.",
   "srd": {
-    "components": "V, S, M (a mitten)",
-    "line": "Level 4 Evocation (Druid, Sorcerer, Wizard)"
+    "line": "Level 4 Evocation (Druid, Sorcerer, Wizard)",
+    "text": "_Level 4 Evocation (Druid, Sorcerer, Wizard)_\n\n**Casting Time:** Action\n**Range:** 300 feet\n**Components:** V, S, M (a mitten)\n**Duration:** Instantaneous\n\nHail falls in a 20-foot-radius, 40-foot-high Cylinder centered on a point within range. Each creature in the Cylinder makes a Dexterity saving throw. A creature takes 2d10 Bludgeoning damage and 4d6 Cold damage on a failed save or half as much damage on a successful one.\n\nHailstones turn ground in the Cylinder into Difficult Terrain until the end of your next turn.\n_Using a Higher-Level Spell Slot._ The Bludgeoning damage increases by 1d10 for each spell slot level above 4."
   }
 }

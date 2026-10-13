@@ -8,17 +8,58 @@
       "effects": []
     },
     {
-      "id": "ammunition_1_2_or_3",
-      "name": "Ammunition, +1, +2, or +3",
+      "id": "ammunition_plus_1",
+      "name": "Ammunition +1",
+      "rarity": "uncommon",
+      "slot": "consumable",
+      "effects": [
+        {
+          "kind": "attack_bonus",
+          "amount": 1
+        },
+        {
+          "kind": "damage_bonus",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "id": "ammunition_plus_2",
+      "name": "Ammunition +2",
+      "rarity": "rare",
+      "slot": "consumable",
+      "effects": [
+        {
+          "kind": "attack_bonus",
+          "amount": 2
+        },
+        {
+          "kind": "damage_bonus",
+          "amount": 2
+        }
+      ]
+    },
+    {
+      "id": "ammunition_plus_3",
+      "name": "Ammunition +3",
       "rarity": "very_rare",
-      "slot": "mainhand",
-      "effects": []
+      "slot": "consumable",
+      "effects": [
+        {
+          "kind": "attack_bonus",
+          "amount": 3
+        },
+        {
+          "kind": "damage_bonus",
+          "amount": 3
+        }
+      ]
     },
     {
       "id": "ammunition_of_slaying",
       "name": "Ammunition of Slaying",
       "rarity": "very_rare",
-      "slot": "mainhand",
+      "slot": "consumable",
       "effects": []
     },
     {
@@ -29,7 +70,13 @@
       "requires": {
         "attunement": true
       },
-      "effects": []
+      "effects": [
+        {
+          "kind": "stat_set",
+          "ability": "con",
+          "score": 19
+        }
+      ]
     },
     {
       "id": "amulet_of_proof_against_detection_and_location",
@@ -49,13 +96,18 @@
       "requires": {
         "attunement": true
       },
-      "effects": []
+      "effects": [
+        {
+          "kind": "grant_spell",
+          "spellId": "plane_shift"
+        }
+      ]
     },
     {
       "id": "animated_shield",
       "name": "Animated Shield",
       "rarity": "very_rare",
-      "slot": "armor",
+      "slot": "shield",
       "requires": {
         "attunement": true
       },
@@ -66,14 +118,52 @@
       "name": "Apparatus of the Crab",
       "rarity": "legendary",
       "slot": "trinket",
-      "effects": []
+      "effects": [
+        {
+          "kind": "immunity",
+          "damageType": "poison"
+        },
+        {
+          "kind": "immunity",
+          "damageType": "psychic"
+        }
+      ]
     },
     {
-      "id": "armor_1_2_or_3",
-      "name": "Armor, +1, +2, or +3",
+      "id": "armor_plus_1",
+      "name": "Armor +1",
+      "rarity": "rare",
+      "slot": "armor",
+      "effects": [
+        {
+          "kind": "ac_bonus",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "id": "armor_plus_2",
+      "name": "Armor +2",
       "rarity": "very_rare",
       "slot": "armor",
-      "effects": []
+      "effects": [
+        {
+          "kind": "ac_bonus",
+          "amount": 2
+        }
+      ]
+    },
+    {
+      "id": "armor_plus_3",
+      "name": "Armor +3",
+      "rarity": "legendary",
+      "slot": "armor",
+      "effects": [
+        {
+          "kind": "ac_bonus",
+          "amount": 3
+        }
+      ]
     },
     {
       "id": "armor_of_invulnerability",
@@ -83,7 +173,24 @@
       "requires": {
         "attunement": true
       },
-      "effects": []
+      "effects": [
+        {
+          "kind": "resistance",
+          "damageType": "bludgeoning"
+        },
+        {
+          "kind": "resistance",
+          "damageType": "piercing"
+        },
+        {
+          "kind": "immunity",
+          "damageType": "bludgeoning"
+        },
+        {
+          "kind": "immunity",
+          "damageType": "piercing"
+        }
+      ]
     },
     {
       "id": "armor_of_resistance",
@@ -103,13 +210,18 @@
       "requires": {
         "attunement": true
       },
-      "effects": []
+      "effects": [
+        {
+          "kind": "grant_spell",
+          "spellId": "identify"
+        }
+      ]
     },
     {
       "id": "arrow_catching_shield",
       "name": "Arrow-Catching Shield",
       "rarity": "rare",
-      "slot": "armor",
+      "slot": "shield",
       "requires": {
         "attunement": true
       },
@@ -178,14 +290,84 @@
       ]
     },
     {
-      "id": "belt_of_giant_strength",
-      "name": "Belt of Giant Strength",
-      "rarity": "common",
+      "id": "belt_of_giant_strength_hill",
+      "name": "Belt of Giant Strength (hill)",
+      "rarity": "rare",
       "slot": "trinket",
       "requires": {
         "attunement": true
       },
-      "effects": []
+      "effects": [
+        {
+          "kind": "stat_set",
+          "ability": "str",
+          "score": 21
+        }
+      ]
+    },
+    {
+      "id": "belt_of_giant_strength_frost_or_stone",
+      "name": "Belt of Giant Strength (frost or stone)",
+      "rarity": "very_rare",
+      "slot": "trinket",
+      "requires": {
+        "attunement": true
+      },
+      "effects": [
+        {
+          "kind": "stat_set",
+          "ability": "str",
+          "score": 23
+        }
+      ]
+    },
+    {
+      "id": "belt_of_giant_strength_fire",
+      "name": "Belt of Giant Strength (fire)",
+      "rarity": "very_rare",
+      "slot": "trinket",
+      "requires": {
+        "attunement": true
+      },
+      "effects": [
+        {
+          "kind": "stat_set",
+          "ability": "str",
+          "score": 25
+        }
+      ]
+    },
+    {
+      "id": "belt_of_giant_strength_cloud",
+      "name": "Belt of Giant Strength (cloud)",
+      "rarity": "legendary",
+      "slot": "trinket",
+      "requires": {
+        "attunement": true
+      },
+      "effects": [
+        {
+          "kind": "stat_set",
+          "ability": "str",
+          "score": 27
+        }
+      ]
+    },
+    {
+      "id": "belt_of_giant_strength_storm",
+      "name": "Belt of Giant Strength (storm)",
+      "rarity": "legendary",
+      "slot": "trinket",
+      "requires": {
+        "attunement": true
+      },
+      "effects": [
+        {
+          "kind": "stat_set",
+          "ability": "str",
+          "score": 29
+        }
+      ]
     },
     {
       "id": "berserker_axe",
@@ -221,7 +403,12 @@
       "requires": {
         "attunement": true
       },
-      "effects": []
+      "effects": [
+        {
+          "kind": "grant_spell",
+          "spellId": "levitate"
+        }
+      ]
     },
     {
       "id": "boots_of_speed",
@@ -330,14 +517,24 @@
       "requires": {
         "attunement": true
       },
-      "effects": []
+      "effects": [
+        {
+          "kind": "grant_spell",
+          "spellId": "gate"
+        }
+      ]
     },
     {
       "id": "cape_of_the_mountebank",
       "name": "Cape of the Mountebank",
       "rarity": "rare",
       "slot": "trinket",
-      "effects": []
+      "effects": [
+        {
+          "kind": "grant_spell",
+          "spellId": "dimension_door"
+        }
+      ]
     },
     {
       "id": "carpet_of_flying",
@@ -358,14 +555,24 @@
       "name": "Chime of Opening",
       "rarity": "rare",
       "slot": "trinket",
-      "effects": []
+      "effects": [
+        {
+          "kind": "grant_spell",
+          "spellId": "knock"
+        }
+      ]
     },
     {
       "id": "circlet_of_blasting",
       "name": "Circlet of Blasting",
       "rarity": "uncommon",
       "slot": "trinket",
-      "effects": []
+      "effects": [
+        {
+          "kind": "grant_spell",
+          "spellId": "scorching_ray"
+        }
+      ]
     },
     {
       "id": "cloak_of_arachnida",
@@ -379,6 +586,10 @@
         {
           "kind": "resistance",
           "damageType": "poison"
+        },
+        {
+          "kind": "grant_spell",
+          "spellId": "web"
         }
       ]
     },
@@ -410,7 +621,8 @@
       "requires": {
         "attunement": true
       },
-      "effects": []
+      "effects": [],
+      "charges": 3
     },
     {
       "id": "cloak_of_protection",
@@ -435,7 +647,12 @@
       "requires": {
         "attunement": true
       },
-      "effects": []
+      "effects": [
+        {
+          "kind": "grant_spell",
+          "spellId": "polymorph"
+        }
+      ]
     },
     {
       "id": "cloak_of_the_manta_ray",
@@ -455,7 +672,12 @@
       "requires": {
         "attunement": true
       },
-      "effects": []
+      "effects": [
+        {
+          "kind": "grant_spell",
+          "spellId": "scrying"
+        }
+      ]
     },
     {
       "id": "crystal_ball_of_mind_reading",
@@ -465,7 +687,16 @@
       "requires": {
         "attunement": true
       },
-      "effects": []
+      "effects": [
+        {
+          "kind": "grant_spell",
+          "spellId": "scrying"
+        },
+        {
+          "kind": "grant_spell",
+          "spellId": "detect_thoughts"
+        }
+      ]
     },
     {
       "id": "crystal_ball_of_telepathy",
@@ -475,7 +706,16 @@
       "requires": {
         "attunement": true
       },
-      "effects": []
+      "effects": [
+        {
+          "kind": "grant_spell",
+          "spellId": "scrying"
+        },
+        {
+          "kind": "grant_spell",
+          "spellId": "suggestion"
+        }
+      ]
     },
     {
       "id": "crystal_ball_of_true_seeing",
@@ -485,7 +725,12 @@
       "requires": {
         "attunement": true
       },
-      "effects": []
+      "effects": [
+        {
+          "kind": "grant_spell",
+          "spellId": "scrying"
+        }
+      ]
     },
     {
       "id": "cube_of_force",
@@ -495,14 +740,49 @@
       "requires": {
         "attunement": true
       },
-      "effects": []
+      "effects": [
+        {
+          "kind": "grant_spell",
+          "spellId": "mage_armor"
+        },
+        {
+          "kind": "grant_spell",
+          "spellId": "shield"
+        },
+        {
+          "kind": "grant_spell",
+          "spellId": "tiny_hut"
+        },
+        {
+          "kind": "grant_spell",
+          "spellId": "private_sanctum"
+        },
+        {
+          "kind": "grant_spell",
+          "spellId": "resilient_sphere"
+        },
+        {
+          "kind": "grant_spell",
+          "spellId": "wall_of_force"
+        }
+      ]
     },
     {
       "id": "cubic_gate",
       "name": "Cubic Gate",
       "rarity": "legendary",
       "slot": "trinket",
-      "effects": []
+      "effects": [
+        {
+          "kind": "grant_spell",
+          "spellId": "gate"
+        },
+        {
+          "kind": "grant_spell",
+          "spellId": "plane_shift"
+        }
+      ],
+      "charges": 3
     },
     {
       "id": "dagger_of_venom",
@@ -554,16 +834,16 @@
       },
       "effects": [
         {
-          "kind": "ac_bonus",
-          "amount": 2
-        },
-        {
           "kind": "attack_bonus",
           "amount": 3
         },
         {
           "kind": "damage_bonus",
           "amount": 3
+        },
+        {
+          "kind": "ac_bonus",
+          "amount": 2
         }
       ]
     },
@@ -592,12 +872,34 @@
     {
       "id": "dragon_orb",
       "name": "Dragon Orb",
-      "rarity": "common",
+      "rarity": "legendary",
       "slot": "trinket",
       "requires": {
         "attunement": true
       },
-      "effects": []
+      "effects": [
+        {
+          "kind": "grant_spell",
+          "spellId": "cure_wounds"
+        },
+        {
+          "kind": "grant_spell",
+          "spellId": "daylight"
+        },
+        {
+          "kind": "grant_spell",
+          "spellId": "death_ward"
+        },
+        {
+          "kind": "grant_spell",
+          "spellId": "detect_magic"
+        },
+        {
+          "kind": "grant_spell",
+          "spellId": "scrying"
+        }
+      ],
+      "charges": 7
     },
     {
       "id": "dragon_scale_mail",
@@ -611,10 +913,6 @@
         {
           "kind": "ac_bonus",
           "amount": 1
-        },
-        {
-          "kind": "resistance",
-          "damageType": "one"
         }
       ]
     },
@@ -673,7 +971,11 @@
       "rarity": "very_rare",
       "slot": "mainhand",
       "requires": {
-        "attunement": true
+        "attunement": true,
+        "species": [
+          "dwarf",
+          "creature_attuned_to_a_belt_of_dwarvenkind"
+        ]
       },
       "effects": [
         {
@@ -760,7 +1062,12 @@
       "requires": {
         "attunement": true
       },
-      "effects": []
+      "effects": [
+        {
+          "kind": "grant_spell",
+          "spellId": "charm_person"
+        }
+      ]
     },
     {
       "id": "eyes_of_minute_seeing",
@@ -830,14 +1137,21 @@
       "requires": {
         "attunement": true
       },
-      "effects": []
+      "effects": [
+        {
+          "kind": "stat_set",
+          "ability": "str",
+          "score": 19
+        }
+      ]
     },
     {
       "id": "gem_of_brightness",
       "name": "Gem of Brightness",
       "rarity": "uncommon",
       "slot": "trinket",
-      "effects": []
+      "effects": [],
+      "charges": 50
     },
     {
       "id": "gem_of_seeing",
@@ -847,7 +1161,8 @@
       "requires": {
         "attunement": true
       },
-      "effects": []
+      "effects": [],
+      "charges": 3
     },
     {
       "id": "giant_slayer",
@@ -928,7 +1243,8 @@
           "kind": "damage_bonus",
           "amount": 1
         }
-      ]
+      ],
+      "charges": 5
     },
     {
       "id": "handy_haversack",
@@ -945,7 +1261,12 @@
       "requires": {
         "attunement": true
       },
-      "effects": []
+      "effects": [
+        {
+          "kind": "grant_spell",
+          "spellId": "disguise_self"
+        }
+      ]
     },
     {
       "id": "hat_of_many_spells",
@@ -953,7 +1274,10 @@
       "rarity": "very_rare",
       "slot": "trinket",
       "requires": {
-        "attunement": true
+        "attunement": true,
+        "class": [
+          "wizard"
+        ]
       },
       "effects": []
     },
@@ -965,7 +1289,13 @@
       "requires": {
         "attunement": true
       },
-      "effects": []
+      "effects": [
+        {
+          "kind": "stat_set",
+          "ability": "int",
+          "score": 19
+        }
+      ]
     },
     {
       "id": "helm_of_brilliance",
@@ -979,6 +1309,22 @@
         {
           "kind": "resistance",
           "damageType": "fire"
+        },
+        {
+          "kind": "grant_spell",
+          "spellId": "daylight"
+        },
+        {
+          "kind": "grant_spell",
+          "spellId": "fireball"
+        },
+        {
+          "kind": "grant_spell",
+          "spellId": "prismatic_spray"
+        },
+        {
+          "kind": "grant_spell",
+          "spellId": "wall_of_fire"
         }
       ]
     },
@@ -987,7 +1333,12 @@
       "name": "Helm of Comprehending Languages",
       "rarity": "uncommon",
       "slot": "trinket",
-      "effects": []
+      "effects": [
+        {
+          "kind": "grant_spell",
+          "spellId": "comprehend_languages"
+        }
+      ]
     },
     {
       "id": "helm_of_telepathy",
@@ -997,7 +1348,16 @@
       "requires": {
         "attunement": true
       },
-      "effects": []
+      "effects": [
+        {
+          "kind": "grant_spell",
+          "spellId": "detect_thoughts"
+        },
+        {
+          "kind": "grant_spell",
+          "spellId": "suggestion"
+        }
+      ]
     },
     {
       "id": "helm_of_teleportation",
@@ -1007,7 +1367,13 @@
       "requires": {
         "attunement": true
       },
-      "effects": []
+      "effects": [
+        {
+          "kind": "grant_spell",
+          "spellId": "teleport"
+        }
+      ],
+      "charges": 3
     },
     {
       "id": "holy_avenger",
@@ -1015,7 +1381,10 @@
       "rarity": "legendary",
       "slot": "mainhand",
       "requires": {
-        "attunement": true
+        "attunement": true,
+        "class": [
+          "paladin"
+        ]
       },
       "effects": [
         {
@@ -1071,7 +1440,16 @@
       "requires": {
         "attunement": true
       },
-      "effects": []
+      "effects": [
+        {
+          "kind": "immunity",
+          "damageType": "bludgeoning"
+        },
+        {
+          "kind": "immunity",
+          "damageType": "piercing"
+        }
+      ]
     },
     {
       "id": "ioun_stone",
@@ -1132,6 +1510,10 @@
         {
           "kind": "damage_bonus",
           "amount": 1
+        },
+        {
+          "kind": "grant_spell",
+          "spellId": "wish"
         }
       ]
     },
@@ -1169,7 +1551,8 @@
       "requires": {
         "attunement": true
       },
-      "effects": []
+      "effects": [],
+      "charges": 3
     },
     {
       "id": "mantle_of_spell_resistance",
@@ -1224,14 +1607,29 @@
       "requires": {
         "attunement": true
       },
-      "effects": []
+      "effects": [
+        {
+          "kind": "grant_spell",
+          "spellId": "detect_thoughts"
+        }
+      ],
+      "charges": 5
     },
     {
       "id": "mirror_of_life_trapping",
       "name": "Mirror of Life Trapping",
       "rarity": "very_rare",
       "slot": "trinket",
-      "effects": []
+      "effects": [
+        {
+          "kind": "immunity",
+          "damageType": "poison"
+        },
+        {
+          "kind": "immunity",
+          "damageType": "psychic"
+        }
+      ]
     },
     {
       "id": "mithral_armor",
@@ -1245,7 +1643,12 @@
       "name": "Mysterious Deck",
       "rarity": "legendary",
       "slot": "trinket",
-      "effects": []
+      "effects": [
+        {
+          "kind": "grant_spell",
+          "spellId": "wish"
+        }
+      ]
     },
     {
       "id": "necklace_of_adaptation",
@@ -1270,9 +1673,39 @@
       "rarity": "rare",
       "slot": "trinket",
       "requires": {
-        "attunement": true
+        "attunement": true,
+        "class": [
+          "cleric",
+          "druid",
+          "paladin"
+        ]
       },
-      "effects": []
+      "effects": [
+        {
+          "kind": "grant_spell",
+          "spellId": "bless"
+        },
+        {
+          "kind": "grant_spell",
+          "spellId": "cure_wounds"
+        },
+        {
+          "kind": "grant_spell",
+          "spellId": "greater_restoration"
+        },
+        {
+          "kind": "grant_spell",
+          "spellId": "shining_smite"
+        },
+        {
+          "kind": "grant_spell",
+          "spellId": "guardian_of_faith"
+        },
+        {
+          "kind": "grant_spell",
+          "spellId": "wind_walk"
+        }
+      ]
     },
     {
       "id": "nine_lives_stealer",
@@ -1330,7 +1763,8 @@
       "rarity": "uncommon",
       "slot": "trinket",
       "requires": {
-        "attunement": true
+        "attunement": true,
+        "spellcaster": true
       },
       "effects": []
     },
@@ -1352,7 +1786,12 @@
       "requires": {
         "attunement": true
       },
-      "effects": []
+      "effects": [
+        {
+          "kind": "immunity",
+          "damageType": "poison"
+        }
+      ]
     },
     {
       "id": "periapt_of_wound_closure",
@@ -1410,7 +1849,12 @@
       "name": "Potion of Animal Friendship",
       "rarity": "uncommon",
       "slot": "consumable",
-      "effects": []
+      "effects": [
+        {
+          "kind": "grant_spell",
+          "spellId": "animal_friendship"
+        }
+      ]
     },
     {
       "id": "potion_of_clairvoyance",
@@ -1448,11 +1892,69 @@
       "effects": []
     },
     {
-      "id": "potion_of_giant_strength",
-      "name": "Potion of Giant Strength",
-      "rarity": "common",
+      "id": "potion_of_giant_strength_hill",
+      "name": "Potion of Giant Strength (hill)",
+      "rarity": "uncommon",
       "slot": "consumable",
-      "effects": []
+      "effects": [
+        {
+          "kind": "stat_set",
+          "ability": "str",
+          "score": 21
+        }
+      ]
+    },
+    {
+      "id": "potion_of_giant_strength_frost_or_stone",
+      "name": "Potion of Giant Strength (frost or stone)",
+      "rarity": "rare",
+      "slot": "consumable",
+      "effects": [
+        {
+          "kind": "stat_set",
+          "ability": "str",
+          "score": 23
+        }
+      ]
+    },
+    {
+      "id": "potion_of_giant_strength_fire",
+      "name": "Potion of Giant Strength (fire)",
+      "rarity": "rare",
+      "slot": "consumable",
+      "effects": [
+        {
+          "kind": "stat_set",
+          "ability": "str",
+          "score": 25
+        }
+      ]
+    },
+    {
+      "id": "potion_of_giant_strength_cloud",
+      "name": "Potion of Giant Strength (cloud)",
+      "rarity": "very_rare",
+      "slot": "consumable",
+      "effects": [
+        {
+          "kind": "stat_set",
+          "ability": "str",
+          "score": 27
+        }
+      ]
+    },
+    {
+      "id": "potion_of_giant_strength_storm",
+      "name": "Potion of Giant Strength (storm)",
+      "rarity": "legendary",
+      "slot": "consumable",
+      "effects": [
+        {
+          "kind": "stat_set",
+          "ability": "str",
+          "score": 29
+        }
+      ]
     },
     {
       "id": "potion_of_growth",
@@ -1487,12 +1989,7 @@
       "name": "Potion of Invulnerability",
       "rarity": "rare",
       "slot": "consumable",
-      "effects": [
-        {
-          "kind": "resistance",
-          "damageType": "all"
-        }
-      ]
+      "effects": []
     },
     {
       "id": "potion_of_longevity",
@@ -1567,7 +2064,21 @@
       "name": "Ring of Animal Influence",
       "rarity": "rare",
       "slot": "trinket",
-      "effects": []
+      "effects": [
+        {
+          "kind": "grant_spell",
+          "spellId": "animal_friendship"
+        },
+        {
+          "kind": "grant_spell",
+          "spellId": "fear"
+        },
+        {
+          "kind": "grant_spell",
+          "spellId": "speak_with_animals"
+        }
+      ],
+      "charges": 3
     },
     {
       "id": "ring_of_djinni_summoning",
@@ -1591,8 +2102,17 @@
         {
           "kind": "resistance",
           "damageType": "lightning"
+        },
+        {
+          "kind": "resistance",
+          "damageType": "acid"
+        },
+        {
+          "kind": "immunity",
+          "damageType": "fire"
         }
-      ]
+      ],
+      "charges": 5
     },
     {
       "id": "ring_of_evasion",
@@ -1602,7 +2122,8 @@
       "requires": {
         "attunement": true
       },
-      "effects": []
+      "effects": [],
+      "charges": 3
     },
     {
       "id": "ring_of_feather_falling",
@@ -1642,7 +2163,12 @@
       "requires": {
         "attunement": true
       },
-      "effects": []
+      "effects": [
+        {
+          "kind": "grant_spell",
+          "spellId": "jump"
+        }
+      ]
     },
     {
       "id": "ring_of_mind_shielding",
@@ -1684,12 +2210,7 @@
       "name": "Ring of Resistance",
       "rarity": "rare",
       "slot": "trinket",
-      "effects": [
-        {
-          "kind": "resistance",
-          "damageType": "one"
-        }
-      ]
+      "effects": []
     },
     {
       "id": "ring_of_shooting_stars",
@@ -1699,7 +2220,21 @@
       "requires": {
         "attunement": true
       },
-      "effects": []
+      "effects": [
+        {
+          "kind": "grant_spell",
+          "spellId": "dancing_lights"
+        },
+        {
+          "kind": "grant_spell",
+          "spellId": "light"
+        },
+        {
+          "kind": "grant_spell",
+          "spellId": "faerie_fire"
+        }
+      ],
+      "charges": 6
     },
     {
       "id": "ring_of_spell_storing",
@@ -1736,7 +2271,12 @@
       "requires": {
         "attunement": true
       },
-      "effects": []
+      "effects": [
+        {
+          "kind": "grant_spell",
+          "spellId": "telekinesis"
+        }
+      ]
     },
     {
       "id": "ring_of_the_ram",
@@ -1746,14 +2286,20 @@
       "requires": {
         "attunement": true
       },
-      "effects": []
+      "effects": [],
+      "charges": 3
     },
     {
       "id": "ring_of_three_wishes",
       "name": "Ring of Three Wishes",
       "rarity": "legendary",
       "slot": "trinket",
-      "effects": []
+      "effects": [
+        {
+          "kind": "grant_spell",
+          "spellId": "wish"
+        }
+      ]
     },
     {
       "id": "ring_of_warmth",
@@ -1770,7 +2316,12 @@
       "name": "Ring of Water Walking",
       "rarity": "uncommon",
       "slot": "trinket",
-      "effects": []
+      "effects": [
+        {
+          "kind": "grant_spell",
+          "spellId": "water_walk"
+        }
+      ]
     },
     {
       "id": "ring_of_x_ray_vision",
@@ -1790,7 +2341,16 @@
       "requires": {
         "attunement": true
       },
-      "effects": []
+      "effects": [
+        {
+          "kind": "grant_spell",
+          "spellId": "light"
+        },
+        {
+          "kind": "grant_spell",
+          "spellId": "daylight"
+        }
+      ]
     },
     {
       "id": "robe_of_scintillating_colors",
@@ -1800,7 +2360,8 @@
       "requires": {
         "attunement": true
       },
-      "effects": []
+      "effects": [],
+      "charges": 3
     },
     {
       "id": "robe_of_stars",
@@ -1810,7 +2371,12 @@
       "requires": {
         "attunement": true
       },
-      "effects": []
+      "effects": [
+        {
+          "kind": "grant_spell",
+          "spellId": "magic_missile"
+        }
+      ]
     },
     {
       "id": "robe_of_the_archmagi",
@@ -1818,7 +2384,12 @@
       "rarity": "legendary",
       "slot": "trinket",
       "requires": {
-        "attunement": true
+        "attunement": true,
+        "class": [
+          "sorcerer",
+          "warlock",
+          "wizard"
+        ]
       },
       "effects": []
     },
@@ -1849,6 +2420,22 @@
       },
       "effects": [
         {
+          "kind": "grant_spell",
+          "spellId": "detect_evil_and_good"
+        },
+        {
+          "kind": "grant_spell",
+          "spellId": "detect_magic"
+        },
+        {
+          "kind": "grant_spell",
+          "spellId": "detect_poison_and_disease"
+        },
+        {
+          "kind": "grant_spell",
+          "spellId": "see_invisibility"
+        },
+        {
           "kind": "ac_bonus",
           "amount": 1
         }
@@ -1862,7 +2449,26 @@
       "requires": {
         "attunement": true
       },
-      "effects": []
+      "effects": [
+        {
+          "kind": "attack_bonus",
+          "amount": 3
+        },
+        {
+          "kind": "damage_bonus",
+          "amount": 3
+        },
+        {
+          "kind": "on_hit_rider",
+          "damage": "2d6",
+          "damageType": "fire"
+        },
+        {
+          "kind": "on_hit_rider",
+          "damage": "4d6",
+          "damageType": "necrotic"
+        }
+      ]
     },
     {
       "id": "rod_of_resurrection",
@@ -1872,7 +2478,17 @@
       "requires": {
         "attunement": true
       },
-      "effects": []
+      "effects": [
+        {
+          "kind": "grant_spell",
+          "spellId": "heal"
+        },
+        {
+          "kind": "grant_spell",
+          "spellId": "resurrection"
+        }
+      ],
+      "charges": 5
     },
     {
       "id": "rod_of_rulership",
@@ -1896,14 +2512,32 @@
       "name": "Rope of Climbing",
       "rarity": "uncommon",
       "slot": "trinket",
-      "effects": []
+      "effects": [
+        {
+          "kind": "immunity",
+          "damageType": "poison"
+        },
+        {
+          "kind": "immunity",
+          "damageType": "psychic"
+        }
+      ]
     },
     {
       "id": "rope_of_entanglement",
       "name": "Rope of Entanglement",
       "rarity": "rare",
       "slot": "trinket",
-      "effects": []
+      "effects": [
+        {
+          "kind": "immunity",
+          "damageType": "poison"
+        },
+        {
+          "kind": "immunity",
+          "damageType": "psychic"
+        }
+      ]
     },
     {
       "id": "scarab_of_protection",
@@ -1918,7 +2552,8 @@
           "kind": "ac_bonus",
           "amount": 1
         }
-      ]
+      ],
+      "charges": 12
     },
     {
       "id": "scimitar_of_speed",
@@ -1944,27 +2579,61 @@
       "name": "Sending Stones",
       "rarity": "uncommon",
       "slot": "trinket",
-      "effects": []
+      "effects": [
+        {
+          "kind": "grant_spell",
+          "spellId": "sending"
+        }
+      ]
     },
     {
       "id": "sentinel_shield",
       "name": "Sentinel Shield",
       "rarity": "uncommon",
-      "slot": "armor",
+      "slot": "shield",
       "effects": []
     },
     {
-      "id": "shield_1_2_or_3",
-      "name": "Shield, +1, +2, or +3",
+      "id": "shield_plus_1",
+      "name": "Shield +1",
+      "rarity": "uncommon",
+      "slot": "shield",
+      "effects": [
+        {
+          "kind": "ac_bonus",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "id": "shield_plus_2",
+      "name": "Shield +2",
+      "rarity": "rare",
+      "slot": "shield",
+      "effects": [
+        {
+          "kind": "ac_bonus",
+          "amount": 2
+        }
+      ]
+    },
+    {
+      "id": "shield_plus_3",
+      "name": "Shield +3",
       "rarity": "very_rare",
-      "slot": "armor",
-      "effects": []
+      "slot": "shield",
+      "effects": [
+        {
+          "kind": "ac_bonus",
+          "amount": 3
+        }
+      ]
     },
     {
       "id": "shield_of_missile_attraction",
       "name": "Shield of Missile Attraction",
       "rarity": "rare",
-      "slot": "armor",
+      "slot": "shield",
       "requires": {
         "attunement": true
       },
@@ -1974,7 +2643,7 @@
       "id": "shield_of_the_cavalier",
       "name": "Shield of the Cavalier",
       "rarity": "very_rare",
-      "slot": "armor",
+      "slot": "shield",
       "requires": {
         "attunement": true
       },
@@ -2006,7 +2675,7 @@
       "id": "spellguard_shield",
       "name": "Spellguard Shield",
       "rarity": "very_rare",
-      "slot": "armor",
+      "slot": "shield",
       "requires": {
         "attunement": true
       },
@@ -2032,9 +2701,31 @@
       "rarity": "rare",
       "slot": "trinket",
       "requires": {
-        "attunement": true
+        "attunement": true,
+        "class": [
+          "bard",
+          "cleric",
+          "druid",
+          "sorcerer",
+          "warlock",
+          "wizard"
+        ]
       },
-      "effects": []
+      "effects": [
+        {
+          "kind": "grant_spell",
+          "spellId": "charm_person"
+        },
+        {
+          "kind": "grant_spell",
+          "spellId": "command"
+        },
+        {
+          "kind": "grant_spell",
+          "spellId": "comprehend_languages"
+        }
+      ],
+      "charges": 10
     },
     {
       "id": "staff_of_fire",
@@ -2042,14 +2733,33 @@
       "rarity": "very_rare",
       "slot": "trinket",
       "requires": {
-        "attunement": true
+        "attunement": true,
+        "class": [
+          "druid",
+          "sorcerer",
+          "warlock",
+          "wizard"
+        ]
       },
       "effects": [
         {
           "kind": "resistance",
           "damageType": "fire"
+        },
+        {
+          "kind": "grant_spell",
+          "spellId": "burning_hands"
+        },
+        {
+          "kind": "grant_spell",
+          "spellId": "wall_of_fire"
+        },
+        {
+          "kind": "grant_spell",
+          "spellId": "fireball"
         }
-      ]
+      ],
+      "charges": 10
     },
     {
       "id": "staff_of_frost",
@@ -2057,14 +2767,37 @@
       "rarity": "very_rare",
       "slot": "trinket",
       "requires": {
-        "attunement": true
+        "attunement": true,
+        "class": [
+          "druid",
+          "sorcerer",
+          "warlock",
+          "wizard"
+        ]
       },
       "effects": [
         {
           "kind": "resistance",
           "damageType": "cold"
+        },
+        {
+          "kind": "grant_spell",
+          "spellId": "cone_of_cold"
+        },
+        {
+          "kind": "grant_spell",
+          "spellId": "ice_storm"
+        },
+        {
+          "kind": "grant_spell",
+          "spellId": "fog_cloud"
+        },
+        {
+          "kind": "grant_spell",
+          "spellId": "wall_of_ice"
         }
-      ]
+      ],
+      "charges": 10
     },
     {
       "id": "staff_of_healing",
@@ -2072,9 +2805,28 @@
       "rarity": "rare",
       "slot": "trinket",
       "requires": {
-        "attunement": true
+        "attunement": true,
+        "class": [
+          "bard",
+          "cleric",
+          "druid"
+        ]
       },
-      "effects": []
+      "effects": [
+        {
+          "kind": "grant_spell",
+          "spellId": "cure_wounds"
+        },
+        {
+          "kind": "grant_spell",
+          "spellId": "lesser_restoration"
+        },
+        {
+          "kind": "grant_spell",
+          "spellId": "mass_cure_wounds"
+        }
+      ],
+      "charges": 10
     },
     {
       "id": "staff_of_power",
@@ -2082,14 +2834,64 @@
       "rarity": "very_rare",
       "slot": "trinket",
       "requires": {
-        "attunement": true
+        "attunement": true,
+        "class": [
+          "sorcerer",
+          "warlock",
+          "wizard"
+        ]
       },
       "effects": [
         {
+          "kind": "attack_bonus",
+          "amount": 2
+        },
+        {
+          "kind": "damage_bonus",
+          "amount": 2
+        },
+        {
           "kind": "ac_bonus",
           "amount": 2
+        },
+        {
+          "kind": "grant_spell",
+          "spellId": "cone_of_cold"
+        },
+        {
+          "kind": "grant_spell",
+          "spellId": "fireball"
+        },
+        {
+          "kind": "grant_spell",
+          "spellId": "globe_of_invulnerability"
+        },
+        {
+          "kind": "grant_spell",
+          "spellId": "hold_monster"
+        },
+        {
+          "kind": "grant_spell",
+          "spellId": "levitate"
+        },
+        {
+          "kind": "grant_spell",
+          "spellId": "lightning_bolt"
+        },
+        {
+          "kind": "grant_spell",
+          "spellId": "magic_missile"
+        },
+        {
+          "kind": "grant_spell",
+          "spellId": "ray_of_enfeeblement"
+        },
+        {
+          "kind": "grant_spell",
+          "spellId": "wall_of_force"
         }
-      ]
+      ],
+      "charges": 20
     },
     {
       "id": "staff_of_striking",
@@ -2099,7 +2901,22 @@
       "requires": {
         "attunement": true
       },
-      "effects": []
+      "effects": [
+        {
+          "kind": "attack_bonus",
+          "amount": 3
+        },
+        {
+          "kind": "damage_bonus",
+          "amount": 3
+        },
+        {
+          "kind": "on_hit_rider",
+          "damage": "1d6",
+          "damageType": "force"
+        }
+      ],
+      "charges": 10
     },
     {
       "id": "staff_of_swarming_insects",
@@ -2107,9 +2924,27 @@
       "rarity": "rare",
       "slot": "trinket",
       "requires": {
-        "attunement": true
+        "attunement": true,
+        "class": [
+          "bard",
+          "cleric",
+          "druid",
+          "sorcerer",
+          "warlock",
+          "wizard"
+        ]
       },
-      "effects": []
+      "effects": [
+        {
+          "kind": "grant_spell",
+          "spellId": "giant_insect"
+        },
+        {
+          "kind": "grant_spell",
+          "spellId": "insect_plague"
+        }
+      ],
+      "charges": 10
     },
     {
       "id": "staff_of_the_magi",
@@ -2117,9 +2952,96 @@
       "rarity": "legendary",
       "slot": "trinket",
       "requires": {
-        "attunement": true
+        "attunement": true,
+        "class": [
+          "sorcerer",
+          "warlock",
+          "wizard"
+        ]
       },
-      "effects": []
+      "effects": [
+        {
+          "kind": "attack_bonus",
+          "amount": 2
+        },
+        {
+          "kind": "damage_bonus",
+          "amount": 2
+        },
+        {
+          "kind": "grant_spell",
+          "spellId": "arcane_lock"
+        },
+        {
+          "kind": "grant_spell",
+          "spellId": "conjure_elemental"
+        },
+        {
+          "kind": "grant_spell",
+          "spellId": "detect_magic"
+        },
+        {
+          "kind": "grant_spell",
+          "spellId": "dispel_magic"
+        },
+        {
+          "kind": "grant_spell",
+          "spellId": "enlarge_reduce"
+        },
+        {
+          "kind": "grant_spell",
+          "spellId": "fireball"
+        },
+        {
+          "kind": "grant_spell",
+          "spellId": "flaming_sphere"
+        },
+        {
+          "kind": "grant_spell",
+          "spellId": "ice_storm"
+        },
+        {
+          "kind": "grant_spell",
+          "spellId": "invisibility"
+        },
+        {
+          "kind": "grant_spell",
+          "spellId": "knock"
+        },
+        {
+          "kind": "grant_spell",
+          "spellId": "light"
+        },
+        {
+          "kind": "grant_spell",
+          "spellId": "lightning_bolt"
+        },
+        {
+          "kind": "grant_spell",
+          "spellId": "passwall"
+        },
+        {
+          "kind": "grant_spell",
+          "spellId": "plane_shift"
+        },
+        {
+          "kind": "grant_spell",
+          "spellId": "protection_from_evil_and_good"
+        },
+        {
+          "kind": "grant_spell",
+          "spellId": "telekinesis"
+        },
+        {
+          "kind": "grant_spell",
+          "spellId": "wall_of_fire"
+        },
+        {
+          "kind": "grant_spell",
+          "spellId": "web"
+        }
+      ],
+      "charges": 50
     },
     {
       "id": "staff_of_the_python",
@@ -2137,9 +3059,54 @@
       "rarity": "rare",
       "slot": "trinket",
       "requires": {
-        "attunement": true
+        "attunement": true,
+        "class": [
+          "druid"
+        ]
       },
-      "effects": []
+      "effects": [
+        {
+          "kind": "attack_bonus",
+          "amount": 2
+        },
+        {
+          "kind": "damage_bonus",
+          "amount": 2
+        },
+        {
+          "kind": "grant_spell",
+          "spellId": "animal_friendship"
+        },
+        {
+          "kind": "grant_spell",
+          "spellId": "awaken"
+        },
+        {
+          "kind": "grant_spell",
+          "spellId": "barkskin"
+        },
+        {
+          "kind": "grant_spell",
+          "spellId": "locate_animals_or_plants"
+        },
+        {
+          "kind": "grant_spell",
+          "spellId": "pass_without_trace"
+        },
+        {
+          "kind": "grant_spell",
+          "spellId": "speak_with_animals"
+        },
+        {
+          "kind": "grant_spell",
+          "spellId": "speak_with_plants"
+        },
+        {
+          "kind": "grant_spell",
+          "spellId": "wall_of_thorns"
+        }
+      ],
+      "charges": 6
     },
     {
       "id": "staff_of_thunder_and_lightning",
@@ -2149,7 +3116,16 @@
       "requires": {
         "attunement": true
       },
-      "effects": []
+      "effects": [
+        {
+          "kind": "attack_bonus",
+          "amount": 2
+        },
+        {
+          "kind": "damage_bonus",
+          "amount": 2
+        }
+      ]
     },
     {
       "id": "staff_of_withering",
@@ -2159,7 +3135,14 @@
       "requires": {
         "attunement": true
       },
-      "effects": []
+      "effects": [
+        {
+          "kind": "on_hit_rider",
+          "damage": "2d10",
+          "damageType": "necrotic"
+        }
+      ],
+      "charges": 3
     },
     {
       "id": "stone_of_controlling_earth_elementals",
@@ -2233,9 +3216,14 @@
       "rarity": "legendary",
       "slot": "trinket",
       "requires": {
-        "attunement": true
+        "attunement": true,
+        "class": [
+          "cleric",
+          "paladin"
+        ]
       },
-      "effects": []
+      "effects": [],
+      "charges": 7
     },
     {
       "id": "talisman_of_the_sphere",
@@ -2255,7 +3243,8 @@
       "requires": {
         "attunement": true
       },
-      "effects": []
+      "effects": [],
+      "charges": 6
     },
     {
       "id": "thunderous_greatclub",
@@ -2265,7 +3254,18 @@
       "requires": {
         "attunement": true
       },
-      "effects": []
+      "effects": [
+        {
+          "kind": "stat_set",
+          "ability": "str",
+          "score": 20
+        },
+        {
+          "kind": "on_hit_rider",
+          "damage": "1d8",
+          "damageType": "thunder"
+        }
+      ]
     },
     {
       "id": "tome_of_clear_thought",
@@ -2296,7 +3296,13 @@
       "requires": {
         "attunement": true
       },
-      "effects": []
+      "effects": [
+        {
+          "kind": "grant_spell",
+          "spellId": "dominate_beast"
+        }
+      ],
+      "charges": 3
     },
     {
       "id": "universal_solvent",
@@ -2332,6 +3338,10 @@
         {
           "kind": "resistance",
           "damageType": "slashing"
+        },
+        {
+          "kind": "immunity",
+          "damageType": "slashing"
         }
       ]
     },
@@ -2343,7 +3353,17 @@
       "requires": {
         "attunement": true
       },
-      "effects": []
+      "effects": [
+        {
+          "kind": "grant_spell",
+          "spellId": "hold_monster"
+        },
+        {
+          "kind": "grant_spell",
+          "spellId": "hold_person"
+        }
+      ],
+      "charges": 7
     },
     {
       "id": "wand_of_enemy_detection",
@@ -2353,7 +3373,8 @@
       "requires": {
         "attunement": true
       },
-      "effects": []
+      "effects": [],
+      "charges": 7
     },
     {
       "id": "wand_of_fear",
@@ -2363,7 +3384,17 @@
       "requires": {
         "attunement": true
       },
-      "effects": []
+      "effects": [
+        {
+          "kind": "grant_spell",
+          "spellId": "command"
+        },
+        {
+          "kind": "grant_spell",
+          "spellId": "fear"
+        }
+      ],
+      "charges": 7
     },
     {
       "id": "wand_of_fireballs",
@@ -2371,9 +3402,16 @@
       "rarity": "rare",
       "slot": "trinket",
       "requires": {
-        "attunement": true
+        "attunement": true,
+        "spellcaster": true
       },
-      "effects": []
+      "effects": [
+        {
+          "kind": "grant_spell",
+          "spellId": "fireball"
+        }
+      ],
+      "charges": 7
     },
     {
       "id": "wand_of_lightning_bolts",
@@ -2381,23 +3419,42 @@
       "rarity": "rare",
       "slot": "trinket",
       "requires": {
-        "attunement": true
+        "attunement": true,
+        "spellcaster": true
       },
-      "effects": []
+      "effects": [
+        {
+          "kind": "grant_spell",
+          "spellId": "lightning_bolt"
+        }
+      ],
+      "charges": 7
     },
     {
       "id": "wand_of_magic_detection",
       "name": "Wand of Magic Detection",
       "rarity": "uncommon",
       "slot": "trinket",
-      "effects": []
+      "effects": [
+        {
+          "kind": "grant_spell",
+          "spellId": "detect_magic"
+        }
+      ],
+      "charges": 3
     },
     {
       "id": "wand_of_magic_missiles",
       "name": "Wand of Magic Missiles",
       "rarity": "uncommon",
       "slot": "trinket",
-      "effects": []
+      "effects": [
+        {
+          "kind": "grant_spell",
+          "spellId": "magic_missile"
+        }
+      ],
+      "charges": 7
     },
     {
       "id": "wand_of_paralysis",
@@ -2405,9 +3462,11 @@
       "rarity": "rare",
       "slot": "trinket",
       "requires": {
-        "attunement": true
+        "attunement": true,
+        "spellcaster": true
       },
-      "effects": []
+      "effects": [],
+      "charges": 7
     },
     {
       "id": "wand_of_polymorph",
@@ -2415,24 +3474,55 @@
       "rarity": "very_rare",
       "slot": "trinket",
       "requires": {
-        "attunement": true
+        "attunement": true,
+        "spellcaster": true
       },
-      "effects": []
+      "effects": [
+        {
+          "kind": "grant_spell",
+          "spellId": "polymorph"
+        }
+      ],
+      "charges": 7
     },
     {
       "id": "wand_of_secrets",
       "name": "Wand of Secrets",
       "rarity": "uncommon",
       "slot": "trinket",
+      "effects": [],
+      "charges": 3
+    },
+    {
+      "id": "wand_of_the_war_mage_plus_1",
+      "name": "Wand of the War Mage +1",
+      "rarity": "uncommon",
+      "slot": "trinket",
+      "requires": {
+        "attunement": true,
+        "spellcaster": true
+      },
       "effects": []
     },
     {
-      "id": "wand_of_the_war_mage_1_2_or_3",
-      "name": "Wand of the War Mage, +1, +2, or +3",
+      "id": "wand_of_the_war_mage_plus_2",
+      "name": "Wand of the War Mage +2",
+      "rarity": "rare",
+      "slot": "trinket",
+      "requires": {
+        "attunement": true,
+        "spellcaster": true
+      },
+      "effects": []
+    },
+    {
+      "id": "wand_of_the_war_mage_plus_3",
+      "name": "Wand of the War Mage +3",
       "rarity": "very_rare",
       "slot": "trinket",
       "requires": {
-        "attunement": true
+        "attunement": true,
+        "spellcaster": true
       },
       "effects": []
     },
@@ -2442,9 +3532,16 @@
       "rarity": "uncommon",
       "slot": "trinket",
       "requires": {
-        "attunement": true
+        "attunement": true,
+        "spellcaster": true
       },
-      "effects": []
+      "effects": [
+        {
+          "kind": "grant_spell",
+          "spellId": "web"
+        }
+      ],
+      "charges": 7
     },
     {
       "id": "wand_of_wonder",
@@ -2454,14 +3551,56 @@
       "requires": {
         "attunement": true
       },
-      "effects": []
+      "effects": [],
+      "charges": 7
     },
     {
-      "id": "weapon_1_2_or_3",
-      "name": "Weapon, +1, +2, or +3",
+      "id": "weapon_plus_1",
+      "name": "Weapon +1",
+      "rarity": "uncommon",
+      "slot": "mainhand",
+      "effects": [
+        {
+          "kind": "attack_bonus",
+          "amount": 1
+        },
+        {
+          "kind": "damage_bonus",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "id": "weapon_plus_2",
+      "name": "Weapon +2",
+      "rarity": "rare",
+      "slot": "mainhand",
+      "effects": [
+        {
+          "kind": "attack_bonus",
+          "amount": 2
+        },
+        {
+          "kind": "damage_bonus",
+          "amount": 2
+        }
+      ]
+    },
+    {
+      "id": "weapon_plus_3",
+      "name": "Weapon +3",
       "rarity": "very_rare",
       "slot": "mainhand",
-      "effects": []
+      "effects": [
+        {
+          "kind": "attack_bonus",
+          "amount": 3
+        },
+        {
+          "kind": "damage_bonus",
+          "amount": 3
+        }
+      ]
     },
     {
       "id": "weapon_of_warning",
@@ -2485,7 +3624,12 @@
       "name": "Wind Fan",
       "rarity": "uncommon",
       "slot": "trinket",
-      "effects": []
+      "effects": [
+        {
+          "kind": "grant_spell",
+          "spellId": "gust_of_wind"
+        }
+      ]
     },
     {
       "id": "winged_boots",

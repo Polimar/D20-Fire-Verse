@@ -5,9 +5,9 @@
   "id": "goodberry",
   "status": "auto_ok",
   "confidence": "high",
-  "usage": "Level-up spell list for the listed classes. Combat only if a wired ability uses this id.",
+  "usage": "Level-up spell list for the listed classes. Combat runs it only when a wired ability has the same id.",
   "srd": {
-    "components": "V, S, M (a sprig of mistletoe)",
-    "line": "Level 1 Conjuration (Druid, Ranger)"
+    "line": "Level 1 Conjuration (Druid, Ranger)",
+    "text": "_Level 1 Conjuration (Druid, Ranger)_\n\n**Casting Time:** Action\n**Range:** Self\n**Components:** V, S, M (a sprig of mistletoe)\n**Duration:** 24 hours\n\nTen berries appear in your hand and are infused with magic for the duration. A creature can take a Bonus Action to eat one berry. Eating a berry restores 1 Hit Point, and the berry provides enough nourishment to sustain a creature for one day.\n\nUneaten berries disappear when the spell ends."
   }
 }

@@ -5,9 +5,9 @@
   "id": "spider_climb",
   "status": "auto_ok",
   "confidence": "high",
-  "usage": "Level-up spell list for the listed classes. Combat only if a wired ability uses this id.",
+  "usage": "Level-up spell list for the listed classes. Combat runs it only when a wired ability has the same id.",
   "srd": {
-    "components": "V, S, M (a drop of bitumen and a spider)",
-    "line": "Level 2 Transmutation (Sorcerer, Warlock, Wizard)"
+    "line": "Level 2 Transmutation (Sorcerer, Warlock, Wizard)",
+    "text": "_Level 2 Transmutation (Sorcerer, Warlock, Wizard)_\n\n**Casting Time:** Action\n**Range:** Touch\n**Components:** V, S, M (a drop of bitumen and a spider)\n**Duration:** Concentration, up to 1 hour\n\nUntil the spell ends, one willing creature you touch gains the ability to move up, down, and across vertical surfaces and along ceilings, while leaving its hands free. The target also gains a Climb Speed equal to its Speed.\n\n_Using a Higher-Level Spell Slot._ You can target one additional creature for each spell slot level above 2."
   }
 }

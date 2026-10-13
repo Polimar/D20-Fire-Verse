@@ -5,9 +5,9 @@
   "id": "disintegrate",
   "status": "auto_ok",
   "confidence": "high",
-  "usage": "Level-up spell list for the listed classes. Combat only if a wired ability uses this id.",
+  "usage": "Level-up spell list for the listed classes. Combat runs it only when a wired ability has the same id.",
   "srd": {
-    "components": "V, S, M (a lodestone and dust)",
-    "line": "Level 6 Transmutation (Sorcerer, Wizard)"
+    "line": "Level 6 Transmutation (Sorcerer, Wizard)",
+    "text": "_Level 6 Transmutation (Sorcerer, Wizard)_\n\n**Casting Time:** Action\n**Range:** 60 feet\n**Components:** V, S, M (a lodestone and dust)\n**Duration:** Instantaneous\n\nYou launch a green ray at a target you can see within range. The target can be a creature, a nonmagical object, or a creation of magical force, such as the wall created by _Wall of Force_.\n\nA creature targeted by this spell makes a Dexterity saving throw. On a failed save, the target takes 10d6 + 40 Force damage. If this damage reduces it to 0 Hit Points, it and everything nonmagical it is wearing and carrying are disintegrated into gray dust. The target can be revived only by a _True Resurrection_ or a _Wish_ spell.\n\nThis spell automatically disintegrates a Large or smaller nonmagical object or a creation of magical force. If such a target is Huge or larger, this spell disintegrates a 10-foot-Cube portion of it.\n\n_Using a Higher-Level Spell Slot._ The damage increases by 3d6 for each spell slot level above 6."
   }
 }

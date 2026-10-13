@@ -5,9 +5,9 @@
   "id": "false_life",
   "status": "auto_ok",
   "confidence": "high",
-  "usage": "Level-up spell list for the listed classes. Combat only if a wired ability uses this id.",
+  "usage": "Level-up spell list for the listed classes. Combat runs it only when a wired ability has the same id.",
   "srd": {
-    "components": "V, S, M (a drop of alcohol)",
-    "line": "Level 1 Necromancy (Sorcerer, Wizard)"
+    "line": "Level 1 Necromancy (Sorcerer, Wizard)",
+    "text": "_Level 1 Necromancy (Sorcerer, Wizard)_\n\n**Casting Time:** Action\n**Range:** Self\n**Components:** V, S, M (a drop of alcohol)\n**Duration:** Instantaneous\n\nYou gain 2d4 + 4 Temporary Hit Points.\n\n_Using a Higher-Level Spell Slot._ You gain 5 additional Temporary Hit Points for each spell slot level above 1."
   }
 }

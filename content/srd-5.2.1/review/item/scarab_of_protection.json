@@ -3,11 +3,17 @@
   "unparsedFields": [],
   "kind": "item",
   "id": "scarab_of_protection",
-  "status": "auto_ok",
-  "confidence": "high",
-  "usage": "Vendor, loot, and stash. Typed effects change AC, attack, and damage.",
+  "status": "needs_review",
+  "confidence": "medium",
+  "usage": "Vendor, loot, and stash. Equipped effects are listed on the sheet; no fight applies them yet.",
   "srd": {
     "line": "Wondrous Item, Legendary (Requires Attunement)",
     "text": "_Wondrous Item, Legendary (Requires Attunement)_\n\nThis beetle-shaped medallion provides three benefits while it is on your person.\n\n_Defense._ You gain a +1 bonus to Armor Class.\n\n_Preservation._ The scarab has 12 charges. If you fail a saving throw against a Necromancy spell or a harmful effect originating from an Undead, you can take a Reaction to expend 1 charge and turn the failed save into a successful one. The scarab crumbles into powder and is destroyed when its last charge is expended.\n\n_Spell Resistance._ You have Advantage on saving throws against spells."
-  }
+  },
+  "notModeled": [
+    "Preservation. The scarab has 12 charges.",
+    "If you fail a saving throw against a Necromancy spell or a harmful effect originating from an Undead, you can take a Reaction to expend 1 charge and turn the failed save into a successful one.",
+    "The scarab crumbles into powder and is destroyed when its last charge is expended.",
+    "Spell Resistance. You have Advantage on saving throws against spells."
+  ]
 }

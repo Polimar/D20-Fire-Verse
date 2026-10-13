@@ -5,9 +5,9 @@
   "id": "levitate",
   "status": "auto_ok",
   "confidence": "high",
-  "usage": "Level-up spell list for the listed classes. Combat only if a wired ability uses this id.",
+  "usage": "Level-up spell list for the listed classes. Combat runs it only when a wired ability has the same id.",
   "srd": {
-    "components": "V, S, M (a metal spring)",
-    "line": "Level 2 Transmutation (Sorcerer, Wizard)"
+    "line": "Level 2 Transmutation (Sorcerer, Wizard)",
+    "text": "_Level 2 Transmutation (Sorcerer, Wizard)_\n\n**Casting Time:** Action\n**Range:** 60 feet\n**Components:** V, S, M (a metal spring)\n**Duration:** Concentration, up to 10 minutes\n\nOne creature or loose object of your choice that you can see within range rises vertically up to 20 feet and remains suspended there for the duration. The spell can levitate an object that weighs up to 500 pounds. An unwilling creature that succeeds on a Constitution saving throw is unaffected.\n\nThe target can move only by pushing or pulling against a fixed object or surface within reach (such as a wall or a ceiling), which allows it to move as if it were climbing. You can change the target's altitude by up to 20 feet in either direction on your turn. If you are the target, you can move up or down as part of your move. Otherwise, you can take a Magic action to move the target, which must remain within the spell's range.\n\nWhen the spell ends, the target floats gently to the ground if it is still aloft."
   }
 }

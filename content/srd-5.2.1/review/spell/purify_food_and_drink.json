@@ -5,9 +5,9 @@
   "id": "purify_food_and_drink",
   "status": "auto_ok",
   "confidence": "high",
-  "usage": "Level-up spell list for the listed classes. Combat only if a wired ability uses this id.",
+  "usage": "Level-up spell list for the listed classes. Combat runs it only when a wired ability has the same id.",
   "srd": {
-    "components": "V, S",
-    "line": "Level 1 Transmutation (Cleric, Druid, Paladin)"
+    "line": "Level 1 Transmutation (Cleric, Druid, Paladin)",
+    "text": "_Level 1 Transmutation (Cleric, Druid, Paladin)_\n\n**Casting Time:** Action or Ritual\n**Range:** 10 feet\n**Components:** V, S\n**Duration:** Instantaneous\n\nYou remove poison and rot from nonmagical food and drink in a 5-foot-radius Sphere centered on a point within range."
   }
 }

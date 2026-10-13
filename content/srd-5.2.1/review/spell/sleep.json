@@ -5,9 +5,9 @@
   "id": "sleep",
   "status": "auto_ok",
   "confidence": "high",
-  "usage": "Level-up spell list for the listed classes. Combat only if a wired ability uses this id.",
+  "usage": "Level-up spell list for the listed classes. Combat runs it only when a wired ability has the same id.",
   "srd": {
-    "components": "V, S, M (a pinch of sand or rose petals)",
-    "line": "Level 1 Enchantment (Bard, Sorcerer, Wizard)"
+    "line": "Level 1 Enchantment (Bard, Sorcerer, Wizard)",
+    "text": "_Level 1 Enchantment (Bard, Sorcerer, Wizard)_\n\n**Casting Time:** Action\n**Range:** 60 feet\n**Components:** V, S, M (a pinch of sand or rose petals)\n**Duration:** Concentration, up to 1 minute\n\nEach creature of your choice in a 5-foot-radius Sphere centered on a point within range must succeed on a Wisdom saving throw or have the Incapacitated condition until the end of its next turn, at which point it must repeat the save. If the target fails the second save, the target has the Unconscious condition for the duration. The spell ends on a target if it takes damage or someone within 5 feet of it takes an action to shake it out of the spell's effect.\n\nCreatures that don't sleep, such as elves, or that have Immunity to the Exhaustion condition automatically succeed on saves against this spell."
   }
 }

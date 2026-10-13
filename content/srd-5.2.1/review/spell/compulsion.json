@@ -5,9 +5,9 @@
   "id": "compulsion",
   "status": "auto_ok",
   "confidence": "high",
-  "usage": "Level-up spell list for the listed classes. Combat only if a wired ability uses this id.",
+  "usage": "Level-up spell list for the listed classes. Combat runs it only when a wired ability has the same id.",
   "srd": {
-    "components": "V, S",
-    "line": "Level 4 Enchantment (Bard)"
+    "line": "Level 4 Enchantment (Bard)",
+    "text": "_Level 4 Enchantment (Bard)_\n\n**Casting Time:** Action\n**Range:** 30 feet\n**Components:** V, S\n**Duration:** Concentration, up to 1 minute\n\nEach creature of your choice that you can see within range must succeed on a Wisdom saving throw or have the Charmed condition until the spell ends.\n\nFor the duration, you can take a Bonus Action to designate a direction that is horizontal to you. Each Charmed target must use as much of its movement as possible to move in that direction on its next turn, taking the safest route. After moving in this way, a target repeats the save, ending the spell on itself on a success."
   }
 }

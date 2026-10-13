@@ -5,9 +5,9 @@
   "id": "circle_of_death",
   "status": "auto_ok",
   "confidence": "high",
-  "usage": "Level-up spell list for the listed classes. Combat only if a wired ability uses this id.",
+  "usage": "Level-up spell list for the listed classes. Combat runs it only when a wired ability has the same id.",
   "srd": {
-    "components": "V, S, M (the powder of a crushed black pearl worth 500+ GP)",
-    "line": "Level 6 Necromancy (Sorcerer, Warlock, Wizard)"
+    "line": "Level 6 Necromancy (Sorcerer, Warlock, Wizard)",
+    "text": "_Level 6 Necromancy (Sorcerer, Warlock, Wizard)_\n\n**Casting Time:** Action\n**Range:** 150 feet\n**Components:** V, S, M (the powder of a crushed black pearl worth 500+ GP)\n**Duration:** Instantaneous\n\nNegative energy ripples out in a 60-foot-radius Sphere from a point you choose within range. Each creature in that area makes a Constitution saving throw, taking 8d8 Necrotic damage on a failed save or half as much damage on a successful one.\n\n_Using a Higher-Level Spell Slot._ The damage increases by 2d8 for each spell slot level above 6."
   }
 }

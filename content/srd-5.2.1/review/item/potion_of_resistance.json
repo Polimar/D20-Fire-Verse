@@ -2,16 +2,119 @@
   "ambiguities": [
     {
       "field": "effects",
-      "summary": "No typed effect matched the item text.",
+      "summary": "The SRD lets the GM pick one damage type for the Resistance. Pick the one this copy grants.",
       "options": [
         {
-          "label": "Leave effects empty",
+          "label": "Resistance to acid",
           "patch": {
-            "effects": []
+            "effects": [
+              {
+                "kind": "resistance",
+                "damageType": "acid"
+              }
+            ]
+          }
+        },
+        {
+          "label": "Resistance to cold",
+          "patch": {
+            "effects": [
+              {
+                "kind": "resistance",
+                "damageType": "cold"
+              }
+            ]
+          }
+        },
+        {
+          "label": "Resistance to fire",
+          "patch": {
+            "effects": [
+              {
+                "kind": "resistance",
+                "damageType": "fire"
+              }
+            ]
+          }
+        },
+        {
+          "label": "Resistance to force",
+          "patch": {
+            "effects": [
+              {
+                "kind": "resistance",
+                "damageType": "force"
+              }
+            ]
+          }
+        },
+        {
+          "label": "Resistance to lightning",
+          "patch": {
+            "effects": [
+              {
+                "kind": "resistance",
+                "damageType": "lightning"
+              }
+            ]
+          }
+        },
+        {
+          "label": "Resistance to necrotic",
+          "patch": {
+            "effects": [
+              {
+                "kind": "resistance",
+                "damageType": "necrotic"
+              }
+            ]
+          }
+        },
+        {
+          "label": "Resistance to poison",
+          "patch": {
+            "effects": [
+              {
+                "kind": "resistance",
+                "damageType": "poison"
+              }
+            ]
+          }
+        },
+        {
+          "label": "Resistance to psychic",
+          "patch": {
+            "effects": [
+              {
+                "kind": "resistance",
+                "damageType": "psychic"
+              }
+            ]
+          }
+        },
+        {
+          "label": "Resistance to radiant",
+          "patch": {
+            "effects": [
+              {
+                "kind": "resistance",
+                "damageType": "radiant"
+              }
+            ]
+          }
+        },
+        {
+          "label": "Resistance to thunder",
+          "patch": {
+            "effects": [
+              {
+                "kind": "resistance",
+                "damageType": "thunder"
+              }
+            ]
           }
         }
-      ],
-      "parserChoice": 0
+      ]
     }
   ],
   "unparsedFields": [
@@ -21,9 +124,9 @@
   "id": "potion_of_resistance",
   "status": "needs_review",
   "confidence": "low",
-  "usage": "Vendor, loot, and stash. Typed effects change AC, attack, and damage.",
+  "usage": "Vendor, loot, and stash. Equipped effects are listed on the sheet; no fight applies them yet.",
   "srd": {
     "line": "Potion, Uncommon",
-    "text": "_Potion, Uncommon_\n\nWhen you drink this potion, you have Resistance to one type of damage for 1 hour. The GM chooses the type or determines it randomly by rolling on the following table.\n\n<table>\n  <thead>\n    <tr>\n      <th>1d10</th>\n      <th>Damage Type</th>\n      <th>1d10</th>\n      <th>Damage Type</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <td>1</td>\n      <td>Acid</td>\n      <td>6</td>\n      <td>Necrotic</td>\n    </tr>\n    <tr>\n      <td>2</td>\n      <td>Cold</td>\n      <td>7</td>\n      <td>Poison</td>\n    </tr>\n    <tr>\n      <td>3</td>\n      <td>Fire</td>\n      <td>8</td>\n      <td>Psychic</td>\n    </tr>\n    <tr>\n      <td>4</td>\n      <td>Force</td>\n      <td>9</td>\n      <td>Radiant</td>\n    </tr>\n    <tr>\n      <td>5</td>\n      <td>Lightning</td>\n      <td>10</td>\n      <td>Thunder</td>\n    </tr>\n  </tbody>\n</table>"
+    "text": "_Potion, Uncommon_\n\nWhen you drink this potion, you have Resistance to one type of damage for 1 hour. The GM chooses the type or determines it randomly by rolling on the following table.\n\n| 1d10 | Damage Type | 1d10 | Damage Type |\n| --- | --- | --- | --- |\n| 1 | Acid | 6 | Necrotic |\n| 2 | Cold | 7 | Poison |\n| 3 | Fire | 8 | Psychic |\n| 4 | Force | 9 | Radiant |\n| 5 | Lightning | 10 | Thunder |"
   }
 }

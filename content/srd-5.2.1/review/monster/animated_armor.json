@@ -1,0 +1,13 @@
+{
+  "ambiguities": [],
+  "unparsedFields": [],
+  "kind": "monster",
+  "id": "animated_armor",
+  "status": "auto_ok",
+  "confidence": "high",
+  "usage": "Encounters and arena fights. The engine runs the actions it can compile from the stat block.",
+  "srd": {
+    "engineId": "srd_animated_armor",
+    "text": "_Medium Construct, Unaligned_\n\n**AC** 18 **Initiative** +2 (12)\n\n**HP** 33 (6d8 + 6)\n\n**Speed** 25 ft.\n\n|  |  | MOD | SAVE |  |  | MOD | SAVE |  |  | MOD | SAVE |\n| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |\n| **STR** | 14 | +2 | +2 | **DEX** | 11 | +0 | +0 | **CON** | 13 | +1 | +1 |\n| **INT** | 1 | −5 | −5 | **WIS** | 3 | −4 | −4 | **CHA** | 1 | −5 | −5 |\n\n**Immunities** Poison, Psychic; Charmed, Deafened, Exhaustion, Frightened, Paralyzed, Petrified, Poisoned\n\n**Senses** Blindsight 60 ft.; Passive Perception 6\n\n**Languages** None\n\n**CR** 1 (XP 200; PB +2)\n\n#### Actions\n\n**_Multiattack._** The armor makes two Slam attacks.\n\n**_Slam._** _Melee Attack Roll:_ +4, reach 5 ft. _Hit:_ 5 (1d6 + 2) Bludgeoning damage."
+  }
+}

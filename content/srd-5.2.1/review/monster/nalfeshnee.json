@@ -3,7 +3,16 @@
   "unparsedFields": [],
   "kind": "monster",
   "id": "nalfeshnee",
-  "status": "auto_ok",
-  "confidence": "high",
-  "usage": "Encounters when enabled. Combat uses a wired ability with the same id when one exists."
+  "status": "needs_review",
+  "confidence": "medium",
+  "usage": "Encounters and arena fights. The engine runs the actions it can compile from the stat block.",
+  "srd": {
+    "engineId": "srd_nalfeshnee",
+    "text": "_Large Fiend (Demon), Chaotic Evil_\n\n**AC** 18 **Initiative** +5 (15)\n\n**HP** 184 (16d10 + 96)\n\n**Speed** 20 ft., Fly 30 ft.\n\n|  |  | MOD | SAVE |  |  | MOD | SAVE |  |  | MOD | SAVE |\n| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |\n| **STR** | 21 | +5 | +5 | **DEX** | 10 | +0 | +0 | **CON** | 22 | +6 | +11 |\n| **INT** | 19 | +4 | +9 | **WIS** | 12 | +1 | +6 | **CHA** | 15 | +2 | +7 |\n\n**Resistances** Cold, Fire, Lightning\n\n**Immunities** Poison; Frightened, Poisoned\n\n**Senses** Truesight 120 ft.; Passive Perception 11\n\n**Languages** Abyssal; telepathy 120 ft.\n\n**CR** 13 (XP 10,000; PB +5)\n\n#### Traits\n\n**_Demonic Restoration._** If the nalfeshnee dies outside the Abyss, its body dissolves into ichor, and it gains a new body instantly, reviving with all its Hit Points somewhere in the Abyss.\n\n**_Magic Resistance._** The nalfeshnee has Advantage on saving throws against spells and other magical effects.\n\n#### Actions\n\n**_Multiattack._** The nalfeshnee makes three Rend attacks.\n\n**_Rend._** _Melee Attack Roll:_ +10, reach 10 ft. _Hit:_ 16 (2d10 + 5) Slashing damage plus 11 (2d10) Force damage.\n\n**_Teleport._** The nalfeshnee teleports up to 120 feet to an unoccupied space it can see.\n\n#### Bonus Actions\n\n**_Horror Nimbus (Recharge 5–6)._** _Wisdom Saving Throw:_ DC 15, each creature in a 15-foot Emanation originating from the nalfeshnee. _Failure:_ 28 (8d6) Psychic damage, and the target has the Frightened condition for 1 minute, until it takes damage, or until it ends its turn with the nalfeshnee out of line of sight. _Success:_\nThe target is immune to this nalfeshnee's Horror Nimbus for 24 hours.\n\n#### Reactions\n\n**_Pursuit._** Trigger: Another creature the nalfeshnee can see ends its move within 120 feet of the nalfeshnee. Response: The nalfeshnee uses Teleport, but its destination space must be within 10 feet of the triggering creature."
+  },
+  "notModeled": [
+    "Action “Teleport”: the combat engine does not run it.",
+    "Reaction “Pursuit”: monsters take no reactions in combat.",
+    "Trait “Demonic Restoration”: text only; the engine ignores it."
+  ]
 }

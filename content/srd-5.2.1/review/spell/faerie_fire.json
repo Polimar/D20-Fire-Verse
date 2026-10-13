@@ -5,9 +5,9 @@
   "id": "faerie_fire",
   "status": "auto_ok",
   "confidence": "high",
-  "usage": "Level-up spell list for the listed classes. Combat only if a wired ability uses this id.",
+  "usage": "Level-up spell list for the listed classes. Combat runs it only when a wired ability has the same id.",
   "srd": {
-    "components": "V",
-    "line": "Level 1 Evocation (Bard, Druid)"
+    "line": "Level 1 Evocation (Bard, Druid)",
+    "text": "_Level 1 Evocation (Bard, Druid)_\n\n**Casting Time:** Action\n**Range:** 60 feet\n**Components:** V\n**Duration:** Concentration, up to 1 minute\n\nObjects in a 20-foot Cube within range are outlined in blue, green, or violet light (your choice). Each creature in the Cube is also outlined if it fails a Dexterity saving throw. For the duration, objects and affected creatures shed Dim Light in a 10-foot radius and can't benefit from the Invisible condition.\n\nAttack rolls against an affected creature or object have Advantage if the attacker can see it."
   }
 }

@@ -5,9 +5,9 @@
   "id": "sunburst",
   "status": "auto_ok",
   "confidence": "high",
-  "usage": "Level-up spell list for the listed classes. Combat only if a wired ability uses this id.",
+  "usage": "Level-up spell list for the listed classes. Combat runs it only when a wired ability has the same id.",
   "srd": {
-    "components": "V, S, M (a piece of sunstone)",
-    "line": "Level 8 Evocation (Cleric, Druid, Sorcerer, Wizard)"
+    "line": "Level 8 Evocation (Cleric, Druid, Sorcerer, Wizard)",
+    "text": "_Level 8 Evocation (Cleric, Druid, Sorcerer, Wizard)_\n\n**Casting Time:** Action\n**Range:** 150 feet\n**Components:** V, S, M (a piece of sunstone)\n**Duration:** Instantaneous\n\nBrilliant sunlight flashes in a 60-foot-radius Sphere centered on a point you choose within range. Each creature in the Sphere makes a Constitution saving throw. On a failed save, a creature takes 12d6 Radiant damage and has the Blinded condition for 1 minute. On a successful save, it takes half as much damage only.\n\nA creature Blinded by this spell makes another Constitution saving throw at the end of each of its turns, ending the effect on itself on a success.\n\nThis spell dispels Darkness in its area that was created by any spell."
   }
 }

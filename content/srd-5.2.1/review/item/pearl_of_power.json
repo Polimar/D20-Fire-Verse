@@ -2,10 +2,10 @@
   "ambiguities": [
     {
       "field": "effects",
-      "summary": "No typed effect matched the item text.",
+      "summary": "No typed effect matches this item. The rules listed under Not modeled stay text only.",
       "options": [
         {
-          "label": "Leave effects empty",
+          "label": "Approve with no typed effects",
           "patch": {
             "effects": []
           }
@@ -21,9 +21,12 @@
   "id": "pearl_of_power",
   "status": "needs_review",
   "confidence": "low",
-  "usage": "Vendor, loot, and stash. Typed effects change AC, attack, and damage.",
+  "usage": "Vendor, loot, and stash. Equipped effects are listed on the sheet; no fight applies them yet.",
   "srd": {
     "line": "Wondrous Item, Uncommon (Requires Attunement by a Spellcaster)",
     "text": "_Wondrous Item, Uncommon (Requires Attunement by a Spellcaster)_\n\nWhile this pearl is on your person, you can take a Magic action to regain one expended spell slot of level 3 or lower. Once you use the pearl, it can't be used again until the next dawn."
-  }
+  },
+  "notModeled": [
+    "While this pearl is on your person, you can take a Magic action to regain one expended spell slot of level 3 or lower."
+  ]
 }

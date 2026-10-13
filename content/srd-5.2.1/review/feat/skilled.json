@@ -5,5 +5,8 @@
   "id": "skilled",
   "status": "auto_ok",
   "confidence": "high",
-  "usage": "Chosen at an ASI level or as an Epic Boon when the class table says so."
+  "usage": "Chosen at an ASI level or as an Epic Boon when the class table says so.",
+  "srd": {
+    "text": "_Origin Feat_\n\nYou gain proficiency in any combination of three skills or tools of your choice.\n\n_Repeatable._ You can take this feat more than once.\n\n### General Feats"
+  }
 }

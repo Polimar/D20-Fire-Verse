@@ -10,5 +10,8 @@
   "id": "halfling",
   "status": "auto_ok",
   "confidence": "medium",
-  "usage": "Chargen species. Unparsed trait numbers count as 0 until you fill them in the wizard."
+  "usage": "Chargen species. Unparsed trait numbers count as 0 until you fill them in the wizard.",
+  "srd": {
+    "text": "**Creature Type:** Humanoid\n**Size:** Small (about 2–3 feet tall)\n**Speed:** 30 feet\n\nAs a Halfling, you have these special traits.\n\n_Brave._ You have Advantage on saving throws you make to avoid or end the Frightened condition.\n\n_Halfling Nimbleness._ You can move through the space of any creature that is a size larger than you, but you can't stop in the same space.\n\n_Luck._ When you roll a 1 on the d20 of a D20 Test, you can reroll the die, and you must use the new roll.\n\n_Naturally Stealthy._ You can take the Hide action even when you are obscured only by a creature that is at least one size larger than you."
+  }
 }

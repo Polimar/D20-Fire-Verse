@@ -5,9 +5,9 @@
   "id": "remove_curse",
   "status": "auto_ok",
   "confidence": "high",
-  "usage": "Level-up spell list for the listed classes. Combat only if a wired ability uses this id.",
+  "usage": "Level-up spell list for the listed classes. Combat runs it only when a wired ability has the same id.",
   "srd": {
-    "components": "V, S",
-    "line": "Level 3 Abjuration (Cleric, Paladin, Warlock, Wizard)"
+    "line": "Level 3 Abjuration (Cleric, Paladin, Warlock, Wizard)",
+    "text": "_Level 3 Abjuration (Cleric, Paladin, Warlock, Wizard)_\n\n**Casting Time:** Action\n**Range:** Touch\n\n**Components:** V, S\n**Duration:** Instantaneous\n\nAt your touch, all curses affecting one creature or object end. If the object is a cursed magic item, its curse remains, but the spell breaks its owner's Attunement to the object so it can be removed or discarded."
   }
 }

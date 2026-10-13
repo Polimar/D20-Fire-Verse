@@ -5,9 +5,9 @@
   "id": "contagion",
   "status": "auto_ok",
   "confidence": "high",
-  "usage": "Level-up spell list for the listed classes. Combat only if a wired ability uses this id.",
+  "usage": "Level-up spell list for the listed classes. Combat runs it only when a wired ability has the same id.",
   "srd": {
-    "components": "",
-    "line": "Level 5 Necromancy (Cleric, Druid)"
+    "line": "Level 5 Necromancy (Cleric, Druid)",
+    "text": "_Level 5 Necromancy (Cleric, Druid)_\n\n**Casting Time:** Action\n**Range:** Touch\n**Component:** V, S\n**Duration:** 7 days\n\nYour touch inflicts a magical contagion. The target must succeed on a Constitution saving throw or take 11d8 Necrotic damage and have the Poisoned condition. Also, choose one ability when you cast the spell. While Poisoned, the target has Disadvantage on saving throws made with the chosen ability.\n\nThe target must repeat the saving throw at the end of each of its turns until it gets three successes or failures. If the target succeeds on three of these saves, the spell ends on the target. If the target fails three of the saves, the spell lasts for 7 days on it.\n\nWhenever the Poisoned target receives an effect that would end the Poisoned condition, the target must succeed on a Constitution saving throw, or the Poisoned condition doesn't end on it."
   }
 }

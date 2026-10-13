@@ -519,6 +519,7 @@ export function mountAdminPortalRoutes(app: Express): void {
       enabled: str(req.query.enabled),
       valid: str(req.query.valid),
       source: str(req.query.source),
+      gaps: str(req.query.gaps),
       sort: str(req.query.sort),
       dir: str(req.query.dir),
       page: int(req.query.page, 1),

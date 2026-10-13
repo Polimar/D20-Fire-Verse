@@ -8,7 +8,16 @@
       "weaponId": "club",
       "weaponMastery": "slow",
       "effects": [],
-      "priceGold": 1
+      "priceGold": 1,
+      "weapon": {
+        "category": "simple_melee",
+        "damage": "1d4",
+        "damageType": "bludgeoning",
+        "properties": [
+          "Light"
+        ]
+      },
+      "weightLb": 2
     },
     {
       "id": "dagger",
@@ -18,7 +27,22 @@
       "weaponId": "dagger",
       "weaponMastery": "nick",
       "effects": [],
-      "priceGold": 2
+      "priceGold": 2,
+      "weapon": {
+        "category": "simple_melee",
+        "damage": "1d4",
+        "damageType": "piercing",
+        "properties": [
+          "Finesse",
+          "Light",
+          "Thrown (Range 20/60)"
+        ],
+        "rangeFt": {
+          "normal": 20,
+          "long": 60
+        }
+      },
+      "weightLb": 1
     },
     {
       "id": "greatclub",
@@ -28,7 +52,16 @@
       "weaponId": "greatclub",
       "weaponMastery": "push",
       "effects": [],
-      "priceGold": 2
+      "priceGold": 1,
+      "weapon": {
+        "category": "simple_melee",
+        "damage": "1d8",
+        "damageType": "bludgeoning",
+        "properties": [
+          "Two-Handed"
+        ]
+      },
+      "weightLb": 10
     },
     {
       "id": "handaxe",
@@ -38,7 +71,21 @@
       "weaponId": "handaxe",
       "weaponMastery": "vex",
       "effects": [],
-      "priceGold": 5
+      "priceGold": 5,
+      "weapon": {
+        "category": "simple_melee",
+        "damage": "1d6",
+        "damageType": "slashing",
+        "properties": [
+          "Light",
+          "Thrown (Range 20/60)"
+        ],
+        "rangeFt": {
+          "normal": 20,
+          "long": 60
+        }
+      },
+      "weightLb": 2
     },
     {
       "id": "javelin",
@@ -48,7 +95,20 @@
       "weaponId": "javelin",
       "weaponMastery": "slow",
       "effects": [],
-      "priceGold": 5
+      "priceGold": 1,
+      "weapon": {
+        "category": "simple_melee",
+        "damage": "1d6",
+        "damageType": "piercing",
+        "properties": [
+          "Thrown (Range 30/120)"
+        ],
+        "rangeFt": {
+          "normal": 30,
+          "long": 120
+        }
+      },
+      "weightLb": 2
     },
     {
       "id": "light_hammer",
@@ -58,7 +118,21 @@
       "weaponId": "light_hammer",
       "weaponMastery": "nick",
       "effects": [],
-      "priceGold": 2
+      "priceGold": 2,
+      "weapon": {
+        "category": "simple_melee",
+        "damage": "1d4",
+        "damageType": "bludgeoning",
+        "properties": [
+          "Light",
+          "Thrown (Range 20/60)"
+        ],
+        "rangeFt": {
+          "normal": 20,
+          "long": 60
+        }
+      },
+      "weightLb": 2
     },
     {
       "id": "mace",
@@ -68,7 +142,14 @@
       "weaponId": "mace",
       "weaponMastery": "sap",
       "effects": [],
-      "priceGold": 5
+      "priceGold": 5,
+      "weapon": {
+        "category": "simple_melee",
+        "damage": "1d6",
+        "damageType": "bludgeoning",
+        "properties": []
+      },
+      "weightLb": 4
     },
     {
       "id": "quarterstaff",
@@ -78,7 +159,17 @@
       "weaponId": "quarterstaff",
       "weaponMastery": "topple",
       "effects": [],
-      "priceGold": 2
+      "priceGold": 1,
+      "weapon": {
+        "category": "simple_melee",
+        "damage": "1d6",
+        "damageType": "bludgeoning",
+        "properties": [
+          "Versatile (1d8)"
+        ],
+        "versatile": "1d8"
+      },
+      "weightLb": 4
     },
     {
       "id": "sickle",
@@ -88,7 +179,16 @@
       "weaponId": "sickle",
       "weaponMastery": "nick",
       "effects": [],
-      "priceGold": 1
+      "priceGold": 1,
+      "weapon": {
+        "category": "simple_melee",
+        "damage": "1d4",
+        "damageType": "slashing",
+        "properties": [
+          "Light"
+        ]
+      },
+      "weightLb": 2
     },
     {
       "id": "spear",
@@ -98,7 +198,22 @@
       "weaponId": "spear",
       "weaponMastery": "sap",
       "effects": [],
-      "priceGold": 1
+      "priceGold": 1,
+      "weapon": {
+        "category": "simple_melee",
+        "damage": "1d6",
+        "damageType": "piercing",
+        "properties": [
+          "Thrown (Range 20/60)",
+          "Versatile (1d8)"
+        ],
+        "rangeFt": {
+          "normal": 20,
+          "long": 60
+        },
+        "versatile": "1d8"
+      },
+      "weightLb": 3
     },
     {
       "id": "dart",
@@ -108,7 +223,21 @@
       "weaponId": "dart",
       "weaponMastery": "vex",
       "effects": [],
-      "priceGold": 5
+      "priceGold": 1,
+      "weapon": {
+        "category": "simple_ranged",
+        "damage": "1d4",
+        "damageType": "piercing",
+        "properties": [
+          "Finesse",
+          "Thrown (Range 20/60)"
+        ],
+        "rangeFt": {
+          "normal": 20,
+          "long": 60
+        }
+      },
+      "weightLb": 4
     },
     {
       "id": "light_crossbow",
@@ -118,7 +247,22 @@
       "weaponId": "light_crossbow",
       "weaponMastery": "slow",
       "effects": [],
-      "priceGold": 25
+      "priceGold": 25,
+      "weapon": {
+        "category": "simple_ranged",
+        "damage": "1d8",
+        "damageType": "piercing",
+        "properties": [
+          "Ammunition (Range 80/320; Bolt)",
+          "Loading",
+          "Two-Handed"
+        ],
+        "rangeFt": {
+          "normal": 80,
+          "long": 320
+        }
+      },
+      "weightLb": 5
     },
     {
       "id": "shortbow",
@@ -128,7 +272,21 @@
       "weaponId": "shortbow",
       "weaponMastery": "vex",
       "effects": [],
-      "priceGold": 25
+      "priceGold": 25,
+      "weapon": {
+        "category": "simple_ranged",
+        "damage": "1d6",
+        "damageType": "piercing",
+        "properties": [
+          "Ammunition (Range 80/320; Arrow)",
+          "Two-Handed"
+        ],
+        "rangeFt": {
+          "normal": 80,
+          "long": 320
+        }
+      },
+      "weightLb": 2
     },
     {
       "id": "sling",
@@ -138,7 +296,19 @@
       "weaponId": "sling",
       "weaponMastery": "slow",
       "effects": [],
-      "priceGold": 1
+      "priceGold": 1,
+      "weapon": {
+        "category": "simple_ranged",
+        "damage": "1d4",
+        "damageType": "bludgeoning",
+        "properties": [
+          "Ammunition (Range 30/120; Bullet)"
+        ],
+        "rangeFt": {
+          "normal": 30,
+          "long": 120
+        }
+      }
     },
     {
       "id": "battleaxe",
@@ -148,7 +318,17 @@
       "weaponId": "battleaxe",
       "weaponMastery": "topple",
       "effects": [],
-      "priceGold": 10
+      "priceGold": 10,
+      "weapon": {
+        "category": "martial_melee",
+        "damage": "1d8",
+        "damageType": "slashing",
+        "properties": [
+          "Versatile (1d10)"
+        ],
+        "versatile": "1d10"
+      },
+      "weightLb": 4
     },
     {
       "id": "flail",
@@ -158,7 +338,14 @@
       "weaponId": "flail",
       "weaponMastery": "sap",
       "effects": [],
-      "priceGold": 10
+      "priceGold": 10,
+      "weapon": {
+        "category": "martial_melee",
+        "damage": "1d8",
+        "damageType": "bludgeoning",
+        "properties": []
+      },
+      "weightLb": 2
     },
     {
       "id": "glaive",
@@ -168,7 +355,18 @@
       "weaponId": "glaive",
       "weaponMastery": "graze",
       "effects": [],
-      "priceGold": 20
+      "priceGold": 20,
+      "weapon": {
+        "category": "martial_melee",
+        "damage": "1d10",
+        "damageType": "slashing",
+        "properties": [
+          "Heavy",
+          "Reach",
+          "Two-Handed"
+        ]
+      },
+      "weightLb": 6
     },
     {
       "id": "greataxe",
@@ -178,7 +376,17 @@
       "weaponId": "greataxe",
       "weaponMastery": "cleave",
       "effects": [],
-      "priceGold": 30
+      "priceGold": 30,
+      "weapon": {
+        "category": "martial_melee",
+        "damage": "1d12",
+        "damageType": "slashing",
+        "properties": [
+          "Heavy",
+          "Two-Handed"
+        ]
+      },
+      "weightLb": 7
     },
     {
       "id": "greatsword",
@@ -188,7 +396,17 @@
       "weaponId": "greatsword",
       "weaponMastery": "graze",
       "effects": [],
-      "priceGold": 50
+      "priceGold": 50,
+      "weapon": {
+        "category": "martial_melee",
+        "damage": "2d6",
+        "damageType": "slashing",
+        "properties": [
+          "Heavy",
+          "Two-Handed"
+        ]
+      },
+      "weightLb": 6
     },
     {
       "id": "halberd",
@@ -198,7 +416,18 @@
       "weaponId": "halberd",
       "weaponMastery": "cleave",
       "effects": [],
-      "priceGold": 20
+      "priceGold": 20,
+      "weapon": {
+        "category": "martial_melee",
+        "damage": "1d10",
+        "damageType": "slashing",
+        "properties": [
+          "Heavy",
+          "Reach",
+          "Two-Handed"
+        ]
+      },
+      "weightLb": 6
     },
     {
       "id": "lance",
@@ -208,7 +437,18 @@
       "weaponId": "lance",
       "weaponMastery": "topple",
       "effects": [],
-      "priceGold": 10
+      "priceGold": 10,
+      "weapon": {
+        "category": "martial_melee",
+        "damage": "1d10",
+        "damageType": "piercing",
+        "properties": [
+          "Heavy",
+          "Reach",
+          "Two-Handed (unless mounted)"
+        ]
+      },
+      "weightLb": 6
     },
     {
       "id": "longsword",
@@ -218,7 +458,17 @@
       "weaponId": "longsword",
       "weaponMastery": "sap",
       "effects": [],
-      "priceGold": 15
+      "priceGold": 15,
+      "weapon": {
+        "category": "martial_melee",
+        "damage": "1d8",
+        "damageType": "slashing",
+        "properties": [
+          "Versatile (1d10)"
+        ],
+        "versatile": "1d10"
+      },
+      "weightLb": 3
     },
     {
       "id": "maul",
@@ -228,7 +478,17 @@
       "weaponId": "maul",
       "weaponMastery": "topple",
       "effects": [],
-      "priceGold": 10
+      "priceGold": 10,
+      "weapon": {
+        "category": "martial_melee",
+        "damage": "2d6",
+        "damageType": "bludgeoning",
+        "properties": [
+          "Heavy",
+          "Two-Handed"
+        ]
+      },
+      "weightLb": 10
     },
     {
       "id": "morningstar",
@@ -238,7 +498,14 @@
       "weaponId": "morningstar",
       "weaponMastery": "sap",
       "effects": [],
-      "priceGold": 15
+      "priceGold": 15,
+      "weapon": {
+        "category": "martial_melee",
+        "damage": "1d8",
+        "damageType": "piercing",
+        "properties": []
+      },
+      "weightLb": 4
     },
     {
       "id": "pike",
@@ -248,7 +515,18 @@
       "weaponId": "pike",
       "weaponMastery": "push",
       "effects": [],
-      "priceGold": 5
+      "priceGold": 5,
+      "weapon": {
+        "category": "martial_melee",
+        "damage": "1d10",
+        "damageType": "piercing",
+        "properties": [
+          "Heavy",
+          "Reach",
+          "Two-Handed"
+        ]
+      },
+      "weightLb": 18
     },
     {
       "id": "rapier",
@@ -258,7 +536,16 @@
       "weaponId": "rapier",
       "weaponMastery": "vex",
       "effects": [],
-      "priceGold": 25
+      "priceGold": 25,
+      "weapon": {
+        "category": "martial_melee",
+        "damage": "1d8",
+        "damageType": "piercing",
+        "properties": [
+          "Finesse"
+        ]
+      },
+      "weightLb": 2
     },
     {
       "id": "scimitar",
@@ -268,7 +555,17 @@
       "weaponId": "scimitar",
       "weaponMastery": "nick",
       "effects": [],
-      "priceGold": 25
+      "priceGold": 25,
+      "weapon": {
+        "category": "martial_melee",
+        "damage": "1d6",
+        "damageType": "slashing",
+        "properties": [
+          "Finesse",
+          "Light"
+        ]
+      },
+      "weightLb": 3
     },
     {
       "id": "shortsword",
@@ -278,7 +575,17 @@
       "weaponId": "shortsword",
       "weaponMastery": "vex",
       "effects": [],
-      "priceGold": 10
+      "priceGold": 10,
+      "weapon": {
+        "category": "martial_melee",
+        "damage": "1d6",
+        "damageType": "piercing",
+        "properties": [
+          "Finesse",
+          "Light"
+        ]
+      },
+      "weightLb": 2
     },
     {
       "id": "trident",
@@ -288,7 +595,22 @@
       "weaponId": "trident",
       "weaponMastery": "topple",
       "effects": [],
-      "priceGold": 5
+      "priceGold": 5,
+      "weapon": {
+        "category": "martial_melee",
+        "damage": "1d8",
+        "damageType": "piercing",
+        "properties": [
+          "Thrown (Range 20/60)",
+          "Versatile (1d10)"
+        ],
+        "rangeFt": {
+          "normal": 20,
+          "long": 60
+        },
+        "versatile": "1d10"
+      },
+      "weightLb": 4
     },
     {
       "id": "warhammer",
@@ -298,7 +620,17 @@
       "weaponId": "warhammer",
       "weaponMastery": "push",
       "effects": [],
-      "priceGold": 15
+      "priceGold": 15,
+      "weapon": {
+        "category": "martial_melee",
+        "damage": "1d8",
+        "damageType": "bludgeoning",
+        "properties": [
+          "Versatile (1d10)"
+        ],
+        "versatile": "1d10"
+      },
+      "weightLb": 5
     },
     {
       "id": "war_pick",
@@ -308,7 +640,17 @@
       "weaponId": "war_pick",
       "weaponMastery": "sap",
       "effects": [],
-      "priceGold": 5
+      "priceGold": 5,
+      "weapon": {
+        "category": "martial_melee",
+        "damage": "1d8",
+        "damageType": "piercing",
+        "properties": [
+          "Versatile (1d10)"
+        ],
+        "versatile": "1d10"
+      },
+      "weightLb": 2
     },
     {
       "id": "whip",
@@ -318,7 +660,17 @@
       "weaponId": "whip",
       "weaponMastery": "slow",
       "effects": [],
-      "priceGold": 2
+      "priceGold": 2,
+      "weapon": {
+        "category": "martial_melee",
+        "damage": "1d4",
+        "damageType": "slashing",
+        "properties": [
+          "Finesse",
+          "Reach"
+        ]
+      },
+      "weightLb": 3
     },
     {
       "id": "blowgun",
@@ -328,7 +680,21 @@
       "weaponId": "blowgun",
       "weaponMastery": "vex",
       "effects": [],
-      "priceGold": 10
+      "priceGold": 10,
+      "weapon": {
+        "category": "martial_ranged",
+        "damage": "1",
+        "damageType": "piercing",
+        "properties": [
+          "Ammunition (Range 25/100; Needle)",
+          "Loading"
+        ],
+        "rangeFt": {
+          "normal": 25,
+          "long": 100
+        }
+      },
+      "weightLb": 1
     },
     {
       "id": "hand_crossbow",
@@ -338,7 +704,22 @@
       "weaponId": "hand_crossbow",
       "weaponMastery": "vex",
       "effects": [],
-      "priceGold": 75
+      "priceGold": 75,
+      "weapon": {
+        "category": "martial_ranged",
+        "damage": "1d6",
+        "damageType": "piercing",
+        "properties": [
+          "Ammunition (Range 30/120; Bolt)",
+          "Light",
+          "Loading"
+        ],
+        "rangeFt": {
+          "normal": 30,
+          "long": 120
+        }
+      },
+      "weightLb": 3
     },
     {
       "id": "heavy_crossbow",
@@ -348,7 +729,23 @@
       "weaponId": "heavy_crossbow",
       "weaponMastery": "push",
       "effects": [],
-      "priceGold": 50
+      "priceGold": 50,
+      "weapon": {
+        "category": "martial_ranged",
+        "damage": "1d10",
+        "damageType": "piercing",
+        "properties": [
+          "Ammunition (Range 100/400; Bolt)",
+          "Heavy",
+          "Loading",
+          "Two-Handed"
+        ],
+        "rangeFt": {
+          "normal": 100,
+          "long": 400
+        }
+      },
+      "weightLb": 18
     },
     {
       "id": "longbow",
@@ -358,7 +755,22 @@
       "weaponId": "longbow",
       "weaponMastery": "slow",
       "effects": [],
-      "priceGold": 50
+      "priceGold": 50,
+      "weapon": {
+        "category": "martial_ranged",
+        "damage": "1d8",
+        "damageType": "piercing",
+        "properties": [
+          "Ammunition (Range 150/600; Arrow)",
+          "Heavy",
+          "Two-Handed"
+        ],
+        "rangeFt": {
+          "normal": 150,
+          "long": 600
+        }
+      },
+      "weightLb": 2
     },
     {
       "id": "musket",
@@ -368,7 +780,22 @@
       "weaponId": "musket",
       "weaponMastery": "slow",
       "effects": [],
-      "priceGold": 500
+      "priceGold": 500,
+      "weapon": {
+        "category": "martial_ranged",
+        "damage": "1d12",
+        "damageType": "piercing",
+        "properties": [
+          "Ammunition (Range 40/120; Bullet)",
+          "Loading",
+          "Two-Handed"
+        ],
+        "rangeFt": {
+          "normal": 40,
+          "long": 120
+        }
+      },
+      "weightLb": 10
     },
     {
       "id": "pistol",
@@ -378,7 +805,224 @@
       "weaponId": "pistol",
       "weaponMastery": "vex",
       "effects": [],
-      "priceGold": 250
+      "priceGold": 250,
+      "weapon": {
+        "category": "martial_ranged",
+        "damage": "1d10",
+        "damageType": "piercing",
+        "properties": [
+          "Ammunition (Range 30/90; Bullet)",
+          "Loading"
+        ],
+        "rangeFt": {
+          "normal": 30,
+          "long": 90
+        }
+      },
+      "weightLb": 3
+    },
+    {
+      "id": "padded_armor",
+      "name": "Padded Armor",
+      "rarity": "common",
+      "slot": "armor",
+      "effects": [],
+      "priceGold": 5,
+      "armor": {
+        "category": "light",
+        "baseAc": 11,
+        "dexCap": null,
+        "stealthDisadvantage": true
+      },
+      "weightLb": 8
+    },
+    {
+      "id": "leather_armor",
+      "name": "Leather Armor",
+      "rarity": "common",
+      "slot": "armor",
+      "effects": [],
+      "priceGold": 10,
+      "armor": {
+        "category": "light",
+        "baseAc": 11,
+        "dexCap": null,
+        "stealthDisadvantage": false
+      },
+      "weightLb": 10
+    },
+    {
+      "id": "studded_leather_armor",
+      "name": "Studded Leather Armor",
+      "rarity": "common",
+      "slot": "armor",
+      "effects": [],
+      "priceGold": 45,
+      "armor": {
+        "category": "light",
+        "baseAc": 12,
+        "dexCap": null,
+        "stealthDisadvantage": false
+      },
+      "weightLb": 13
+    },
+    {
+      "id": "hide_armor",
+      "name": "Hide Armor",
+      "rarity": "common",
+      "slot": "armor",
+      "effects": [],
+      "priceGold": 10,
+      "armor": {
+        "category": "medium",
+        "baseAc": 12,
+        "dexCap": 2,
+        "stealthDisadvantage": false
+      },
+      "weightLb": 12
+    },
+    {
+      "id": "chain_shirt",
+      "name": "Chain Shirt",
+      "rarity": "common",
+      "slot": "armor",
+      "effects": [],
+      "priceGold": 50,
+      "armor": {
+        "category": "medium",
+        "baseAc": 13,
+        "dexCap": 2,
+        "stealthDisadvantage": false
+      },
+      "weightLb": 20
+    },
+    {
+      "id": "scale_mail",
+      "name": "Scale Mail",
+      "rarity": "common",
+      "slot": "armor",
+      "effects": [],
+      "priceGold": 50,
+      "armor": {
+        "category": "medium",
+        "baseAc": 14,
+        "dexCap": 2,
+        "stealthDisadvantage": true
+      },
+      "weightLb": 45
+    },
+    {
+      "id": "breastplate",
+      "name": "Breastplate",
+      "rarity": "common",
+      "slot": "armor",
+      "effects": [],
+      "priceGold": 400,
+      "armor": {
+        "category": "medium",
+        "baseAc": 14,
+        "dexCap": 2,
+        "stealthDisadvantage": false
+      },
+      "weightLb": 20
+    },
+    {
+      "id": "half_plate_armor",
+      "name": "Half Plate Armor",
+      "rarity": "common",
+      "slot": "armor",
+      "effects": [],
+      "priceGold": 750,
+      "armor": {
+        "category": "medium",
+        "baseAc": 15,
+        "dexCap": 2,
+        "stealthDisadvantage": true
+      },
+      "weightLb": 40
+    },
+    {
+      "id": "ring_mail",
+      "name": "Ring Mail",
+      "rarity": "common",
+      "slot": "armor",
+      "effects": [],
+      "priceGold": 30,
+      "armor": {
+        "category": "heavy",
+        "baseAc": 14,
+        "dexCap": 0,
+        "stealthDisadvantage": true
+      },
+      "weightLb": 40
+    },
+    {
+      "id": "chain_mail",
+      "name": "Chain Mail",
+      "rarity": "common",
+      "slot": "armor",
+      "effects": [],
+      "priceGold": 75,
+      "armor": {
+        "category": "heavy",
+        "baseAc": 16,
+        "dexCap": 0,
+        "strength": 13,
+        "stealthDisadvantage": true
+      },
+      "weightLb": 55
+    },
+    {
+      "id": "splint_armor",
+      "name": "Splint Armor",
+      "rarity": "common",
+      "slot": "armor",
+      "effects": [],
+      "priceGold": 200,
+      "armor": {
+        "category": "heavy",
+        "baseAc": 17,
+        "dexCap": 0,
+        "strength": 15,
+        "stealthDisadvantage": true
+      },
+      "weightLb": 60
+    },
+    {
+      "id": "plate_armor",
+      "name": "Plate Armor",
+      "rarity": "common",
+      "slot": "armor",
+      "effects": [],
+      "priceGold": 1500,
+      "armor": {
+        "category": "heavy",
+        "baseAc": 18,
+        "dexCap": 0,
+        "strength": 15,
+        "stealthDisadvantage": true
+      },
+      "weightLb": 65
+    },
+    {
+      "id": "shield",
+      "name": "Shield",
+      "rarity": "common",
+      "slot": "shield",
+      "effects": [
+        {
+          "kind": "ac_bonus",
+          "amount": 2
+        }
+      ],
+      "priceGold": 10,
+      "armor": {
+        "category": "shield",
+        "baseAc": 2,
+        "dexCap": 0,
+        "stealthDisadvantage": false
+      },
+      "weightLb": 6
     }
   ]
 }

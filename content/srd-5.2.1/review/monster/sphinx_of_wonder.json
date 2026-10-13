@@ -1,0 +1,16 @@
+{
+  "ambiguities": [],
+  "unparsedFields": [],
+  "kind": "monster",
+  "id": "sphinx_of_wonder",
+  "status": "needs_review",
+  "confidence": "medium",
+  "usage": "Encounters and arena fights. The engine runs the actions it can compile from the stat block.",
+  "srd": {
+    "engineId": "srd_sphinx_of_wonder",
+    "text": "_Tiny Celestial, Lawful Good_\n\n**AC** 13 **Initiative** +3 (13)\n\n**HP** 24 (7d4 + 7)\n\n**Speed** 20 ft., Fly 40 ft.\n\n|  |  | MOD | SAVE |  |  | MOD | SAVE |  |  | MOD | SAVE |\n| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |\n| **STR** | 6 | −2 | −2 | **DEX** | 17 | +3 | +3 | **CON** | 13 | +1 | +1 |\n| **INT** | 15 | +2 | +2 | **WIS** | 12 | +1 | +1 | **CHA** | 11 | +0 | +0 |\n\n**Skills** Arcana +4, Religion +4, Stealth +5\n\n**Resistances** Necrotic, Psychic, Radiant\n\n**Senses** Darkvision 60 ft.; Passive Perception 11\n\n**Languages** Celestial, Common\n\n**CR** 1 (XP 200; PB +2)\n\n#### Traits\n\n**_Magic Resistance._** The sphinx has Advantage on saving throws against spells and other magical effects.\n\n#### Actions\n\n**_Rend._** _Melee Attack Roll:_ +5, reach 5 ft. _Hit:_ 5 (1d4 + 3) Slashing damage plus 7 (2d6) Radiant damage.\n\n#### Reactions\n\n**_Burst of Ingenuity (2/Day)._** _Trigger:_ The sphinx or another creature within 30 feet makes an ability check or a saving throw. _Response:_ The sphinx adds 2 to the roll."
+  },
+  "notModeled": [
+    "Reaction “Burst of Ingenuity”: monsters take no reactions in combat."
+  ]
+}

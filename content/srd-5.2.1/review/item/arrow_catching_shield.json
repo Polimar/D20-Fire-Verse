@@ -3,11 +3,15 @@
   "unparsedFields": [],
   "kind": "item",
   "id": "arrow_catching_shield",
-  "status": "auto_ok",
-  "confidence": "high",
-  "usage": "Vendor, loot, and stash. Typed effects change AC, attack, and damage.",
+  "status": "needs_review",
+  "confidence": "medium",
+  "usage": "Vendor, loot, and stash. Equipped effects are listed on the sheet; no fight applies them yet.",
   "srd": {
     "line": "Armor (Shield), Rare (Requires Attunement)",
     "text": "_Armor (Shield), Rare (Requires Attunement)_\n\nYou gain a +2 bonus to Armor Class against ranged attack rolls while you wield this Shield. This bonus is in addition to the Shield's normal bonus to AC.\n\nWhenever an attacker makes a ranged attack roll against a target within 5 feet of you, you can take a Reaction to become the target of the attack instead."
-  }
+  },
+  "notModeled": [
+    "This bonus is in addition to the Shield's normal bonus to AC.",
+    "Whenever an attacker makes a ranged attack roll against a target within 5 feet of you, you can take a Reaction to become the target of the attack instead."
+  ]
 }

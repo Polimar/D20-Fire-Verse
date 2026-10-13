@@ -5,9 +5,9 @@
   "id": "blur",
   "status": "auto_ok",
   "confidence": "high",
-  "usage": "Level-up spell list for the listed classes. Combat only if a wired ability uses this id.",
+  "usage": "Level-up spell list for the listed classes. Combat runs it only when a wired ability has the same id.",
   "srd": {
-    "components": "V",
-    "line": "Level 2 Illusion (Sorcerer, Wizard)"
+    "line": "Level 2 Illusion (Sorcerer, Wizard)",
+    "text": "_Level 2 Illusion (Sorcerer, Wizard)_\n\n**Casting Time:** Action\n**Range:** Self\n**Components:** V\n**Duration:** Concentration, up to 1 minute\n\nYour body becomes blurred. For the duration, any creature has Disadvantage on attack rolls against you. An attacker is immune to this effect if it perceives you with Blindsight or Truesight."
   }
 }

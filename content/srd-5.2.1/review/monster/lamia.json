@@ -3,7 +3,15 @@
   "unparsedFields": [],
   "kind": "monster",
   "id": "lamia",
-  "status": "auto_ok",
-  "confidence": "high",
-  "usage": "Encounters when enabled. Combat uses a wired ability with the same id when one exists."
+  "status": "needs_review",
+  "confidence": "medium",
+  "usage": "Encounters and arena fights. The engine runs the actions it can compile from the stat block.",
+  "srd": {
+    "engineId": "srd_lamia",
+    "text": "_Large Fiend, Chaotic Evil_\n\n**AC** 13 **Initiative** +1 (11)\n\n**HP** 97 (13d10 + 26)\n\n**Speed** 40 ft.\n\n|  |  | MOD | SAVE |  |  | MOD | SAVE |  |  | MOD | SAVE |\n| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |\n| **STR** | 16 | +3 | +3 | **DEX** | 13 | +1 | +1 | **CON** | 15 | +2 | +2 |\n| **INT** | 14 | +2 | +2 | **WIS** | 15 | +2 | +2 | **CHA** | 16 | +3 | +3 |\n\n**Skills** Deception +7, Insight +4, Stealth +5\n\n**Senses** Darkvision 60 ft.; Passive Perception 12\n\n**Languages** Abyssal, Common\n\n**CR** 4 (XP 1,100; PB +2)\n\n#### Actions\n\n**_Multiattack._** The lamia makes two Claw attacks. It can replace one attack with a use of Corrupting Touch.\n\n**_Claw._** _Melee Attack Roll:_ +5, reach 5 ft. _Hit:_ 7 (1d8 + 3) Slashing damage plus 7 (2d6) Psychic damage.\n\n**_Corrupting Touch._** _Wisdom Saving Throw:_ DC 13, one creature the lamia can see within 5 feet. _Failure:_ 13 (3d8) Psychic damage, and the target is cursed for 1 hour. Until the curse ends, the target has the Charmed and Poisoned conditions.\n\n**_Spellcasting._** The lamia casts one of the following spells, requiring no Material components and using Charisma as the spellcasting ability (spell save DC 13):\n\n**At Will:** _Disguise Self_ (can appear as a Large or Medium biped), _Minor Illusion_\n\n**1/Day Each:** _Geas_, _Major Image_, _Scrying_\n\n#### Bonus Actions\n\n**_Leap._** The lamia jumps up to 30 feet by spending 10 feet of movement."
+  },
+  "notModeled": [
+    "Action “Spellcasting”: only spells wired in content/rules/srd51_combat.json run; none of these are wired.",
+    "Bonus action “Leap”: the combat engine does not run it."
+  ]
 }

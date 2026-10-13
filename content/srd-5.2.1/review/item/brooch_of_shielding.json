@@ -5,7 +5,7 @@
   "id": "brooch_of_shielding",
   "status": "auto_ok",
   "confidence": "high",
-  "usage": "Vendor, loot, and stash. Typed effects change AC, attack, and damage.",
+  "usage": "Vendor, loot, and stash. Equipped effects are listed on the sheet; no fight applies them yet.",
   "srd": {
     "line": "Wondrous Item, Uncommon (Requires Attunement)",
     "text": "_Wondrous Item, Uncommon (Requires Attunement)_\n\nWhile wearing this brooch, you have Resistance to Force damage, and you have Immunity to damage from the _Magic Missile_ spell."

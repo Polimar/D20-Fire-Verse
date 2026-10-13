@@ -5,9 +5,9 @@
   "id": "power_word_kill",
   "status": "auto_ok",
   "confidence": "high",
-  "usage": "Level-up spell list for the listed classes. Combat only if a wired ability uses this id.",
+  "usage": "Level-up spell list for the listed classes. Combat runs it only when a wired ability has the same id.",
   "srd": {
-    "components": "",
-    "line": "Level 9 Enchantment (Bard, Sorcerer, Warlock, Wizard)"
+    "line": "Level 9 Enchantment (Bard, Sorcerer, Warlock, Wizard)",
+    "text": "_Level 9 Enchantment (Bard, Sorcerer, Warlock, Wizard)_\n\n**Casting Time:** Action\n**Range:** 60 feet\n**Component:** V\n**Duration:** Instantaneous\n\nYou compel one creature you can see within range to die. If the target has 100 Hit Points or fewer, it dies. Otherwise, it takes 12d12 Psychic damage."
   }
 }

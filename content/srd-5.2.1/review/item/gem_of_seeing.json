@@ -2,10 +2,10 @@
   "ambiguities": [
     {
       "field": "effects",
-      "summary": "No typed effect matched the item text.",
+      "summary": "No typed effect matches this item. The rules listed under Not modeled stay text only.",
       "options": [
         {
-          "label": "Leave effects empty",
+          "label": "Approve with no typed effects",
           "patch": {
             "effects": []
           }
@@ -21,9 +21,14 @@
   "id": "gem_of_seeing",
   "status": "needs_review",
   "confidence": "low",
-  "usage": "Vendor, loot, and stash. Typed effects change AC, attack, and damage.",
+  "usage": "Vendor, loot, and stash. Equipped effects are listed on the sheet; no fight applies them yet.",
   "srd": {
     "line": "Wondrous Item, Rare (Requires Attunement)",
     "text": "_Wondrous Item, Rare (Requires Attunement)_\n\nThis gem has 3 charges. As a Magic action, you can expend 1 charge. For the next 10 minutes, you have Truesight out to 120 feet when you peer through the gem.\n\nThe gem regains 1d3 expended charges daily at dawn."
-  }
+  },
+  "notModeled": [
+    "As a Magic action, you can expend 1 charge.",
+    "For the next 10 minutes, you have Truesight out to 120 feet when you peer through the gem.",
+    "The gem regains 1d3 expended charges daily at dawn."
+  ]
 }

@@ -2,10 +2,10 @@
   "ambiguities": [
     {
       "field": "effects",
-      "summary": "No typed effect matched the item text.",
+      "summary": "No typed effect matches this item. The rules listed under Not modeled stay text only.",
       "options": [
         {
-          "label": "Leave effects empty",
+          "label": "Approve with no typed effects",
           "patch": {
             "effects": []
           }
@@ -21,9 +21,12 @@
   "id": "ring_of_feather_falling",
   "status": "needs_review",
   "confidence": "low",
-  "usage": "Vendor, loot, and stash. Typed effects change AC, attack, and damage.",
+  "usage": "Vendor, loot, and stash. Equipped effects are listed on the sheet; no fight applies them yet.",
   "srd": {
     "line": "Ring, Rare (Requires Attunement)",
     "text": "_Ring, Rare (Requires Attunement)_\n\nWhen you fall while wearing this ring, you descend 60 feet per round and take no damage from falling."
-  }
+  },
+  "notModeled": [
+    "When you fall while wearing this ring, you descend 60 feet per round and take no damage from falling."
+  ]
 }

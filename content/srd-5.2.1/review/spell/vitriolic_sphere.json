@@ -5,9 +5,9 @@
   "id": "vitriolic_sphere",
   "status": "auto_ok",
   "confidence": "high",
-  "usage": "Level-up spell list for the listed classes. Combat only if a wired ability uses this id.",
+  "usage": "Level-up spell list for the listed classes. Combat runs it only when a wired ability has the same id.",
   "srd": {
-    "components": "V, S, M (a drop of bile)",
-    "line": "Level 4 Evocation (Sorcerer, Wizard)"
+    "line": "Level 4 Evocation (Sorcerer, Wizard)",
+    "text": "_Level 4 Evocation (Sorcerer, Wizard)_\n\n**Casting Time:** Action\n**Range:** 150 feet\n**Components:** V, S, M (a drop of bile)\n**Duration:** Instantaneous\n\nYou point at a location within range, and a glowing, 1-foot-diameter ball of acid streaks there and explodes in a 20-foot-radius Sphere. Each creature in that area makes a Dexterity saving throw. On a failed save, a creature takes 10d4 Acid damage and another 5d4 Acid damage at the end of its next turn. On a successful save, a creature takes half the initial damage only.\n\n_Using a Higher-Level Spell Slot._ The initial damage increases by 2d4 for each spell slot level above 4."
   }
 }

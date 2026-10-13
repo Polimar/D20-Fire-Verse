@@ -1,0 +1,18 @@
+{
+  "ambiguities": [],
+  "unparsedFields": [],
+  "kind": "item",
+  "id": "chain_mail",
+  "status": "needs_review",
+  "confidence": "medium",
+  "usage": "Vendor, loot, and stash. Equipped effects are listed on the sheet; no fight applies them yet.",
+  "srd": {
+    "line": "Heavy armor",
+    "text": "| Armor | AC | Strength | Stealth | Weight | Cost |\n| --- | --- | --- | --- | --- | --- |\n| Chain Mail | 16 | Str 13 | Disadvantage | 55 lb. | 75 GP |"
+  },
+  "notModeled": [
+    "Base AC 16: the loadout starts from AC 10 and adds bonuses, so the armor's own AC is not used yet.",
+    "Strength 13 or Speed drops by 10 feet.",
+    "Disadvantage on Dexterity (Stealth) checks."
+  ]
+}

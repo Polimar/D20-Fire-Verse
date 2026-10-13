@@ -28,6 +28,7 @@ import {
   wallet,
 } from "./hero.js";
 import { contentDetail, listCatalog, playbook, savePending, setPlaybook } from "./content-catalog.js";
+import { engineView } from "./content-engine.js";
 import { buyVendorSlot, declarePayToWin, vendorStock } from "./vendor.js";
 import { enqueue, leaderboard, takeMatch, type ArenaMode } from "./arena-queue.js";
 import { buyPremium, closeSeasonNow, currentSeason, skipPassTier } from "./seasons.js";
@@ -321,7 +322,8 @@ export function mountV2Routes(app: Express): void {
   app.get("/api/admin/content/:kind/:id", (req, res) => {
     try {
       if (user(req).role !== "admin") throw new Error("FORBIDDEN");
-      res.json(contentDetail(req.params.kind, req.params.id));
+      const detail = contentDetail(req.params.kind, req.params.id);
+      res.json({ ...detail, engine: engineView(req.params.kind, req.params.id, detail.game) });
     } catch (err) {
       fail(res, err);
     }

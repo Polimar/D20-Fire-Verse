@@ -5,9 +5,9 @@
   "id": "create_food_and_water",
   "status": "auto_ok",
   "confidence": "high",
-  "usage": "Level-up spell list for the listed classes. Combat only if a wired ability uses this id.",
+  "usage": "Level-up spell list for the listed classes. Combat runs it only when a wired ability has the same id.",
   "srd": {
-    "components": "V, S",
-    "line": "Level 3 Conjuration (Cleric, Paladin)"
+    "line": "Level 3 Conjuration (Cleric, Paladin)",
+    "text": "_Level 3 Conjuration (Cleric, Paladin)_\n\n**Casting Time:** Action\n**Range:** 30 feet\n**Components:** V, S\n**Duration:** Instantaneous\n\nYou create 45 pounds of food and 30 gallons of fresh water on the ground or in containers within range—both useful in fending off the hazards of malnutrition and dehydration. The food is bland but nourishing and looks like a food of your choice, and the water is clean. The food spoils after 24 hours if uneaten."
   }
 }

@@ -1,0 +1,17 @@
+{
+  "ambiguities": [],
+  "unparsedFields": [],
+  "kind": "item",
+  "id": "padded_armor",
+  "status": "needs_review",
+  "confidence": "medium",
+  "usage": "Vendor, loot, and stash. Equipped effects are listed on the sheet; no fight applies them yet.",
+  "srd": {
+    "line": "Light armor",
+    "text": "| Armor | AC | Strength | Stealth | Weight | Cost |\n| --- | --- | --- | --- | --- | --- |\n| Padded Armor | 11 + Dex modifier | — | Disadvantage | 8 lb. | 5 GP |"
+  },
+  "notModeled": [
+    "Base AC 11 + Dex modifier: the loadout starts from AC 10 and adds bonuses, so the armor's own AC is not used yet.",
+    "Disadvantage on Dexterity (Stealth) checks."
+  ]
+}

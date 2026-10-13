@@ -5,9 +5,9 @@
   "id": "arcane_sword",
   "status": "auto_ok",
   "confidence": "high",
-  "usage": "Level-up spell list for the listed classes. Combat only if a wired ability uses this id.",
+  "usage": "Level-up spell list for the listed classes. Combat runs it only when a wired ability has the same id.",
   "srd": {
-    "components": "V, S, M (a miniature sword worth 250+ GP)",
-    "line": "Level 7 Evocation (Bard, Wizard)"
+    "line": "Level 7 Evocation (Bard, Wizard)",
+    "text": "_Level 7 Evocation (Bard, Wizard)_\n\n**Casting Time:** Action\n**Range:** 90 feet\n**Components:** V, S, M (a miniature sword worth 250+ GP)\n**Duration:** Concentration, up to 1 minute\n\nYou create a spectral sword that hovers within range. It lasts for the duration.\n\nWhen the sword appears, you make a melee spell attack against a target within 5 feet of the sword. On a hit, the target takes Force damage equal to 4d12 plus your spellcasting ability modifier.\n\nOn your later turns, you can take a Bonus Action to move the sword up to 30 feet to a spot you can see and repeat the attack against the same target or a different one."
   }
 }

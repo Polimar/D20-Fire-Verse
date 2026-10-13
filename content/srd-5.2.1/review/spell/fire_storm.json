@@ -5,9 +5,9 @@
   "id": "fire_storm",
   "status": "auto_ok",
   "confidence": "high",
-  "usage": "Level-up spell list for the listed classes. Combat only if a wired ability uses this id.",
+  "usage": "Level-up spell list for the listed classes. Combat runs it only when a wired ability has the same id.",
   "srd": {
-    "components": "V, S",
-    "line": "Level 7 Evocation (Cleric, Druid, Sorcerer)"
+    "line": "Level 7 Evocation (Cleric, Druid, Sorcerer)",
+    "text": "_Level 7 Evocation (Cleric, Druid, Sorcerer)_\n\n**Casting Time:** Action\n**Range:** 150 feet\n**Components:** V, S\n**Duration:** Instantaneous\n\nA storm of fire appears within range. The area of the storm consists of up to ten 10-foot Cubes, which you arrange as you like. Each Cube must be contiguous with at least one other Cube. Each creature in the area makes a Dexterity saving throw, taking 7d10 Fire damage on a failed save or half as much damage on a successful one.\n\nFlammable objects in the area that aren't being worn or carried start burning."
   }
 }

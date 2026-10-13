@@ -5,9 +5,9 @@
   "id": "greater_restoration",
   "status": "auto_ok",
   "confidence": "high",
-  "usage": "Level-up spell list for the listed classes. Combat only if a wired ability uses this id.",
+  "usage": "Level-up spell list for the listed classes. Combat runs it only when a wired ability has the same id.",
   "srd": {
-    "components": "V, S, M (diamond dust worth 100+ GP, which the spell consumes)",
-    "line": "Level 5 Abjuration (Bard, Cleric, Druid, Paladin, Ranger)"
+    "line": "Level 5 Abjuration (Bard, Cleric, Druid, Paladin, Ranger)",
+    "text": "_Level 5 Abjuration (Bard, Cleric, Druid, Paladin, Ranger)_\n\n**Casting Time:** Action\n**Range:** Touch\n**Components:** V, S, M (diamond dust worth 100+ GP, which the spell consumes)\n**Duration:** Instantaneous\n\nYou touch a creature and magically remove one of the following effects from it:\n\n- 1 Exhaustion level\n- The Charmed or Petrified condition\n- A curse, including the target's Attunement to a cursed magic item\n- Any reduction to one of the target's ability scores\n- Any reduction to the target's Hit Point maximum"
   }
 }

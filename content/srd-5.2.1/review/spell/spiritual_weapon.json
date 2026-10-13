@@ -5,9 +5,9 @@
   "id": "spiritual_weapon",
   "status": "auto_ok",
   "confidence": "high",
-  "usage": "Level-up spell list for the listed classes. Combat only if a wired ability uses this id.",
+  "usage": "Level-up spell list for the listed classes. Combat runs it only when a wired ability has the same id.",
   "srd": {
-    "components": "V, S",
-    "line": "Level 2 Evocation (Cleric)"
+    "line": "Level 2 Evocation (Cleric)",
+    "text": "_Level 2 Evocation (Cleric)_\n\n**Casting Time:** Bonus Action\n**Range:** 60 feet\n**Components:** V, S\n**Duration:** Concentration, up to 1 minute\n\nYou create a floating, spectral force that resembles a weapon of your choice and lasts for the duration. The force appears within range in a space of your choice, and you can immediately make one melee spell attack against one creature within 5 feet of the force. On a hit, the target takes Force damage equal to 1d8 plus your spellcasting ability modifier.\n\nAs a Bonus Action on your later turns, you can move the force up to 20 feet and repeat the attack against a creature within 5 feet of it.\n\n_Using a Higher-Level Spell Slot._ The damage increases by 1d8 for every slot level above 2."
   }
 }

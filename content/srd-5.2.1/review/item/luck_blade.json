@@ -3,11 +3,18 @@
   "unparsedFields": [],
   "kind": "item",
   "id": "luck_blade",
-  "status": "auto_ok",
-  "confidence": "high",
-  "usage": "Vendor, loot, and stash. Typed effects change AC, attack, and damage.",
+  "status": "needs_review",
+  "confidence": "medium",
+  "usage": "Vendor, loot, and stash. Equipped effects are listed on the sheet; no fight applies them yet.",
   "srd": {
     "line": "Weapon (Glaive, Greatsword, Longsword, Rapier, Scimitar, Sickle, or Shortsword), Legendary (Requires Attunement)",
     "text": "_Weapon (Glaive, Greatsword, Longsword, Rapier, Scimitar, Sickle, or Shortsword), Legendary (Requires Attunement)_\n\nYou gain a +1 bonus to attack rolls and damage rolls made with this magic weapon. While the weapon is on your person, you also gain a +1 bonus to saving throws.\n\n_Luck._ If the weapon is on your person, you can call on its luck (no action required) to reroll one failed D20 Test if you don't have the Incapacitated condition. You must use the second roll. Once used, this property can't be used again until the next dawn.\n\n_Wish._ The weapon has 1d3 charges. While holding it, you can expend 1 charge and cast _Wish_ from it. Once used, this property can't be used again until the next dawn. The weapon loses this property if it has no charges."
-  }
+  },
+  "notModeled": [
+    "While the weapon is on your person, you also gain a +1 bonus to saving throws.",
+    "Luck. If the weapon is on your person, you can call on its luck (no action required) to reroll one failed D20 Test if you don't have the Incapacitated condition.",
+    "Wish. The weapon has 1d3 charges.",
+    "Charges limit the casts: While holding it, you can expend 1 charge and cast Wish from it.",
+    "The weapon loses this property if it has no charges."
+  ]
 }

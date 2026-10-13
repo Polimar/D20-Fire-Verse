@@ -5,9 +5,9 @@
   "id": "divine_word",
   "status": "auto_ok",
   "confidence": "high",
-  "usage": "Level-up spell list for the listed classes. Combat only if a wired ability uses this id.",
+  "usage": "Level-up spell list for the listed classes. Combat runs it only when a wired ability has the same id.",
   "srd": {
-    "components": "V",
-    "line": "Level 7 Evocation (Cleric)"
+    "line": "Level 7 Evocation (Cleric)",
+    "text": "_Level 7 Evocation (Cleric)_\n\n**Casting Time:** Bonus Action\n**Range:** 30 feet\n**Components:** V\n**Duration:** Instantaneous\n\nYou utter a word imbued with power from the Upper Planes. Each creature of your choice in range makes a Charisma saving throw. On a failed save, a target that has 50 Hit Points or fewer suffers an effect based on its current Hit Points, as shown in the Divine Word Effects table. Regardless of its Hit Points, a Celestial, an Elemental, a Fey, or a Fiend target that fails its save is forced back to its plane of origin (if it isn't there already) and can't return to the current plane for 24 hours by any means short of a _Wish_ spell.\n\n**Divine Word Effects**\n\n| Hit Points | Effect |\n| --- | --- |\n| 0–20 | The target dies. |\n| 21–30 | The target has the Blinded, Deafened, and Stunned conditions for 1 hour. |\n| 31–40 | The target has the Blinded and Deafened conditions for 10 minutes. |\n| 41–50 | The target has the Deafened condition for 1 minute. |"
   }
 }

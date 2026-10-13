@@ -23,5 +23,8 @@
     "content:parse": "node --import tsx tools/srd-parser/src/import-catalog.ts",
     "build": "npm run build:tv && npm run build:companion",
     "brand": "node brand/export.mjs"
+  },
+  "devDependencies": {
+    "tsx": "^4.23.15"
   }
 }

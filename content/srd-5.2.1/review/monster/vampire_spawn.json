@@ -1,0 +1,21 @@
+{
+  "ambiguities": [],
+  "unparsedFields": [],
+  "kind": "monster",
+  "id": "vampire_spawn",
+  "status": "auto_ok",
+  "confidence": "high",
+  "usage": "Encounters and arena fights. The engine runs the actions it can compile from the stat block.",
+  "srd": {
+    "engineId": "srd_vampire_spawn",
+    "text": "_Medium or Small Undead, Neutral Evil_\n\n**AC** 16 **Initiative** +3 (13)\n\n**HP** 90 (12d8 + 36)\n\n**Speed** 30 ft.\n\n|  |  | MOD | SAVE |  |  | MOD | SAVE |  |  | MOD | SAVE |\n| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |\n| **STR** | 16 | +3 | +3 | **DEX** | 16 | +3 | +6 | **CON** | 16 | +3 | +3 |\n| **INT** | 11 | +0 | +0 | **WIS** | 10 | +0 | +3 | **CHA** | 12 | +1 | +1 |\n\n**Skills** Perception +3, Stealth +6\n\n**Resistances** Necrotic\n\n**Senses** Darkvision 60 ft.; Passive Perception 13\n\n**Languages** Common plus one other language\n\n**CR** 5 (XP 1,800; PB +3)\n\n#### Traits\n\n**_Spider Climb._** The vampire can climb difficult surfaces, including along ceilings, without needing to make an ability check.\n\n**_Vampire Weakness._** The vampire has these weaknesses:\n\n**_Forbiddance._** The vampire can't enter a residence without an invitation from an occupant.\n\n**_Running Water._** The vampire takes 20 Acid damage if it ends its turn in running water.\n\n**_Stake to the Heart._** The vampire is destroyed if a weapon that deals Piercing damage is driven into the vampire's heart while the vampire has the Incapacitated condition.\n\n**_Sunlight._** The vampire takes 20 Radiant damage if it starts its turn in sunlight. While in sunlight, it has Disadvantage on attack rolls and ability checks.\n\n#### Actions\n\n**_Multiattack._** The vampire makes two Claw attacks and uses Bite.\n\n**_Claw._** _Melee Attack Roll:_ +6, reach 5 ft. _Hit:_ 8 (2d4 + 3) Slashing damage. If the target is a Medium or smaller creature, it has the Grappled condition (escape DC 13) from one of two claws.\n\n**_Bite._** _Constitution Saving Throw:_ DC 14, one creature within 5 feet that is willing or that has the Grappled, Incapacitated, or Restrained condition. _Failure:_ 5 (1d4 + 3) Piercing damage plus 10 (3d6) Necrotic damage. The target's Hit Point maximum decreases by an amount equal to the Necrotic damage taken, and the vampire regains Hit Points equal to that amount.\n\n#### Bonus Actions\n\n**_Deathless Agility._** The vampire takes the Dash or Disengage action."
+  },
+  "notModeled": [
+    "Trait “Spider Climb”: text only; the engine ignores it.",
+    "Trait “Vampire Weakness”: text only; the engine ignores it.",
+    "Trait “Forbiddance”: text only; the engine ignores it.",
+    "Trait “Running Water”: text only; the engine ignores it.",
+    "Trait “Stake to the Heart”: text only; the engine ignores it.",
+    "Trait “Sunlight”: text only; the engine ignores it."
+  ]
+}

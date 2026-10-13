@@ -5,9 +5,9 @@
   "id": "beacon_of_hope",
   "status": "auto_ok",
   "confidence": "high",
-  "usage": "Level-up spell list for the listed classes. Combat only if a wired ability uses this id.",
+  "usage": "Level-up spell list for the listed classes. Combat runs it only when a wired ability has the same id.",
   "srd": {
-    "components": "V, S",
-    "line": "Level 3 Abjuration (Cleric)"
+    "line": "Level 3 Abjuration (Cleric)",
+    "text": "_Level 3 Abjuration (Cleric)_\n\n**Casting Time:** Action\n**Range:** 30 feet\n**Components:** V, S\n**Duration:** Concentration, up to 1 minute\n\nChoose any number of creatures within range. For the duration, each target has Advantage on Wisdom saving throws and Death Saving Throws and regains the maximum number of Hit Points possible from any healing."
   }
 }

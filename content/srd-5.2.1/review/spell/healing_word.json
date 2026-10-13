@@ -5,9 +5,9 @@
   "id": "healing_word",
   "status": "auto_ok",
   "confidence": "high",
-  "usage": "Level-up spell list for the listed classes. Combat only if a wired ability uses this id.",
+  "usage": "Level-up spell list for the listed classes. Combat runs it only when a wired ability has the same id.",
   "srd": {
-    "components": "V",
-    "line": "Level 1 Abjuration (Bard, Cleric, Druid)"
+    "line": "Level 1 Abjuration (Bard, Cleric, Druid)",
+    "text": "_Level 1 Abjuration (Bard, Cleric, Druid)_\n\n**Casting Time:** Bonus Action\n**Range:** 60 feet\n**Components:** V\n**Duration:** Instantaneous\n\nA creature of your choice that you can see within range regains Hit Points equal to 2d4 plus your spellcasting ability modifier.\n\n_Using a Higher-Level Spell Slot._ The healing increases by 2d4 for each spell slot level above 1."
   }
 }

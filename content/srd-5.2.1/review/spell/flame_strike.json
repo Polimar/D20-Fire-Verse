@@ -5,9 +5,9 @@
   "id": "flame_strike",
   "status": "auto_ok",
   "confidence": "high",
-  "usage": "Level-up spell list for the listed classes. Combat only if a wired ability uses this id.",
+  "usage": "Level-up spell list for the listed classes. Combat runs it only when a wired ability has the same id.",
   "srd": {
-    "components": "V, S, M (a pinch of sulfur)",
-    "line": "Level 5 Evocation (Cleric)"
+    "line": "Level 5 Evocation (Cleric)",
+    "text": "_Level 5 Evocation (Cleric)_\n\n**Casting Time:** Action\n**Range:** 60 feet\n**Components:** V, S, M (a pinch of sulfur)\n**Duration:** Instantaneous\n\nA vertical column of brilliant fire roars down from above. Each creature in a 10-foot-radius, 40-foot-high Cylinder centered on a point within range makes a Dexterity saving throw, taking 5d6 Fire damage and 5d6 Radiant damage on a failed save or half as much damage on a successful one.\n\n_Using a Higher-Level Spell Slot._ The Fire damage and the Radiant damage increase by 1d6 for each spell slot level above 5."
   }
 }

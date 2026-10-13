@@ -9,5 +9,8 @@
   "id": "tiefling",
   "status": "auto_ok",
   "confidence": "medium",
-  "usage": "Chargen species. Unparsed trait numbers count as 0 until you fill them in the wizard."
+  "usage": "Chargen species. Unparsed trait numbers count as 0 until you fill them in the wizard.",
+  "srd": {
+    "text": "**Creature Type:** Humanoid\n**Size:** Medium (about 4–7 feet tall) or Small (about 3–4 feet tall), chosen when you select this species\n**Speed:** 30 feet\n\nAs a Tiefling, you have the following special traits.\n\n_Darkvision._ You have Darkvision with a range of 60 feet.\n\n_Fiendish Legacy._ You are the recipient of a legacy that grants you supernatural abilities. Choose a legacy from the Fiendish Legacies table. You gain the level 1 benefit of the chosen legacy.\n\nWhen you reach character levels 3 and 5, you learn a higher-level spell, as shown on the table. You always have that spell prepared. You can cast it once without a spell slot, and you regain the ability to cast it in that way when you finish a Long Rest. You can also cast the spell using any spell slots you have of the appropriate level.\n\nIntelligence, Wisdom, or Charisma is your spellcasting ability for the spells you cast with this trait (choose the ability when you select the legacy).\n\n**Fiendish Legacies**\n\n| Legacy | Level 1 | Level 3 | Level 5 |\n| --- | --- | --- | --- |\n| Abyssal | You have Resistance to Poison damage. You also know the Poison Spray cantrip. | Ray of Sickness | Hold Person |\n| Chthonic | You have Resistance to Necrotic damage. You also know the Chill Touch cantrip. | False Life | Ray of Enfeeblement |\n| Infernal | You have Resistance to Fire damage. You also know the Fire Bolt cantrip. | Hellish Rebuke | Darkness |\n\n_Otherworldly Presence._ You know the _Thaumaturgy_ cantrip. When you cast it with this trait, the spell uses the same spellcasting ability you use for your Fiendish Legacy trait."
+  }
 }

@@ -5,9 +5,9 @@
   "id": "spare_the_dying",
   "status": "auto_ok",
   "confidence": "high",
-  "usage": "Level-up spell list for the listed classes. Combat only if a wired ability uses this id.",
+  "usage": "Level-up spell list for the listed classes. Combat runs it only when a wired ability has the same id.",
   "srd": {
-    "components": "V, S",
-    "line": "Necromancy Cantrip (Cleric, Druid)"
+    "line": "Necromancy Cantrip (Cleric, Druid)",
+    "text": "_Necromancy Cantrip (Cleric, Druid)_\n\n**Casting Time:** Action\n**Range:** 15 feet\n**Components:** V, S\n**Duration:** Instantaneous\n\nChoose a creature within range that has 0 Hit Points and isn't dead. The creature becomes Stable.\n\n_Cantrip Upgrade._ The range doubles when you reach levels 5 (30 feet), 11 (60 feet), and 17 (120 feet)."
   }
 }

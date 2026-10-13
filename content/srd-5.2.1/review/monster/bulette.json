@@ -3,7 +3,14 @@
   "unparsedFields": [],
   "kind": "monster",
   "id": "bulette",
-  "status": "auto_ok",
-  "confidence": "high",
-  "usage": "Encounters when enabled. Combat uses a wired ability with the same id when one exists."
+  "status": "needs_review",
+  "confidence": "medium",
+  "usage": "Encounters and arena fights. The engine runs the actions it can compile from the stat block.",
+  "srd": {
+    "engineId": "srd_bulette",
+    "text": "_Large Monstrosity, Unaligned_\n\n**AC** 17 **Initiative** +0 (10)\n\n**HP** 94 (9d10 + 45)\n\n**Speed** 40 ft., Burrow 40 ft.\n\n|  |  | MOD | SAVE |  |  | MOD | SAVE |  |  | MOD | SAVE |\n| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |\n| **STR** | 19 | +4 | +4 | **DEX** | 11 | +0 | +0 | **CON** | 21 | +5 | +5 |\n| **INT** | 2 | −4 | −4 | **WIS** | 10 | +0 | +0 | **CHA** | 5 | −3 | −3 |\n\n**Skills** Perception +6\n\n**Senses** Darkvision 60 ft., Tremorsense 120 ft.; Passive Perception 16\n\n**Languages** None\n\n**CR** 5 (XP 1,800; PB +3)\n\n#### Actions\n\n**_Multiattack._** The bulette makes two Bite attacks.\n\n**_Bite._** _Melee Attack Roll:_ +7, reach 5 ft. _Hit:_ 17 (2d12 + 4) Piercing damage.\n\n**_Deadly Leap._** The bulette spends 5 feet of movement to jump to a space within 15 feet that contains one or more Large or smaller creatures. _Dexterity Saving Throw:_ DC 15, each creature in the bulette's destination space. _Failure:_ 19 (3d12) Bludgeoning damage, and the target has the Prone condition. _Success:_ Half damage, and the target is pushed 5 feet straight away from the bulette.\n\n#### Bonus Actions\n\n**_Leap._** The bulette jumps up to 30 feet by spending 10 feet of movement."
+  },
+  "notModeled": [
+    "Bonus action “Leap”: the combat engine does not run it."
+  ]
 }

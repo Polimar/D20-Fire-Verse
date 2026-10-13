@@ -5,9 +5,9 @@
   "id": "enhance_ability",
   "status": "auto_ok",
   "confidence": "high",
-  "usage": "Level-up spell list for the listed classes. Combat only if a wired ability uses this id.",
+  "usage": "Level-up spell list for the listed classes. Combat runs it only when a wired ability has the same id.",
   "srd": {
-    "components": "V, S, M (fur or a feather)",
-    "line": "Level 2 Transmutation (Bard, Cleric, Druid, Ranger, Sorcerer, Wizard)"
+    "line": "Level 2 Transmutation (Bard, Cleric, Druid, Ranger, Sorcerer, Wizard)",
+    "text": "_Level 2 Transmutation (Bard, Cleric, Druid, Ranger, Sorcerer, Wizard)_\n\n**Casting Time:** Action\n**Range:** Touch\n**Components:** V, S, M (fur or a feather)\n**Duration:** Concentration, up to 1 hour\n\nYou touch a creature and choose Strength, Dexterity, Intelligence, Wisdom, or Charisma. For the duration, the target has Advantage on ability checks using the chosen ability.\n\n_Using a Higher-Level Spell Slot._ You can target one additional creature for each spell slot level above 2. You can choose a different ability for each target."
   }
 }

@@ -5,9 +5,9 @@
   "id": "scimitar",
   "status": "auto_ok",
   "confidence": "high",
-  "usage": "Vendor, loot, and stash. Typed effects change AC, attack, and damage.",
+  "usage": "Vendor, loot, and stash. Equipped effects are listed on the sheet; no fight applies them yet.",
   "srd": {
-    "damage": "1d6 Slashing",
-    "properties": "Finesse, Light"
+    "line": "martial melee weapon",
+    "text": "| Name | Damage | Properties | Mastery | Weight | Cost |\n| --- | --- | --- | --- | --- | --- |\n| Scimitar | 1d6 Slashing | Finesse, Light | Nick | 3 lb. | 25 GP |"
   }
 }

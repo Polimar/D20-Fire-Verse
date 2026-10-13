@@ -5,5 +5,8 @@
   "id": "alert",
   "status": "auto_ok",
   "confidence": "high",
-  "usage": "Chosen at an ASI level or as an Epic Boon when the class table says so."
+  "usage": "Chosen at an ASI level or as an Epic Boon when the class table says so.",
+  "srd": {
+    "text": "_Origin Feat_\n\nYou gain the following benefits.\n\n_Initiative Proficiency._ When you roll Initiative, you can add your Proficiency Bonus to the roll.\n\n_Initiative Swap._ Immediately after you roll Initiative, you can swap your Initiative with the Initiative of one willing ally in the same combat. You can't make this swap if you or the ally has the Incapacitated condition."
+  }
 }

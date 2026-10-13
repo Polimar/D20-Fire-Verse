@@ -5,9 +5,9 @@
   "id": "aura_of_life",
   "status": "auto_ok",
   "confidence": "high",
-  "usage": "Level-up spell list for the listed classes. Combat only if a wired ability uses this id.",
+  "usage": "Level-up spell list for the listed classes. Combat runs it only when a wired ability has the same id.",
   "srd": {
-    "components": "V",
-    "line": "Level 4 Abjuration (Cleric, Paladin)"
+    "line": "Level 4 Abjuration (Cleric, Paladin)",
+    "text": "_Level 4 Abjuration (Cleric, Paladin)_\n\n**Casting Time:** Action\n**Range:** Self\n**Components:** V\n**Duration:** Concentration, up to 10 minutes\n\nAn aura radiates from you in a 30-foot Emanation for the duration. While in the aura, you and your allies have Resistance to Necrotic damage, and your Hit Point maximums can't be reduced. If an ally with 0 Hit Points starts its turn in the aura, that ally regains 1 Hit Point."
   }
 }

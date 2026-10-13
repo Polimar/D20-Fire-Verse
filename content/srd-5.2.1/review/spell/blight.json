@@ -5,9 +5,9 @@
   "id": "blight",
   "status": "auto_ok",
   "confidence": "high",
-  "usage": "Level-up spell list for the listed classes. Combat only if a wired ability uses this id.",
+  "usage": "Level-up spell list for the listed classes. Combat runs it only when a wired ability has the same id.",
   "srd": {
-    "components": "V, S",
-    "line": "Level 4 Necromancy (Druid, Sorcerer, Warlock, Wizard)"
+    "line": "Level 4 Necromancy (Druid, Sorcerer, Warlock, Wizard)",
+    "text": "_Level 4 Necromancy (Druid, Sorcerer, Warlock, Wizard)_\n\n**Casting Time:** Action\n**Range:** 30 feet\n**Components:** V, S\n**Duration:** Instantaneous\n\nA creature that you can see within range makes a Constitution saving throw, taking 8d8 Necrotic damage on a failed save or half as much damage on a successful one. A Plant creature automatically fails the save.\n\nAlternatively, target a nonmagical plant that isn't a creature, such as a tree or shrub. It doesn't make a save; it simply withers and dies.\n\n_Using a Higher-Level Spell Slot._ The damage increases by 1d8 for each spell slot level above 4."
   }
 }

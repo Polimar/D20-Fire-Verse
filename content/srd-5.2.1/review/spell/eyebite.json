@@ -5,9 +5,9 @@
   "id": "eyebite",
   "status": "auto_ok",
   "confidence": "high",
-  "usage": "Level-up spell list for the listed classes. Combat only if a wired ability uses this id.",
+  "usage": "Level-up spell list for the listed classes. Combat runs it only when a wired ability has the same id.",
   "srd": {
-    "components": "V, S",
-    "line": "Level 6 Necromancy (Bard, Sorcerer, Warlock, Wizard)"
+    "line": "Level 6 Necromancy (Bard, Sorcerer, Warlock, Wizard)",
+    "text": "_Level 6 Necromancy (Bard, Sorcerer, Warlock, Wizard)_\n\n**Casting Time:** Action\n**Range:** Self\n**Components:** V, S\n**Duration:** Concentration, up to 1 minute\n\nFor the duration, your eyes become an inky void. One creature of your choice within 60 feet of you that you can see must succeed on a Wisdom saving throw or be affected by one of the following effects of your choice for the duration.\n\nOn each of your turns until the spell ends, you can take a Magic action to target another creature but can't target a creature again if it has succeeded on a save against this casting of the spell.\n\n_Asleep._ The target has the Unconscious condition. It wakes up if it takes any damage or if another creature takes an action to shake it awake.\n\n_Panicked._ The target has the Frightened condition. On each of its turns, the Frightened target must take the Dash action and move away from you by the safest and shortest route available. If the target moves to a space at least 60 feet away from you where it can't see you, this effect ends.\n\n_Sickened._ The target has the Poisoned condition."
   }
 }

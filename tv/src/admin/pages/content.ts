@@ -40,12 +40,24 @@ type Row = {
   usage: string;
   source: "srd" | "custom" | "queue";
   edited: boolean;
+  summary: string;
+  notModeled: number;
+};
+type EngineView = {
+  state: "runs" | "partial" | "sheet" | "unused";
+  headline: string;
+  source: string;
+  lines: Array<{ label: string; detail: string; ok: boolean }>;
+  mismatches: string[];
+  notes: string[];
 };
 type Ambiguity = { field?: string; summary?: string; options?: Array<{ label?: string; patch?: Record<string, unknown> }>; parserChoice?: number };
 type Detail = Row & {
   game: Record<string, unknown> | null;
   original: Record<string, unknown> | null;
   srd: Record<string, unknown>;
+  notModeledRules: string[];
+  engine: EngineView | null;
   ambiguities: Ambiguity[];
   parsedUnparsedFields: string[];
   adminNote: string;
@@ -121,6 +133,7 @@ async function listView(host: HTMLElement, ctx: PageCtx): Promise<void> {
     enabled: p.get("enabled") ?? "",
     valid: p.get("valid") ?? "",
     source: p.get("source") ?? "",
+    gaps: p.get("gaps") ?? "",
   };
   let state: TableState = tableState(p, { sort: "kind", dir: "asc" });
   const selected = new Set<string>();
@@ -130,6 +143,12 @@ async function listView(host: HTMLElement, ctx: PageCtx): Promise<void> {
   const columns: Column<Row>[] = [
     { key: "name", label: "Entry", sort: "name", render: (r) => `<b>${esc(r.name || "(no name)")}</b><span class="sub mono">${esc(r.id)}</span>` },
     { key: "kind", label: "Kind", sort: "kind", render: (r) => esc(kindLabel(r.kind)) },
+    {
+      key: "summary",
+      label: "Mechanics",
+      render: (r) =>
+        `<span class="mech">${esc(r.summary || "—")}</span>${r.notModeled ? `<span class="sub warn-text" title="Rules in the SRD text that the game does not apply">${fmtNum(r.notModeled)} SRD rule${r.notModeled === 1 ? "" : "s"} not applied</span>` : ""}`,
+    },
     {
       key: "status",
       label: "Review",
@@ -141,7 +160,7 @@ async function listView(host: HTMLElement, ctx: PageCtx): Promise<void> {
       label: "In game",
       sort: "enabled",
       render: (r) =>
-        `<button type="button" class="switch${r.enabled ? " on" : ""}" data-act="toggle" title="${r.enabled ? "Players can get this. Click to disable." : "Hidden from players. Click to enable."}">${r.enabled ? "Enabled" : "Off"}</button>${r.inPlay ? `<span class="sub">Used by the campaign</span>` : ""}`,
+        `<button type="button" class="switch${r.enabled ? " on" : ""}" data-act="toggle" title="${r.enabled ? "Players can get this. Click to disable." : "Hidden from players. Click to enable."}">${r.enabled ? "Enabled" : "Off"}</button>${r.inPlay ? `<span class="sub">In play</span>` : ""}`,
     },
     {
       key: "valid",
@@ -167,7 +186,7 @@ async function listView(host: HTMLElement, ctx: PageCtx): Promise<void> {
           <option value="">In game: any</option>
           <option value="on" ${filters.enabled === "on" ? "selected" : ""}>Enabled</option>
           <option value="off" ${filters.enabled === "off" ? "selected" : ""}>Off</option>
-          <option value="in_play" ${filters.enabled === "in_play" ? "selected" : ""}>Used by the campaign</option>
+          <option value="in_play" ${filters.enabled === "in_play" ? "selected" : ""}>In play (enabled and approved)</option>
         </select>
         <select id="cValid" aria-label="Schema">
           <option value="">Schema: any</option>
@@ -179,6 +198,11 @@ async function listView(host: HTMLElement, ctx: PageCtx): Promise<void> {
           <option value="edited" ${filters.source === "edited" ? "selected" : ""}>Edited by an admin</option>
           <option value="custom" ${filters.source === "custom" ? "selected" : ""}>Custom entries</option>
           <option value="queue" ${filters.source === "queue" ? "selected" : ""}>Import queue</option>
+        </select>
+        <select id="cGaps" aria-label="SRD rules">
+          <option value="">SRD rules: any</option>
+          <option value="yes" ${filters.gaps === "yes" ? "selected" : ""}>Some rules not applied</option>
+          <option value="no" ${filters.gaps === "no" ? "selected" : ""}>Every rule applied</option>
         </select>
         <span class="spacer"></span>
         <button type="button" class="ghost sm" id="cResetF">Clear filters</button>
@@ -199,7 +223,7 @@ async function listView(host: HTMLElement, ctx: PageCtx): Promise<void> {
     host.querySelector("#cStats")!.innerHTML = [
       card(t.all, "Entries in the catalog", {}),
       card(t.needsReview, "Waiting for review", { status: "needs_review" }, true),
-      card(t.inPlay, "Used by the campaign", { enabled: "in_play" }),
+      card(t.inPlay, "In play", { enabled: "in_play" }),
       card(t.invalid, "Fail the game schema", { valid: "no" }, true),
       card(t.edited, "Edited by an admin", { source: "edited" }),
     ].join("");
@@ -376,6 +400,7 @@ async function listView(host: HTMLElement, ctx: PageCtx): Promise<void> {
     host.querySelector<HTMLSelectElement>("#cEnabled")!.value = filters.enabled;
     host.querySelector<HTMLSelectElement>("#cValid")!.value = filters.valid;
     host.querySelector<HTMLSelectElement>("#cSource")!.value = filters.source;
+    host.querySelector<HTMLSelectElement>("#cGaps")!.value = filters.gaps;
     host.querySelector<HTMLInputElement>("#cQ")!.value = filters.q;
   };
   for (const [sel, k] of [
@@ -390,6 +415,7 @@ async function listView(host: HTMLElement, ctx: PageCtx): Promise<void> {
   host.querySelector("#cEnabled")!.addEventListener("change", (ev) => setFilter({ enabled: (ev.target as HTMLSelectElement).value }));
   host.querySelector("#cValid")!.addEventListener("change", (ev) => setFilter({ valid: (ev.target as HTMLSelectElement).value }));
   host.querySelector("#cSource")!.addEventListener("change", (ev) => setFilter({ source: (ev.target as HTMLSelectElement).value }));
+  host.querySelector("#cGaps")!.addEventListener("change", (ev) => setFilter({ gaps: (ev.target as HTMLSelectElement).value }));
   host.querySelector("#cQ")!.addEventListener("input", debounce((ev: Event) => setFilter({ q: (ev.target as HTMLInputElement).value.trim() })));
   host.querySelector("#cResetF")!.addEventListener("click", () => {
     for (const k of Object.keys(filters) as Array<keyof typeof filters>) filters[k] = "";
@@ -436,17 +462,258 @@ function pretty(v: unknown): string {
   return JSON.stringify(v ?? null, null, 2);
 }
 
-function srdFields(srd: Record<string, unknown>): string {
-  const entries = Object.entries(srd).filter(([, v]) => v !== undefined && v !== null && v !== "");
-  if (!entries.length) {
-    return `<p class="faint">The importer kept no source fields for this entry. Check the SRD 5.2.1 PDF for the full wording.</p>`;
+function inlineMd(text: string): string {
+  return esc(text)
+    .replace(/\*\*([^*\n]+)\*\*/g, "<b>$1</b>")
+    .replace(/(^|[\s(“"])_([^_\n]+?)_(?=[\s.,;:)!?”"]|$)/g, "$1<i>$2</i>")
+    .replace(/(^|[\s(])\*([^*\n]+)\*(?=[\s.,;:)!?]|$)/g, "$1<i>$2</i>");
+}
+
+/** The importer's plain markdown: paragraphs, pipe tables, bold and italic. */
+function mdToHtml(text: string): string {
+  return text
+    .split(/\n{2,}/)
+    .map((block) => {
+      const lines = block.split("\n").filter((l) => l.trim());
+      if (lines.length && lines.every((l) => l.trim().startsWith("|"))) {
+        const rows = lines.filter((l) => !/^\|\s*-{3}/.test(l.trim())).map((l) => l.trim().replace(/^\||\|$/g, "").split("|").map((c) => c.trim()));
+        const [head, ...body] = rows;
+        return `<table class="md"><thead><tr>${(head ?? []).map((c) => `<th>${inlineMd(c)}</th>`).join("")}</tr></thead><tbody>${body.map((r) => `<tr>${r.map((c) => `<td>${inlineMd(c)}</td>`).join("")}</tr>`).join("")}</tbody></table>`;
+      }
+      const heading = lines[0]?.match(/^#{2,4}\s+(.+)$/);
+      if (heading) return `<h4>${inlineMd(heading[1]!)}</h4>${lines.length > 1 ? `<p>${lines.slice(1).map(inlineMd).join("<br>")}</p>` : ""}`;
+      return `<p>${lines.map(inlineMd).join("<br>")}</p>`;
+    })
+    .join("");
+}
+
+function srdPanel(srd: Record<string, unknown>): string {
+  const text = typeof srd.text === "string" ? srd.text : "";
+  const line = typeof srd.line === "string" ? srd.line : "";
+  const extra = Object.entries(srd).filter(([k, v]) => !["text", "line"].includes(k) && v != null && v !== "");
+  if (!text && !line && !extra.length) return `<p class="faint">The importer kept no source text for this entry. Run npm run content:import to refresh it.</p>`;
+  return `${line ? `<p class="mono faint">${esc(line)}</p>` : ""}
+    ${extra.length ? `<dl class="kv">${extra.map(([k, v]) => `<dt>${esc(k)}</dt><dd class="mono">${esc(typeof v === "string" ? v : pretty(v))}</dd>`).join("")}</dl>` : ""}
+    ${text ? `<div class="srd-doc">${mdToHtml(text)}</div>` : ""}
+    <p class="faint">SRD 5.2.1 text from the vendored markdown in content/srd. Edit the game JSON to change what players get.</p>`;
+}
+
+const ENGINE_STATE: Record<EngineView["state"], [string, "ok" | "warn" | "info" | "bad"]> = {
+  runs: ["Runs in the game", "ok"],
+  partial: ["Partly runs", "warn"],
+  sheet: ["Lists and menus only", "info"],
+  unused: ["Not applied by the game", "bad"],
+};
+
+function engineCard(e: EngineView | null): string {
+  if (!e) return "";
+  const [label, tone] = ENGINE_STATE[e.state];
+  return `<div class="engine-card">
+    <div class="row">${badge(label, tone)} <b>${esc(e.headline)}</b></div>
+    ${
+      e.lines.length
+        ? `<table class="engine-lines"><tbody>${e.lines
+            .map((l) => `<tr class="${l.ok ? "ok" : "no"}"><td class="mark">${l.ok ? "✓" : "✗"}</td><td class="lbl">${esc(l.label)}</td><td>${esc(l.detail)}</td></tr>`)
+            .join("")}</tbody></table>`
+        : ""
+    }
+    ${e.mismatches.length ? `<div class="notice bad"><b>The engine disagrees with the SRD</b><ul class="rules">${e.mismatches.map((m) => `<li>${esc(m)}</li>`).join("")}</ul></div>` : ""}
+    ${e.notes.map((n) => `<p class="faint">${esc(n)}</p>`).join("")}
+    ${e.source ? `<p class="faint mono">${esc(e.source)}</p>` : ""}
+  </div>`;
+}
+
+type Loose = Record<string, unknown>;
+const arr = <T,>(v: unknown): T[] => (Array.isArray(v) ? (v as T[]) : []);
+const str = (v: unknown): string => (v == null ? "" : String(v));
+const mod = (score: number) => {
+  const m = Math.floor((score - 10) / 2);
+  return m >= 0 ? `+${m}` : `−${Math.abs(m)}`;
+};
+const signedNum = (n: number) => (n >= 0 ? `+${n}` : `−${Math.abs(n)}`);
+const ABIL = ["str", "dex", "con", "int", "wis", "cha"] as const;
+
+function dmgChips(list: unknown): string {
+  return arr<Loose>(list)
+    .map((d) => `<span class="tag dice" title="${d.average != null ? `Average ${str(d.average)}` : "No printed average"}">${esc(str(d.dice))} ${esc(str(d.damageType))}${d.average != null ? ` <small>avg ${esc(str(d.average))}</small>` : ""}</span>`)
+    .join(" ");
+}
+
+function kvRows(rows: Array<[string, string]>): string {
+  const shown = rows.filter(([, v]) => v);
+  return shown.length ? `<dl class="kv">${shown.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${v}</dd>`).join("")}</dl>` : "";
+}
+
+function actionBlock(a: Loose): string {
+  const attack = a.attack as Loose | undefined;
+  const save = a.save as Loose | undefined;
+  const range = attack?.rangeFt as Loose | undefined;
+  const facts = [
+    attack ? `<span class="tag dice">${esc(str(attack.kind).replace(/_/g, " "))} ${esc(signedNum(Number(attack.bonus)))} to hit</span>` : "",
+    attack?.reachFt ? `<span class="tag">reach ${esc(str(attack.reachFt))} ft</span>` : "",
+    range ? `<span class="tag">range ${esc(str(range.normal))}${range.long ? `/${esc(str(range.long))}` : ""} ft</span>` : "",
+    save ? `<span class="tag dice">${esc(str(save.ability).toUpperCase())} save DC ${esc(str(save.dc))}${save.onSuccess === "half" ? " · half on success" : ""}</span>` : "",
+    dmgChips(a.damage),
+    ...arr<string>(a.conditions).map((c) => `<span class="tag warn">${esc(c)}</span>`),
+    a.recharge ? `<span class="tag">recharge ${esc(str(a.recharge))}</span>` : "",
+    a.uses ? `<span class="tag">${esc(str(a.uses))}</span>` : "",
+  ].filter(Boolean);
+  return `<div class="stat-entry"><div class="row"><b>${esc(str(a.name))}</b>${facts.join(" ")}</div><div class="stat-text">${mdToHtml(str(a.text))}</div></div>`;
+}
+
+function monsterSummary(g: Loose): string {
+  const abilities = (g.abilities ?? {}) as Record<string, number>;
+  const saves = (g.saves ?? {}) as Record<string, number>;
+  const sections: Array<[string, unknown]> = [
+    ["Traits", g.traits],
+    ["Actions", g.actions],
+    ["Bonus actions", g.bonusActions],
+    ["Reactions", g.reactions],
+    [`Legendary actions${g.legendaryUses ? ` (${str(g.legendaryUses)} per round)` : ""}`, g.legendaryActions],
+  ];
+  return `<div class="statblock">
+    <p class="faint">${esc([g.size, g.creatureType, g.alignment].map(str).filter(Boolean).join(" · "))}${g.group ? ` · group ${esc(str(g.group))}` : ""}</p>
+    ${kvRows([
+      ["Armor Class", esc(str(g.ac))],
+      ["Hit Points", `${esc(str(g.hp))}${g.hitDice ? ` <span class="tag dice">${esc(str(g.hitDice))}</span>` : ""}`],
+      ["Speed", esc(str(g.speed))],
+      ["Initiative", g.initiative != null ? esc(signedNum(Number(g.initiative))) : ""],
+      ["Challenge", `CR ${esc(str(g.cr))} · ${esc(fmtNum(Number(g.xp ?? 0)))} XP${g.proficiencyBonus ? ` · PB +${esc(str(g.proficiencyBonus))}` : ""}`],
+    ])}
+    ${
+      Object.keys(abilities).length
+        ? `<table class="abil"><thead><tr><th></th>${ABIL.map((k) => `<th>${k.toUpperCase()}</th>`).join("")}</tr></thead><tbody>
+          <tr><th>Score</th>${ABIL.map((k) => `<td>${esc(str(abilities[k] ?? "—"))}</td>`).join("")}</tr>
+          <tr><th>Mod</th>${ABIL.map((k) => `<td>${abilities[k] != null ? esc(mod(abilities[k]!)) : "—"}</td>`).join("")}</tr>
+          <tr><th>Save</th>${ABIL.map((k) => `<td>${saves[k] != null ? esc(signedNum(saves[k]!)) : "—"}</td>`).join("")}</tr>
+        </tbody></table>`
+        : ""
+    }
+    ${kvRows([
+      ["Skills", esc(str(g.skills))],
+      ["Resistances", esc(str(g.resistances))],
+      ["Vulnerabilities", esc(str(g.vulnerabilities))],
+      ["Immunities", esc(str(g.immunities))],
+      ["Gear", esc(str(g.gear))],
+      ["Senses", esc(str(g.senses))],
+      ["Languages", esc(str(g.languages))],
+    ])}
+    ${sections
+      .filter(([, list]) => arr(list).length)
+      .map(([title, list]) => `<h3>${esc(title)}</h3>${arr<Loose>(list).map(actionBlock).join("")}`)
+      .join("")}
+  </div>`;
+}
+
+function spellSummary(g: Loose): string {
+  const m = (g.mechanics ?? {}) as Loose;
+  const c = g.components as Loose | undefined;
+  const save = m.save as Loose | undefined;
+  const area = m.area as Loose | undefined;
+  const cantrip = arr<string>(m.cantripDice);
+  const facts = [
+    m.attack ? `<span class="tag dice">${esc(str(m.attack))} spell attack</span>` : "",
+    save ? `<span class="tag dice">${esc(str(save.ability).toUpperCase())} save${save.onSuccess === "half" ? " · half on success" : save.onSuccess === "none" ? " · nothing on success" : ""}</span>` : "",
+    dmgChips(m.damage),
+    m.heal ? `<span class="tag dice">heals ${esc(str(m.heal))}${m.healAddsModifier ? " + spell mod" : ""}</span>` : "",
+    area ? `<span class="tag">${esc(str(area.sizeFt))} ft ${esc(str(area.shape))}</span>` : "",
+    ...arr<string>(m.conditions).map((x) => `<span class="tag warn">${esc(x)}</span>`),
+  ].filter(Boolean);
+  return `${kvRows([
+    ["Level", Number(g.level) === 0 ? `Cantrip · ${esc(str(g.school))}` : `Level ${esc(str(g.level))} · ${esc(str(g.school))}`],
+    ["Casting time", `${esc(str(g.castingTime))}${g.ritual ? " · Ritual" : ""}`],
+    ["Range", `${esc(str(g.range))}${m.rangeFt != null ? ` <span class="faint">(${esc(str(m.rangeFt))} ft)</span>` : ""}`],
+    ["Components", c ? esc([c.verbal ? "V" : "", c.somatic ? "S" : "", c.material ? `M (${str(c.material)})` : ""].filter(Boolean).join(", ")) : ""],
+    ["Duration", `${esc(str(g.duration))}${g.concentration ? ` ${badge("Concentration", "warn")}` : ""}`],
+    ["Classes", esc(arr<string>(g.classes).join(", "))],
+    ["Mechanics", facts.join(" ") || `<span class="faint">No attack, save, damage, or healing found in the text.</span>`],
+    ["Higher slots", m.upcastText ? `${m.upcastPerSlot ? `<span class="tag dice">+${esc(str(m.upcastPerSlot))} per slot</span> ` : ""}${esc(str(m.upcastText))}` : ""],
+    ["Cantrip dice", cantrip.length === 4 ? cantrip.map((dice, i) => `<span class="tag dice">L${[1, 5, 11, 17][i]} ${esc(dice)}</span>`).join(" ") : ""],
+  ])}<div class="stat-text">${mdToHtml(str(g.description))}</div>`;
+}
+
+function effectSentence(e: Loose): string {
+  switch (e.kind) {
+    case "ac_bonus":
+      return `+${str(e.amount)} to Armor Class`;
+    case "attack_bonus":
+      return `+${str(e.amount)} to attack rolls`;
+    case "damage_bonus":
+      return `+${str(e.amount)} to damage rolls${e.damageType ? ` (${str(e.damageType)})` : ""}`;
+    case "on_hit_rider":
+      return `Extra ${str(e.damage)} ${str(e.damageType)} damage on every hit`;
+    case "resistance":
+      return `Resistance to ${str(e.damageType)} damage`;
+    case "immunity":
+      return `Immunity to ${str(e.damageType)} damage`;
+    case "grant_spell":
+      return `Can cast ${str(e.spellId).replace(/_/g, " ")}`;
+    case "grant_feature":
+      return `Grants the feature ${str(e.featureId)}`;
+    case "stat_set":
+      return `${str(e.ability).toUpperCase()} score becomes ${str(e.score)}`;
+    case "stat_increase_cap":
+      return `${str(e.ability).toUpperCase()} can rise to ${str(e.cap)}`;
+    default:
+      return `Unknown effect ${esc(pretty(e))}`;
   }
-  const label = (k: string) => k.replace(/([a-z])([A-Z])/g, "$1 $2").replace(/_/g, " ").replace(/^./, (c) => c.toUpperCase());
-  return `<dl class="kv">${entries
-    .map(([k, v]) => `<dt>${esc(label(k))}</dt><dd>${
-        typeof v === "string" ? (v.length > 140 ? `<div class="srd-text">${esc(v)}</div>` : esc(v)) : `<pre class="mono">${esc(pretty(v))}</pre>`
-      }</dd>`)
-    .join("")}</dl><p class="faint">Fields kept by the SRD 5.2.1 importer. Edit the game JSON to change what players get.</p>`;
+}
+
+function itemSummary(g: Loose): string {
+  const req = (g.requires ?? {}) as Loose;
+  const w = g.weapon as Loose | undefined;
+  const a = g.armor as Loose | undefined;
+  const range = w?.rangeFt as Loose | undefined;
+  const effects = arr<Loose>(g.effects);
+  const needs = [
+    req.attunement ? "Attunement" : "",
+    arr<string>(req.class).length ? `class ${arr<string>(req.class).join(", ")}` : "",
+    arr<string>(req.species).length ? `species ${arr<string>(req.species).join(", ")}` : "",
+    req.spellcaster ? "a spellcaster" : "",
+    req.minLevel ? `level ${str(req.minLevel)}+` : "",
+  ].filter(Boolean);
+  return `${kvRows([
+    ["Rarity", esc(str(g.rarity).replace(/_/g, " "))],
+    ["Slot", esc(str(g.slot))],
+    ["Requires", esc(needs.join(" · "))],
+    ["Price", g.priceGold != null ? `${esc(fmtNum(Number(g.priceGold)))} gp` : ""],
+    ["Weight", g.weightLb != null ? `${esc(str(g.weightLb))} lb` : ""],
+    ["Charges", esc(str(g.charges))],
+    [
+      "Weapon",
+      w
+        ? `<span class="tag dice">${esc(str(w.damage))} ${esc(str(w.damageType))}</span>${w.versatile ? ` <span class="tag dice">versatile ${esc(str(w.versatile))}</span>` : ""}${range ? ` <span class="tag">range ${esc(str(range.normal))}/${esc(str(range.long))} ft</span>` : ""} <span class="faint">${esc(str(w.category).replace(/_/g, " "))} · ${esc(arr<string>(w.properties).join(", ") || "no properties")}${g.weaponMastery ? ` · mastery ${esc(str(g.weaponMastery))}` : ""}</span>`
+        : "",
+    ],
+    [
+      "Armor",
+      a
+        ? `${esc(str(a.category))} · ${a.category === "shield" ? `+${esc(str(a.baseAc))} AC` : `AC ${esc(str(a.baseAc))}${a.dexCap === null ? " + DEX" : Number(a.dexCap) > 0 ? ` + DEX (max ${esc(str(a.dexCap))})` : ""}`}${a.strength ? ` · STR ${esc(str(a.strength))}` : ""}${a.stealthDisadvantage ? " · Stealth disadvantage" : ""}`
+        : "",
+    ],
+  ])}
+  <h3>Typed effects when equipped</h3>
+  ${effects.length ? `<ul class="rules">${effects.map((e) => `<li>${esc(effectSentence(e))}</li>`).join("")}</ul>` : `<p class="faint">None. Equipping it changes no number.</p>`}`;
+}
+
+function genericSummary(g: Loose): string {
+  const rows = Object.entries(g)
+    .filter(([k, v]) => k !== "id" && k !== "name" && v != null && (typeof v !== "object" || (Array.isArray(v) && v.every((x) => typeof x !== "object"))))
+    .map(([k, v]) => [k.replace(/([a-z])([A-Z])/g, "$1 $2"), esc(Array.isArray(v) ? v.join(", ") : String(v))] as [string, string]);
+  return kvRows(rows) || `<p class="faint">Open the game JSON tab for the full entry.</p>`;
+}
+
+function summaryFor(kind: string, game: Record<string, unknown>): string {
+  switch (kind) {
+    case "monster":
+      return monsterSummary(game);
+    case "spell":
+      return spellSummary(game);
+    case "item":
+      return itemSummary(game);
+    default:
+      return genericSummary(game);
+  }
 }
 
 async function openDetail(row: { kind: string; id: string; name?: string }, onChanged: (r?: { kind: string; id: string }) => Promise<void>): Promise<void> {
@@ -458,7 +725,7 @@ async function openDetail(row: { kind: string; id: string; name?: string }, onCh
     canClose: async () => !dirty || (await confirmDialog({ title: "Drop your JSON edits?", body: "<p>The game JSON has changes that are not saved.</p>", confirm: "Drop edits", danger: true })),
   });
   const base = `/api/admin/content/${row.kind}/${encodeURIComponent(row.id)}`;
-  let tab = "game";
+  let tab = "what";
 
   const paint = (d: Detail) => {
     dirty = false;
@@ -467,7 +734,7 @@ async function openDetail(row: { kind: string; id: string; name?: string }, onCh
     const playBlock = d.reviewStatus === "needs_review" ? "Approve it first" : d.reviewStatus === "rejected" ? "Reopen it first" : !d.valid ? "Fix the schema errors first" : "";
     drawer.body.innerHTML = `
       <section>
-        <div class="row">${statusBadge(d.reviewStatus, d.confidence)} ${d.enabled ? badge("Enabled for players", "ok") : badge("Off for players")} ${d.valid ? badge("Schema valid", "ok") : badge("Schema invalid", "bad")} ${sourceBadges(d)} ${d.inPlay ? badge("Used by the campaign", "info") : ""}</div>
+        <div class="row">${statusBadge(d.reviewStatus, d.confidence)} ${d.enabled ? badge("Enabled for players", "ok") : badge("Off for players")} ${d.valid ? badge("Schema valid", "ok") : badge("Schema invalid", "bad")} ${sourceBadges(d)} ${d.inPlay ? badge("In play", "info") : ""}</div>
         <dl class="kv">
           <dt>Used for</dt><dd>${esc(d.usage || "—")}</dd>
           <dt>Last decision</dt><dd>${d.reviewedAt ? `${fmtDate(d.reviewedAt)}${d.adminNote ? ` · “${esc(d.adminNote)}”` : ""}` : `<span class="faint">None. Parser said ${esc(STATUSES.find(([s]) => s === d.fileStatus)?.[1] ?? d.fileStatus)}.</span>`}</dd>
@@ -509,6 +776,7 @@ async function openDetail(row: { kind: string; id: string; name?: string }, onCh
       }
       <div class="tabs" role="tablist">
         ${[
+          ["what", "What it does"],
           ["game", "Game JSON"],
           ["srd", "SRD text"],
           ...(d.original ? [["diff", "Compare with SRD import"]] : []),
@@ -516,6 +784,15 @@ async function openDetail(row: { kind: string; id: string; name?: string }, onCh
           .map(([k, l]) => `<button type="button" data-tab="${k}" class="${tab === k ? "on" : ""}">${l}</button>`)
           .join("")}
       </div>
+      <section data-panel="what" ${tab === "what" ? "" : "hidden"}>
+        ${engineCard(d.engine)}
+        ${
+          d.notModeledRules.length
+            ? `<div class="notice warn"><b>The SRD text says this, but the game does not apply it (${fmtNum(d.notModeledRules.length)})</b><ul class="rules">${d.notModeledRules.map((r) => `<li>${inlineMd(r)}</li>`).join("")}</ul></div>`
+            : ""
+        }
+        ${d.game ? summaryFor(d.kind, d.game) : `<p class="faint">No game JSON yet.</p>`}
+      </section>
       <section data-panel="game" ${tab === "game" ? "" : "hidden"}>
         <textarea id="dJson" class="code" spellcheck="false" style="min-height:360px">${esc(pretty(d.game))}</textarea>
         <div class="row">
@@ -528,7 +805,7 @@ async function openDetail(row: { kind: string; id: string; name?: string }, onCh
         </div>
       </section>
       <section data-panel="srd" ${tab === "srd" ? "" : "hidden"}>
-        ${srdFields(d.srd)}
+        ${srdPanel(d.srd)}
       </section>
       ${
         d.original

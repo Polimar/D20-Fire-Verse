@@ -5,9 +5,9 @@
   "id": "inflict_wounds",
   "status": "auto_ok",
   "confidence": "high",
-  "usage": "Level-up spell list for the listed classes. Combat only if a wired ability uses this id.",
+  "usage": "Level-up spell list for the listed classes. Combat runs it only when a wired ability has the same id.",
   "srd": {
-    "components": "V, S",
-    "line": "Level 1 Necromancy (Cleric)"
+    "line": "Level 1 Necromancy (Cleric)",
+    "text": "_Level 1 Necromancy (Cleric)_\n\n**Casting Time:** Action\n**Range:** Touch\n**Components:** V, S\n**Duration:** Instantaneous\n\nA creature you touch makes a Constitution saving throw, taking 2d10 Necrotic damage on a failed save or half as much damage on a successful one.\n\n_Using a Higher-Level Spell Slot._ The damage increases by 1d10 for each spell slot level above 1."
   }
 }

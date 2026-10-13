@@ -2,10 +2,10 @@
   "ambiguities": [
     {
       "field": "effects",
-      "summary": "No typed effect matched the item text.",
+      "summary": "No typed effect matches this item. The rules listed under Not modeled stay text only.",
       "options": [
         {
-          "label": "Leave effects empty",
+          "label": "Approve with no typed effects",
           "patch": {
             "effects": []
           }
@@ -21,9 +21,12 @@
   "id": "shield_of_missile_attraction",
   "status": "needs_review",
   "confidence": "low",
-  "usage": "Vendor, loot, and stash. Typed effects change AC, attack, and damage.",
+  "usage": "Vendor, loot, and stash. Equipped effects are listed on the sheet; no fight applies them yet.",
   "srd": {
     "line": "Armor (Shield), Rare (Requires Attunement)",
     "text": "_Armor (Shield), Rare (Requires Attunement)_\n\nWhile holding this Shield, you have Resistance to damage from attacks made with Ranged weapons.\n\n_Curse._ This Shield is cursed. Attuning to it curses you until you are targeted by a _Remove Curse_ spell or similar magic. Removing the Shield fails to end the curse on you. Whenever an attack with a Ranged weapon targets a creature within 10 feet of you, the curse causes you to become the target instead."
-  }
+  },
+  "notModeled": [
+    "While holding this Shield, you have Resistance to damage from attacks made with Ranged weapons."
+  ]
 }

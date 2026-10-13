@@ -1,29 +1,23 @@
 {
-  "ambiguities": [
-    {
-      "field": "effects",
-      "summary": "No typed effect matched the item text.",
-      "options": [
-        {
-          "label": "Leave effects empty",
-          "patch": {
-            "effects": []
-          }
-        }
-      ],
-      "parserChoice": 0
-    }
-  ],
-  "unparsedFields": [
-    "effects"
-  ],
+  "ambiguities": [],
+  "unparsedFields": [],
   "kind": "item",
   "id": "dragon_orb",
   "status": "needs_review",
-  "confidence": "low",
-  "usage": "Vendor, loot, and stash. Typed effects change AC, attack, and damage.",
+  "confidence": "medium",
+  "usage": "Vendor, loot, and stash. Equipped effects are listed on the sheet; no fight applies them yet.",
   "srd": {
     "line": "Wondrous Item, Artifact (Requires Attunement)",
-    "text": "_Wondrous Item, Artifact (Requires Attunement)_\n\nAn orb is an etched crystal globe about 10 inches in diameter. When used, it grows to about 20 inches in diameter, and mist swirls inside it.\n\nWhile attuned to an orb, you can take a Magic action to peer into the orb's depths. You must then make a DC 15 Charisma saving throw. On a successful save, you control the orb for as long as you remain attuned to it. On a failed save, the orb imposes the Charmed condition on you for as long as you remain attuned to it.\n\nWhile you are Charmed by the orb, you can't voluntarily end your Attunement to it, and the orb casts _Suggestion_ on you at will (save DC 18), urging you to work toward the evil ends it desires. The dragon essence within the orb might want many things: the annihilation of a particular society or organization, freedom from the orb, to spread suffering in the world, to advance the worship of Tiamat, or something else the GM decides.\n\n_Spells._ The orb has 7 charges and regains 1d4 + 3 expended charges daily at dawn. If you control the orb, you can cast one of the spells on the following table from it. The table indicates how many charges you must expend to cast the spell.\n\n<table>\n  <thead>\n    <tr>\n      <th>Spell</th>\n      <th>Charge Cost</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <td>Cure Wounds (level 9 version)</td>\n      <td>4</td>\n    </tr>\n    <tr>\n      <td>Daylight</td>\n      <td>1</td>\n    </tr>\n    <tr>\n      <td>Death Ward</td>\n      <td>2</td>\n    </tr>\n    <tr>\n      <td>Detect Magic</td>\n      <td>0</td>\n    </tr>\n    <tr>\n      <td>Scrying (save DC 18)</td>\n      <td>3</td>\n    </tr>\n  </tbody>\n</table>\n\n_Call Dragons._ While you control the orb, you can take a Magic action to cause the orb to issue a telepathic call that extends in all directions for 40 miles. Chromatic dragons in range feel compelled to come to the orb as soon as possible by the most direct route. Dragon deities such as Tiamat are unaffected by this call. Chromatic dragons drawn to the orb might be Hostile toward you for compelling them against their will. Once you have used this property, it can't be used again for 1 hour.\n\n_Destroying an Orb._ A _Dragon Orb_ has AC 20 and is destroyed if it takes damage from a +3 _Weapon_ or a _Disintegrate_ spell. Nothing else can harm it."
-  }
+    "text": "_Wondrous Item, Artifact (Requires Attunement)_\n\nAn orb is an etched crystal globe about 10 inches in diameter. When used, it grows to about 20 inches in diameter, and mist swirls inside it.\n\nWhile attuned to an orb, you can take a Magic action to peer into the orb's depths. You must then make a DC 15 Charisma saving throw. On a successful save, you control the orb for as long as you remain attuned to it. On a failed save, the orb imposes the Charmed condition on you for as long as you remain attuned to it.\n\nWhile you are Charmed by the orb, you can't voluntarily end your Attunement to it, and the orb casts _Suggestion_ on you at will (save DC 18), urging you to work toward the evil ends it desires. The dragon essence within the orb might want many things: the annihilation of a particular society or organization, freedom from the orb, to spread suffering in the world, to advance the worship of Tiamat, or something else the GM decides.\n\n_Spells._ The orb has 7 charges and regains 1d4 + 3 expended charges daily at dawn. If you control the orb, you can cast one of the spells on the following table from it. The table indicates how many charges you must expend to cast the spell.\n\n| Spell | Charge Cost |\n| --- | --- |\n| Cure Wounds (level 9 version) | 4 |\n| Daylight | 1 |\n| Death Ward | 2 |\n| Detect Magic | 0 |\n| Scrying (save DC 18) | 3 |\n\n_Call Dragons._ While you control the orb, you can take a Magic action to cause the orb to issue a telepathic call that extends in all directions for 40 miles. Chromatic dragons in range feel compelled to come to the orb as soon as possible by the most direct route. Dragon deities such as Tiamat are unaffected by this call. Chromatic dragons drawn to the orb might be Hostile toward you for compelling them against their will. Once you have used this property, it can't be used again for 1 hour.\n\n_Destroying an Orb._ A _Dragon Orb_ has AC 20 and is destroyed if it takes damage from a +3 _Weapon_ or a _Disintegrate_ spell. Nothing else can harm it."
+  },
+  "notModeled": [
+    "While attuned to an orb, you can take a Magic action to peer into the orb's depths.",
+    "You must then make a DC 15 Charisma saving throw.",
+    "On a failed save, the orb imposes the Charmed condition on you for as long as you remain attuned to it.",
+    "Spells. The orb has 7 charges and regains 1d4 + 3 expended charges daily at dawn.",
+    "If you control the orb, you can cast one of the spells on the following table from it.",
+    "The table indicates how many charges you must expend to cast the spell.",
+    "Call Dragons. While you control the orb, you can take a Magic action to cause the orb to issue a telepathic call that extends in all directions for 40 miles.",
+    "Destroying an Orb. A Dragon Orb has AC 20 and is destroyed if it takes damage from a +3 Weapon or a Disintegrate spell."
+  ]
 }

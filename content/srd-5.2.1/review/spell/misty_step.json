@@ -5,9 +5,9 @@
   "id": "misty_step",
   "status": "auto_ok",
   "confidence": "high",
-  "usage": "Level-up spell list for the listed classes. Combat only if a wired ability uses this id.",
+  "usage": "Level-up spell list for the listed classes. Combat runs it only when a wired ability has the same id.",
   "srd": {
-    "components": "V",
-    "line": "Level 2 Conjuration (Sorcerer, Warlock, Wizard)"
+    "line": "Level 2 Conjuration (Sorcerer, Warlock, Wizard)",
+    "text": "_Level 2 Conjuration (Sorcerer, Warlock, Wizard)_\n\n**Casting Time:** Bonus Action\n**Range:** Self\n**Components:** V\n**Duration:** Instantaneous\n\nBriefly surrounded by silvery mist, you teleport up to 30 feet to an unoccupied space you can see."
   }
 }

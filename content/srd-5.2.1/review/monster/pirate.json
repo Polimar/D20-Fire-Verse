@@ -1,0 +1,13 @@
+{
+  "ambiguities": [],
+  "unparsedFields": [],
+  "kind": "monster",
+  "id": "pirate",
+  "status": "auto_ok",
+  "confidence": "high",
+  "usage": "Encounters and arena fights. The engine runs the actions it can compile from the stat block.",
+  "srd": {
+    "engineId": "srd_pirate",
+    "text": "_Medium or Small Humanoid, Neutral_\n\n**AC** 14 **Initiative** +5 (15)\n\n**HP** 33 (6d8 + 6)\n\n**Speed** 30 ft.\n\n|  |  | MOD | SAVE |  |  | MOD | SAVE |  |  | MOD | SAVE |\n| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |\n| **STR** | 10 | +0 | +0 | **DEX** | 16 | +3 | +5 | **CON** | 12 | +1 | +1 |\n| **INT** | 8 | −1 | −1 | **WIS** | 12 | +1 | +1 | **CHA** | 14 | +2 | +4 |\n\n**Gear** Daggers (6), Leather Armor\n\n**Senses** Passive Perception 11\n\n**Languages** Common plus one other language\n\n**CR** 1 (XP 200; PB +2)\n\n#### Actions\n\n**_Multiattack._** The pirate makes two Dagger attacks. It can replace one attack with a use of Enthralling Panache.\n\n**_Dagger._** _Melee or Ranged Attack Roll:_ +5, reach 5 ft. or range 20/60 ft. _Hit:_ 5 (1d4 + 3) Piercing damage.\n\n**_Enthralling Panache._** _Wisdom Saving Throw:_ DC 12, one creature the pirate can see within 30 feet. _Failure:_ The target has the Charmed condition until the start of the pirate's next turn."
+  }
+}

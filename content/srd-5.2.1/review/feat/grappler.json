@@ -5,5 +5,8 @@
   "id": "grappler",
   "status": "auto_ok",
   "confidence": "high",
-  "usage": "Chosen at an ASI level or as an Epic Boon when the class table says so."
+  "usage": "Chosen at an ASI level or as an Epic Boon when the class table says so.",
+  "srd": {
+    "text": "_General Feat (Prerequisite: Level 4+, Strength or Dexterity 13+)_\n\nYou gain the following benefits.\n\n_Ability Score Increase._ Increase your Strength or Dexterity score by 1, to a maximum of 20.\n\n_Punch and Grab._ When you hit a creature with an Unarmed Strike as part of the Attack action on your turn, you can use both the Damage and the Grapple option. You can use this benefit only once per turn.\n\n_Attack Advantage._ You have Advantage on attack rolls against a creature Grappled by you.\n\n_Fast Wrestler._ You don't have to spend extra movement to move a creature Grappled by you if the creature is your size or smaller.\n\n### Fighting Style Feats"
+  }
 }

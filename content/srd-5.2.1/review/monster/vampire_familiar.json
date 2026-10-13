@@ -1,0 +1,16 @@
+{
+  "ambiguities": [],
+  "unparsedFields": [],
+  "kind": "monster",
+  "id": "vampire_familiar",
+  "status": "auto_ok",
+  "confidence": "high",
+  "usage": "Encounters and arena fights. The engine runs the actions it can compile from the stat block.",
+  "srd": {
+    "engineId": "srd_vampire_familiar",
+    "text": "_Medium or Small Humanoid, Neutral Evil_\n\n**AC** 15 **Initiative** +5 (15)\n\n**HP** 65 (10d8 + 20)\n\n**Speed** 30 ft., Climb 30 ft.\n\n|  |  | MOD | SAVE |  |  | MOD | SAVE |  |  | MOD | SAVE |\n| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |\n| **STR** | 17 | +3 | +3 | **DEX** | 16 | +3 | +5 | **CON** | 15 | +2 | +2 |\n| **INT** | 10 | +0 | +0 | **WIS** | 10 | +0 | +2 | **CHA** | 14 | +2 | +2 |\n\n**Skills** Perception +4, Persuasion +4, Stealth +7\n\n**Resistances** Necrotic\n\n**Immunities** Charmed (except from its vampire master)\n\n**Gear** Daggers (10)\n\n**Senses** Darkvision 60 ft.; Passive Perception 14\n\n**Languages** Common plus one other language\n\n**CR** 3 (XP 700; PB +2)\n\n#### Traits\n\n**_Vampiric Connection._** While the familiar and its vampire master are on the same plane of existence, the vampire can communicate with the familiar telepathically, and the vampire can perceive through the familiar's senses.\n\n#### Actions\n\n**_Multiattack._** The familiar makes two Umbral Dagger attacks.\n\n**_Umbral Dagger._** _Melee or Ranged Attack Roll:_ +5, reach 5 ft. or range 20/60 ft. _Hit:_ 5 (1d4 + 3) Piercing damage plus 7 (3d4) Necrotic damage. If the target is reduced to 0 Hit Points by this attack, the target becomes Stable but has the Poisoned condition for 1 hour. While it has the Poisoned condition, the target has the Paralyzed condition.\n\n#### Bonus Actions\n\n**_Deathless Agility._** The familiar takes the Dash or Disengage action."
+  },
+  "notModeled": [
+    "Trait “Vampiric Connection”: text only; the engine ignores it."
+  ]
+}

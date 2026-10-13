@@ -1,0 +1,16 @@
+{
+  "ambiguities": [],
+  "unparsedFields": [],
+  "kind": "monster",
+  "id": "swarm_of_crawling_claws",
+  "status": "auto_ok",
+  "confidence": "high",
+  "usage": "Encounters and arena fights. The engine runs the actions it can compile from the stat block.",
+  "srd": {
+    "engineId": "srd_swarm_of_crawling_claws",
+    "text": "_Medium Swarm of Tiny Undead, Neutral Evil_\n\n**AC** 12 **Initiative** +2 (12)\n\n**HP** 49 (11d8)\n\n**Speed** 30 ft., Climb 30 ft.\n\n|  |  | MOD | SAVE |  |  | MOD | SAVE |  |  | MOD | SAVE |\n| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |\n| **STR** | 14 | +2 | +2 | **DEX** | 14 | +2 | +2 | **CON** | 11 | +0 | +0 |\n| **INT** | 5 | −3 | −3 | **WIS** | 10 | +0 | +0 | **CHA** | 4 | −3 | −3 |\n\n**Resistances** Bludgeoning, Piercing, Slashing\n\n**Immunities** Necrotic, Poison; Charmed, Exhaustion, Frightened, Grappled, Incapacitated, Paralyzed, Petrified, Poisoned, Prone, Restrained, Stunned\n\n**Senses** Blindsight 30 ft.; Passive Perception 10\n\n**Languages** Understands Common but can't speak\n\n**CR** 3 (XP 700; PB +2)\n\n#### Traits\n\n**_Swarm._** The swarm can occupy another creature's space and vice versa, and the swarm can move through any opening large enough for a Tiny creature. The swarm can't regain Hit Points or gain Temporary Hit Points.\n\n#### Actions\n\n**_Swarm of Grasping Hands._** _Melee Attack Roll:_ +4, reach 5 ft. _Hit:_ 20 (4d8 + 2) Necrotic damage, or 11 (2d8 + 2) Necrotic damage if the swarm is Bloodied. If the target is a Medium or smaller creature, it has the Prone condition."
+  },
+  "notModeled": [
+    "Trait “Swarm”: text only; the engine ignores it."
+  ]
+}

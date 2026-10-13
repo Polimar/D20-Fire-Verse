@@ -3,11 +3,14 @@
   "unparsedFields": [],
   "kind": "item",
   "id": "ring_of_protection",
-  "status": "auto_ok",
-  "confidence": "high",
-  "usage": "Vendor, loot, and stash. Typed effects change AC, attack, and damage.",
+  "status": "needs_review",
+  "confidence": "medium",
+  "usage": "Vendor, loot, and stash. Equipped effects are listed on the sheet; no fight applies them yet.",
   "srd": {
     "line": "Ring, Rare (Requires Attunement)",
     "text": "_Ring, Rare (Requires Attunement)_\n\nYou gain a +1 bonus to Armor Class and saving throws while wearing this ring."
-  }
+  },
+  "notModeled": [
+    "+1 bonus to saving throws."
+  ]
 }

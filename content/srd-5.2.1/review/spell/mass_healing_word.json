@@ -5,9 +5,9 @@
   "id": "mass_healing_word",
   "status": "auto_ok",
   "confidence": "high",
-  "usage": "Level-up spell list for the listed classes. Combat only if a wired ability uses this id.",
+  "usage": "Level-up spell list for the listed classes. Combat runs it only when a wired ability has the same id.",
   "srd": {
-    "components": "V",
-    "line": "Level 3 Abjuration (Bard, Cleric)"
+    "line": "Level 3 Abjuration (Bard, Cleric)",
+    "text": "_Level 3 Abjuration (Bard, Cleric)_\n\n**Casting Time:** Bonus Action\n**Range:** 60 feet\n**Components:** V\n**Duration:** Instantaneous\n\nUp to six creatures of your choice that you can see within range regain Hit Points equal to 2d4 plus your spellcasting ability modifier.\n\n_Using a Higher-Level Spell Slot._ The healing increases by 1d4 for each spell slot level above 3."
   }
 }

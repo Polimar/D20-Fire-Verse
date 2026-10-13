@@ -5,9 +5,9 @@
   "id": "awaken",
   "status": "auto_ok",
   "confidence": "high",
-  "usage": "Level-up spell list for the listed classes. Combat only if a wired ability uses this id.",
+  "usage": "Level-up spell list for the listed classes. Combat runs it only when a wired ability has the same id.",
   "srd": {
-    "components": "V, S, M (an agate worth 1,000+ GP, which the spell consumes)",
-    "line": "Level 5 Transmutation (Bard, Druid)"
+    "line": "Level 5 Transmutation (Bard, Druid)",
+    "text": "_Level 5 Transmutation (Bard, Druid)_\n\n**Casting Time:** 8 hours\n**Range:** Touch\n**Components:** V, S, M (an agate worth 1,000+ GP, which the spell consumes)\n**Duration:** Instantaneous\n\nYou spend the casting time tracing magical pathways within a precious gemstone, and then touch the target. The target must be either a Beast or Plant creature with an Intelligence of 3 or less or a natural plant that isn't a creature. The target gains\nan Intelligence of 10 and the ability to speak one language you know. If the target is a natural plant, it becomes a Plant creature and gains the ability to move its limbs, roots, vines, creepers, and so forth, and it gains senses similar to a human's. The GM chooses statistics appropriate for the awakened Plant, such as the statistics for the **Awakened Shrub** or **Awakened Tree** in \"Monsters.\"\n\nThe awakened target has the Charmed condition for 30 days or until you or your allies deal damage to it. When that condition ends, the awakened creature chooses its attitude toward you."
   }
 }

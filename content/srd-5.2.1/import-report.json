@@ -6,8 +6,9 @@
   "species": 9,
   "backgrounds": 4,
   "feats": 17,
-  "gear": 38,
-  "magic": 258,
-  "monsters": 177,
-  "needsReview": 217
+  "gear": 51,
+  "magic": 276,
+  "monsters": 235,
+  "needsReview": 353,
+  "notModeled": 404
 }

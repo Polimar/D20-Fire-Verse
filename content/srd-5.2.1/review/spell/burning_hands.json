@@ -5,9 +5,9 @@
   "id": "burning_hands",
   "status": "auto_ok",
   "confidence": "high",
-  "usage": "Level-up spell list for the listed classes. Combat only if a wired ability uses this id.",
+  "usage": "Level-up spell list for the listed classes. Combat runs it only when a wired ability has the same id.",
   "srd": {
-    "components": "V, S",
-    "line": "Level 1 Evocation (Sorcerer, Wizard)"
+    "line": "Level 1 Evocation (Sorcerer, Wizard)",
+    "text": "_Level 1 Evocation (Sorcerer, Wizard)_\n\n**Casting Time:** Action\n**Range:** Self\n**Components:** V, S\n**Duration:** Instantaneous\n\nA thin sheet of flames shoots forth from you. Each creature in a 15-foot Cone makes a Dexterity saving throw, taking 3d6 Fire damage on a failed save or half as much damage on a successful one.\n\nFlammable objects in the Cone that aren't being worn or carried start burning.\n\n_Using a Higher-Level Spell Slot._ The damage increases by 1d6 for each spell slot level above 1."
   }
 }

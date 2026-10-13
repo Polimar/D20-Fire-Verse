@@ -3,7 +3,16 @@
   "unparsedFields": [],
   "kind": "monster",
   "id": "ettercap",
-  "status": "auto_ok",
-  "confidence": "high",
-  "usage": "Encounters when enabled. Combat uses a wired ability with the same id when one exists."
+  "status": "needs_review",
+  "confidence": "medium",
+  "usage": "Encounters and arena fights. The engine runs the actions it can compile from the stat block.",
+  "srd": {
+    "engineId": "srd_ettercap",
+    "text": "_Medium Monstrosity, Neutral Evil_\n\n**AC** 13 **Initiative** +2 (12)\n\n**HP** 44 (8d8 + 8)\n\n**Speed** 30 ft., Climb 30 ft.\n\n|  |  | MOD | SAVE |  |  | MOD | SAVE |  |  | MOD | SAVE |\n| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |\n| **STR** | 14 | +2 | +2 | **DEX** | 15 | +2 | +2 | **CON** | 13 | +1 | +1 |\n| **INT** | 7 | −2 | −2 | **WIS** | 12 | +1 | +1 | **CHA** | 8 | −1 | −1 |\n\n**Skills** Perception +3, Stealth +4, Survival +3\n\n**Senses** Darkvision 60 ft.; Passive Perception 13\n\n**Languages** None\n\n**CR** 2 (XP 450; PB +2)\n\n#### Traits\n\n**_Spider Climb._** The ettercap can climb difficult surfaces, including along ceilings, without needing to make an ability check.\n\n**_Web Walker._** The ettercap ignores movement restrictions caused by webs, and the ettercap knows the location of any other creature in contact with the same web.\n\n#### Actions\n\n**_Multiattack._** The ettercap makes one Bite attack and one Claw attack.\n\n**_Bite._** _Melee Attack Roll:_ +4, reach 5 ft. _Hit:_ 5 (1d6 + 2) Piercing damage plus 2 (1d4) Poison damage, and the target has the Poisoned condition until the start of the ettercap's next turn.\n\n**_Claw._** _Melee Attack Roll:_ +4, reach 5 ft. _Hit:_ 7 (2d4 + 2) Slashing damage.\n\n**_Web Strand (Recharge 5–6)._** _Dexterity Saving Throw:_ DC 12, one Large or smaller creature the ettercap can see within 30 feet. _Failure:_ The target has the Restrained condition until the web is destroyed (AC 10; HP 5; Vulnerability to Fire damage; Immunity to Bludgeoning, Poison, and Psychic damage).\n\n#### Bonus Actions\n\n**_Reel._** The ettercap pulls one creature within 30 feet of itself that is Restrained by its Web Strand up to 25 feet straight toward itself."
+  },
+  "notModeled": [
+    "Bonus action “Reel”: the combat engine does not run it.",
+    "Trait “Spider Climb”: text only; the engine ignores it.",
+    "Trait “Web Walker”: text only; the engine ignores it."
+  ]
 }

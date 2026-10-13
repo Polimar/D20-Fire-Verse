@@ -5,9 +5,9 @@
   "id": "cone_of_cold",
   "status": "auto_ok",
   "confidence": "high",
-  "usage": "Level-up spell list for the listed classes. Combat only if a wired ability uses this id.",
+  "usage": "Level-up spell list for the listed classes. Combat runs it only when a wired ability has the same id.",
   "srd": {
-    "components": "V, S, M (a small crystal or glass cone)",
-    "line": "Level 5 Evocation (Druid, Sorcerer, Wizard)"
+    "line": "Level 5 Evocation (Druid, Sorcerer, Wizard)",
+    "text": "_Level 5 Evocation (Druid, Sorcerer, Wizard)_\n\n**Casting Time:** Action\n**Range:** Self\n**Components:** V, S, M (a small crystal or glass cone)\n**Duration:** Instantaneous\n\nYou unleash a blast of cold air. Each creature in a 60-foot Cone originating from you makes a Constitution saving throw, taking 8d8 Cold damage on a failed save or half as much damage on a successful one. A creature killed by this spell becomes a frozen statue until it thaws.\n\n_Using a Higher-Level Spell Slot._ The damage increases by 1d8 for each spell slot level above 5."
   }
 }

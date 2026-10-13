@@ -3,7 +3,16 @@
   "unparsedFields": [],
   "kind": "monster",
   "id": "wraith",
-  "status": "auto_ok",
-  "confidence": "high",
-  "usage": "Encounters when enabled. Combat uses a wired ability with the same id when one exists."
+  "status": "needs_review",
+  "confidence": "medium",
+  "usage": "Encounters and arena fights. The engine runs the actions it can compile from the stat block.",
+  "srd": {
+    "engineId": "srd_wraith",
+    "text": "_Medium or Small Undead, Neutral Evil_\n\n**AC** 13 **Initiative** +3 (13)\n\n**HP** 67 (9d8 + 27)\n\n**Speed** 5 ft., Fly 60 ft. (hover)\n\n|  |  | MOD | SAVE |  |  | MOD | SAVE |  |  | MOD | SAVE |\n| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |\n| **STR** | 6 | -2 | -2 | **DEX** | 16 | +3 | +3 | **CON** | 16 | +3 | +3 |\n| **INT** | 12 | +1 | +1 | **WIS** | 14 | +2 | +2 | **CHA** | 15 | +2 | +2 |\n\n**Resistances** Acid, Bludgeoning, Cold, Fire, Piercing, Slashing\n\n**Immunities** Necrotic, Poison; Charmed, Exhaustion, Grappled, Paralyzed, Petrified, Poisoned, Prone, Restrained, Unconscious\n\n**Senses** Darkvision 60 ft.; Passive Perception 12\n\n**Languages** Common plus two other languages\n\n**CR** 5 (XP 1,800; PB +3)\n\n#### Traits\n\n**_Incorporeal Movement._** The wraith can move through other creatures and objects as if they were Difficult Terrain. It takes 5 (1d10) Force damage if it ends its turn inside an object.\n\n**_Sunlight Sensitivity._** While in sunlight, the wraith has Disadvantage on ability checks and attack rolls.\n\n#### Actions\n\n**_Life Drain._** _Melee Attack Roll:_ +6, reach 5 ft. _Hit:_ 21 (4d8 + 3) Necrotic damage. If the target is a creature, its Hit Point maximum decreases by an amount equal to the damage taken.\n\n**_Create Specter._** The wraith targets a Humanoid corpse within 10 feet of itself that has been dead for no longer than 1 minute. The target's spirit rises as a **Specter** in the space of its corpse or in the nearest unoccupied space. The specter is under the wraith's control. The wraith can have no more than seven specters under its control at a time."
+  },
+  "notModeled": [
+    "Action “Create Specter”: the combat engine does not run it.",
+    "Trait “Incorporeal Movement”: text only; the engine ignores it.",
+    "Trait “Sunlight Sensitivity”: text only; the engine ignores it."
+  ]
 }

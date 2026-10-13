@@ -5,9 +5,9 @@
   "id": "barkskin",
   "status": "auto_ok",
   "confidence": "high",
-  "usage": "Level-up spell list for the listed classes. Combat only if a wired ability uses this id.",
+  "usage": "Level-up spell list for the listed classes. Combat runs it only when a wired ability has the same id.",
   "srd": {
-    "components": "",
-    "line": "Level 2 Transmutation (Druid, Ranger)"
+    "line": "Level 2 Transmutation (Druid, Ranger)",
+    "text": "_Level 2 Transmutation (Druid, Ranger)_\n\n**Casting Time:** Bonus Action\n**Range:** Touch\n\n**Component:** V, S, M (a handful of bark)\n**Duration:** 1 hour\n\nYou touch a willing creature. Until the spell ends, the target's skin assumes a bark-like appearance, and the target has an Armor Class of 17 if its AC is lower than that."
   }
 }

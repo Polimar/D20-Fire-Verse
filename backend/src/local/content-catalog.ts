@@ -43,6 +43,10 @@ export type CatalogRow = {
   usage: string;
   source: "srd" | "custom" | "queue";
   edited: boolean;
+  /** One line of mechanics for the list: dice, AC, effects. */
+  summary: string;
+  /** SRD rules this entry states that the game does not apply. */
+  notModeled: number;
 };
 
 export const CONTENT_KINDS = ["class", "subclass", "species", "background", "spell", "feat", "item", "monster"] as const;
@@ -77,6 +81,7 @@ type ReviewFile = {
   unparsedFields?: string[];
   usage?: string;
   srd?: Record<string, unknown>;
+  notModeled?: string[];
   ambiguities?: unknown[];
   adminNote?: string;
 };
@@ -280,7 +285,102 @@ function toRow(row: Stored, on: Set<string>, saved: Map<string, Resolution>): Ca
     source: row.source,
     edited: row.edited,
     inPlay: enabled && row.valid && reviewAllowsPlay(status),
+    summary: summarize(row.kind, row.raw),
+    notModeled: row.review?.notModeled?.length ?? 0,
   };
+}
+
+type Loose = Record<string, unknown>;
+
+function list<T>(value: unknown): T[] {
+  return Array.isArray(value) ? (value as T[]) : [];
+}
+
+function dmg(parts: unknown): string {
+  return list<{ dice?: string; damageType?: string }>(parts)
+    .map((p) => `${p.dice ?? "?"} ${p.damageType ?? ""}`.trim())
+    .join(" + ");
+}
+
+function effectShort(e: Loose): string {
+  switch (e.kind) {
+    case "ac_bonus":
+      return `+${String(e.amount)} AC`;
+    case "attack_bonus":
+      return `+${String(e.amount)} attack`;
+    case "damage_bonus":
+      return `+${String(e.amount)} damage`;
+    case "on_hit_rider":
+      return `+${String(e.damage)} ${String(e.damageType)} on hit`;
+    case "resistance":
+      return `resist ${String(e.damageType)}`;
+    case "immunity":
+      return `immune ${String(e.damageType)}`;
+    case "grant_spell":
+      return `casts ${String(e.spellId).replace(/_/g, " ")}`;
+    case "grant_feature":
+      return `feature ${String(e.featureId)}`;
+    case "stat_set":
+      return `${String(e.ability).toUpperCase()} ${String(e.score)}`;
+    case "stat_increase_cap":
+      return `${String(e.ability).toUpperCase()} cap ${String(e.cap)}`;
+    default:
+      return String(e.kind ?? "?");
+  }
+}
+
+/** A list cell, not a rules engine: it reads whatever shape the entry has and never throws. */
+function summarize(kind: string, raw: unknown): string {
+  if (!raw || typeof raw !== "object") return "";
+  const e = raw as Loose;
+  switch (kind) {
+    case "monster": {
+      const actions = list<Loose>(e.actions).filter((a) => a.name !== "Multiattack");
+      const first = actions.find((a) => a.attack || a.save);
+      const lead = first
+        ? `${String(first.name)} ${first.attack ? `+${String((first.attack as Loose).bonus)}` : `DC ${String((first.save as Loose).dc)}`} ${dmg(first.damage)}`.trim()
+        : "";
+      return [`CR ${String(e.cr ?? "?")}`, `AC ${String(e.ac ?? "?")}`, `HP ${String(e.hp ?? "?")}${e.hitDice ? ` (${String(e.hitDice)})` : ""}`, `${actions.length} actions`, lead].filter(Boolean).join(" · ");
+    }
+    case "spell": {
+      const m = (e.mechanics ?? {}) as Loose;
+      const save = m.save as Loose | undefined;
+      const area = m.area as Loose | undefined;
+      return [
+        Number(e.level) === 0 ? "Cantrip" : `L${String(e.level)}`,
+        m.attack ? `${String(m.attack)} attack` : save ? `${String(save.ability).toUpperCase()} save` : "",
+        dmg(m.damage),
+        m.heal ? `heals ${String(m.heal)}` : "",
+        area ? `${String(area.sizeFt)} ft ${String(area.shape)}` : "",
+        e.concentration ? "conc." : "",
+      ]
+        .filter(Boolean)
+        .join(" · ");
+    }
+    case "item": {
+      const weapon = e.weapon as Loose | undefined;
+      const armor = e.armor as Loose | undefined;
+      return [
+        weapon ? `${String(weapon.damage)} ${String(weapon.damageType)}` : "",
+        armor ? (armor.category === "shield" ? `+${String(armor.baseAc)} AC` : `AC ${String(armor.baseAc)}${armor.dexCap === null ? " + DEX" : Number(armor.dexCap) > 0 ? ` + DEX (max ${String(armor.dexCap)})` : ""}`) : "",
+        ...list<Loose>(e.effects).filter((x) => !(armor?.category === "shield" && x.kind === "ac_bonus")).map(effectShort),
+      ]
+        .filter(Boolean)
+        .join(" · ") || "no typed effects";
+    }
+    case "class":
+      return `d${String(e.hitDie ?? "?")} · saves ${list<string>(e.saves).join("/").toUpperCase()} · ${String(e.caster ?? "none")} caster`;
+    case "species":
+      return `${String(e.size ?? "")} · ${String(e.speedFt ?? "?")} ft · ${list(e.traits).length} traits`;
+    case "background":
+      return list<string>(e.skills).join(", ").replace(/_/g, " ");
+    case "subclass":
+      return `${String(e.classId ?? "")} · from level ${String(e.level ?? "?")}`;
+    case "feat":
+      return list<string>(e.prerequisites).join("; ") || (e.repeatable ? "repeatable" : "");
+    default:
+      return "";
+  }
 }
 
 export function listCatalog(): CatalogRow[] {
@@ -302,6 +402,7 @@ export type CatalogQuery = {
   enabled?: string;
   valid?: string;
   source?: string;
+  gaps?: string;
   sort?: string;
   dir?: string;
   page?: number;
@@ -323,6 +424,8 @@ export function queryCatalog(query: CatalogQuery) {
     if (query.source === "edited" && !row.edited) return false;
     if (query.source === "custom" && row.source !== "custom") return false;
     if (query.source === "queue" && row.source !== "queue") return false;
+    if (query.gaps === "yes" && !row.notModeled) return false;
+    if (query.gaps === "no" && row.notModeled) return false;
     return true;
   };
   const kinds: Record<string, number> = {};
@@ -418,6 +521,7 @@ export function contentDetail(kind: string, id: string): Record<string, unknown>
     game: entry.raw ?? null,
     original,
     srd: entry.review?.srd ?? {},
+    notModeledRules: entry.review?.notModeled ?? [],
     ambiguities: entry.review?.ambiguities ?? [],
     parsedUnparsedFields: entry.review?.unparsedFields ?? [],
     adminNote: saved?.note ?? entry.review?.adminNote ?? "",

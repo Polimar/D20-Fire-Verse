@@ -5,9 +5,9 @@
   "id": "fly",
   "status": "auto_ok",
   "confidence": "high",
-  "usage": "Level-up spell list for the listed classes. Combat only if a wired ability uses this id.",
+  "usage": "Level-up spell list for the listed classes. Combat runs it only when a wired ability has the same id.",
   "srd": {
-    "components": "V, S, M (a feather)",
-    "line": "Level 3 Transmutation (Sorcerer, Warlock, Wizard)"
+    "line": "Level 3 Transmutation (Sorcerer, Warlock, Wizard)",
+    "text": "_Level 3 Transmutation (Sorcerer, Warlock, Wizard)_\n\n**Casting Time:** Action\n**Range:** Touch\n**Components:** V, S, M (a feather)\n**Duration:** Concentration, up to 10 minutes\n\nYou touch a willing creature. For the duration, the target gains a Fly Speed of 60 feet and can hover. When the spell ends, the target falls if it is still aloft unless it can stop the fall.\n\n_Using a Higher-Level Spell Slot._ You can target one additional creature for each spell slot level above 3."
   }
 }

@@ -5,9 +5,9 @@
   "id": "shield",
   "status": "auto_ok",
   "confidence": "high",
-  "usage": "Level-up spell list for the listed classes. Combat only if a wired ability uses this id.",
+  "usage": "Level-up spell list for the listed classes. Combat runs it only when a wired ability has the same id.",
   "srd": {
-    "components": "V, S",
-    "line": "Level 1 Abjuration (Sorcerer, Wizard)"
+    "line": "Level 1 Abjuration (Sorcerer, Wizard)",
+    "text": "_Level 1 Abjuration (Sorcerer, Wizard)_\n\n**Casting Time:** Reaction, which you take when you are hit by an attack roll or targeted by the _Magic Missile_ spell\n**Range:** Self\n**Components:** V, S\n**Duration:** 1 round\n\nAn imperceptible barrier of magical force protects you. Until the start of your next turn, you have a +5\nbonus to AC, including against the triggering attack, and you take no damage from _Magic Missile_."
   }
 }

@@ -142,6 +142,42 @@ export const backgroundDef = z
   })
   .strict();
 
+/** A dice expression as written in the SRD, e.g. "2d6 + 5" stored as "2d6+5". Flat numbers are allowed. */
+export const diceExpr = z.string().regex(/^(\d+d\d+([+-]\d+)?|\d+)$/);
+
+export const damagePart = z
+  .object({
+    dice: diceExpr,
+    damageType: z.string().min(1),
+    /** The SRD's printed average, kept so the admin can check the dice. */
+    average: z.number().int().nonnegative().optional(),
+  })
+  .strict();
+
+export const areaShape = z.enum(["sphere", "cone", "cube", "line", "cylinder", "emanation"]);
+
+export const spellMechanics = z
+  .object({
+    attack: z.enum(["melee", "ranged"]).optional(),
+    save: z
+      .object({ ability: abilityKey, onSuccess: z.enum(["half", "none", "special"]) })
+      .strict()
+      .optional(),
+    damage: z.array(damagePart).optional(),
+    heal: diceExpr.optional(),
+    healAddsModifier: z.boolean().optional(),
+    area: z.object({ shape: areaShape, sizeFt: z.number().int().positive() }).strict().optional(),
+    rangeFt: z.number().int().nonnegative().optional(),
+    conditions: z.array(z.string().min(1)).optional(),
+    /** Extra dice per slot level above the spell's own level. */
+    upcastPerSlot: diceExpr.optional(),
+    upcastText: z.string().min(1).optional(),
+    /** Cantrip dice at character levels 1, 5, 11, 17. */
+    cantripDice: z.array(diceExpr).length(4).optional(),
+  })
+  .strict();
+export type SpellMechanics = z.infer<typeof spellMechanics>;
+
 export const spellDef = z
   .object({
     id: z.string().min(1),
@@ -153,6 +189,13 @@ export const spellDef = z
     range: z.string().min(1),
     duration: z.string().min(1),
     description: z.string().min(1),
+    components: z
+      .object({ verbal: z.boolean(), somatic: z.boolean(), material: z.string().min(1).optional() })
+      .strict()
+      .optional(),
+    ritual: z.boolean().optional(),
+    concentration: z.boolean().optional(),
+    mechanics: spellMechanics.optional(),
   })
   .strict();
 export type SpellDef = z.infer<typeof spellDef>;
@@ -178,9 +221,55 @@ export const itemDef = z
     effects: z.array(effectDef),
     weaponMastery: z.enum(["cleave", "graze", "nick", "push", "sap", "slow", "topple", "vex"]).optional(),
     priceGold: z.number().int().nonnegative().optional(),
+    weapon: z
+      .object({
+        category: z.enum(["simple_melee", "simple_ranged", "martial_melee", "martial_ranged"]),
+        damage: diceExpr,
+        damageType: z.string().min(1),
+        properties: z.array(z.string().min(1)),
+        rangeFt: z.object({ normal: z.number().int().positive(), long: z.number().int().positive() }).strict().optional(),
+        versatile: diceExpr.optional(),
+      })
+      .strict()
+      .optional(),
+    armor: z
+      .object({
+        category: z.enum(["light", "medium", "heavy", "shield"]),
+        baseAc: z.number().int().nonnegative(),
+        /** null means the full Dexterity modifier; 0 means none. */
+        dexCap: z.number().int().nonnegative().nullable(),
+        strength: z.number().int().positive().optional(),
+        stealthDisadvantage: z.boolean(),
+      })
+      .strict()
+      .optional(),
+    charges: z.number().int().positive().optional(),
+    weightLb: z.number().nonnegative().optional(),
   })
   .strict();
 export type ItemDef = z.infer<typeof itemDef>;
+
+export const monsterAction = z
+  .object({
+    name: z.string().min(1),
+    text: z.string(),
+    attack: z
+      .object({
+        kind: z.enum(["melee", "ranged", "melee_or_ranged"]),
+        bonus: z.number().int(),
+        reachFt: z.number().int().positive().optional(),
+        rangeFt: z.object({ normal: z.number().int().positive(), long: z.number().int().positive().optional() }).strict().optional(),
+      })
+      .strict()
+      .optional(),
+    save: z.object({ ability: abilityKey, dc: z.number().int().positive(), onSuccess: z.enum(["half", "none", "special"]) }).strict().optional(),
+    damage: z.array(damagePart).optional(),
+    conditions: z.array(z.string().min(1)).optional(),
+    recharge: z.string().min(1).optional(),
+    uses: z.string().min(1).optional(),
+  })
+  .strict();
+export type MonsterAction = z.infer<typeof monsterAction>;
 
 export const monsterDef = z
   .object({
@@ -194,7 +283,26 @@ export const monsterDef = z
     cr: z.string().min(1),
     crValue: z.number().nonnegative(),
     xp: z.number().int().nonnegative(),
-    actions: z.array(z.string()).optional(),
+    group: z.string().min(1).optional(),
+    hitDice: diceExpr.optional(),
+    initiative: z.number().int().optional(),
+    speed: z.string().min(1).optional(),
+    abilities: abilityScores.optional(),
+    saves: z.record(abilityKey, z.number().int()).optional(),
+    skills: z.string().min(1).optional(),
+    resistances: z.string().min(1).optional(),
+    vulnerabilities: z.string().min(1).optional(),
+    immunities: z.string().min(1).optional(),
+    gear: z.string().min(1).optional(),
+    senses: z.string().min(1).optional(),
+    languages: z.string().min(1).optional(),
+    proficiencyBonus: z.number().int().positive().optional(),
+    traits: z.array(monsterAction).optional(),
+    actions: z.array(monsterAction).optional(),
+    bonusActions: z.array(monsterAction).optional(),
+    reactions: z.array(monsterAction).optional(),
+    legendaryActions: z.array(monsterAction).optional(),
+    legendaryUses: z.number().int().positive().optional(),
   })
   .strict();
 export type MonsterDef = z.infer<typeof monsterDef>;
@@ -254,6 +362,8 @@ export const contentReviewBundle = z
     unparsedFields: z.array(z.string()).default([]),
     usage: z.string(),
     srd: z.record(z.string(), z.unknown()).optional(),
+    /** Rules the SRD text states that the typed schema cannot carry. The game ignores them. */
+    notModeled: z.array(z.string()).optional(),
     ambiguities: z
       .array(
         z

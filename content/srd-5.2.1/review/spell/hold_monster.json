@@ -5,9 +5,9 @@
   "id": "hold_monster",
   "status": "auto_ok",
   "confidence": "high",
-  "usage": "Level-up spell list for the listed classes. Combat only if a wired ability uses this id.",
+  "usage": "Level-up spell list for the listed classes. Combat runs it only when a wired ability has the same id.",
   "srd": {
-    "components": "V, S, M (a straight piece of iron)",
-    "line": "Level 5 Enchantment (Bard, Sorcerer, Warlock, Wizard)"
+    "line": "Level 5 Enchantment (Bard, Sorcerer, Warlock, Wizard)",
+    "text": "_Level 5 Enchantment (Bard, Sorcerer, Warlock, Wizard)_\n\n**Casting Time:** Action\n**Range:** 90 feet\n**Components:** V, S, M (a straight piece of iron)\n**Duration:** Concentration, up to 1 minute\n\nChoose a creature that you can see within range. The target must succeed on a Wisdom saving throw or have the Paralyzed condition for the duration. At the end of each of its turns, the target repeats the save, ending the spell on itself on a success.\n\n_Using a Higher-Level Spell Slot._ You can target one additional creature for each spell slot level above 5."
   }
 }

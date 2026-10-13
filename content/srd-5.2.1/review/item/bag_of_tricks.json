@@ -2,10 +2,10 @@
   "ambiguities": [
     {
       "field": "effects",
-      "summary": "No typed effect matched the item text.",
+      "summary": "No typed effect matches this item. The rules listed under Not modeled stay text only.",
       "options": [
         {
-          "label": "Leave effects empty",
+          "label": "Approve with no typed effects",
           "patch": {
             "effects": []
           }
@@ -21,9 +21,14 @@
   "id": "bag_of_tricks",
   "status": "needs_review",
   "confidence": "low",
-  "usage": "Vendor, loot, and stash. Typed effects change AC, attack, and damage.",
+  "usage": "Vendor, loot, and stash. Equipped effects are listed on the sheet; no fight applies them yet.",
   "srd": {
     "line": "Wondrous Item, Uncommon",
-    "text": "_Wondrous Item, Uncommon_\n\nThis bag made from gray, rust, or tan cloth appears empty. Reaching inside the bag, however, reveals the presence of a small, fuzzy object.\n\nYou can take a Magic action to pull the fuzzy object from the bag and throw it up to 20 feet. When the object lands, it transforms into a creature you determine by rolling on the table that corresponds to the bag's color. See \"Monsters\" for the creature's stat block. The creature vanishes at the next dawn or when it is reduced to 0 Hit Points.\n\nThe creature is Friendly to you and your allies, and it acts immediately after you on your Initiative count. You can take a Bonus Action to command how the creature moves and what action it takes on its next turn, such as attacking an enemy. In the absence of such orders, the creature acts in a fashion appropriate to its nature.\n\nOnce three fuzzy objects have been pulled from the bag, the bag can't be used again until the next dawn.\n\n**Gray Bag of Tricks**\n\n<table>\n  <thead>\n    <tr>\n      <th>1d8</th>\n      <th>Creature</th>\n      <th>1d8</th>\n      <th>Creature</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <td>1</td>\n      <td>Weasel</td>\n      <td>5</td>\n      <td>Panther</td>\n    </tr>\n    <tr>\n      <td>2</td>\n      <td>Giant Rat</td>\n      <td>6</td>\n      <td>Giant Badger</td>\n    </tr>\n    <tr>\n      <td>3</td>\n      <td>Badger</td>\n      <td>7</td>\n      <td>Dire Wolf</td>\n    </tr>\n    <tr>\n      <td>4</td>\n      <td>Boar</td>\n      <td>8</td>\n      <td>Giant Elk</td>\n    </tr>\n  </tbody>\n</table>\n\n**Rust Bag of Tricks**\n\n<table>\n  <thead>\n    <tr>\n      <th>1d8</th>\n      <th>Creature</th>\n      <th>1d8</th>\n      <th>Creature</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <td>1</td>\n      <td>Rat</td>\n      <td>5</td>\n      <td>Giant Goat</td>\n    </tr>\n    <tr>\n      <td>2</td>\n      <td>Owl</td>\n      <td>6</td>\n      <td>Giant Boar</td>\n    </tr>\n    <tr>\n      <td>3</td>\n      <td>Mastiff</td>\n      <td>7</td>\n      <td>Lion</td>\n    </tr>\n    <tr>\n      <td>4</td>\n      <td>Goat</td>\n      <td>8</td>\n      <td>Brown Bear</td>\n    </tr>\n  </tbody>\n</table>\n\n**Tan Bag of Tricks**\n\n<table>\n  <thead>\n    <tr>\n      <th>1d8</th>\n      <th>Creature</th>\n      <th>1d8</th>\n      <th>Creature</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <td>1</td>\n      <td>Jackal</td>\n      <td>5</td>\n      <td>Black Bear</td>\n    </tr>\n    <tr>\n      <td>2</td>\n      <td>Ape</td>\n      <td>6</td>\n      <td>Giant Weasel</td>\n    </tr>\n    <tr>\n      <td>3</td>\n      <td>Baboon</td>\n      <td>7</td>\n      <td>Giant Hyena</td>\n    </tr>\n    <tr>\n      <td>4</td>\n      <td>Axe Beak</td>\n      <td>8</td>\n      <td>Tiger</td>\n    </tr>\n  </tbody>\n</table>"
-  }
+    "text": "_Wondrous Item, Uncommon_\n\nThis bag made from gray, rust, or tan cloth appears empty. Reaching inside the bag, however, reveals the presence of a small, fuzzy object.\n\nYou can take a Magic action to pull the fuzzy object from the bag and throw it up to 20 feet. When the object lands, it transforms into a creature you determine by rolling on the table that corresponds to the bag's color. See \"Monsters\" for the creature's stat block. The creature vanishes at the next dawn or when it is reduced to 0 Hit Points.\n\nThe creature is Friendly to you and your allies, and it acts immediately after you on your Initiative count. You can take a Bonus Action to command how the creature moves and what action it takes on its next turn, such as attacking an enemy. In the absence of such orders, the creature acts in a fashion appropriate to its nature.\n\nOnce three fuzzy objects have been pulled from the bag, the bag can't be used again until the next dawn.\n\n**Gray Bag of Tricks**\n\n| 1d8 | Creature | 1d8 | Creature |\n| --- | --- | --- | --- |\n| 1 | Weasel | 5 | Panther |\n| 2 | Giant Rat | 6 | Giant Badger |\n| 3 | Badger | 7 | Dire Wolf |\n| 4 | Boar | 8 | Giant Elk |\n\n**Rust Bag of Tricks**\n\n| 1d8 | Creature | 1d8 | Creature |\n| --- | --- | --- | --- |\n| 1 | Rat | 5 | Giant Goat |\n| 2 | Owl | 6 | Giant Boar |\n| 3 | Mastiff | 7 | Lion |\n| 4 | Goat | 8 | Brown Bear |\n\n**Tan Bag of Tricks**\n\n| 1d8 | Creature | 1d8 | Creature |\n| --- | --- | --- | --- |\n| 1 | Jackal | 5 | Black Bear |\n| 2 | Ape | 6 | Giant Weasel |\n| 3 | Baboon | 7 | Giant Hyena |\n| 4 | Axe Beak | 8 | Tiger |"
+  },
+  "notModeled": [
+    "You can take a Magic action to pull the fuzzy object from the bag and throw it up to 20 feet.",
+    "The creature vanishes at the next dawn or when it is reduced to 0 Hit Points.",
+    "You can take a Bonus Action to command how the creature moves and what action it takes on its next turn, such as attacking an enemy."
+  ]
 }

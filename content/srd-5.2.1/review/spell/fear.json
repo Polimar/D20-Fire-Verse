@@ -5,9 +5,9 @@
   "id": "fear",
   "status": "auto_ok",
   "confidence": "high",
-  "usage": "Level-up spell list for the listed classes. Combat only if a wired ability uses this id.",
+  "usage": "Level-up spell list for the listed classes. Combat runs it only when a wired ability has the same id.",
   "srd": {
-    "components": "V, S, M (a white feather)",
-    "line": "Level 3 Illusion (Bard, Sorcerer, Warlock, Wizard)"
+    "line": "Level 3 Illusion (Bard, Sorcerer, Warlock, Wizard)",
+    "text": "_Level 3 Illusion (Bard, Sorcerer, Warlock, Wizard)_\n\n**Casting Time:** Action\n**Range:** Self\n**Components:** V, S, M (a white feather)\n**Duration:** Concentration, up to 1 minute\n\nEach creature in a 30-foot Cone must succeed on a Wisdom saving throw or drop whatever it is holding and have the Frightened condition for the duration.\n\nA Frightened creature takes the Dash action and moves away from you by the safest route on each of its turns unless there is nowhere to move. If the creature ends its turn in a space where it doesn't have line of sight to you, the creature makes a Wisdom saving throw. On a successful save, the spell ends on that creature."
   }
 }

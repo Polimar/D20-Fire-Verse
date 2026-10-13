@@ -1,0 +1,18 @@
+{
+  "ambiguities": [],
+  "unparsedFields": [],
+  "kind": "item",
+  "id": "splint_armor",
+  "status": "needs_review",
+  "confidence": "medium",
+  "usage": "Vendor, loot, and stash. Equipped effects are listed on the sheet; no fight applies them yet.",
+  "srd": {
+    "line": "Heavy armor",
+    "text": "| Armor | AC | Strength | Stealth | Weight | Cost |\n| --- | --- | --- | --- | --- | --- |\n| Splint Armor | 17 | Str 15 | Disadvantage | 60 lb. | 200 GP |"
+  },
+  "notModeled": [
+    "Base AC 17: the loadout starts from AC 10 and adds bonuses, so the armor's own AC is not used yet.",
+    "Strength 15 or Speed drops by 10 feet.",
+    "Disadvantage on Dexterity (Stealth) checks."
+  ]
+}

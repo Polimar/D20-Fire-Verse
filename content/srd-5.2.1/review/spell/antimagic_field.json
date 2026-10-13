@@ -5,9 +5,9 @@
   "id": "antimagic_field",
   "status": "auto_ok",
   "confidence": "high",
-  "usage": "Level-up spell list for the listed classes. Combat only if a wired ability uses this id.",
+  "usage": "Level-up spell list for the listed classes. Combat runs it only when a wired ability has the same id.",
   "srd": {
-    "components": "V, S, M (iron filings)",
-    "line": "Level 8 Abjuration (Cleric, Wizard)"
+    "line": "Level 8 Abjuration (Cleric, Wizard)",
+    "text": "_Level 8 Abjuration (Cleric, Wizard)_\n\n**Casting Time:** Action\n**Range:** Self\n**Components:** V, S, M (iron filings)\n**Duration:** Concentration, up to 1 hour\n\nAn aura of antimagic surrounds you in 10-foot Emanation. No one can cast spells, take Magic actions, or create other magical effects inside the aura, and those things can't target or otherwise affect anything inside it. Magical properties of magic items don't work inside the aura or on anything inside it.\n\nAreas of effect created by spells or other magic can't extend into the aura, and no one can teleport into or out of it or use planar travel there. Portals close temporarily while in the aura.\n\nOngoing spells, except those cast by an Artifact or a deity, are suppressed in the area. While an effect is suppressed, it doesn't function, but the time it spends suppressed counts against its duration.\n\n_Dispel Magic_ has no effect on the aura, and the auras created by different _Antimagic Field_ spells don't nullify each other."
   }
 }

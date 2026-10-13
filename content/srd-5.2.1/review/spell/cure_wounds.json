@@ -5,9 +5,9 @@
   "id": "cure_wounds",
   "status": "auto_ok",
   "confidence": "high",
-  "usage": "Level-up spell list for the listed classes. Combat only if a wired ability uses this id.",
+  "usage": "Level-up spell list for the listed classes. Combat runs it only when a wired ability has the same id.",
   "srd": {
-    "components": "V, S",
-    "line": "Level 1 Abjuration (Bard, Cleric, Druid, Paladin, Ranger)"
+    "line": "Level 1 Abjuration (Bard, Cleric, Druid, Paladin, Ranger)",
+    "text": "_Level 1 Abjuration (Bard, Cleric, Druid, Paladin, Ranger)_\n\n**Casting Time:** Action\n**Range:** Touch\n**Components:** V, S\n**Duration:** Instantaneous\n\nA creature you touch regains a number of Hit Points equal to 2d8 plus your spellcasting ability modifier.\n\n_Using a Higher-Level Spell Slot._ The healing increases by 2d8 for each spell slot level above 1."
   }
 }

@@ -292,7 +292,7 @@ table.data tr.flash td { animation: flash 1.6s ease-out; }
 .drawer > header { display: flex; align-items: center; gap: 10px; padding: 14px 18px; border-bottom: 1px solid var(--border); }
 .drawer > header .titles { flex: 1; min-width: 0; }
 .drawer > header .titles small { display: block; color: var(--text-faint); font-family: var(--mono); font-size: 12px; overflow: hidden; text-overflow: ellipsis; }
-.drawer > .body { flex: 1; overflow: auto; padding: 18px; display: grid; gap: 16px; align-content: start; }
+.drawer > .body { flex: 1; overflow: auto; padding: 18px; display: grid; gap: 16px; align-content: start; grid-auto-rows: max-content; }
 .drawer > footer { display: flex; gap: 8px; align-items: center; padding: 12px 18px; border-top: 1px solid var(--border); background: var(--panel-2); }
 .drawer section { display: grid; gap: 10px; }
 .drawer section > h3 { color: var(--text-dim); font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; }
@@ -432,3 +432,48 @@ table.data tr.flash td { animation: flash 1.6s ease-out; }
   .grid-2, .grid-3 { grid-template-columns: 1fr; }
   input.search { width: 100%; }
 }
+
+/* ------------------------------------------------------------ content detail */
+
+table.data .mech { display: block; max-width: 340px; color: var(--text-dim); font-size: 12.5px; white-space: normal; }
+.warn-text { color: #f3cf86 !important; }
+.tag {
+  display: inline-block;
+  padding: 1px 8px;
+  margin: 1px 0;
+  border-radius: 4px;
+  font-size: 12px;
+  line-height: 18px;
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+.tag.dice { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--text); border-color: rgba(224, 112, 58, 0.45); }
+.tag.dice small { color: var(--text-faint); font-size: 11px; }
+.tag.warn { border-color: rgba(230, 180, 80, 0.45); background: var(--warn-soft); color: #f3cf86; }
+.engine-card { display: grid; gap: 10px; padding: 12px; margin-bottom: 14px; border: 1px solid var(--border); border-radius: 8px; background: var(--panel-2); }
+.engine-card .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.engine-lines { width: 100%; border-collapse: collapse; font-size: 13px; }
+.engine-lines td { padding: 4px 6px; border-top: 1px solid var(--border); vertical-align: top; }
+.engine-lines .mark { width: 18px; font-weight: 700; }
+.engine-lines .lbl { width: 32%; color: var(--text); }
+.engine-lines tr.ok .mark { color: #6fd7a1; }
+.engine-lines tr.no .mark, .engine-lines tr.no .lbl { color: #ff9a9a; }
+ul.rules { margin: 6px 0 0; padding-left: 18px; display: grid; gap: 4px; }
+.statblock h3, [data-panel="what"] h3 { margin: 16px 0 6px; font-size: 13px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--accent, #e0703a); }
+.stat-entry { padding: 8px 0; border-top: 1px solid var(--border); }
+.stat-entry .row { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.stat-text { color: var(--text-dim); font-size: 13px; }
+.stat-text p { margin: 4px 0; }
+table.abil { border-collapse: collapse; margin: 10px 0; font-size: 13px; font-variant-numeric: tabular-nums; }
+table.abil th, table.abil td { padding: 3px 10px; border: 1px solid var(--border); text-align: center; }
+table.abil tbody th { text-align: left; color: var(--text-faint); font-weight: 500; }
+.srd-doc { font-size: 13.5px; line-height: 1.55; color: var(--text-dim); }
+.srd-doc p { margin: 0 0 10px; }
+.srd-doc h4 { margin: 14px 0 6px; color: var(--text); }
+table.md { border-collapse: collapse; margin: 8px 0 12px; font-size: 12.5px; }
+table.md th, table.md td { padding: 4px 8px; border: 1px solid var(--border); text-align: left; vertical-align: top; }
+table.md th { background: var(--panel); color: var(--text); }
+[data-panel="what"] .kv { margin-bottom: 8px; }
+[data-panel="what"] .notice { margin-bottom: 12px; }

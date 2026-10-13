@@ -5,5 +5,8 @@
   "id": "soldier",
   "status": "auto_ok",
   "confidence": "high",
-  "usage": "Chargen background. Grants the listed skills."
+  "usage": "Chargen background. Grants the listed skills.",
+  "srd": {
+    "text": "**Ability Scores:** Strength, Dexterity, Constitution\n**Feat:** Savage Attacker (see \"Feats\")\n**Skill Proficiencies:** Athletics and Intimidation\n**Tool Proficiency:** _Choose one kind of_ Gaming Set (see \"Equipment\")\n**Equipment:** _Choose A or B:_ (A) Spear, Shortbow, 20 Arrows, Gaming Set (same as above), Healer's Kit, Quiver, Traveler's Clothes, 14 GP; or (B) 50 GP"
+  }
 }

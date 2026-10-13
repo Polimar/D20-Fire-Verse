@@ -1,0 +1,13 @@
+{
+  "ambiguities": [],
+  "unparsedFields": [],
+  "kind": "item",
+  "id": "shield_plus_3",
+  "status": "auto_ok",
+  "confidence": "high",
+  "usage": "Vendor, loot, and stash. Equipped effects are listed on the sheet; no fight applies them yet.",
+  "srd": {
+    "line": "Armor (Shield), Uncommon (+1), Rare (+2), or Very Rare (+3)",
+    "text": "_Armor (Shield), Uncommon (+1), Rare (+2), or Very Rare (+3)_\n\nWhile holding this Shield, you have a bonus to Armor Class determined by the Shield's rarity, in addition to the Shield's normal bonus to AC."
+  }
+}

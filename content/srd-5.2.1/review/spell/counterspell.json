@@ -5,9 +5,9 @@
   "id": "counterspell",
   "status": "auto_ok",
   "confidence": "high",
-  "usage": "Level-up spell list for the listed classes. Combat only if a wired ability uses this id.",
+  "usage": "Level-up spell list for the listed classes. Combat runs it only when a wired ability has the same id.",
   "srd": {
-    "components": "S",
-    "line": "Level 3 Abjuration (Sorcerer, Warlock, Wizard)"
+    "line": "Level 3 Abjuration (Sorcerer, Warlock, Wizard)",
+    "text": "_Level 3 Abjuration (Sorcerer, Warlock, Wizard)_\n\n**Casting Time:** Reaction, which you take when you see a creature within 60 feet of yourself casting a spell with Verbal, Somatic, or Material components\n**Range:** 60 feet\n**Components:** S\n**Duration:** Instantaneous\n\nYou attempt to interrupt a creature in the process of casting a spell. The creature makes a Constitution saving throw. On a failed save, the spell dissipates with no effect, and the action, Bonus Action, or Reaction used to cast it is wasted. If that spell was cast with a spell slot, the slot isn't expended."
   }
 }

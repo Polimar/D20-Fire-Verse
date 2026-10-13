@@ -5,9 +5,9 @@
   "id": "guiding_bolt",
   "status": "auto_ok",
   "confidence": "high",
-  "usage": "Level-up spell list for the listed classes. Combat only if a wired ability uses this id.",
+  "usage": "Level-up spell list for the listed classes. Combat runs it only when a wired ability has the same id.",
   "srd": {
-    "components": "V, S",
-    "line": "Level 1 Evocation (Cleric)"
+    "line": "Level 1 Evocation (Cleric)",
+    "text": "_Level 1 Evocation (Cleric)_\n\n**Casting Time:** Action\n**Range:** 120 feet\n**Components:** V, S\n**Duration:** 1 round\n\nYou hurl a bolt of light toward a creature within range. Make a ranged spell attack against the target. On a hit, it takes 4d6 Radiant damage, and the next attack roll made against it before the end of your next turn has Advantage.\n\n_Using a Higher-Level Spell Slot._ The damage increases by 1d6 for each spell slot level above 1."
   }
 }

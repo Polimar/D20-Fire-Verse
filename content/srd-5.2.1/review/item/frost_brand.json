@@ -1,11 +1,46 @@
 {
-  "ambiguities": [],
+  "ambiguities": [
+    {
+      "field": "effects",
+      "summary": "Conditional extra damage: “When you hit with an attack roll using this magic weapon, the target takes an extra 1d6 Cold damage.” The engine cannot check the condition.",
+      "options": [
+        {
+          "label": "Leave the extra damage out",
+          "patch": {
+            "effects": [
+              {
+                "kind": "resistance",
+                "damageType": "fire"
+              }
+            ]
+          }
+        },
+        {
+          "label": "Apply 1d6 cold on every hit",
+          "patch": {
+            "effects": [
+              {
+                "kind": "resistance",
+                "damageType": "fire"
+              },
+              {
+                "kind": "on_hit_rider",
+                "damage": "1d6",
+                "damageType": "cold"
+              }
+            ]
+          }
+        }
+      ],
+      "parserChoice": 0
+    }
+  ],
   "unparsedFields": [],
   "kind": "item",
   "id": "frost_brand",
-  "status": "auto_ok",
-  "confidence": "high",
-  "usage": "Vendor, loot, and stash. Typed effects change AC, attack, and damage.",
+  "status": "needs_review",
+  "confidence": "medium",
+  "usage": "Vendor, loot, and stash. Equipped effects are listed on the sheet; no fight applies them yet.",
   "srd": {
     "line": "Weapon (Glaive, Greatsword, Longsword, Rapier, Scimitar, or Shortsword), Very Rare (Requires Attunement)",
     "text": "_Weapon (Glaive, Greatsword, Longsword, Rapier, Scimitar, or Shortsword), Very Rare (Requires Attunement)_\n\nWhen you hit with an attack roll using this magic weapon, the target takes an extra 1d6 Cold damage. In addition, while you hold the weapon, you have Resistance to Fire damage.\n\nIn freezing temperatures, the weapon sheds Bright Light in a 10-foot radius and Dim Light for an additional 10 feet.\n\nWhen you draw this weapon, you can extinguish all nonmagical flames within 30 feet of yourself. Once used, this property can't be used again for 1 hour."

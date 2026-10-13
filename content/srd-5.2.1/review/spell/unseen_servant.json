@@ -5,9 +5,9 @@
   "id": "unseen_servant",
   "status": "auto_ok",
   "confidence": "high",
-  "usage": "Level-up spell list for the listed classes. Combat only if a wired ability uses this id.",
+  "usage": "Level-up spell list for the listed classes. Combat runs it only when a wired ability has the same id.",
   "srd": {
-    "components": "V, S, M (a bit of string and of wood)",
-    "line": "Level 1 Conjuration (Bard, Warlock, Wizard)"
+    "line": "Level 1 Conjuration (Bard, Warlock, Wizard)",
+    "text": "_Level 1 Conjuration (Bard, Warlock, Wizard)_\n\n**Casting Time:** Action or Ritual\n**Range:** 60 feet\n**Components:** V, S, M (a bit of string and of wood)\n**Duration:** 1 hour\n\nThis spell creates an Invisible, mindless, shapeless, Medium force that performs simple tasks at your command until the spell ends. The servant springs into existence in an unoccupied space on the ground within range. It has AC 10, 1 Hit Point, and a Strength of 2, and it can't attack. If it drops to 0 Hit Points, the spell ends.\n\nOnce on each of your turns as a Bonus Action, you can mentally command the servant to move up to 15 feet and interact with an object. The servant can perform simple tasks that a human could do, such as fetching things, cleaning, mending, folding clothes, lighting fires, serving food, and pouring drinks. Once you give the command, the servant performs the task to the best of its ability until it completes the task, then waits for your next command.\n\nIf you command the servant to perform a task that would move it more than 60 feet away from you, the spell ends."
   }
 }

@@ -5,9 +5,9 @@
   "id": "magic_missile",
   "status": "auto_ok",
   "confidence": "high",
-  "usage": "Level-up spell list for the listed classes. Combat only if a wired ability uses this id.",
+  "usage": "Level-up spell list for the listed classes. Combat runs it only when a wired ability has the same id.",
   "srd": {
-    "components": "V, S",
-    "line": "Level 1 Evocation (Sorcerer, Wizard)"
+    "line": "Level 1 Evocation (Sorcerer, Wizard)",
+    "text": "_Level 1 Evocation (Sorcerer, Wizard)_\n\n**Casting Time:** Action\n**Range:** 120 feet\n**Components:** V, S\n**Duration:** Instantaneous\n\nYou create three glowing darts of magical force. Each dart strikes a creature of your choice that you can see within range. A dart deals 1d4 + 1 Force damage to its target. The darts all strike simultaneously, and you can direct them to hit one creature or several.\n\n_Using a Higher-Level Spell Slot._ The spell creates one more dart for each spell slot level above 1."
   }
 }

@@ -3,7 +3,15 @@
   "unparsedFields": [],
   "kind": "monster",
   "id": "quasit",
-  "status": "auto_ok",
-  "confidence": "high",
-  "usage": "Encounters when enabled. Combat uses a wired ability with the same id when one exists."
+  "status": "needs_review",
+  "confidence": "medium",
+  "usage": "Encounters and arena fights. The engine runs the actions it can compile from the stat block.",
+  "srd": {
+    "engineId": "srd_quasit",
+    "text": "_Tiny Fiend (Demon), Chaotic Evil_\n\n**AC** 13 **Initiative** +3 (13)\n\n**HP** 25 (10d4)\n\n**Speed** 40 ft.\n\n|  |  | MOD | SAVE |  |  | MOD | SAVE |  |  | MOD | SAVE |\n| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |\n| **STR** | 5 | −3 | −3 | **DEX** | 17 | +3 | +3 | **CON** | 10 | +0 | +0 |\n| **INT** | 7 | −2 | −2 | **WIS** | 10 | +0 | +0 | **CHA** | 10 | +0 | +0 |\n\n**Skills** Stealth +5\n\n**Resistances** Cold, Fire, Lightning\n\n**Immunities** Poison; Poisoned\n\n**Senses** Darkvision 120 ft.; Passive Perception 10\n\n**Languages** Abyssal, Common\n\n**CR** 1 (XP 200; PB +2)\n\n#### Traits\n\n**_Magic Resistance._** The quasit has Advantage on saving throws against spells and other magical effects.\n\n#### Actions\n\n**_Rend._** _Melee Attack Roll:_ +5, reach 5 ft. _Hit:_ 5 (1d4 + 3) Slashing damage, and the target has the Poisoned condition until the start of the quasit's next turn.\n\n**_Invisibility._** The quasit casts _Invisibility_ on itself, requiring no spell components and using Charisma as the spellcasting ability.\n\n**_Scare (1/Day)._** _Wisdom Saving Throw:_ DC 10, one creature within 20 feet. _Failure:_ The target has the Frightened condition. At the end of each of its turns, the target repeats the save, ending the effect on itself on a success. After 1 minute, it succeeds automatically.\n\n**_Shape-Shift._** The quasit shape-shifts to resemble a bat (Speed 10 ft., Fly 40 ft.), a centipede (40 ft., Climb 40 ft.), or a toad (40 ft., Swim 40 ft.), or it returns to its true form. Its game statistics are the same in each form, except for its Speed. Any equipment it is wearing or carrying isn't transformed."
+  },
+  "notModeled": [
+    "Action “Invisibility”: the combat engine does not run it.",
+    "Action “Shape-Shift”: the combat engine does not run it."
+  ]
 }

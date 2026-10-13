@@ -1,0 +1,16 @@
+{
+  "ambiguities": [],
+  "unparsedFields": [],
+  "kind": "item",
+  "id": "ammunition_plus_3",
+  "status": "needs_review",
+  "confidence": "medium",
+  "usage": "Vendor, loot, and stash. Equipped effects are listed on the sheet; no fight applies them yet.",
+  "srd": {
+    "line": "Weapon (Any Ammunition), Uncommon (+1), Rare (+2), or Very Rare (+3)",
+    "text": "_Weapon (Any Ammunition), Uncommon (+1), Rare (+2), or Very Rare (+3)_\n\nYou have a bonus to attack rolls and damage rolls made with this piece of magic ammunition. The bonus is determined by the rarity of the ammunition. Once it hits a target, the ammunition is no longer magical.\n\nThis ammunition is typically found or sold in quantities of ten or twenty pieces. Ten pieces of this ammunition are equivalent in value to a potion of the same rarity."
+  },
+  "notModeled": [
+    "The bonus is determined by the rarity of the ammunition."
+  ]
+}

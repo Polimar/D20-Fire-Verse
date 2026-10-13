@@ -1,0 +1,13 @@
+{
+  "ambiguities": [],
+  "unparsedFields": [],
+  "kind": "monster",
+  "id": "skeleton",
+  "status": "auto_ok",
+  "confidence": "high",
+  "usage": "Encounters and arena fights. The engine runs the actions it can compile from the stat block.",
+  "srd": {
+    "engineId": "srd_skeleton",
+    "text": "_Medium Undead, Lawful Evil_\n\n**AC** 14 **Initiative** +3 (13)\n\n**HP** 13 (2d8 + 4)\n\n**Speed** 30 ft.\n\n|  |  | MOD | SAVE |  |  | MOD | SAVE |  |  | MOD | SAVE |\n| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |\n| **STR** | 10 | +0 | +0 | **DEX** | 16 | +3 | +3 | **CON** | 15 | +2 | +2 |\n| **INT** | 6 | −2 | −2 | **WIS** | 8 | −1 | −1 | **CHA** | 5 | −3 | −3 |\n\n**Vulnerabilities** Bludgeoning\n\n**Immunities** Poison; Exhaustion, Poisoned\n\n**Gear** Shortbow, Shortsword\n\n**Senses** Darkvision 60 ft.; Passive Perception 9\n\n**Languages** Understands Common plus one other language but can't speak\n\n**CR** 1/4 (XP 50; PB +2)\n\n#### Actions\n\n**_Shortsword._** _Melee Attack Roll:_ +5, reach 5 ft. _Hit:_ 6 (1d6 + 3) Piercing damage.\n\n**_Shortbow._** _Ranged Attack Roll:_ +5, range 80/320 ft. _Hit:_ 6 (1d6 + 3) Piercing damage."
+  }
+}

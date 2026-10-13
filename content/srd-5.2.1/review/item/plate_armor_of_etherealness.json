@@ -2,10 +2,10 @@
   "ambiguities": [
     {
       "field": "effects",
-      "summary": "No typed effect matched the item text.",
+      "summary": "No typed effect matches this item. The rules listed under Not modeled stay text only.",
       "options": [
         {
-          "label": "Leave effects empty",
+          "label": "Approve with no typed effects",
           "patch": {
             "effects": []
           }
@@ -21,9 +21,13 @@
   "id": "plate_armor_of_etherealness",
   "status": "needs_review",
   "confidence": "low",
-  "usage": "Vendor, loot, and stash. Typed effects change AC, attack, and damage.",
+  "usage": "Vendor, loot, and stash. Equipped effects are listed on the sheet; no fight applies them yet.",
   "srd": {
     "line": "Armor (Half Plate Armor or Plate Armor), Legendary (Requires Attunement)",
     "text": "_Armor (Half Plate Armor or Plate Armor), Legendary (Requires Attunement)_\n\nWhile you're wearing this armor, you can take a Magic action and use a command word to gain the effect of the _Etherealness_ spell. The spell ends immediately if you remove the armor or take a Magic action to repeat the command word. This property of the armor can't be used again until the next dawn."
-  }
+  },
+  "notModeled": [
+    "While you're wearing this armor, you can take a Magic action and use a command word to gain the effect of the Etherealness spell.",
+    "The spell ends immediately if you remove the armor or take a Magic action to repeat the command word."
+  ]
 }

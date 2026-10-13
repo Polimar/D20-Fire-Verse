@@ -5,9 +5,9 @@
   "id": "regenerate",
   "status": "auto_ok",
   "confidence": "high",
-  "usage": "Level-up spell list for the listed classes. Combat only if a wired ability uses this id.",
+  "usage": "Level-up spell list for the listed classes. Combat runs it only when a wired ability has the same id.",
   "srd": {
-    "components": "V, S, M (a prayer wheel)",
-    "line": "Level 7 Transmutation (Bard, Cleric, Druid)"
+    "line": "Level 7 Transmutation (Bard, Cleric, Druid)",
+    "text": "_Level 7 Transmutation (Bard, Cleric, Druid)_\n\n**Casting Time:** 1 minute\n**Range:** Touch\n**Components:** V, S, M (a prayer wheel)\n**Duration:** 1 hour\n\nA creature you touch regains 4d8 + 15 Hit Points. For the duration, the target regains 1 Hit Point at the start of each of its turns, and any severed body parts regrow after 2 minutes."
   }
 }

@@ -3,7 +3,15 @@
   "unparsedFields": [],
   "kind": "monster",
   "id": "stone_golem",
-  "status": "auto_ok",
-  "confidence": "high",
-  "usage": "Encounters when enabled. Combat uses a wired ability with the same id when one exists."
+  "status": "needs_review",
+  "confidence": "medium",
+  "usage": "Encounters and arena fights. The engine runs the actions it can compile from the stat block.",
+  "srd": {
+    "engineId": "srd_stone_golem",
+    "text": "_Large Construct, Unaligned_\n\n**AC** 18 **Initiative** +3 (13)\n\n**HP** 220 (21d10 + 105)\n\n**Speed** 30 ft.\n\n|  |  | MOD | SAVE |  |  | MOD | SAVE |  |  | MOD | SAVE |\n| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |\n| **STR** | 22 | +6 | +6 | **DEX** | 9 | -1 | -1 | **CON** | 20 | +5 | +5 |\n| **INT** | 3 | -4 | -4 | **WIS** | 11 | +0 | +0 | **CHA** | 1 | -5 | -5 |\n\n**Immunities** Poison, Psychic; Charmed, Exhaustion, Frightened, Paralyzed, Petrified, Poisoned\n\n**Senses** Darkvision 120 ft.; Passive Perception 10\n\n**Languages** Understands Common plus two other languages but can't speak\n\n**CR** 10 (XP 5,900; PB +4)\n\n#### Traits\n\n**_Immutable Form._** The golem can't shape-shift.\n\n**_Magic Resistance._** The golem has Advantage on saving throws against spells and other magical effects.\n\n#### Actions\n\n**_Multiattack._** The golem makes two attacks, using Slam or Force Bolt in any combination.\n\n**_Slam._** _Melee Attack Roll:_ +10, reach 5 ft. _Hit:_ 15 (2d8 + 6) Bludgeoning damage plus 9 (2d8) Force damage.\n\n**_Force Bolt._** _Ranged Attack Roll:_ +9, range 120 ft. _Hit:_ 22 (4d10) Force damage.\n\n#### Bonus Actions\n\n**_Slow (Recharge 5–6)._** The golem casts the _Slow_ spell, requiring no spell components and using Constitution as the spellcasting ability (spell save DC 17)."
+  },
+  "notModeled": [
+    "Bonus action “Slow”: the combat engine does not run it.",
+    "Trait “Immutable Form”: text only; the engine ignores it."
+  ]
 }

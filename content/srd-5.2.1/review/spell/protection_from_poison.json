@@ -5,9 +5,9 @@
   "id": "protection_from_poison",
   "status": "auto_ok",
   "confidence": "high",
-  "usage": "Level-up spell list for the listed classes. Combat only if a wired ability uses this id.",
+  "usage": "Level-up spell list for the listed classes. Combat runs it only when a wired ability has the same id.",
   "srd": {
-    "components": "V, S",
-    "line": "Level 2 Abjuration (Cleric, Druid, Paladin, Ranger)"
+    "line": "Level 2 Abjuration (Cleric, Druid, Paladin, Ranger)",
+    "text": "_Level 2 Abjuration (Cleric, Druid, Paladin, Ranger)_\n\n**Casting Time:** Action\n**Range:** Touch\n**Components:** V, S\n**Duration:** 1 hour\n\nYou touch a creature and end the Poisoned condition on it. For the duration, the target has Advantage on saving throws to avoid or end the Poisoned condition, and it has Resistance to Poison damage."
   }
 }

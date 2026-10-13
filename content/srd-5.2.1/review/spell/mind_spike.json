@@ -5,9 +5,9 @@
   "id": "mind_spike",
   "status": "auto_ok",
   "confidence": "high",
-  "usage": "Level-up spell list for the listed classes. Combat only if a wired ability uses this id.",
+  "usage": "Level-up spell list for the listed classes. Combat runs it only when a wired ability has the same id.",
   "srd": {
-    "components": "S",
-    "line": "Level 2 Divination (Sorcerer, Warlock, Wizard)"
+    "line": "Level 2 Divination (Sorcerer, Warlock, Wizard)",
+    "text": "_Level 2 Divination (Sorcerer, Warlock, Wizard)_\n\n**Casting Time:** Action\n**Range:** 120 feet\n**Components:** S\n**Duration:** Concentration, up to 1 hour\n\nYou drive a spike of psionic energy into the mind of one creature you can see within range. The target makes a Wisdom saving throw, taking 3d8 Psychic damage on a failed save or half as much damage on a successful one. On a failed save, you also always know the target's location until the spell ends, but only while the two of you are on the same plane\n\nof existence. While you have this knowledge, the target can't become hidden from you, and if it has the Invisible condition, it gains no benefit from that condition against you.\n\n_Using a Higher-Level Spell Slot._ The damage increases by 1d8 for each spell slot level above 2."
   }
 }

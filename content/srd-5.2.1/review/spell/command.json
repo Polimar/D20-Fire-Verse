@@ -5,9 +5,9 @@
   "id": "command",
   "status": "auto_ok",
   "confidence": "high",
-  "usage": "Level-up spell list for the listed classes. Combat only if a wired ability uses this id.",
+  "usage": "Level-up spell list for the listed classes. Combat runs it only when a wired ability has the same id.",
   "srd": {
-    "components": "V",
-    "line": "Level 1 Enchantment (Bard, Cleric, Paladin)"
+    "line": "Level 1 Enchantment (Bard, Cleric, Paladin)",
+    "text": "_Level 1 Enchantment (Bard, Cleric, Paladin)_\n\n**Casting Time:** Action\n**Range:** 60 feet\n**Components:** V\n**Duration:** Instantaneous\n\nYou speak a one-word command to a creature you can see within range. The target must succeed on a Wisdom saving throw or follow the command on its next turn. Choose the command from these options:\n\n**Approach.** The target moves toward you by the shortest and most direct route, ending its turn if it moves within 5 feet of you.\n\n**Drop.** The target drops whatever it is holding and then ends its turn.\n\n**Flee.** The target spends its turn moving away from you by the fastest available means.\n\n**Grovel.** The target has the Prone condition and then ends its turn.\n\n**Halt.** On its turn, the target doesn't move and takes no action or Bonus Action.\n\n_Using a Higher-Level Spell Slot._ You can affect one additional creature for each spell slot level above 1."
   }
 }

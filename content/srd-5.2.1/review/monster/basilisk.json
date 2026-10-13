@@ -5,5 +5,9 @@
   "id": "basilisk",
   "status": "auto_ok",
   "confidence": "high",
-  "usage": "Encounters when enabled. Combat uses a wired ability with the same id when one exists."
+  "usage": "Encounters and arena fights. The engine runs the actions it can compile from the stat block.",
+  "srd": {
+    "engineId": "srd_basilisk",
+    "text": "_Medium Monstrosity, Unaligned_\n\n**AC** 15 **Initiative** −1 (9)\n\n**HP** 52 (8d8 + 16)\n\n**Speed** 20 ft.\n\n|  |  | MOD | SAVE |  |  | MOD | SAVE |  |  | MOD | SAVE |\n| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |\n| **STR** | 16 | +3 | +3 | **DEX** | 8 | −1 | −1 | **CON** | 15 | +2 | +2 |\n| **INT** | 2 | −4 | −4 | **WIS** | 8 | −1 | −1 | **CHA** | 7 | −2 | −2 |\n\n**Senses** Darkvision 60 ft.; Passive Perception 9\n\n**Languages** None\n\n**CR** 3 (XP 700; PB +2)\n\n#### Actions\n\n**_Bite._** _Melee Attack Roll:_ +5, reach 5 ft. _Hit:_ 10 (2d6 + 3) Piercing damage plus 7 (2d6) Poison damage.\n\n#### Bonus Actions\n\n**_Petrifying Gaze (Recharge 4–6)._** _Constitution Saving Throw:_ DC 12, each creature in a 30-foot Cone. If the basilisk sees its reflection in the Cone, the basilisk must make this save. _First Failure:_ The target has the Restrained condition and repeats the save at the end of its next turn if it is still Restrained, ending the effect on itself on a success. _Second Failure:_ The target has the Petrified condition instead of the Restrained condition."
+  }
 }

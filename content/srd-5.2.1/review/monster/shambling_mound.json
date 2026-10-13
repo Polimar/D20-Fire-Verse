@@ -5,5 +5,12 @@
   "id": "shambling_mound",
   "status": "auto_ok",
   "confidence": "high",
-  "usage": "Encounters when enabled. Combat uses a wired ability with the same id when one exists."
+  "usage": "Encounters and arena fights. The engine runs the actions it can compile from the stat block.",
+  "srd": {
+    "engineId": "srd_shambling_mound",
+    "text": "_Large Plant, Unaligned_\n\n**AC** 15 **Initiative** −1 (9)\n\n**HP** 110 (13d10 + 39)\n\n**Speed** 30 ft., Swim 20 ft.\n\n|  |  | MOD | SAVE |  |  | MOD | SAVE |  |  | MOD | SAVE |\n| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |\n| **STR** | 18 | +4 | +4 | **DEX** | 8 | −1 | −1 | **CON** | 16 | +3 | +3 |\n| **INT** | 5 | −3 | −3 | **WIS** | 10 | +0 | +0 | **CHA** | 5 | −3 | −3 |\n\n**Skills** Stealth +3\n\n**Resistances** Cold, Fire\n\n**Immunities** Lightning; Deafened, Exhaustion\n\n**Senses** Blindsight 60 ft.; Passive Perception 10\n\n**Languages** None\n\n**CR** 5 (XP 1,800; PB +3)\n\n#### Traits\n\n**_Lightning Absorption._** Whenever the shambling mound is subjected to Lightning damage, it regains a number of Hit Points equal to the Lightning damage dealt.\n\n#### Actions\n\n**_Multiattack._** The shambling mound makes three Charged Tendril attacks. It can replace one attack with a use of Engulf.\n\n**_Charged Tendril._** _Melee Attack Roll:_ +7, reach 10 ft. _Hit:_ 7 (1d6 + 4) Bludgeoning damage plus 5 (2d4) Lightning damage. If the target is a Medium or smaller creature, the shambling mound pulls the target 5 feet straight toward itself.\n\n**_Engulf._** _Strength Saving Throw:_ DC 15, one Medium or smaller creature within 5 feet. _Failure:_ The target is pulled into the shambling mound's space and has the Grappled condition (escape DC 14). Until the grapple ends, the target has the Blinded and Restrained conditions, and it takes 10 (3d6) Lightning damage at the start of each of its turns. When the shambling mound moves, the Grappled target moves with it, costing it no extra movement. The shambling mound can have only one creature Grappled by this action at a time."
+  },
+  "notModeled": [
+    "Trait “Lightning Absorption”: text only; the engine ignores it."
+  ]
 }

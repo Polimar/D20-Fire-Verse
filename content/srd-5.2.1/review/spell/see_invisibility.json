@@ -5,9 +5,9 @@
   "id": "see_invisibility",
   "status": "auto_ok",
   "confidence": "high",
-  "usage": "Level-up spell list for the listed classes. Combat only if a wired ability uses this id.",
+  "usage": "Level-up spell list for the listed classes. Combat runs it only when a wired ability has the same id.",
   "srd": {
-    "components": "V, S, M (a pinch of talc)",
-    "line": "Level 2 Divination (Bard, Sorcerer, Wizard)"
+    "line": "Level 2 Divination (Bard, Sorcerer, Wizard)",
+    "text": "_Level 2 Divination (Bard, Sorcerer, Wizard)_\n\n**Casting Time:** Action\n**Range:** Self\n**Components:** V, S, M (a pinch of talc)\n**Duration:** 1 hour\n\nFor the duration, you see creatures and objects that have the Invisible condition as if they were visible, and you can see into the Ethereal Plane. Creatures and objects there appear ghostly."
   }
 }

@@ -5,9 +5,9 @@
   "id": "word_of_recall",
   "status": "auto_ok",
   "confidence": "high",
-  "usage": "Level-up spell list for the listed classes. Combat only if a wired ability uses this id.",
+  "usage": "Level-up spell list for the listed classes. Combat runs it only when a wired ability has the same id.",
   "srd": {
-    "components": "V",
-    "line": "Level 6 Conjuration (Cleric)"
+    "line": "Level 6 Conjuration (Cleric)",
+    "text": "_Level 6 Conjuration (Cleric)_\n\n**Casting Time:** Action\n**Range:** 5 feet\n**Components:** V\n**Duration:** Instantaneous\n\nYou and up to five willing creatures within 5 feet of you instantly teleport to a previously designated sanctuary. You and any creatures that teleport with you appear in the nearest unoccupied space to the spot you designated when you prepared your sanctuary (see below). If you cast this spell without first preparing a sanctuary, the spell has no effect.\n\nYou must designate a location, such as a temple, as a sanctuary by casting this spell there."
   }
 }

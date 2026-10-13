@@ -3,7 +3,14 @@
   "unparsedFields": [],
   "kind": "monster",
   "id": "roc",
-  "status": "auto_ok",
-  "confidence": "high",
-  "usage": "Encounters when enabled. Combat uses a wired ability with the same id when one exists."
+  "status": "needs_review",
+  "confidence": "medium",
+  "usage": "Encounters and arena fights. The engine runs the actions it can compile from the stat block.",
+  "srd": {
+    "engineId": "srd_roc",
+    "text": "_Gargantuan Monstrosity, Unaligned_\n\n**AC** 15 **Initiative** +8 (18)\n\n**HP** 248 (16d20 + 80)\n\n**Speed** 20 ft., Fly 120 ft.\n\n|  |  | MOD | SAVE |  |  | MOD | SAVE |  |  | MOD | SAVE |\n| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |\n| **STR** | 28 | +9 | +9 | **DEX** | 10 | +0 | +4 | **CON** | 20 | +5 | +5 |\n| **INT** | 3 | −4 | −4 | **WIS** | 10 | +0 | +4 | **CHA** | 9 | −1 | −1 |\n\n**Skills** Perception +8\n\n**Senses** Passive Perception 18\n\n**Languages** None\n\n**CR** 11 (XP 7,200; PB +4)\n\n#### Actions\n\n**_Multiattack._** The roc makes two Beak attacks. It can replace one attack with a Talons attack.\n\n**_Beak._** _Melee Attack Roll:_ +13, reach 10 ft. _Hit:_ 28 (3d12 + 9) Piercing damage.\n\n**_Talons._** _Melee Attack Roll:_ +13, reach 5 ft. _Hit:_ 23 (4d6 + 9) Slashing damage. If the target is a Huge or smaller creature, it has the Grappled condition (escape DC 19) from both talons, and it has the Restrained condition until the grapple ends.\n\n#### Bonus Actions\n\n**_Swoop (Recharge 5–6)._** If the roc has a creature Grappled, the roc flies up to half its Fly Speed without provoking Opportunity Attacks and drops that creature."
+  },
+  "notModeled": [
+    "Bonus action “Swoop”: the combat engine does not run it."
+  ]
 }

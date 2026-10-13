@@ -5,5 +5,9 @@
   "id": "gorgon",
   "status": "auto_ok",
   "confidence": "high",
-  "usage": "Encounters when enabled. Combat uses a wired ability with the same id when one exists."
+  "usage": "Encounters and arena fights. The engine runs the actions it can compile from the stat block.",
+  "srd": {
+    "engineId": "srd_gorgon",
+    "text": "_Large Construct, Unaligned_\n\n**AC** 19 **Initiative** +0 (10)\n\n**HP** 114 (12d10 + 48)\n\n**Speed** 40 ft.\n\n|  |  | MOD | SAVE |  |  | MOD | SAVE |  |  | MOD | SAVE |\n| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |\n| **STR** | 20 | +5 | +5 | **DEX** | 11 | +0 | +0 | **CON** | 18 | +4 | +4 |\n| **INT** | 2 | −4 | −4 | **WIS** | 12 | +1 | +1 | **CHA** | 7 | −2 | −2 |\n\n**Skills** Perception +7\n\n**Immunities** Exhaustion, Petrified\n\n**Senses** Darkvision 60 ft.; Passive Perception 17\n\n**Languages** None\n\n**CR** 5 (XP 1,800; PB +3)\n\n#### Actions\n\n**_Gore._** _Melee Attack Roll:_ +8, reach 5 ft. _Hit:_ 18 (2d12 + 5) Piercing damage. If the target is a Large or smaller creature and the gorgon moved 20+ feet straight toward it immediately before the hit, the target has the Prone condition.\n\n**_Petrifying Breath (Recharge 5–6)._** _Constitution Saving Throw:_ DC 15, each creature in a 30-foot Cone. _First Failure:_ The target has the Restrained condition and repeats the save at the end of its next turn if it is still Restrained, ending the effect on itself on a success. _Second Failure:_ The target has the Petrified condition instead of the Restrained condition.\n\n#### Bonus Actions\n\n**_Trample._** _Dexterity Saving Throw:_ DC 16, one creature within 5 feet that has the Prone condition. _Failure:_ 16 (2d10 + 5) Bludgeoning damage. _Success:_ Half damage."
+  }
 }

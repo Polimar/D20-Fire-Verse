@@ -5,9 +5,9 @@
   "id": "chain_lightning",
   "status": "auto_ok",
   "confidence": "high",
-  "usage": "Level-up spell list for the listed classes. Combat only if a wired ability uses this id.",
+  "usage": "Level-up spell list for the listed classes. Combat runs it only when a wired ability has the same id.",
   "srd": {
-    "components": "V, S, M (three silver pins)",
-    "line": "Level 6 Evocation (Sorcerer, Wizard)"
+    "line": "Level 6 Evocation (Sorcerer, Wizard)",
+    "text": "_Level 6 Evocation (Sorcerer, Wizard)_\n\n**Casting Time:** Action\n**Range:** 150 feet\n**Components:** V, S, M (three silver pins)\n**Duration:** Instantaneous\n\nYou launch a lightning bolt toward a target you can see within range. Three bolts then leap from that target to as many as three other targets of your choice, each of which must be within 30 feet of the first target. A target can be a creature or an object and can be targeted by only one of the bolts.\n\nEach target makes a Dexterity saving throw, taking 10d8 Lightning damage on a failed save or half as much damage on a successful one.\n\n_Using a Higher-Level Spell Slot._ One additional bolt leaps from the first target to another target for each spell slot level above 6."
   }
 }

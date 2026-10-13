@@ -5,9 +5,9 @@
   "id": "produce_flame",
   "status": "auto_ok",
   "confidence": "high",
-  "usage": "Level-up spell list for the listed classes. Combat only if a wired ability uses this id.",
+  "usage": "Level-up spell list for the listed classes. Combat runs it only when a wired ability has the same id.",
   "srd": {
-    "components": "V, S",
-    "line": "Conjuration Cantrip (Druid)"
+    "line": "Conjuration Cantrip (Druid)",
+    "text": "_Conjuration Cantrip (Druid)_\n\n**Casting Time:** Bonus Action\n**Range:** Self\n**Components:** V, S\n**Duration:** 10 minutes\n\nA flickering flame appears in your hand and remains there for the duration. While there, the flame emits no heat and ignites nothing, and it sheds Bright Light in a 20-foot radius and Dim Light for an additional 20 feet. The spell ends if you cast it again.\n\nUntil the spell ends, you can take a Magic action to hurl fire at a creature or an object within 60 feet of you. Make a ranged spell attack. On a hit, the target takes 1d8 Fire damage.\n\n_Cantrip Upgrade._ The damage increases by 1d8 when you reach levels 5 (2d8), 11 (3d8), and 17 (4d8)."
   }
 }
