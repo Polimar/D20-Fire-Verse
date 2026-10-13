@@ -343,10 +343,11 @@
     "effects": [
       {
         "type": "heal",
-        "dice": "1d8",
+        "dice": "2d8",
         "ability": "wis",
         "rangeCells": 1,
-        "slot": 1
+        "slot": 1,
+        "scaling": { "2": "4d8", "3": "6d8" }
       }
     ]
   },

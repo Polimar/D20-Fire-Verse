@@ -491,6 +491,30 @@ test("a successful Dex save against burning hands takes half and is not a miss",
   assert.equal(failed.tokens[1].hp, 22);
 });
 
+test("Inflict Wounds is a Constitution save for 2d10 necrotic, half on a success", () => {
+  for (const [face, outcome, damage] of [
+    [20, "success", 10],
+    [1, "fail", 20],
+  ] as const) {
+    const c = arena(4, 1, [quill(0, 0, { actionIds: ["spell_inflict_wounds"] }), rat("en-1", 1, 0, { hp: 40, maxHp: 40 })]);
+    const restore = scriptDice([
+      [10, 10],
+      [10, 10],
+      [20, face],
+    ]);
+    try {
+      performPcAction(c, "P1", "spell_inflict_wounds", "en-1");
+    } finally {
+      restore();
+    }
+    const strike = c.events.at(-1);
+    assert.ok(strike?.kind === "strike");
+    assert.equal(strike.hits[0].outcome, outcome);
+    assert.equal(strike.hits[0].damage, damage);
+    assert.equal(c.tokens[1].hp, 40 - damage);
+  }
+});
+
 test("a real encounter opens with initiative and hands the turn to a hero", () => {
   const c = startCombat("cellar_rats", [
     { playerId: "P1", displayName: "T", characterId: "brenna_ironveal", characterName: "Brenna Ironveal" },

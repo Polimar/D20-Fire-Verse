@@ -37,7 +37,7 @@
     "actionType": "action",
     "level": 0,
     "combat": true,
-    "effects": [{ "type": "save", "shape": "one", "ability": "wis", "dcFrom": "spell", "rangeCells": 12, "damage": [{ "dice": "1d4", "damageType": "psychic" }], "onFail": "mocked", "halfOnSuccess": false }]
+    "effects": [{ "type": "save", "shape": "one", "ability": "wis", "dcFrom": "spell", "rangeCells": 12, "damage": [{ "dice": "1d6", "damageType": "psychic" }], "onFail": "mocked", "halfOnSuccess": false }]
   },
   "eldritch_blast": {
     "id": "eldritch_blast",
@@ -85,7 +85,7 @@
     "actionType": "bonus_action",
     "level": 1,
     "combat": true,
-    "effects": [{ "type": "heal", "dice": "1d4", "ability": "spell", "rangeCells": 12, "slot": 1, "scaling": { "2": "2d4" } }]
+    "effects": [{ "type": "heal", "dice": "2d4", "ability": "spell", "rangeCells": 12, "slot": 1, "scaling": { "2": "4d4", "3": "6d4" } }]
   },
   "spell_inflict_wounds": {
     "id": "spell_inflict_wounds",
@@ -93,7 +93,7 @@
     "actionType": "action",
     "level": 1,
     "combat": true,
-    "effects": [{ "type": "attack", "spellAttack": true, "ability": "spell", "rangeCells": 1, "damage": [{ "dice": "3d10", "damageType": "necrotic" }], "slot": 1, "scaling": { "2": "4d10" } }]
+    "effects": [{ "type": "save", "shape": "one", "ability": "con", "dcFrom": "spell", "rangeCells": 1, "damage": [{ "dice": "2d10", "damageType": "necrotic" }], "halfOnSuccess": true, "slot": 1, "scaling": { "2": "3d10", "3": "4d10" } }]
   },
   "spell_shield_of_faith": {
     "id": "spell_shield_of_faith",
@@ -109,7 +109,7 @@
     "actionType": "action",
     "level": 1,
     "combat": true,
-    "effects": [{ "type": "save", "shape": "sphere", "ability": "dex", "dcFrom": "spell", "lengthCells": 4, "radius": 2, "onFail": "restrained", "concentration": true, "slot": 1, "damage": [{ "dice": "0", "damageType": "none" }] }]
+    "effects": [{ "type": "save", "shape": "sphere", "ability": "str", "dcFrom": "spell", "lengthCells": 4, "radius": 2, "onFail": "restrained", "concentration": true, "slot": 1, "damage": [{ "dice": "0", "damageType": "none" }] }]
   },
   "spell_faerie_fire": {
     "id": "spell_faerie_fire",

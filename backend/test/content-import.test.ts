@@ -48,10 +48,15 @@ test("magic items say what they do when equipped, and flag what the engine canno
 });
 
 test("the engine panel reports what combat really runs", () => {
-  const healingWord = readPack<SpellDef>("spells.json").find((s) => s.id === "healing_word");
-  const healing = engineView("spell", "healing_word", healingWord);
+  const spells = readPack<SpellDef>("spells.json");
+  const healing = engineView("spell", "healing_word", spells.find((s) => s.id === "healing_word"));
   assert.equal(healing?.state, "runs");
-  assert.ok(healing?.mismatches.some((m) => /2d4/.test(m) && /1d4/.test(m)));
+  assert.ok(healing?.lines.some((l) => /heals 2d4/.test(l.detail)));
+  const drift = [
+    ...spells.map((s) => [s.id, engineView("spell", s.id, s)?.mismatches ?? []] as const),
+    ...readPack<CatalogMonster>("monsters.json").map((m) => [m.id, engineView("monster", m.id, m)?.mismatches ?? []] as const),
+  ].filter(([, list]) => list.length);
+  assert.deepEqual(drift, [], "combat dice, saves, and levels match SRD 5.2.1");
 
   const fireball = engineView("spell", "fireball", readPack<SpellDef>("spells.json").find((s) => s.id === "fireball"));
   assert.equal(fireball?.state, "sheet");
