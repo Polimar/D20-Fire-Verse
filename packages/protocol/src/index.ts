@@ -184,6 +184,7 @@ const ERROR_TEXT: Record<string, string> = {
   ARENA_TEAMS: "Teams must be even before the fight starts.",
   ARENA_BAD_FORMAT: "That arena format is not available.",
   ARENA_BAD_MONSTER: "That creature is not on the arena roster.",
+  ARENA_NO_MONSTERS: "No creatures are enabled for the arena yet. An admin turns them on in the portal.",
   ARENA_BAD_THEME: "That arena theme is not available.",
   ARENA_BAD_SIZE: "Pick a small, medium, or large floor.",
   ARENA_NOT_OWNER: "Only the host can start or kick from this arena.",

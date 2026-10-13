@@ -5,7 +5,7 @@
   "id": "spy",
   "status": "auto_ok",
   "confidence": "high",
-  "usage": "Encounters and arena fights. The engine runs the actions it can compile from the stat block.",
+  "usage": "Arena PvE foe once enabled. The engine runs the actions it can compile from the stat block; campaign encounters use their own copies.",
   "srd": {
     "engineId": "srd_spy",
     "text": "_Medium or Small Humanoid, Neutral_\n\n**AC** 12 **Initiative** +4 (14)\n\n**HP** 27 (6d8)\n\n**Speed** 30 ft., Climb 30 ft.\n\n|  |  | MOD | SAVE |  |  | MOD | SAVE |  |  | MOD | SAVE |\n| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |\n| **STR** | 10 | +0 | +0 | **DEX** | 15 | +2 | +2 | **CON** | 10 | +0 | +0 |\n| **INT** | 12 | +1 | +1 | **WIS** | 14 | +2 | +2 | **CHA** | 16 | +3 | +3 |\n\n**Skills** Deception +5, Insight +4, Investigation +5, Perception +6, Sleight of Hand +4, Stealth +6\n\n**Gear** Hand Crossbow, Shortsword, Thieves' Tools\n\n**Senses** Passive Perception 16\n\n**Languages** Common plus one other language\n\n**CR** 1 (XP 200; PB +2)\n\n#### Actions\n\n**_Shortsword._** _Melee Attack Roll:_ +4, reach 5 ft. _Hit:_ 5 (1d6 + 2) Piercing damage plus 7 (2d6) Poison damage.\n\n**_Hand Crossbow._** _Ranged Attack Roll:_ +4, range 30/120 ft. _Hit:_ 5 (1d6 + 2) Piercing damage plus 7 (2d6) Poison damage.\n\n#### Bonus Actions\n\n**_Cunning Action._** The spy takes the Dash, Disengage, or Hide action."

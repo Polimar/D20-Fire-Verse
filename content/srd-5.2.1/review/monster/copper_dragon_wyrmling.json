@@ -5,7 +5,7 @@
   "id": "copper_dragon_wyrmling",
   "status": "auto_ok",
   "confidence": "high",
-  "usage": "Encounters and arena fights. The engine runs the actions it can compile from the stat block.",
+  "usage": "Arena PvE foe once enabled. The engine runs the actions it can compile from the stat block; campaign encounters use their own copies.",
   "srd": {
     "engineId": "srd_copper_dragon_wyrmling",
     "text": "_Medium Dragon (Metallic), Chaotic Good_\n\n**AC** 16 **Initiative** +3 (13)\n\n**HP** 22 (4d8 + 4)\n\n**Speed** 30 ft., Climb 30 ft., Fly 60 ft.\n\n|  |  | MOD | SAVE |  |  | MOD | SAVE |  |  | MOD | SAVE |\n| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |\n| **STR** | 15 | +2 | +2 | **DEX** | 12 | +1 | +3 | **CON** | 13 | +1 | +1 |\n| **INT** | 14 | +2 | +2 | **WIS** | 11 | +0 | +2 | **CHA** | 13 | +1 | +1 |\n\n**Skills** Perception +4, Stealth +3\n\n**Immunities** Acid\n\n**Senses** Blindsight 10 ft., Darkvision 60 ft.; Passive Perception 14\n\n**Languages** Draconic\n\n**CR** 1 (XP 200; PB +2)\n\n#### Actions\n\n**_Rend._** _Melee Attack Roll:_ +4, reach 5 ft. _Hit:_ 7 (1d10 + 2) Slashing damage.\n\n**_Acid Breath (Recharge 5–6)._** _Dexterity Saving Throw:_ DC 11, each creature in a 20-foot-long, 5-foot-wide Line. _Failure:_ 18 (4d8) Acid damage. _Success:_ Half damage.\n\n**_Slowing Breath._** _Constitution Saving Throw:_ DC 11, each creature in a 15-foot Cone. _Failure:_ The target can't take Reactions; its Speed is halved; and it can take either an action or a Bonus Action on its turn, not both. This effect lasts until the end of its next turn."

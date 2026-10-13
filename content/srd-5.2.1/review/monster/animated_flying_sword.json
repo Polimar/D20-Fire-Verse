@@ -5,7 +5,7 @@
   "id": "animated_flying_sword",
   "status": "auto_ok",
   "confidence": "high",
-  "usage": "Encounters and arena fights. The engine runs the actions it can compile from the stat block.",
+  "usage": "Arena PvE foe once enabled. The engine runs the actions it can compile from the stat block; campaign encounters use their own copies.",
   "srd": {
     "engineId": "srd_animated_flying_sword",
     "text": "_Small Construct, Unaligned_\n\n**AC** 17 **Initiative** +4 (14)\n\n**HP** 14 (4d6)\n\n**Speed** 5 ft., Fly 50 ft. (hover)\n\n|  |  | MOD | SAVE |  |  | MOD | SAVE |  |  | MOD | SAVE |\n| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |\n| **STR** | 12 | +1 | +1 | **DEX** | 15 | +2 | +4 | **CON** | 11 | +0 | +0 |\n| **INT** | 1 | −5 | −5 | **WIS** | 5 | −3 | −3 | **CHA** | 1 | −5 | −5 |\n\n**Immunities** Poison, Psychic; Charmed, Deafened, Exhaustion, Frightened, Paralyzed, Petrified, Poisoned\n\n**Senses** Blindsight 60 ft.; Passive Perception 7\n\n**Languages** None\n\n**CR** 1/4 (XP 50; PB +2)\n\n#### Actions\n\n**_Slash._** _Melee Attack Roll:_ +4, reach 5 ft. _Hit:_ 6 (1d8 + 2) Slashing damage."

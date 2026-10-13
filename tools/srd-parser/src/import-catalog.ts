@@ -37,7 +37,7 @@ const USAGE: Record<string, string> = {
   background: "Chargen background. Grants the listed skills.",
   feat: "Chosen at an ASI level or as an Epic Boon when the class table says so.",
   item: "Vendor, loot, and stash. Equipped effects are listed on the sheet; no fight applies them yet.",
-  monster: "Encounters and arena fights. The engine runs the actions it can compile from the stat block.",
+  monster: "Arena PvE foe once enabled. The engine runs the actions it can compile from the stat block; campaign encounters use their own copies.",
 };
 
 /** Long class chapters stay readable in the drawer; the vendored markdown keeps the rest. */

@@ -5,7 +5,7 @@
   "id": "merrow",
   "status": "auto_ok",
   "confidence": "high",
-  "usage": "Encounters and arena fights. The engine runs the actions it can compile from the stat block.",
+  "usage": "Arena PvE foe once enabled. The engine runs the actions it can compile from the stat block; campaign encounters use their own copies.",
   "srd": {
     "engineId": "srd_merrow",
     "text": "_Large Monstrosity, Chaotic Evil_\n\n**AC** 13 **Initiative** +2 (12)\n\n**HP** 45 (6d10 + 12)\n\n**Speed** 10 ft., Swim 40 ft.\n\n|  |  | MOD | SAVE |  |  | MOD | SAVE |  |  | MOD | SAVE |\n| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |\n| **STR** | 18 | +4 | +4 | **DEX** | 15 | +2 | +2 | **CON** | 15 | +2 | +2 |\n| **INT** | 8 | −1 | −1 | **WIS** | 10 | +0 | +0 | **CHA** | 9 | −1 | −1 |\n\n**Senses** Darkvision 60 ft.; Passive Perception 10\n\n**Languages** Abyssal, Primordial (Aquan)\n\n**CR** 2 (XP 450; PB +2)\n\n#### Traits\n\n**_Amphibious._** The merrow can breathe air and water.\n\n#### Actions\n\n**_Multiattack._** The merrow makes two attacks, using Bite, Claw, or Harpoon in any combination.\n\n**_Bite._** _Melee Attack Roll:_ +6, reach 5 ft. _Hit:_ 6 (1d4 + 4) Piercing damage, and the target has the Poisoned condition until the end of the merrow's next turn.\n\n**_Claw._** _Melee Attack Roll:_ +6, reach 5 ft. _Hit:_ 9 (2d4 + 4) Slashing damage.\n\n**_Harpoon._** _Melee or Ranged Attack Roll:_ +6, reach 5 ft. or range 20/60 ft. _Hit:_ 11 (2d6 + 4) Piercing damage. If the target is a Large or smaller creature, the merrow pulls the target up to 15 feet straight toward itself."

@@ -323,7 +323,7 @@ export function mountV2Routes(app: Express): void {
     try {
       if (user(req).role !== "admin") throw new Error("FORBIDDEN");
       const detail = contentDetail(req.params.kind, req.params.id);
-      res.json({ ...detail, engine: engineView(req.params.kind, req.params.id, detail.game) });
+      res.json({ ...detail, engine: engineView(req.params.kind, req.params.id, detail.game, detail.inPlay === true) });
     } catch (err) {
       fail(res, err);
     }

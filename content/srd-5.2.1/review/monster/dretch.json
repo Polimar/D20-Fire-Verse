@@ -5,7 +5,7 @@
   "id": "dretch",
   "status": "auto_ok",
   "confidence": "high",
-  "usage": "Encounters and arena fights. The engine runs the actions it can compile from the stat block.",
+  "usage": "Arena PvE foe once enabled. The engine runs the actions it can compile from the stat block; campaign encounters use their own copies.",
   "srd": {
     "engineId": "srd_dretch",
     "text": "_Small Fiend (Demon), Chaotic Evil_\n\n**AC** 11 **Initiative** +0 (10)\n\n**HP** 18 (4d6 + 4)\n\n**Speed** 20 ft.\n\n|  |  | MOD | SAVE |  |  | MOD | SAVE |  |  | MOD | SAVE |\n| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |\n| **STR** | 12 | +1 | +1 | **DEX** | 11 | +0 | +0 | **CON** | 12 | +1 | +1 |\n| **INT** | 5 | −3 | −3 | **WIS** | 8 | −1 | −1 | **CHA** | 3 | −4 | −4 |\n\n**Resistances** Cold, Fire, Lightning\n\n**Immunities** Poison; Poisoned\n\n**Senses** Darkvision 60 ft.; Passive Perception 9\n\n**Languages** Abyssal; telepathy 60 ft. (works only with creatures that understand Abyssal)\n\n**CR** 1/4 (XP 50; PB +2)\n\n#### Actions\n\n**_Rend._** _Melee Attack Roll:_ +3, reach 5 ft. _Hit:_ 4 (1d6 + 1) Slashing damage.\n\n**_Fetid Cloud (1/Day)._** _Constitution Saving Throw:_ DC 11, each creature in a 10-foot Emanation originating from the dretch. _Failure:_ The target has the Poisoned condition until the end of its next turn. While Poisoned, the creature can take either an action or a Bonus Action on its turn, not both, and it can't take Reactions."

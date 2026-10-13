@@ -5,7 +5,7 @@
   "id": "nightmare",
   "status": "needs_review",
   "confidence": "medium",
-  "usage": "Encounters and arena fights. The engine runs the actions it can compile from the stat block.",
+  "usage": "Arena PvE foe once enabled. The engine runs the actions it can compile from the stat block; campaign encounters use their own copies.",
   "srd": {
     "engineId": "srd_nightmare",
     "text": "_Large Fiend, Neutral Evil_\n\n**AC** 13 **Initiative** +2 (12)\n\n**HP** 68 (8d10 + 24)\n\n**Speed** 60 ft., Fly 90 ft. (hover)\n\n|  |  | MOD | SAVE |  |  | MOD | SAVE |  |  | MOD | SAVE |\n| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |\n| **STR** | 18 | +4 | +4 | **DEX** | 15 | +2 | +2 | **CON** | 16 | +3 | +3 |\n| **INT** | 10 | +0 | +0 | **WIS** | 13 | +1 | +1 | **CHA** | 15 | +2 | +2 |\n\n**Immunities** Fire\n\n**Senses** Passive Perception 11\n\n**Languages** Understands Abyssal, Common, and Infernal but can't speak\n\n**CR** 3 (XP 700; PB +2)\n\n#### Traits\n\n**_Confer Fire Resistance._** The nightmare can grant Resistance to Fire damage to a rider while it is on the nightmare.\n\n**_Illumination._** The nightmare sheds Bright Light in a 10-foot radius and Dim Light for an additional 10 feet.\n\n#### Actions\n\n**_Hooves._** _Melee Attack Roll:_ +6, reach 5 ft. _Hit:_ 13 (2d8 + 4) Bludgeoning damage plus 10 (3d6) Fire damage.\n\n**_Ethereal Stride._** The nightmare and up to three willing creatures within 5 feet of it teleport to the Ethereal Plane from the Material Plane or vice versa."

@@ -40,9 +40,8 @@ import {
   type ChargenDraft,
 } from "./chargen.js";
 import { announceTable } from "./announce.js";
-import { ARENA_FORMATS } from "./arena.js";
+import { ARENA_FORMATS, arenaRoster } from "./arena.js";
 import { ARENA_THEMES } from "./arena-maps.js";
-import { listArenaMonsters } from "./srd-monsters.js";
 import { ensureDataDir, REPO_ROOT } from "./paths.js";
 import { audioPath, narrationStatus, prewarmNarration, waitForNarration } from "./narration.js";
 import {
@@ -772,7 +771,7 @@ wss.on("connection", (ws, req) => {
         formats: Object.entries(ARENA_FORMATS).map(([id, v]) => ({ id, ...v })),
         themes: ARENA_THEMES,
         sizes: ["small", "medium", "large"],
-        monsters: listArenaMonsters(),
+        monsters: arenaRoster(),
       },
       narration: narrationStatus(),
     },

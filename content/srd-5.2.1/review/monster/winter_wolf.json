@@ -5,7 +5,7 @@
   "id": "winter_wolf",
   "status": "auto_ok",
   "confidence": "high",
-  "usage": "Encounters and arena fights. The engine runs the actions it can compile from the stat block.",
+  "usage": "Arena PvE foe once enabled. The engine runs the actions it can compile from the stat block; campaign encounters use their own copies.",
   "srd": {
     "engineId": "srd_winter_wolf",
     "text": "_Large Monstrosity, Neutral Evil_\n\n**AC** 13 **Initiative** +1 (11)\n\n**HP** 75 (10d10 + 20)\n\n**Speed** 50 ft.\n\n|  |  | MOD | SAVE |  |  | MOD | SAVE |  |  | MOD | SAVE |\n| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |\n| **STR** | 18 | +4 | +4 | **DEX** | 13 | +1 | +1 | **CON** | 14 | +2 | +2 |\n| **INT** | 7 | -2 | -2 | **WIS** | 12 | +1 | +1 | **CHA** | 8 | -1 | -1 |\n\n**Skills** Perception +5, Stealth +5\n\n**Immunities** Cold\n\n**Senses** Passive Perception 15\n\n**Languages** Common, Giant\n\n**CR** 3 (XP 700; PB +2)\n\n#### Traits\n\n**_Pack Tactics._** The wolf has Advantage on an attack roll against a creature if at least one of the wolf's allies is within 5 feet of the creature and the ally doesn't have the Incapacitated condition.\n\n#### Actions\n\n**_Bite._** _Melee Attack Roll:_ +6, reach 5 ft. _Hit:_ 11 (2d6 + 4) Piercing damage. If the target is a Large or smaller creature, it has the Prone condition.\n\n**_Cold Breath (Recharge 5–6)._** _Constitution Saving Throw:_ DC 12, each creature in a 15-foot Cone. _Failure:_ 18 (4d8) Cold damage. _Success:_ Half damage."

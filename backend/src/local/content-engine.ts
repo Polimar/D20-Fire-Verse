@@ -92,13 +92,17 @@ function encountersUsing(ids: string[]): string[] {
     .map((enc) => enc.name || enc.id);
 }
 
-function monsterView(id: string, game: CatalogMonster): EngineView {
+function monsterView(id: string, game: CatalogMonster, inPlay: boolean): EngineView {
   const engineId = srdMonsterId(game.name || id);
   const compiled = getMonster(engineId);
   const campaignCopy = currentSnapshot().monsters[id];
   const encounters = encountersUsing([id, engineId]);
   const notes: string[] = [
-    "Arena fights draw from every SRD stat block the engine compiles. The Enabled switch does not gate the arena yet.",
+    !compiled
+      ? "Never in the arena roster: the engine has nothing to fight with."
+      : inPlay
+        ? "In the arena roster: players can pick it as a PvE foe."
+        : "Not in the arena roster. Approve and enable it to let players pick it as a PvE foe.",
   ];
   if (campaignCopy) {
     notes.push(`The campaign ships its own “${campaignCopy.name}” (AC ${campaignCopy.ac}, HP ${campaignCopy.hp}, actions ${campaignCopy.actions.join(", ")}). Campaign fights use that copy, not this entry.`);
@@ -261,11 +265,11 @@ function itemView(game: ItemDef): EngineView {
   };
 }
 
-export function engineView(kind: string, id: string, game: unknown): EngineView | null {
+export function engineView(kind: string, id: string, game: unknown, inPlay = false): EngineView | null {
   if (!game || typeof game !== "object") return null;
   switch (kind) {
     case "monster":
-      return monsterView(id, game as CatalogMonster);
+      return monsterView(id, game as CatalogMonster, inPlay);
     case "spell":
       return spellView(id, game as SpellDef);
     case "item":

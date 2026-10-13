@@ -12,6 +12,7 @@ import {
   redeemPairToken,
   unlinkPhone,
 } from "../src/local/companion-link.js";
+import { setContentEnabled } from "../src/local/content-catalog.js";
 import { arenaReady, arenaStart, createArena, createRoom, heroSheet, joinRoom } from "../src/local/room.js";
 import { boot } from "./helpers.js";
 
@@ -275,6 +276,7 @@ test("the phone gets the full sheet of the seated hero outside a fight", () => {
 });
 
 test("in an arena the phone's sheet is the hero at the arena's level", () => {
+  setContentEnabled("monster", "goblin_warrior", true);
   const room = createArena({ format: "pve_1v1", theme: "brewery", mapSize: "small", level: 1, privacy: "private" });
   const { playerId } = joinRoom(room.roomCode, "Ada", "brenna_ironveal", "user_arena_sheet");
   const sheet = heroSheet(room, playerId);

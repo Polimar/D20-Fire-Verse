@@ -5,7 +5,7 @@
   "id": "warrior_infantry",
   "status": "auto_ok",
   "confidence": "high",
-  "usage": "Encounters and arena fights. The engine runs the actions it can compile from the stat block.",
+  "usage": "Arena PvE foe once enabled. The engine runs the actions it can compile from the stat block; campaign encounters use their own copies.",
   "srd": {
     "engineId": "srd_warrior_infantry",
     "text": "_Medium or Small Humanoid, Neutral_\n\n**AC** 13 **Initiative** +0 (10)\n\n**HP** 9 (2d8)\n\n**Speed** 30 ft.\n\n|  |  | MOD | SAVE |  |  | MOD | SAVE |  |  | MOD | SAVE |\n| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |\n| **STR** | 13 | +1 | +1 | **DEX** | 11 | +0 | +0 | **CON** | 11 | +0 | +0 |\n| **INT** | 8 | −1 | −1 | **WIS** | 11 | +0 | +0 | **CHA** | 8 | −1 | −1 |\n\n**Gear** Chain Shirt, Spear\n\n**Senses** Passive Perception 10\n\n**Languages** Common\n\n**CR** 1/8 (XP 25; PB +2)\n\n#### Traits\n\n**_Pack Tactics._** The warrior has Advantage on an attack roll against a creature if at least one of the warrior's allies is within 5 feet of the creature and the ally doesn't have the Incapacitated condition.\n\n#### Actions\n\n**_Spear._** _Melee or Ranged Attack Roll:_ +3, reach 5 ft. or range 20/60 ft. _Hit:_ 4 (1d6 + 1) Piercing damage."

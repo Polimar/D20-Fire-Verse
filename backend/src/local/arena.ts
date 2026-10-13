@@ -12,8 +12,23 @@ import { startArenaCombat, type CombatState } from "./combat.js";
 import { heroPending } from "./hero.js";
 import { settleHero } from "./rewards.js";
 import type { Room } from "./room.js";
-import { defaultMonsterId, listArenaMonsters } from "./srd-monsters.js";
+import { listArenaMonsters, srdMonsterId } from "./srd-monsters.js";
 import { getMonster } from "./campaign.js";
+import { enabledMonsters } from "./content-catalog.js";
+
+export type ArenaFoe = ReturnType<typeof listArenaMonsters>[number];
+
+/** PvE foes: compiled SRD stat blocks whose catalog entry an admin enabled and the review cleared. */
+export function arenaRoster(): ArenaFoe[] {
+  const inPlay = new Set(enabledMonsters().map((m) => srdMonsterId(m.name)));
+  return listArenaMonsters().filter((m) => inPlay.has(m.id));
+}
+
+function defaultFoe(roster: ArenaFoe[], level: number): string | undefined {
+  const cap = level <= 1 ? 0.25 : level === 2 ? 1 : 2;
+  const fitting = roster.filter((m) => m.crValue <= cap).sort((a, b) => b.crValue - a.crValue || a.name.localeCompare(b.name));
+  return (fitting[0] ?? [...roster].sort((a, b) => a.crValue - b.crValue)[0])?.id;
+}
 
 export const ARENA_FORMATS = {
   ffa_1v1: { seats: 2, teams: 0, label: "Duel 1v1" },
@@ -101,11 +116,10 @@ export function parseCreateArena(body: {
   const name = String(body.name ?? "").trim().slice(0, 24);
   let monsterId: string | undefined;
   if (format === "pve_1v1") {
-    monsterId = String(body.monsterId ?? defaultMonsterId(level));
-    if (!getMonster(monsterId) && !listArenaMonsters().some((m) => m.id === monsterId)) {
-      throw new Error("ARENA_BAD_MONSTER");
-    }
-    if (!getMonster(monsterId)) throw new Error("ARENA_BAD_MONSTER");
+    const roster = arenaRoster();
+    if (!roster.length) throw new Error("ARENA_NO_MONSTERS");
+    monsterId = body.monsterId ? String(body.monsterId) : defaultFoe(roster, level);
+    if (!monsterId || !roster.some((m) => m.id === monsterId) || !getMonster(monsterId)) throw new Error("ARENA_BAD_MONSTER");
   }
   return { format, theme, size, mapId, level, privacy, name, monsterId };
 }
@@ -172,7 +186,7 @@ export function publicArena(room: Room) {
       formats: Object.entries(ARENA_FORMATS).map(([id, v]) => ({ id, ...v })),
       themes: ARENA_THEMES,
       sizes: ["small", "medium", "large"],
-      monsters: listArenaMonsters(),
+      monsters: arenaRoster(),
     },
     seats: room.players.map((p) => {
       const ap = p as ArenaPlayer;

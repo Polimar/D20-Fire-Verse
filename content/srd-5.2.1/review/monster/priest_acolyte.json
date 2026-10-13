@@ -5,7 +5,7 @@
   "id": "priest_acolyte",
   "status": "needs_review",
   "confidence": "medium",
-  "usage": "Encounters and arena fights. The engine runs the actions it can compile from the stat block.",
+  "usage": "Arena PvE foe once enabled. The engine runs the actions it can compile from the stat block; campaign encounters use their own copies.",
   "srd": {
     "engineId": "srd_priest_acolyte",
     "text": "_Medium or Small Humanoid (Cleric), Neutral_\n\n**AC** 13 **Initiative** +0 (10)\n\n**HP** 11 (2d8 + 2)\n\n**Speed** 30 ft.\n\n|  |  | MOD | SAVE |  |  | MOD | SAVE |  |  | MOD | SAVE |\n| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |\n| **STR** | 14 | +2 | +2 | **DEX** | 10 | +0 | +0 | **CON** | 12 | +1 | +1 |\n| **INT** | 10 | +0 | +0 | **WIS** | 14 | +2 | +2 | **CHA** | 11 | +0 | +0 |\n\n**Skills** Medicine +4, Religion +2\n\n**Gear** Chain Shirt, Holy Symbol, Mace\n\n**Senses** Passive Perception 12\n\n**Languages** Common\n\n**CR** 1/4 (XP 50; PB +2)\n\n#### Actions\n\n**_Mace._** _Melee Attack Roll:_ +4, reach 5 ft. _Hit:_ 5 (1d6 + 2) Bludgeoning damage plus 2 (1d4) Radiant damage.\n\n**_Radiant Flame._** _Ranged Attack Roll:_ +4, range 60 ft. _Hit:_ 7 (2d6) Radiant damage.\n\n**_Spellcasting._** The priest casts one of the following spells, using Wisdom as the spellcasting ability:\n\n**At Will:** _Light, Thaumaturgy_\n\n#### Bonus Actions\n\n**_Divine Aid (1/Day)._** The priest casts _Bless, Healing Word,_ or _Sanctuary,_ using the same spellcasting ability as Spellcasting."

@@ -5,7 +5,7 @@
   "id": "specter",
   "status": "auto_ok",
   "confidence": "high",
-  "usage": "Encounters and arena fights. The engine runs the actions it can compile from the stat block.",
+  "usage": "Arena PvE foe once enabled. The engine runs the actions it can compile from the stat block; campaign encounters use their own copies.",
   "srd": {
     "engineId": "srd_specter",
     "text": "_Medium Undead, Chaotic Evil_\n\n**AC** 12 **Initiative** +2 (12)\n\n**HP** 22 (5d8)\n\n**Speed** 30 ft., Fly 50 ft. (hover)\n\n|  |  | MOD | SAVE |  |  | MOD | SAVE |  |  | MOD | SAVE |\n| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |\n| **STR** | 1 | −5 | −5 | **DEX** | 14 | +2 | +2 | **CON** | 11 | +0 | +0 |\n| **INT** | 10 | +0 | +0 | **WIS** | 10 | +0 | +0 | **CHA** | 11 | +0 | +0 |\n\n**Resistances** Acid, Bludgeoning, Cold, Fire, Lightning, Piercing, Slashing, Thunder\n\n**Immunities** Necrotic, Poison; Charmed, Exhaustion, Grappled, Paralyzed, Petrified, Poisoned, Prone, Restrained, Unconscious\n\n**Senses** Darkvision 60 ft.; Passive Perception 10\n\n**Languages** Understands Common plus one other language but can't speak\n\n**CR** 1 (XP 200; PB +2)\n\n#### Traits\n\n**_Incorporeal Movement._** The specter can move through other creatures and objects as if they were Difficult Terrain. It takes 5 (1d10) Force damage if it ends its turn inside an object.\n\n**_Sunlight Sensitivity._** While in sunlight, the specter has Disadvantage on ability checks and attack rolls.\n\n#### Actions\n\n**_Life Drain._** _Melee Attack Roll:_ +4, reach 5 ft. _Hit:_ 7 (2d6) Necrotic damage. If the target is a creature, its Hit Point maximum decreases by an amount equal to the damage taken."

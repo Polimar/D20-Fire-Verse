@@ -12,6 +12,8 @@ import {
   publicState,
 } from "../src/local/room.js";
 import { getArenaMap } from "../src/local/arena-maps.js";
+import { arenaRoster } from "../src/local/arena.js";
+import { setContentEnabled } from "../src/local/content-catalog.js";
 import { boot } from "./helpers.js";
 
 before(boot);
@@ -100,6 +102,19 @@ test("kicking without being the host is refused", () => {
   const room = createArena({ format: "ffa_1v1", ownerUserId: "host" });
   const a = joinRoom(room.roomCode, "One", "brenna_ironveal", "ua");
   assert.throws(() => arenaKick(room.roomCode, "other", a.playerId), /ARENA_NOT_OWNER/);
+});
+
+test("the PvE roster is only what an admin enabled", () => {
+  const pve = { format: "pve_1v1", theme: "brewery", mapSize: "small", level: 1, privacy: "public" } as const;
+  assert.equal(arenaRoster().length, 0);
+  assert.throws(() => createArena(pve), /ARENA_NO_MONSTERS/);
+  setContentEnabled("monster", "goblin_minion", true);
+  setContentEnabled("monster", "goblin_warrior", true);
+  assert.deepEqual(arenaRoster().map((m) => m.id), ["srd_goblin_minion", "srd_goblin_warrior"]);
+  assert.equal(createArena(pve).arena?.monsterId, "srd_goblin_warrior");
+  assert.throws(() => createArena({ ...pve, monsterId: "srd_aboleth" }), /ARENA_BAD_MONSTER/);
+  setContentEnabled("monster", "goblin_minion", false);
+  assert.throws(() => createArena({ ...pve, monsterId: "srd_goblin_minion" }), /ARENA_BAD_MONSTER/);
 });
 
 test("arena PvE 1v1 seats one hero against a catalog monster", () => {

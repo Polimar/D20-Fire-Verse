@@ -5,7 +5,7 @@
   "id": "sprite",
   "status": "needs_review",
   "confidence": "medium",
-  "usage": "Encounters and arena fights. The engine runs the actions it can compile from the stat block.",
+  "usage": "Arena PvE foe once enabled. The engine runs the actions it can compile from the stat block; campaign encounters use their own copies.",
   "srd": {
     "engineId": "srd_sprite",
     "text": "_Tiny Fey, Neutral Good_\n\n**AC** 15 **Initiative** +4 (14)\n\n**HP** 10 (4d4)\n\n**Speed** 10 ft., Fly 40 ft.\n\n|  |  | MOD | SAVE |  |  | MOD | SAVE |  |  | MOD | SAVE |\n| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |\n| **STR** | 3 | −4 | −4 | **DEX** | 18 | +4 | +4 | **CON** | 10 | +0 | +0 |\n| **INT** | 14 | +2 | +2 | **WIS** | 13 | +1 | +1 | **CHA** | 11 | +0 | +0 |\n\n**Skills** Perception +3, Stealth +8\n\n**Senses** Passive Perception 13\n\n**Languages** Common, Elvish, Sylvan\n\n**CR** 1/4 (XP 50; PB +2)\n\n#### Actions\n\n**_Needle Sword._** _Melee Attack Roll:_ +6, reach 5 ft. _Hit:_ 6 (1d4 + 4) Piercing damage.\n\n**_Enchanting Bow._** _Ranged Attack Roll:_ +6, range 40/160 ft. _Hit:_ 1 Piercing damage, and the target has the Charmed condition until the start of the sprite's next turn.\n\n**_Heart Sight._** _Charisma Saving Throw:_ DC 10, one creature within 5 feet the sprite can see (Celestials, Fiends, and Undead automatically fail the save). _Failure:_ The sprite knows the target's emotions and alignment.\n\n**_Invisibility._** The sprite casts _Invisibility_ on itself, requiring no spell components and using Charisma as the spellcasting ability."

@@ -7,7 +7,7 @@
   "id": "shrieker_fungus",
   "status": "needs_review",
   "confidence": "low",
-  "usage": "Encounters and arena fights. The engine runs the actions it can compile from the stat block.",
+  "usage": "Arena PvE foe once enabled. The engine runs the actions it can compile from the stat block; campaign encounters use their own copies.",
   "srd": {
     "engineId": "srd_shrieker_fungus",
     "text": "_Medium Plant, Unaligned_\n\n**AC** 5 **Initiative** −5 (5)\n\n**HP** 13 (3d8)\n\n**Speed** 5 ft.\n\n|  |  | MOD | SAVE |  |  | MOD | SAVE |  |  | MOD | SAVE |\n| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |\n| **STR** | 1 | −5 | −5 | **DEX** | 1 | −5 | −5 | **CON** | 10 | +0 | +0 |\n| **INT** | 1 | −5 | −5 | **WIS** | 3 | −4 | −4 | **CHA** | 1 | −5 | −5 |\n\n**Immunities** Blinded, Charmed, Deafened, Frightened\n\n**Senses** Blindsight 30 ft.; Passive Perception 6\n\n**Languages** None\n\n**CR** 0 (XP 0; PB +2)\n\n#### Reactions\n\n**_Shriek._** _Trigger:_ A creature or a source of Bright Light moves within 30 feet of the shrieker. _Response:_ The shrieker emits a shriek audible within 300 feet of itself for 1 minute or until the shrieker dies."

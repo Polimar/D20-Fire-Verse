@@ -716,6 +716,7 @@ function renderHome() {
       <div id="pveMonsterWrap" ${arenaCreate.format === "pve_1v1" ? "" : "hidden"}>
         <label>Foe name <input id="arenaMonsterQ" value="${esc(arenaCreate.monsterQuery)}" placeholder="Filter by name" /></label>
         <label>CR <select id="arenaMonsterCr"><option value="">Any</option>${[...new Set(arenaMonsters.map((m) => m.cr))].sort((a, b) => (arenaMonsters.find((m) => m.cr === a)?.crValue ?? 0) - (arenaMonsters.find((m) => m.cr === b)?.crValue ?? 0)).map((cr) => `<option value="${esc(cr)}" ${arenaCreate.monsterCr === cr ? "selected" : ""}>${esc(cr)}</option>`).join("")}</select></label>
+        ${arenaMonsters.length ? "" : `<p class="meta">No creatures are enabled for the arena yet. An admin turns them on in the portal under Content.</p>`}
         <label>Creature <select id="arenaMonster">${filteredArenaMonsters().map((m) => `<option value="${esc(m.id)}" ${arenaCreate.monsterId === m.id ? "selected" : ""}>${esc(m.name)} (CR ${esc(m.cr)})</option>`).join("")}</select></label>
       </div>
       <button type="submit" class="primary">Open the arena</button>

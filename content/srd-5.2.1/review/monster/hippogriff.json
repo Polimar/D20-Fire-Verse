@@ -5,7 +5,7 @@
   "id": "hippogriff",
   "status": "auto_ok",
   "confidence": "high",
-  "usage": "Encounters and arena fights. The engine runs the actions it can compile from the stat block.",
+  "usage": "Arena PvE foe once enabled. The engine runs the actions it can compile from the stat block; campaign encounters use their own copies.",
   "srd": {
     "engineId": "srd_hippogriff",
     "text": "_Large Monstrosity, Unaligned_\n\n**AC** 11 **Initiative** +1 (11)\n\n**HP** 26 (4d10 + 4)\n\n**Speed** 40 ft., Fly 60 ft.\n\n|  |  | MOD | SAVE |  |  | MOD | SAVE |  |  | MOD | SAVE |\n| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |\n| **STR** | 17 | +3 | +3 | **DEX** | 13 | +1 | +1 | **CON** | 13 | +1 | +1 |\n| **INT** | 2 | −4 | −4 | **WIS** | 12 | +1 | +1 | **CHA** | 8 | −1 | −1 |\n\n**Skills** Perception +5\n\n**Senses** Passive Perception 15\n\n**Languages** None\n\n**CR** 1 (XP 200; PB +2)\n\n#### Traits\n\n**_Flyby._** The hippogriff doesn't provoke an Opportunity Attack when it flies out of an enemy's reach.\n\n#### Actions\n\n**_Multiattack._** The hippogriff makes two Rend attacks.\n\n**_Rend._** _Melee Attack Roll:_ +5, reach 5 ft. _Hit:_ 7 (1d8 + 3) Slashing damage."

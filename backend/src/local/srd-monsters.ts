@@ -488,12 +488,6 @@ export function listArenaMonsters(): Array<{ id: string; name: string; cr: strin
     .sort((a, b) => a.name.localeCompare(b.name) || a.id.localeCompare(b.id));
 }
 
-export function defaultMonsterId(level: number): string {
-  const cap = level <= 1 ? 0.25 : level === 2 ? 1 : 2;
-  const list = listArenaMonsters().filter((m) => m.crValue <= cap);
-  return (list[0] ?? listArenaMonsters()[0])?.id ?? "giant_rat";
-}
-
 export function mergeSrdInto(snap: { monsters: Record<string, MonsterDef>; abilities: Record<string, AbilityDef> }): void {
   const srd = loadSrdCatalog();
   for (const [id, mon] of Object.entries(srd.monsters)) {
