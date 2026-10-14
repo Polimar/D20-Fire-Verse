@@ -59,13 +59,18 @@ export function parseNotation(notation: string): {
 
 export function rollNotation(
   notation: string,
-  opts: { crit?: boolean } = {},
+  opts: { crit?: boolean; floor?: number; twice?: boolean } = {},
 ): {
   values: number[];
   total: number;
   sides: number[];
   modifier: number;
 } {
+  if (opts.twice) {
+    const a = rollNotation(notation, { crit: opts.crit, floor: opts.floor });
+    const b = rollNotation(notation, { crit: opts.crit, floor: opts.floor });
+    return b.total > a.total ? b : a;
+  }
   const parsed = parseNotation(notation);
   if (!parsed) {
     const n = Number(notation);
@@ -77,7 +82,7 @@ export function rollNotation(
   const values: number[] = [];
   let total = parsed.modifier;
   for (let i = 0; i < count; i += 1) {
-    const v = rollDie(parsed.sides);
+    const v = Math.max(rollDie(parsed.sides), Math.min(opts.floor ?? 0, parsed.sides));
     values.push(v);
     total += v;
   }
@@ -163,10 +168,12 @@ export function rollAttack(opts: {
   bonus: number;
   ac: number;
   mode: D20Mode;
+  /** Improved Critical and the like: the lowest natural roll that crits. */
+  critMin?: number;
 }): DiceRoll {
   const test = rollD20Test(opts.mode);
   const total = test.natural + opts.bonus;
-  const crit = test.natural === 20;
+  const crit = test.natural >= Math.min(20, opts.critMin ?? 20);
   const fumble = test.natural === 1;
   const outcome: DiceOutcome = crit ? "crit" : fumble ? "fumble" : total >= opts.ac ? "hit" : "miss";
   return makeDiceRoll({

@@ -160,7 +160,9 @@ test("an account hero sits down with the armor, shield, and magic weapon it has 
   const kitted = getPregen(hero.id) as HeroPregen;
   assert.equal(kitted.ac, 16 + 2 + 1);
   assert.deepEqual(kitted.weapons, ["gear_longsword_attack"], "Weapon +1 is swung as the fighter's longsword");
-  assert.deepEqual(kitted.gear.weapons.gear_longsword_attack, { attack: 1, damage: 1, onHit: [] });
+  assert.equal(kitted.gear.weapons.gear_longsword_attack?.attack, 1);
+  assert.equal(kitted.gear.weapons.gear_longsword_attack?.damage, 1);
+  assert.equal(kitted.gear.weapons.gear_longsword_attack?.mastery, "sap");
   assert.equal(kitted.gear.attack, 0, "the +1 stays on the weapon");
 
   const token = seat(kitted);

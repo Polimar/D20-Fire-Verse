@@ -710,7 +710,7 @@ function renderHome() {
       <label>Theme <select id="arenaTheme">${ARENA_THEMES.map((t) => `<option value="${t.id}" ${arenaCreate.theme === t.id ? "selected" : ""}>${esc(t.label)}</option>`).join("")}</select></label>
       <label>Size <select id="arenaSize">${["small", "medium", "large"].map((s) => `<option value="${s}" ${arenaCreate.mapSize === s ? "selected" : ""}>${s}</option>`).join("")}</select></label>
       <label>Custom map <select id="arenaMapId"><option value="">None</option></select></label>
-      <label>Hero level <select id="arenaLevel">${[1, 2, 3].map((l) => `<option value="${l}" ${arenaCreate.level === l ? "selected" : ""}>${l}</option>`).join("")}</select></label>
+      <label>Hero level <select id="arenaLevel">${[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((l) => `<option value="${l}" ${arenaCreate.level === l ? "selected" : ""}>${l}</option>`).join("")}</select></label>
       <label>Privacy <select id="arenaPrivacy"><option value="public" ${arenaCreate.privacy === "public" ? "selected" : ""}>Public</option><option value="private" ${arenaCreate.privacy === "private" ? "selected" : ""}>Private (code only)</option></select></label>
       <label>Name <input id="arenaName" maxlength="24" value="${esc(arenaCreate.name)}" placeholder="Optional" /></label>
       <div id="pveMonsterWrap" ${arenaCreate.format === "pve_1v1" ? "" : "hidden"}>

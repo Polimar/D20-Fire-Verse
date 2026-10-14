@@ -7,7 +7,8 @@
         "insight",
         "religion"
       ],
-      "feat": "magic_initiate_cleric_see_feats"
+      "feat": "magic_initiate",
+      "featChoice": "cleric"
     },
     {
       "id": "criminal",
@@ -16,7 +17,7 @@
         "sleight_of_hand",
         "stealth"
       ],
-      "feat": "alert_see_feats"
+      "feat": "alert"
     },
     {
       "id": "sage",
@@ -25,7 +26,8 @@
         "arcana",
         "history"
       ],
-      "feat": "magic_initiate_wizard_see_feats"
+      "feat": "magic_initiate",
+      "featChoice": "wizard"
     },
     {
       "id": "soldier",
@@ -34,7 +36,7 @@
         "athletics",
         "intimidation"
       ],
-      "feat": "savage_attacker_see_feats"
+      "feat": "savage_attacker"
     }
   ]
 }

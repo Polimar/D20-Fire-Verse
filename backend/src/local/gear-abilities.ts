@@ -28,7 +28,9 @@ export function weaponAbility(item: ItemDef): AbilityDef | undefined {
     proficient: true,
     rangeCells: ranged ? Math.max(2, Math.floor((weapon.rangeFt?.normal ?? 80) / FEET_PER_CELL)) : 1,
     damage: [{ dice: weapon.damage, damageType: weapon.damageType, ability }],
+    properties: weapon.properties.map((p) => p.toLowerCase().replace(/\s*\(.*$/, "")),
   };
+  if (weapon.versatile) effect.versatile = weapon.versatile;
   if (ranged && weapon.rangeFt) effect.longRangeCells = Math.floor(weapon.rangeFt.long / FEET_PER_CELL);
   if (finesse || ranged) effect.sneakAttackEligible = true;
   return { id: gearAttackId(item.id), name: item.name, actionType: "action", needsTarget: true, effects: [effect] };

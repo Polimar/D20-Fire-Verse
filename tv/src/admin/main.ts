@@ -5,6 +5,7 @@ import "./admin.css";
 import { activityPage } from "./pages/activity";
 import { campaignsPage } from "./pages/campaigns";
 import { contentPage } from "./pages/content";
+import { labPage } from "./pages/lab";
 import { mapsPage } from "./pages/maps";
 import { overviewPage } from "./pages/overview";
 import { roomsPage } from "./pages/rooms";
@@ -26,6 +27,7 @@ const PAGES: Page[] = [
   campaignsPage,
   mapsPage,
   contentPage,
+  labPage,
   statsPage,
   activityPage,
   mailPage,

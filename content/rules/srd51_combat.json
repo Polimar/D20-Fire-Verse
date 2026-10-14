@@ -256,6 +256,14 @@
     "combat": true,
     "effects": [{ "type": "reckless" }]
   },
+  "rage_extend": {
+    "id": "rage_extend",
+    "name": "Extend Rage",
+    "actionType": "bonus_action",
+    "level": 0,
+    "combat": true,
+    "effects": [{ "type": "rage_extend" }]
+  },
   "action_surge": {
     "id": "action_surge",
     "name": "Action Surge",

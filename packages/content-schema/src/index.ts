@@ -75,6 +75,8 @@ export const classLevel = z
     cantrips: z.number().int().nonnegative().optional(),
     preparedSpells: z.number().int().nonnegative().optional(),
     spellsKnown: z.number().int().nonnegative().optional(),
+    /** The class table's own columns at this level, e.g. { rages: "3", rage_damage: "+2" }. */
+    columns: z.record(z.string(), z.string()).optional(),
   })
   .strict();
 
@@ -139,6 +141,8 @@ export const backgroundDef = z
     skills: z.array(z.string()),
     tools: z.array(z.string()).optional(),
     feat: z.string().optional(),
+    /** The option the background fixes, e.g. "cleric" for Magic Initiate (Cleric). */
+    featChoice: z.string().optional(),
   })
   .strict();
 

@@ -29,6 +29,8 @@ import {
 } from "./hero.js";
 import { contentDetail, listCatalog, playbook, savePending, setPlaybook } from "./content-catalog.js";
 import { engineView } from "./content-engine.js";
+import { coverageSummary } from "./coverage.js";
+import { labCatalog, simulateHero, stampLabHero } from "./rules-lab.js";
 import { buyVendorSlot, declarePayToWin, vendorStock } from "./vendor.js";
 import { enqueue, leaderboard, takeMatch, type ArenaMode } from "./arena-queue.js";
 import { buyPremium, closeSeasonNow, currentSeason, skipPassTier } from "./seasons.js";
@@ -299,6 +301,50 @@ export function mountV2Routes(app: Express): void {
       const out = closeSeasonNow();
       audit(actor, "season.close", out.closed.id, { opened: out.opened.id });
       res.json({ season: out.opened, closed: out.closed });
+    } catch (err) {
+      fail(res, err);
+    }
+  });
+
+  app.get("/api/admin/lab/coverage", (req, res) => {
+    try {
+      admin(req);
+      res.json({ classes: coverageSummary() });
+    } catch (err) {
+      fail(res, err);
+    }
+  });
+
+  app.get("/api/admin/lab/options", (req, res) => {
+    try {
+      admin(req);
+      const catalog = labCatalog();
+      res.json({
+        classes: catalog.classes.map((row) => ({ id: row.id, name: row.name })),
+        subclasses: catalog.subclasses.map((row) => ({ id: row.id, classId: row.classId, name: row.name })),
+        species: (catalog.species ?? []).map((row) => ({ id: row.id, name: row.name })),
+        coverage: coverageSummary(),
+      });
+    } catch (err) {
+      fail(res, err);
+    }
+  });
+
+  app.post("/api/admin/lab/simulate", (req, res) => {
+    try {
+      admin(req);
+      res.json(simulateHero(req.body ?? {}));
+    } catch (err) {
+      fail(res, err);
+    }
+  });
+
+  app.post("/api/admin/lab/stamp", (req, res) => {
+    try {
+      const actor = admin(req);
+      const hero = stampLabHero(actor.id, req.body ?? {});
+      audit(actor, "lab.stamp", hero.id, { classId: hero.classes[0]?.id, level: hero.level });
+      res.json({ hero });
     } catch (err) {
       fail(res, err);
     }

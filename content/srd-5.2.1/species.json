@@ -77,7 +77,7 @@
       "id": "human",
       "name": "Human",
       "speedFt": 30,
-      "size": "small",
+      "size": "medium",
       "traits": [
         "Resourceful",
         "Skillful",
@@ -99,7 +99,7 @@
       "id": "tiefling",
       "name": "Tiefling",
       "speedFt": 30,
-      "size": "small",
+      "size": "medium",
       "traits": [
         "Darkvision",
         "Fiendish Legacy",

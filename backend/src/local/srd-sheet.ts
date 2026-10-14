@@ -3,6 +3,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import type { Pregen } from "./campaign.js";
 import type { CombatToken } from "./combat.js";
+import { buildKit, type ClassKit, type KitClass } from "./class-kit.js";
 import type { GearSheet } from "./hero-pregen.js";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -23,6 +24,8 @@ export type SrdAbility = {
 export type Vitals = {
   slots?: Record<string, number>;
   ragesLeft?: number;
+  secondWindLeft?: number;
+  indomitableLeft?: number;
   actionSurge?: boolean;
   ki?: number;
   layOnHands?: number;
@@ -99,19 +102,48 @@ export function spendSlot(token: CombatToken, level: number): number {
   throw new Error("NO_SLOT");
 }
 
+type SheetPregen = Pregen & {
+  spellSlots?: Record<string, number>;
+  cantrips?: string[];
+  spellsKnown?: string[];
+  spellAbility?: string;
+  reactions?: string[];
+  features?: string[];
+  fightingStyle?: string;
+  weapons?: string[];
+  gear?: GearSheet;
+  classes?: KitClass[];
+  savingThrows?: string[];
+  heavyArmor?: boolean;
+};
+
+const ABILITY_KEYS = ["str", "dex", "con", "int", "wis", "cha"] as const;
+export const FIGHTING_STYLES = ["archery", "defense", "great_weapon_fighting", "dueling"] as const;
+
+/** The class kit for any seat: account heroes carry their classes, campaign pregens name one class and level. */
+export function kitForPregen(pregen: Pregen, level = pregen.level ?? 1): ClassKit {
+  const extra = pregen as SheetPregen;
+  const classes = extra.classes?.length ? extra.classes : [{ id: pregen.class, level }];
+  const kit = buildKit(classes, extra.features ?? []);
+  if (extra.savingThrows?.length) kit.saves = [...extra.savingThrows];
+  return kit;
+}
+
+export function saveBonuses(pregen: Pregen, kit: ClassKit): Record<string, number> {
+  const prof = pregen.proficiencyBonus ?? 2;
+  const out: Record<string, number> = {};
+  for (const key of ABILITY_KEYS) {
+    const score = pregen.abilities[key] ?? 10;
+    out[key] = Math.floor((score - 10) / 2) + (kit.saves.includes(key) ? prof : 0);
+  }
+  return out;
+}
+
 export function initSheet(token: CombatToken, pregen: Pregen, saved?: Vitals): void {
-  const extra = pregen as Pregen & {
-    spellSlots?: Record<string, number>;
-    cantrips?: string[];
-    spellsKnown?: string[];
-    spellAbility?: string;
-    reactions?: string[];
-    features?: string[];
-    fightingStyle?: string;
-    weapons?: string[];
-    gear?: GearSheet;
-  };
+  const extra = pregen as SheetPregen;
   const level = pregen.level ?? 1;
+  const kit = kitForPregen(pregen, level);
+  token.kit = kit;
   token.sheetDriven = true;
   token.slots = { ...(saved?.slots ?? extra.spellSlots ?? {}) };
   token.cantrips = [...(extra.cantrips ?? [])];
@@ -119,24 +151,30 @@ export function initSheet(token: CombatToken, pregen: Pregen, saved?: Vitals): v
   token.spellAbility = extra.spellAbility;
   token.reactionIds = [...(extra.reactions ?? [])];
   token.reactionReady = saved ? !saved.dying : true;
-  token.features = [...(extra.features ?? [])];
-  token.fightingStyle = extra.fightingStyle;
+  token.features = [...new Set([...(extra.features ?? []), ...kit.flags])];
+  token.fightingStyles = FIGHTING_STYLES.filter((style) => token.features?.includes(style) || extra.fightingStyle === style);
+  token.fightingStyle = extra.fightingStyle ?? token.fightingStyles[0];
+  token.saves = saveBonuses(pregen, kit);
+  token.heavyArmor = Boolean(extra.heavyArmor);
   token.conditions = [];
   token.deathSuccesses = saved?.deathSuccesses ?? 0;
   token.deathFailures = saved?.deathFailures ?? 0;
   token.stable = Boolean(saved?.stable);
   token.dying = Boolean(saved?.dying) || (token.hp <= 0 && !token.stable);
-  token.secondWindUsed = Boolean(saved?.secondWindUsed);
-  token.ragesLeft = saved?.ragesLeft ?? (pregen.class === "barbarian" ? (level >= 3 ? 3 : 2) : 0);
-  token.actionSurge = saved?.actionSurge ?? (pregen.class === "fighter" && level >= 2);
-  token.kiMax = pregen.class === "monk" && level >= 2 ? level : 0;
+  const secondWindMax = kit.secondWind || (token.features.includes("second_wind") ? 1 : 0);
+  token.secondWindLeft = saved?.secondWindLeft ?? (saved?.secondWindUsed ? Math.max(0, secondWindMax - 1) : secondWindMax);
+  token.secondWindUsed = token.secondWindLeft <= 0;
+  token.indomitableLeft = saved?.indomitableLeft ?? kit.indomitable;
+  token.ragesLeft = saved?.ragesLeft ?? kit.rages;
+  token.actionSurge = saved?.actionSurge ?? kit.actionSurge > 0;
+  token.kiMax = kit.focus;
   token.ki = saved?.ki ?? token.kiMax;
   token.layOnHandsMax = pregen.class === "paladin" ? 5 * level : 0;
   token.layOnHands = saved?.layOnHands ?? token.layOnHandsMax;
-  token.channelDivinity = saved?.channelDivinity ?? (pregen.class === "cleric" && level >= 2 ? 1 : 0);
+  token.channelDivinity = saved?.channelDivinity ?? kit.channelDivinity;
   const cha = Math.max(1, Math.floor(((pregen.abilities.cha ?? 10) - 10) / 2));
   token.bardicLeft = saved?.bardicLeft ?? (pregen.class === "bard" ? cha : 0);
-  token.sorceryPoints = saved?.sorceryPoints ?? (pregen.class === "sorcerer" && level >= 2 ? level : 0);
+  token.sorceryPoints = saved?.sorceryPoints ?? kit.sorceryPoints;
   token.hitDie = HIT_DICE[pregen.class] ?? 8;
   token.hitDice = saved?.hitDice ?? level;
   if (token.hp <= 0) {
@@ -168,6 +206,8 @@ export function exportVitals(token: CombatToken): Vitals {
   return {
     slots: token.slots ? { ...token.slots } : undefined,
     ragesLeft: token.ragesLeft,
+    secondWindLeft: token.secondWindLeft,
+    indomitableLeft: token.indomitableLeft,
     actionSurge: token.actionSurge,
     ki: token.ki,
     layOnHands: token.layOnHands,
@@ -187,6 +227,54 @@ function pushUnique(list: string[], id: string): void {
   if (!list.includes(id)) list.push(id);
 }
 
+/** Ways to swing the same weapon. The menu id is `<variant>:<attack id>`. */
+export const ATTACK_VARIANTS = {
+  reckless: "Reckless",
+  brutal_force: "Brutal Strike: Forceful Blow",
+  brutal_hamstring: "Brutal Strike: Hamstring Blow",
+  tm_push: "Tactical Master: Push",
+  tm_sap: "Tactical Master: Sap",
+  tm_slow: "Tactical Master: Slow",
+} as const;
+
+export type AttackVariant = keyof typeof ATTACK_VARIANTS;
+
+export function splitVariant(id: string): { variant?: AttackVariant; id: string } {
+  const at = id.indexOf(":");
+  if (at < 0) return { id };
+  const head = id.slice(0, at);
+  if (head in ATTACK_VARIANTS) return { variant: head as AttackVariant, id: id.slice(at + 1) };
+  return { id };
+}
+
+/** Strength drives the swing: Strength weapons, and Finesse weapons when Strength is the higher score. */
+export function strengthWeapon(effect: Record<string, unknown> | undefined, pregen: Pregen | undefined): boolean {
+  if (!effect || effect.type !== "attack" || effect.spellAttack) return false;
+  if (Number(effect.rangeCells ?? 1) > 1) return false;
+  if (effect.ability === "str") return true;
+  return effect.ability === "finesse" && (pregen?.abilities.str ?? 10) >= (pregen?.abilities.dex ?? 10);
+}
+
+function attackVariants(token: CombatToken, pregen: Pregen | undefined, id: string, lookup: Lookup): string[] {
+  const effect = lookup(id)?.effects[0];
+  if (!effect || effect.type !== "attack" || effect.spellAttack) return [];
+  const has = (flag: string) => Boolean(token.features?.includes(flag));
+  const strong = strengthWeapon(effect, pregen);
+  const firstRoll = !token.rolledAttack;
+  const out: string[] = [];
+  if (has("reckless_attack") && strong && !token.reckless && firstRoll) out.push(`reckless:${id}`);
+  if (has("brutal_strike") && has("reckless_attack") && strong && !token.brutalUsed && (token.reckless || firstRoll)) {
+    out.push(`brutal_force:${id}`, `brutal_hamstring:${id}`);
+  }
+  const own = token.weaponGear?.[id]?.mastery;
+  if (has("tactical_master") && has("weapon_mastery") && own) {
+    for (const mastery of ["push", "sap", "slow"]) {
+      if (mastery !== own) out.push(`tm_${mastery}:${id}`);
+    }
+  }
+  return out;
+}
+
 export function refreshMenus(token: CombatToken, pregen: Pregen | undefined, lookup: Lookup): void {
   if (!token.sheetDriven || token.kind !== "pc") return;
   const actions: string[] = [];
@@ -196,7 +284,7 @@ export function refreshMenus(token: CombatToken, pregen: Pregen | undefined, loo
     if (!ability || ability.actionType === "reaction") return;
     const level = spellLevel(ability);
     if (level > 0 && !charged && !slotReady(token, level)) return;
-    if (token.raging && level > 0 && id.startsWith("spell_")) return;
+    if (token.raging && (id.startsWith("spell_") || token.cantrips?.includes(id) || token.spells?.includes(id))) return;
     if (token.castBonusSpell && level > 0) return;
     if (token.castLeveled && ability.actionType === "bonus_action" && level > 0) return;
     const bucket = ability.actionType === "bonus_action" ? bonus : actions;
@@ -205,6 +293,10 @@ export function refreshMenus(token: CombatToken, pregen: Pregen | undefined, loo
 
   const weapons = (pregen as { weapons?: string[] } | undefined)?.weapons ?? [];
   for (const name of weapons) place(weaponId(name));
+  for (const name of weapons) {
+    if (!actions.includes(weaponId(name))) continue;
+    for (const variant of attackVariants(token, pregen, weaponId(name), lookup)) pushUnique(actions, variant);
+  }
   for (const id of STANDARD) place(id);
   if (token.inventory.includes("potion_healing")) place("use_potion_healing");
   for (const id of token.cantrips ?? []) place(id);
@@ -216,15 +308,16 @@ export function refreshMenus(token: CombatToken, pregen: Pregen | undefined, loo
 
   const cls = pregen?.class;
   const level = pregen?.level ?? 1;
-  if ((cls === "fighter" || token.features?.includes("second_wind")) && !token.secondWindUsed) pushUnique(bonus, "second_wind");
+  const has = (flag: string) => Boolean(token.features?.includes(flag));
+  if ((token.secondWindLeft ?? 0) > 0) pushUnique(bonus, "second_wind");
   if (token.actionSurge) pushUnique(actions, "action_surge");
-  if (cls === "rogue" || pregen?.traits?.includes("cunning_action")) {
+  if (has("cunning_action") || pregen?.traits?.includes("cunning_action")) {
     pushUnique(bonus, "cunning_dash");
     pushUnique(bonus, "cunning_disengage");
     pushUnique(bonus, "cunning_hide");
   }
-  if ((token.ragesLeft ?? 0) > 0 && !token.raging && cls === "barbarian") pushUnique(bonus, "rage");
-  if (cls === "barbarian" && level >= 2) pushUnique(actions, "reckless_attack");
+  if ((token.ragesLeft ?? 0) > 0 && !token.raging && has("rage") && !token.heavyArmor) pushUnique(bonus, "rage");
+  if (token.raging && !token.rageKept) pushUnique(bonus, "rage_extend");
   if ((token.layOnHands ?? 0) > 0) pushUnique(actions, "lay_on_hands");
   if ((token.channelDivinity ?? 0) > 0 && token.features?.some((f) => f.includes("life") || f === "domain_life" || f === "disciple_of_life")) {
     pushUnique(actions, "channel_preserve_life");
@@ -263,8 +356,18 @@ export function shortRestResources(token: CombatToken, pregen: Pregen | undefine
     token.hitDice = (token.hitDice ?? 0) - 1;
     notes.push("hit die");
   }
-  token.secondWindUsed = false;
-  token.actionSurge = pregen?.class === "fighter" && (pregen.level ?? 1) >= 2;
+  const kit = token.kit ?? (pregen ? kitForPregen(pregen) : undefined);
+  const windMax = kit?.secondWind || (token.features?.includes("second_wind") ? 1 : 0);
+  if ((token.secondWindLeft ?? 0) < windMax) {
+    token.secondWindLeft = (token.secondWindLeft ?? 0) + 1;
+    notes.push("second wind");
+  }
+  token.secondWindUsed = (token.secondWindLeft ?? 0) <= 0;
+  if (kit && (token.ragesLeft ?? 0) < kit.rages) {
+    token.ragesLeft = (token.ragesLeft ?? 0) + 1;
+    notes.push("rage");
+  }
+  token.actionSurge = (kit?.actionSurge ?? 0) > 0;
   const knownSlots = (pregen as { spellSlots?: Record<string, number> } | undefined)?.spellSlots;
   if (pregen?.class === "warlock" && knownSlots) {
     token.slots = { ...knownSlots };
@@ -283,12 +386,11 @@ export function shortRestResources(token: CombatToken, pregen: Pregen | undefine
     notes.push("arcane recovery");
   }
   if (pregen?.class === "monk") token.ki = token.kiMax ?? token.ki;
-  if (pregen?.class === "fighter") notes.push("second wind");
   if (pregen?.class === "bard") {
     const cha = Math.max(1, Math.floor(((pregen.abilities.cha ?? 10) - 10) / 2));
     token.bardicLeft = cha;
   }
-  if (pregen?.class === "cleric" && (pregen.level ?? 1) >= 2) token.channelDivinity = 1;
+  if (kit?.channelDivinity && (token.channelDivinity ?? 0) < kit.channelDivinity) token.channelDivinity = (token.channelDivinity ?? 0) + 1;
   return notes;
 }
 
@@ -303,13 +405,16 @@ export function longRestResources(token: CombatToken, pregen: Pregen | undefined
   if (knownSlots) token.slots = { ...knownSlots };
   const level = pregen?.level ?? 1;
   if (token.hitDice == null) token.hitDice = level;
-  token.secondWindUsed = false;
-  token.actionSurge = pregen?.class === "fighter" && level >= 2;
+  const kit = token.kit ?? (pregen ? kitForPregen(pregen) : undefined);
+  token.secondWindLeft = kit?.secondWind || (token.features?.includes("second_wind") ? 1 : 0);
+  token.secondWindUsed = token.secondWindLeft <= 0;
+  token.indomitableLeft = kit?.indomitable ?? 0;
+  token.actionSurge = (kit?.actionSurge ?? 0) > 0;
   token.ki = token.kiMax ?? 0;
   token.layOnHands = token.layOnHandsMax ?? 0;
-  token.sorceryPoints = pregen?.class === "sorcerer" && level >= 2 ? level : 0;
-  if (pregen?.class === "barbarian") token.ragesLeft = level >= 3 ? 3 : 2;
-  if (pregen?.class === "cleric" && level >= 2) token.channelDivinity = 1;
+  token.sorceryPoints = kit?.sorceryPoints ?? 0;
+  token.ragesLeft = kit?.rages ?? 0;
+  token.channelDivinity = kit?.channelDivinity ?? 0;
   if (pregen?.class === "bard") {
     token.bardicLeft = Math.max(1, Math.floor(((pregen.abilities.cha ?? 10) - 10) / 2));
   }

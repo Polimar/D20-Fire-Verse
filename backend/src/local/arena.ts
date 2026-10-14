@@ -25,7 +25,7 @@ export function arenaRoster(): ArenaFoe[] {
 }
 
 function defaultFoe(roster: ArenaFoe[], level: number): string | undefined {
-  const cap = level <= 1 ? 0.25 : level === 2 ? 1 : 2;
+  const cap = [0, 0.25, 0.5, 1, 2, 3, 4, 5, 6, 7, 8][Math.min(10, Math.max(1, level))] ?? 8;
   const fitting = roster.filter((m) => m.crValue <= cap).sort((a, b) => b.crValue - a.crValue || a.name.localeCompare(b.name));
   return (fitting[0] ?? [...roster].sort((a, b) => a.crValue - b.crValue)[0])?.id;
 }
@@ -53,7 +53,7 @@ export type ArenaConfig = {
   theme: ArenaThemeId;
   size: ArenaSize;
   mapId?: string;
-  level: 1 | 2 | 3;
+  level: number;
   privacy: "public" | "private";
   name: string;
   phase: "lobby" | "active" | "ended" | "hero_swap";
@@ -111,7 +111,7 @@ export function parseCreateArena(body: {
   if (!isArenaTheme(theme)) throw new Error("ARENA_BAD_THEME");
   if (!isArenaSize(size)) throw new Error("ARENA_BAD_SIZE");
   const level = Number(body.level ?? 1);
-  if (level !== 1 && level !== 2 && level !== 3) throw new Error("BAD_LEVEL");
+  if (!Number.isInteger(level) || level < 1 || level > 10) throw new Error("BAD_LEVEL");
   const privacy = body.privacy === "private" ? "private" : "public";
   const name = String(body.name ?? "").trim().slice(0, 24);
   let monsterId: string | undefined;

@@ -6,6 +6,7 @@
 import type { ClassDef, EffectDef, ItemDef, SpeciesDef, SpellDef } from "@d20-fireverse/content-schema";
 import { abilityMod, averageHitDie } from "@d20-fireverse/rules";
 import type { AbilityDef, Pregen } from "./campaign.js";
+import { buildKit, hasFlag } from "./class-kit.js";
 import { catalogEntry } from "./content-catalog.js";
 import { gearAttackId } from "./gear-abilities.js";
 import { classPackWeapon, equippedGear, getHero, listHeroes, type EquippedItem, type HeroRow } from "./hero.js";
@@ -13,7 +14,7 @@ import { classPackWeapon, equippedGear, getHero, listHeroes, type EquippedItem, 
 type Ability = "str" | "dex" | "con" | "int" | "wis" | "cha";
 type Rider = { damage: string; damageType: string };
 
-export type WeaponGear = { attack: number; damage: number; onHit: Rider[] };
+export type WeaponGear = { attack: number; damage: number; onHit: Rider[]; mastery?: string };
 
 export type GearSheet = {
   attack: number;
@@ -38,16 +39,17 @@ export type HeroPregen = Pregen & {
   features: string[];
   weapons: string[];
   gear: GearSheet;
+  classes: Array<{ id: string; level: number; subclass?: string }>;
+  savingThrows: string[];
+  skills: string[];
+  background: string;
+  heavyArmor: boolean;
 };
 
 type Lookup = (id: string) => AbilityDef | undefined;
 
 const FEET_PER_CELL = 5;
 const POTIONS: Record<string, string> = { potion_of_healing: "potion_healing" };
-
-function slugFeature(name: string): string {
-  return name.toLowerCase().replace(/['’]/g, "").replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "");
-}
 
 function gearItem(id: string): ItemDef | undefined {
   return catalogEntry<ItemDef>("item", id);
@@ -144,8 +146,14 @@ export function heroPregen(heroId: string, lookup: Lookup): HeroPregen | undefin
   }
   if (shieldEntry && !shieldEntry.item.armor) ac += 2;
   if (armorEntry && !armor) notes.push(`${armorEntry.item.name} names no base armor the game knows, so it adds only its bonus.`);
+  const kit = buildKit(hero.classes, hero.features);
+  const heavyArmor = armor?.category === "heavy";
+  if (armor && hasFlag(kit, "defense")) ac += 1;
 
-  let speedCells = Math.floor((species?.speedFt ?? 30) / FEET_PER_CELL);
+  let speedFt = species?.speedFt ?? 30;
+  if (!heavyArmor) speedFt += kit.fastMovementFt;
+  if (!armor && !shieldEntry) speedFt += kit.unarmoredMovementFt;
+  let speedCells = Math.floor(speedFt / FEET_PER_CELL);
   if (armor?.strength && abilities.str < armor.strength) {
     speedCells = Math.max(1, speedCells - 2);
     notes.push(`Strength ${abilities.str} is under the armor's ${armor.strength}: Speed drops by 10 feet.`);
@@ -153,7 +161,7 @@ export function heroPregen(heroId: string, lookup: Lookup): HeroPregen | undefin
 
   const sheet: GearSheet = { attack: 0, damage: 0, resistances: [], immunities: [], weapons: {}, granted: {}, charges: {}, masteries: [], notes };
   const weapons: string[] = [];
-  const masteryKnown = hero.features.some((f) => slugFeature(f) === "weapon_mastery");
+  const masteryKnown = hasFlag(kit, "weapon_mastery");
   for (const entry of live) {
     const isWeaponSlot = entry.slot === "mainhand" || entry.slot === "offhand";
     const base = isWeaponSlot ? baseOf(entry.item, classWeapon(primary.id)) : undefined;
@@ -161,7 +169,11 @@ export function heroPregen(heroId: string, lookup: Lookup): HeroPregen | undefin
     if (attackId && !weapons.includes(attackId)) weapons.push(attackId);
     if (isWeaponSlot && !attackId) notes.push(`${entry.item.name} names no base weapon the game knows, so it cannot attack.`);
     const bucket: WeaponGear | undefined = attackId ? (sheet.weapons[attackId] ??= { attack: 0, damage: 0, onHit: [] }) : undefined;
-    if (masteryKnown && (base?.weaponMastery ?? entry.item.weaponMastery)) sheet.masteries.push((base?.weaponMastery ?? entry.item.weaponMastery)!);
+    const mastery = base?.weaponMastery ?? entry.item.weaponMastery;
+    if (masteryKnown && mastery) {
+      sheet.masteries.push(mastery);
+      if (bucket) bucket.mastery = mastery;
+    }
     for (const effect of effects(entry)) {
       switch (effect.kind) {
         case "ac_bonus":
@@ -239,9 +251,14 @@ export function heroPregen(heroId: string, lookup: Lookup): HeroPregen | undefin
     spellAbility: cls?.spellAbility,
     cantrips,
     spellsKnown,
-    features: hero.features.map(slugFeature),
+    features: kit.flags,
     weapons,
     gear: sheet,
+    classes: hero.classes.map((entry) => ({ ...entry })),
+    savingThrows: kit.saves,
+    skills: [...hero.skills],
+    background: hero.background,
+    heavyArmor,
   };
 }
 

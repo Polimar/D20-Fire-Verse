@@ -87,6 +87,27 @@ test("two +1 choices stay at or under 20", () => {
   assert.equal(pc.abilities.con, 15);
 });
 
+test("berserker at 3 grants Frenzy only, not later path features", () => {
+  const book = catalog();
+  let pc = hero("barbarian", 900);
+  pc = applyPick(pc, { kind: "class", classId: "barbarian" }, book);
+  pc = applyPick(pc, { kind: "class", classId: "barbarian" }, book);
+  assert.equal(nextAsk(pc, book)?.kind, "subclass");
+  pc = applyPick(pc, { kind: "subclass", subclassId: "path_of_the_berserker" }, book);
+  assert.ok(pc.features.includes("Frenzy"));
+  assert.equal(pc.features.includes("Retaliation"), false);
+  assert.equal(pc.features.includes("Intimidating Presence"), false);
+});
+
+test("a class cap blocks the next level in that class", () => {
+  const book = catalog();
+  book.classes = book.classes.map((row) => (row.id === "fighter" ? { ...row, cap: 2 } : row));
+  let pc = hero("fighter", 900);
+  pc = applyPick(pc, { kind: "class", classId: "fighter" }, book);
+  assert.equal(pc.level, 2);
+  assert.throws(() => applyPick(pc, { kind: "class", classId: "fighter" }, book), /CLASS_LEVEL_CAP/);
+});
+
 test("a class without spellProgression cannot take spell choices", () => {
   const book = catalog();
   const pc = hero("fighter");

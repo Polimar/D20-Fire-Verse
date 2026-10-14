@@ -9,11 +9,11 @@ import path from "node:path";
 import type { ClassDef, ItemDef } from "@d20-fireverse/content-schema";
 import {
   applyPick,
-  canAddClass,
+  blankProgress,
   canEquip,
-  defaultLevelPicks,
+  firstLevel,
+  levelableClasses,
   levelForXp,
-  meetsMulticlass,
   milestoneReward,
   nextAsk,
   placeholderPrice,
@@ -27,6 +27,7 @@ import {
 } from "@d20-fireverse/rules";
 import { accountDb, type SessionUser } from "./auth.js";
 import { enabledById, enabledClasses, enabledItems, enabledSpells, listCatalog, xpThresholds } from "./content-catalog.js";
+import { classLevelCap } from "./coverage.js";
 import { recordEvent } from "./events.js";
 import { CONTENT_ROOT, DATA_DIR } from "./paths.js";
 
@@ -285,8 +286,13 @@ export function createHero(userId: string, input: {
   if (packId) giveItem(userId, packId, heroId);
   const hero = getHero(heroId);
   if (!hero) throw new Error("BAD_CHARACTER");
+  const opened = firstLevel(blankProgress(toRules(hero), progressionCatalog()), progressionCatalog());
+  hero.features = opened.features;
+  hero.pending = opened.pending;
+  hero.maxHp = opened.maxHp;
+  saveHero(hero);
   recordEvent(userId, heroId, "hero_create", { classId: cls.id });
-  return hero;
+  return getHero(heroId) ?? hero;
 }
 
 function giveItem(userId: string, itemDefId: string, equipOn?: string): string {
@@ -504,7 +510,7 @@ function progressionCatalog(): CatalogSlice {
   const inPlay = new Set(listCatalog().filter((row) => row.inPlay).map((row) => `${row.kind}:${row.id}`));
   const take = <T extends { id: string }>(kind: string, rows: T[]) => rows.filter((row) => inPlay.has(`${kind}:${row.id}`));
   return {
-    classes: take("class", enabledClasses()) as CatalogSlice["classes"],
+    classes: take("class", enabledClasses()).map((row) => ({ ...row, cap: classLevelCap(row.id) })) as CatalogSlice["classes"],
     subclasses: take("subclass", listCatalog().filter((row) => row.kind === "subclass").map((row) => enabledById<CatalogSlice["subclasses"][number]>("subclass", row.id)).filter((row): row is CatalogSlice["subclasses"][number] => Boolean(row))),
     feats: take("feat", listCatalog().filter((row) => row.kind === "feat").map((row) => enabledById<CatalogSlice["feats"][number]>("feat", row.id)).filter((row): row is CatalogSlice["feats"][number] => Boolean(row))),
     spells: take("spell", enabledSpells()),
@@ -536,7 +542,7 @@ export function levelOptions(heroId: string): { ask: PendingAsk | null; classes:
   const classId = ask && "classId" in ask ? ask.classId : hero.classes[0]?.id;
   return {
     ask,
-    classes: catalog.classes.map((row) => row.id),
+    classes: levelableClasses(toProgress(hero), catalog),
     subclasses: catalog.subclasses.filter((row) => row.classId === classId).map((row) => row.id),
     feats: catalog.feats.map((row) => row.id),
     spells: catalog.spells.filter((row) => !classId || row.classes.includes(classId)).map((row) => row.id),
@@ -555,7 +561,8 @@ export function applyLevelUp(heroId: string, picks?: LevelPick): HeroRow {
   hero.classes = progress.classes;
   hero.abilities = progress.abilities;
   hero.features = progress.features;
-  hero.spells = progress.spells;
+  hero.skills = progress.proficiency;
+  hero.spells = [...progress.spells, ...progress.cantrips];
   hero.pending = progress.pending;
   hero.maxHp = progress.maxHp;
   saveHero(hero);

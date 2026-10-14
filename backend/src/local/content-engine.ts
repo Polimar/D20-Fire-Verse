@@ -8,6 +8,7 @@ import { getAbility, getMonster, type AbilityDef } from "./campaign.js";
 import { currentSnapshot } from "./catalog.js";
 import { catalogEntry } from "./content-catalog.js";
 import { gearAbility, gearAttackId } from "./gear-abilities.js";
+import { classFeatureRows, classLevelCap, type CoverageStatus } from "./coverage.js";
 import { srdMonsterId } from "./srd-monsters.js";
 
 export type EngineLine = { label: string; detail: string; ok: boolean };
@@ -306,6 +307,31 @@ function itemView(game: ItemDef): EngineView {
   };
 }
 
+const STATUS_OK: ReadonlySet<CoverageStatus> = new Set(["runs", "progression", "no_combat"]);
+
+function classView(id: string, game: { name?: string; levels?: Array<{ level: number; features: string[] }> }): EngineView {
+  const rows = classFeatureRows(id).filter((row) => row.level <= 10);
+  const cap = classLevelCap(id);
+  const lines: EngineLine[] = rows.map((row) => ({
+    label: `L${row.level} ${row.feature}`,
+    detail: row.note ?? row.status.replace(/_/g, " "),
+    ok: STATUS_OK.has(row.status),
+  }));
+  const blocked = lines.filter((line) => !line.ok).length;
+  const state: EngineView["state"] = !rows.length ? "sheet" : !blocked ? "runs" : lines.some((line) => line.ok) ? "partial" : "unused";
+  return {
+    state,
+    headline:
+      cap > 0
+        ? `${game.name ?? id} is playable through level ${cap}. Features above that, or marked missing, do not run in a fight.`
+        : `${game.name ?? id} has no fully green level yet. Create it in the rules lab to review gaps, then approve the record in Content.`,
+    source: "backend/src/local/coverage.ts · class-kit.ts · combat.ts",
+    lines,
+    mismatches: [],
+    notes: cap > 0 ? [`Playable cap: ${cap}`] : ["Playable cap: 0"],
+  };
+}
+
 export function engineView(kind: string, id: string, game: unknown, inPlay = false): EngineView | null {
   if (!game || typeof game !== "object") return null;
   switch (kind) {
@@ -316,6 +342,7 @@ export function engineView(kind: string, id: string, game: unknown, inPlay = fal
     case "item":
       return itemView(game as ItemDef);
     case "class":
+      return classView(id, game as { name?: string; levels?: Array<{ level: number; features: string[] }> });
     case "subclass":
     case "species":
     case "background":

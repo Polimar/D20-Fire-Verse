@@ -330,10 +330,18 @@ function parseClasses(markdown: string, reviews: ReviewBundle[]): { classes: unk
     const top = featureTable?.[0] ?? [];
     const data = (featureTable ?? []).slice(header2 ? 2 : 1);
     const col = (label: string) => top.findIndex((cell) => cell.toLowerCase().includes(label.toLowerCase()));
+    const extraCols = top
+      .map((label, index) => ({ label, index }))
+      .filter(({ label }) => label && !/^(level|proficiency bonus|class features|cantrips|prepared spells)$/i.test(label) && !/spell slots|slot level/i.test(label));
     const levels = data.filter((row) => num(row[0]) != null).map((row) => {
       const level = num(row[0]) ?? 1;
       const featureCol = top.findIndex((cell) => cell.toLowerCase().includes("class features"));
-      const features = (row[featureCol >= 0 ? featureCol : 2] ?? "").split(",").map((feature) => feature.trim()).filter(Boolean);
+      const features = (row[featureCol >= 0 ? featureCol : 2] ?? "").split(",").map((feature) => feature.trim()).filter((feature) => feature && feature !== "—");
+      const columns: Record<string, string> = {};
+      for (const { label, index } of extraCols) {
+        const value = row[index]?.trim();
+        if (value && value !== "—") columns[slug(label)] = value;
+      }
       const slots: Record<string, number> = {};
       headers.forEach((label, index) => {
         const slot = num(label);
@@ -350,6 +358,7 @@ function parseClasses(markdown: string, reviews: ReviewBundle[]): { classes: unk
         ...(pactCount && pactLevel ? { pactSlots: { slotLevel: pactLevel, count: pactCount } } : {}),
         ...(col("Cantrips") >= 0 && num(row[col("Cantrips")]) != null ? { cantrips: num(row[col("Cantrips")]) } : {}),
         ...(col("Prepared Spells") >= 0 && num(row[col("Prepared Spells")]) != null ? { preparedSpells: num(row[col("Prepared Spells")]) } : {}),
+        ...(Object.keys(columns).length ? { columns } : {}),
       };
     });
     while (levels.length < 20) {
@@ -362,6 +371,7 @@ function parseClasses(markdown: string, reviews: ReviewBundle[]): { classes: unk
     const half = hasSlots && !pact && !atFive?.spellSlots?.["3"] && Boolean(atFive?.spellSlots?.["2"]);
     const caster = pact ? "pact" : hasSlots ? (half ? "half" : "full") : "none";
     const mode = pact ? "pact" : hasSlots ? "prepared" : undefined;
+    const castWith = abilitiesIn(chunk.body.match(/Spellcasting Ability\.?[_*]*\s*(\w+) is (?:your|the) spellcasting ability/i)?.[1] ?? "")[0];
     const unparsed: string[] = [];
     if (!primary.length) unparsed.push("primary");
     if (levels.filter((level) => level.features.length || level.level === 1).length < 10) unparsed.push("levels");
@@ -375,7 +385,7 @@ function parseClasses(markdown: string, reviews: ReviewBundle[]): { classes: unk
       primary: primary.length ? primary : ["str"],
       multiclass,
       caster,
-      ...(primary[0] && caster !== "none" ? { spellAbility: primary[0] } : {}),
+      ...(caster !== "none" && (castWith ?? primary[0]) ? { spellAbility: castWith ?? primary[0] } : {}),
       ...(mode ? { spellProgression: { mode } } : {}),
       weaponMastery: levels.some((level) => level.level === 1 && level.features.some((feature) => /weapon mastery/i.test(feature))),
       levels: levels.slice(0, 20),
@@ -431,8 +441,16 @@ function parseOrigins(markdown: string, reviews: ReviewBundle[]): { species: unk
     const skills = [...chunk.body.matchAll(/Skill Proficiencies:\*\*\s*([^\n]+)/g)].flatMap((match) =>
       match[1].split(/,| and /).map((skill) => skillId(skill.trim())),
     );
-    const feat = chunk.body.match(/\*\*Feat:\*\*\s*([^\n]+)/)?.[1]?.trim();
-    const game = { id: slug(chunk.title), name: chunk.title, skills, ...(feat ? { feat: slug(feat) } : {}) };
+    const featText = chunk.body.match(/\*\*Feat:\*\*\s*([^\n]+)/)?.[1]?.replace(/\(see[^)]*\)/i, "").trim();
+    const featName = featText?.replace(/\(.*$/, "").trim();
+    const featChoice = featText?.match(/\(([^)]+)\)/)?.[1];
+    const game = {
+      id: slug(chunk.title),
+      name: chunk.title,
+      skills,
+      ...(featName ? { feat: slug(featName) } : {}),
+      ...(featChoice ? { featChoice: slug(featChoice) } : {}),
+    };
     backgrounds.push(game);
     reviews.push(bundle({
       kind: "background",
@@ -446,7 +464,7 @@ function parseOrigins(markdown: string, reviews: ReviewBundle[]): { species: unk
   }
   for (const chunk of chunks(speciesSection, 4)) {
     const speed = num(chunk.body.match(/\*\*Speed:\*\*\s*(\d+)/)?.[1]) ?? 30;
-    const size = /small/i.test(chunk.body.match(/\*\*Size:\*\*\s*([^\n]+)/)?.[1] ?? "") ? "small" : "medium";
+    const size = /^\W*small/i.test(chunk.body.match(/\*\*Size:\*\*\s*([^\n]+)/)?.[1] ?? "") ? "small" : "medium";
     const traits = [...chunk.body.matchAll(/^_([^_]+)\._/gm)].map((match) => match[1].trim());
     const unparsed = traits.filter((trait) => !/toughness/i.test(trait));
     const hpPerLevel = traits.some((trait) => /toughness/i.test(trait)) ? 1 : undefined;

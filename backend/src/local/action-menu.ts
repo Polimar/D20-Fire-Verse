@@ -115,11 +115,13 @@ const FIXED: Record<string, string> = {
   rage: "Bonus · STR advantage and physical resistance while raging",
   reckless: "Advantage on melee STR attacks; foes have advantage against you",
   surge: "Take one extra action this turn",
+  rage_extend: "Bonus · keep Rage until the end of your next turn",
   mage_armor: "Self · AC becomes 13+DEX for 8 hours · slot 1",
 };
 
 const BY_ID: Record<string, string> = {
-  second_wind: "Bonus · heal 1d10+level · once per rest",
+  second_wind: "Bonus · heal 1d10+fighter level · uses from the class table",
+  rage_extend: "Bonus · keep Rage until the end of your next turn",
   cunning_dash: "Bonus · Dash (move again this turn)",
   cunning_disengage: "Bonus · Disengage (no opportunity attacks)",
   cunning_hide: "Bonus · Hide (Stealth check)",

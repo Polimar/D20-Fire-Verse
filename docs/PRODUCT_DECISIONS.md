@@ -51,3 +51,6 @@ Full SRD to L20 · map editor · shops · systemic loot/level-up · Cognito/acco
 
 ## Post-hackathon (not scheduled)
 Widen catalog on same effect schema; deeper Arcana console parity; ambient integrations if APIs exist. Arena PvP (see `docs/ARENA.md`) ships on a personal branch; friends/leaderboard stay unranked until scoring is chosen.
+
+## SRD 5.2.1 playable slice (2026-10-13)
+The live rules are SRD 5.2.1. A class is playable in arena and campaign up to the **coverage cap**: the highest level 1–10 whose combat paragraphs actually run. Barbarian (Path of the Berserker) and Fighter (Champion) are capped at 10. Other classes can be created at level 1 and reviewed in **Admin → Rules lab**; they do not level past a green cap. Arena hero level is 1–10. The TV forge still uses the older 5.1 1–3 flow; account heroes and the lab are the 5.2.1 path. Content review (edit, approve, reject, notes, enable) is unchanged — in-play still requires a valid, enabled, non-rejected record.
