@@ -2,7 +2,7 @@
 
 Documento di riferimento per implementazione e **brief Cursor**.  
 Organizzato in **CHECKPOINT** (fette verticali giocabili).  
-**Ultimo aggiornamento:** 2026-10-15 (CK-2…CK-9 chiusi su branch `cursor/pg-builder-v2-plan-e574`).
+**Ultimo aggiornamento:** 2026-10-15 (CK-2…CK-9 + gap pre-merge su branch `cursor/pg-builder-v2-plan-e574`).
 
 ### Stato CK-2…CK-9 (agent)
 
@@ -10,12 +10,21 @@ Organizzato in **CHECKPOINT** (fette verticali giocabili).
 |----|--------|----------------------|
 | CK-2 | ☑ | `hero-sheet.test.ts` — API sheet + equip → attacchi |
 | CK-3 | ☑ | `wizard-forge.test.ts` — derive + cast arena + slot |
-| CK-4 | ☑ | `packages/protocol/forge-app.ts` + `tv/src/forge-v2.ts` (array/PB/roll, ASI, Human, spell, About, lingue) |
+| CK-4 | ☑ | `packages/protocol/forge-app.ts` + `tv/src/forge-v2.ts` (array/PB/roll, ASI, Human, spell, About, lingue, class + background starter picks) |
 | CK-5 | ☑ | Companion `mountForgeApp` parità; QR nascosto se loggato (già presente) |
-| CK-6 | ☑ | Exhaustion 2024 tier + long rest −1; short-rest HD in `rest-exhaustion.test.ts` |
-| CK-7 | ☑ | `rules-conditions.test.ts` (15 condizioni) + `standard-actions.test.ts` (6 std_*) |
-| CK-8 | ☑ | Split cantrips/prepared in `hero.ts`; `hero-level-up.test.ts` |
+| CK-6 | ☑ | Exhaustion 2024 (rest + **tier 4 max HP / tier 6 death in combat**); `rest-exhaustion.test.ts`, `exhaustion-combat.test.ts` |
+| CK-7 | ☑ | `rules-conditions.test.ts` (15 condizioni) + `standard-actions.test.ts` (**12** std_* 2024) |
+| CK-8 | ☑ | Split cantrips/prepared in `hero.ts`; `hero-level-up.test.ts`, `level-up-flow.test.ts` (API E2E; TV Phaser UI non headless) |
 | CK-9 | ☑ | `class-smoke-pack-a.test.ts` L1–20; `npm run coverage:report:pack-a` verde |
+
+### Gap espliciti pre-merge (chiusi)
+
+| Voce | Stato | Verifica |
+|------|--------|----------|
+| Starter equipment 12 classi + 4 background → stash/GP | ☑ | `starter-equipment.ts` + `starter-equipment.test.ts` |
+| 12 azioni standard 2024 eseguibili | ☑ | `oneshot_v1.json` std_* + `combat.ts` + `standard-actions.test.ts` |
+| Exhaustion tier 4 / 6 in combattimento | ☑ | `effectiveMaxHp` / `applyExhaustionLevel` + `exhaustion-combat.test.ts` |
+| Level-up UI E2E TV | ☑ (API) | `level-up-flow.test.ts`; **blocco TV:** nessun harness Phaser/D-pad headless — flusso coperto via `/api/heroes/:id/level-options` + `level-up` come `tv/src/level-up.ts` |
 
 ---
 
