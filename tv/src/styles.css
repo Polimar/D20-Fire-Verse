@@ -1242,7 +1242,8 @@ body.in-combat .subtitles p { font-size: calc(var(--sub-size) * 0.85); }
   animation: fade-in 0.3s ease;
 }
 @keyframes fade-in { from { opacity: 0; } }
-.modal.hero-wizard-modal { z-index: 80; background: #0c0806; backdrop-filter: none; }
+.modal.hero-wizard-modal { z-index: 80; background: #0c0806; backdrop-filter: none; animation: none; opacity: 1; }
+.modal.hero-wizard-modal .modal-card.hero-wizard-card { animation: none; opacity: 1; }
 body.wizard-open .stage,
 body.wizard-open .vignette,
 body.wizard-open .grain,

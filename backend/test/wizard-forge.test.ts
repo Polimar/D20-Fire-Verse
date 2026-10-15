@@ -5,7 +5,7 @@ import { createUser, openAuth } from "../src/local/auth.js";
 import { getAbility, getPregen } from "../src/local/campaign.js";
 import { performPcAction, type CombatState, type CombatToken } from "../src/local/combat.js";
 import { commitBuilderDraft } from "../src/local/builder-commit.js";
-import { resolveContent, setContentEnabled } from "../src/local/content-catalog.js";
+import { ensureForgeContentDefaults, resolveContent, setContentEnabled } from "../src/local/content-catalog.js";
 import { deriveHero } from "@d20-fireverse/rules";
 import { builderCatalog, classDefForBuilder } from "../src/local/builder-catalog.js";
 import { initSheet, refreshMenus } from "../src/local/srd-sheet.js";
@@ -81,9 +81,71 @@ test("wizard L1 derive requires exact cantrip and prepared counts", () => {
     spellSlotsL1: l1?.spellSlots,
   });
   assert.equal(sheet.ok, true);
+  assert.equal(sheet.ac, 12, "wizard kit A has no armor, so AC is 10 + Dexterity");
   assert.equal(sheet.cantripIds?.length, l1?.cantrips);
   assert.equal(sheet.preparedSpellIds?.length, l1?.preparedSpells);
   assert.deepEqual(sheet.spellSlots, l1?.spellSlots ?? { "1": 2 });
+});
+
+test("starter kit armor sets preview AC for every class", () => {
+  ensureForgeContentDefaults();
+  enableWizardLine();
+  const catalog = builderCatalog();
+  const scores = { str: 15, dex: 14, con: 13, int: 12, wis: 10, cha: 8 };
+  const expectAc: Record<string, number> = {
+    barbarian: 14,
+    bard: 13,
+    cleric: 17,
+    druid: 15,
+    fighter: 16,
+    monk: 12,
+    paladin: 18,
+    ranger: 14,
+    rogue: 13,
+    sorcerer: 12,
+    warlock: 13,
+    wizard: 12,
+  };
+  for (const [classId, ac] of Object.entries(expectAc)) {
+    const cls = classDefForBuilder(classId);
+    assert.ok(cls, classId);
+    const l1 = cls.levels.find((row) => row.level === 1);
+    const sheet = deriveHero(
+      {
+        name: classId,
+        classId,
+        speciesId: "human",
+        backgroundId: "soldier",
+        method: "standard_array",
+        baseAbilities: scores,
+        classSkills: cls.skillList.slice(0, cls.skillChoices),
+        backgroundAsi: { mode: "plus2plus1", plus2: "str", plus1: "con" },
+        equipChoice: "A",
+        fightingStyleFeatId: cls.levels.some((row) => row.features.some((f) => /fighting style/i.test(f))) ? "archery" : undefined,
+      },
+      catalog,
+      { hitDie: cls.hitDie, saves: cls.saves, spellSlotsL1: l1?.spellSlots },
+    );
+    assert.equal(sheet.ac, ac, `${classId} kit A`);
+  }
+  const fighter = classDefForBuilder("fighter")!;
+  const light = deriveHero(
+    {
+      name: "fighter",
+      classId: "fighter",
+      speciesId: "human",
+      backgroundId: "soldier",
+      method: "standard_array",
+      baseAbilities: scores,
+      classSkills: fighter.skillList.slice(0, fighter.skillChoices),
+      backgroundAsi: { mode: "plus2plus1", plus2: "dex", plus1: "con" },
+      equipChoice: "B",
+      fightingStyleFeatId: "archery",
+    },
+    catalog,
+    { hitDie: fighter.hitDie, saves: fighter.saves },
+  );
+  assert.equal(light.ac, 15, "fighter kit B is studded leather 12 + Dexterity 3");
 });
 
 test("wizard builder hero spends a level-1 slot when casting in arena combat", () => {

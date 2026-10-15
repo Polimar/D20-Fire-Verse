@@ -38,10 +38,10 @@ const SKILL_ABILITY: Record<string, AbilityKey> = {
   survival: "wis",
 };
 
-function classEquipChoices(classId: string): Array<{ id: "A" | "B" | "C"; label: string }> {
+function classEquipChoices(classId: string): Array<{ id: "A" | "B" | "C"; label: string; items: string[] }> {
   const row = classStarters().find((c) => c.classId === classId);
-  if (!row?.options.length) return [{ id: "A", label: "Class starter gear" }];
-  return row.options.map((o) => ({ id: o.id, label: o.label.slice(0, 96) }));
+  if (!row?.options.length) return [{ id: "A", label: "Class starter gear", items: [] }];
+  return row.options.map((o) => ({ id: o.id, label: o.label.slice(0, 96), items: o.items }));
 }
 
 function backgroundEquipChoices(backgroundId: string): Array<{ id: "A" | "B"; label: string }> {

@@ -16,7 +16,7 @@
     "build:companion": "npm run build -w @d20-fireverse/companion",
     "typecheck": "npm run typecheck -w @d20-fireverse/backend && tsc --noEmit -p tv && tsc --noEmit -p companion",
     "test": "npm test -w @d20-fireverse/backend",
-    "test:e2e": "npm run build:tv && npm run test:e2e -w @d20-fireverse/backend",
+    "test:e2e": "npm run build && npm run test:e2e -w @d20-fireverse/backend",
     "content:sync-srd": "node --import tsx tools/srd-parser/src/sync-downfallx.ts",
     "content:import": "node --import tsx tools/srd-parser/src/import-catalog.ts",
     "content:seed": "node --import tsx tools/srd-parser/src/emit-core.ts",
