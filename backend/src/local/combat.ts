@@ -133,6 +133,8 @@ export type CombatToken = {
   brand?: { by: string; dice: string };
   hitDie?: number;
   hitDice?: number;
+  /** 2024 exhaustion tier 0–6 on this token. */
+  exhaustionLevel?: number;
   arcaneRecovery?: boolean;
   attackedThisTurn?: boolean;
   saves?: Record<string, number>;
@@ -982,6 +984,8 @@ function isWeaponAttack(effect: Record<string, unknown> | undefined): boolean {
 }
 
 function cannotAct(token: CombatToken): boolean {
+  const tier = token.exhaustionLevel ?? 0;
+  if (tier >= 5) return true;
   return hasCondition(token, "incapacitated") || hasCondition(token, "paralyzed") || hasCondition(token, "unconscious");
 }
 
