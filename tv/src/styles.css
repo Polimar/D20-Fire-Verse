@@ -509,19 +509,25 @@ body[data-tone="victory"] .vignette {
   width: min(1280px, 96vw);
   max-height: 94vh;
   overflow: auto;
-  background: rgba(18, 12, 9, 0.96);
-  border: 1px solid rgba(240, 160, 90, 0.45);
-  box-shadow: 0 0 40px rgba(255, 120, 40, 0.22);
+  background: #120c09;
+  border: 1px solid rgba(240, 160, 90, 0.55);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.6), 0 0 48px rgba(255, 120, 40, 0.22);
 }
 .hero-wizard-card .hw { min-height: 72vh; }
 @media (max-width: 800px) {
   .modal.hero-wizard-modal { padding: 0; background: #120c09; }
   .modal.hero-wizard-modal .modal-card.hero-wizard-card {
     width: 100%;
-    height: 100%;
-    max-height: none;
+    height: 100dvh;
+    max-height: 100dvh;
     border-radius: 0;
+    border: 0;
+    padding: 0.7rem 0.75rem 0.35rem;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
   }
+  .hero-wizard-card .hw { min-height: 0; flex: 1; }
 }
 
 body.forge-page {
@@ -1236,7 +1242,12 @@ body.in-combat .subtitles p { font-size: calc(var(--sub-size) * 0.85); }
   animation: fade-in 0.3s ease;
 }
 @keyframes fade-in { from { opacity: 0; } }
-.modal.hero-wizard-modal { background: #0c0806; }
+.modal.hero-wizard-modal { z-index: 80; background: #0c0806; backdrop-filter: none; }
+body.wizard-open .stage,
+body.wizard-open .vignette,
+body.wizard-open .grain,
+body.wizard-open .topbar,
+body.wizard-open .pages { visibility: hidden; }
 .hw-card, .hw-chip { background: #1c130e; }
 
 .modal-card {

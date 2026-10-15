@@ -34,7 +34,10 @@ function mountSite(): express.Express {
 }
 
 async function shot(page: Page, name: string): Promise<void> {
-  await page.screenshot({ path: path.join(SHOT, `${name}.png`), fullPage: true });
+  await page
+    .waitForFunction(() => /HP \d+/.test(document.querySelector(".hw-sheet")?.textContent ?? ""), undefined, { timeout: 8_000 })
+    .catch(() => undefined);
+  await page.screenshot({ path: path.join(SHOT, `${name}.png`) });
 }
 
 async function forgeOne(page: Page, base: string, token: string, classId: string, heroName: string, label: string): Promise<void> {
@@ -64,6 +67,11 @@ async function forgeOne(page: Page, base: string, token: string, classId: string
   const skills = cls.skillList.filter((id) => !bg.skills.includes(id)).slice(0, cls.skillChoices);
   assert.equal(skills.length, cls.skillChoices, `skills for ${classId}`);
   for (const id of skills) await page.locator(`[data-skill="${id}"]`).click();
+  if (classId === "rogue") {
+    const expert = [...new Set([...bg.skills, ...skills])].slice(0, 2);
+    assert.equal(expert.length, 2);
+    for (const id of expert) await page.locator(`[data-expert="${id}"]`).click();
+  }
   if (cls.fightingStyleRequired && cls.fightingStyleFeatIds[0]) {
     await page.locator(`[data-style="${cls.fightingStyleFeatIds[0]}"]`).click();
   }
@@ -163,6 +171,41 @@ test("phone 390x844 touch forges a fighter", async () => {
     await context.addCookies([{ name: "fv_session", value: token, url: base }]);
     const page = await context.newPage();
     await forgeOne(page, base, token, "fighter", "Phone Fighter", "phone-fighter");
+  } finally {
+    await browser.close();
+    server.close();
+  }
+});
+
+test("TV D-pad moves the wizard with arrows and track skip", async () => {
+  const user = `dp${randomUUID().replace(/-/g, "").slice(0, 8)}`;
+  createUser(user, "password", "player");
+  const { token } = login(user, "password")!;
+  const app = mountSite();
+  const server = http.createServer(app);
+  await new Promise<void>((r) => server.listen(0, "127.0.0.1", r));
+  const port = (server.address() as { port: number }).port;
+  const base = `http://127.0.0.1:${port}`;
+  const browser = await chromium.launch({ headless: true });
+  try {
+    const context = await browser.newContext({ viewport: { width: 1920, height: 1080 } });
+    await context.addCookies([{ name: "fv_session", value: token, url: base }]);
+    const page = await context.newPage();
+    await page.goto(`${base}/?builder=open`, { waitUntil: "domcontentloaded" });
+    await page.waitForSelector(".hw h2");
+    await page.locator(".hw h2").first().waitFor();
+    const title = async () => (await page.locator(".hw h2").innerText()).trim();
+    assert.match(await title(), /class/i);
+    await page.keyboard.press("ArrowDown");
+    const focused = await page.evaluate(() => document.activeElement?.className ?? "");
+    assert.match(focused, /hw-/);
+    await page.evaluate(() => window.dispatchEvent(new KeyboardEvent("keydown", { key: "MediaTrackNext", bubbles: true })));
+    await page.waitForTimeout(200);
+    assert.match(await title(), /origin/i);
+    await page.evaluate(() => window.dispatchEvent(new KeyboardEvent("keydown", { key: "MediaTrackPrevious", bubbles: true })));
+    await page.waitForTimeout(200);
+    assert.match(await title(), /class/i);
+    await shot(page, "tv-dpad-class");
   } finally {
     await browser.close();
     server.close();

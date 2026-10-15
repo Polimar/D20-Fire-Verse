@@ -92,10 +92,10 @@ export function mountPocket(host: HTMLElement, adopt: (key: string) => void, sca
         <div class="pocket-sheet">${pcSheetHtml(data.sheet, tab, { isMyTurn: false, showEconomy: false })}</div>
         <div class="row2">
           <button type="button" id="pocketRename" ${data.seated ? "disabled" : ""}>Rename</button>
-          <button type="button" id="pocketReforge" ${data.seated ? "disabled" : ""}>Reforge</button>
+          <button type="button" id="pocketForgeNew">Forge another</button>
           <button type="button" id="pocketDelete" ${data.seated ? "disabled" : ""}>Delete</button>
         </div>
-        ${data.seated ? `<p class="meta">This hero is seated. Reforge and delete wait until that table closes.</p>` : ""}`;
+        ${data.seated ? `<p class="meta">This hero is seated. Delete waits until that table closes.</p>` : ""}`;
       card().querySelector("#pocketBack")!.addEventListener("click", paintHome);
       card().querySelector(".pocket-sheet")!.addEventListener("click", (ev) => {
         const t = (ev.target as HTMLElement).closest<HTMLElement>("[data-sheet-tab]");
@@ -109,7 +109,7 @@ export function mountPocket(host: HTMLElement, adopt: (key: string) => void, sca
         await api(`/api/characters/${id}/rename`, { method: "POST", body: JSON.stringify({ name }) });
         await refresh();
       });
-      card().querySelector("#pocketReforge")!.addEventListener("click", () => void openForge(id));
+      card().querySelector("#pocketForgeNew")!.addEventListener("click", () => void openForgeV2());
       card().querySelector("#pocketDelete")!.addEventListener("click", async () => {
         if (!window.confirm("Delete this hero?")) return;
         await api(`/api/characters/${id}`, { method: "DELETE" });

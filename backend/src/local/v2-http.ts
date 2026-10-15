@@ -38,6 +38,8 @@ import { createCampaignHero, listCampaignHeroes } from "./campaign-hero.js";
 import { addGold } from "./stash-mut.js";
 import { recordEvent } from "./events.js";
 import { mountBuilderRoutes } from "./builder-http.js";
+import { swapWeaponMastery } from "./mastery-swap.js";
+import { castRitual } from "./ritual.js";
 
 function user(req: Request): SessionUser {
   const found = requestUser(req);
@@ -175,6 +177,22 @@ export function mountV2Routes(app: Express): void {
   app.post("/api/heroes/:id/respec", (req, res) => {
     try {
       res.json({ hero: respec(user(req).id, req.params.id) });
+    } catch (err) {
+      fail(res, err);
+    }
+  });
+
+  app.post("/api/heroes/:id/mastery-swap", (req, res) => {
+    try {
+      res.json(swapWeaponMastery(user(req).id, req.params.id, String(req.body?.drop ?? ""), String(req.body?.take ?? "")));
+    } catch (err) {
+      fail(res, err);
+    }
+  });
+
+  app.post("/api/heroes/:id/ritual", (req, res) => {
+    try {
+      res.json(castRitual(user(req).id, req.params.id, String(req.body?.spellId ?? "")));
     } catch (err) {
       fail(res, err);
     }

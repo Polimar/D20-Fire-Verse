@@ -38,50 +38,106 @@ export type ForgeWizardHandle = {
 
 const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]!);
 
+const GLYPH: Record<string, string> = {
+  barbarian: `<path d="M5 19 L9 5 L12 12 L15 5 L19 19"/><path d="M7 19 H17"/>`,
+  bard: `<path d="M9 18 V6 L18 4 V16"/><circle cx="7" cy="18" r="2.2"/><circle cx="16" cy="16" r="2.2"/>`,
+  cleric: `<circle cx="12" cy="12" r="7"/><path d="M12 6 V18 M8 12 H16"/>`,
+  druid: `<path d="M12 20 C12 20 5 14 6 9 C9 8 12 12 12 12 C12 12 15 6 19 8 C18 15 12 20 12 20 Z"/>`,
+  fighter: `<path d="M12 3 V17"/><path d="M8 7 H16"/><path d="M9 21 L12 17 L15 21"/>`,
+  monk: `<circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="7.5"/>`,
+  paladin: `<path d="M12 3 L19 7 V13 C19 17 12 21 12 21 C12 21 5 17 5 13 V7 Z"/>`,
+  ranger: `<path d="M4 16 C8 8 16 6 20 4"/><path d="M14 4 H20 V10"/><path d="M6 19 L10 15"/>`,
+  rogue: `<path d="M8 20 L16 4"/><path d="M10 4 H17"/><path d="M7 16 L12 18"/>`,
+  sorcerer: `<path d="M12 3 L13.5 9 L20 10.5 L13.5 12 L12 18 L10.5 12 L4 10.5 L10.5 9 Z"/>`,
+  warlock: `<circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2.4" fill="#f6ead6"/><path d="M4 12 H8 M16 12 H20"/>`,
+  wizard: `<path d="M6 6 H18 V18 H6 Z"/><path d="M6 10 H18"/><path d="M12 3 L13.2 6 L12 5.2 L10.8 6 Z"/>`,
+  human: `<circle cx="12" cy="8" r="3"/><path d="M6 20 C7 14 17 14 18 20"/>`,
+  elf: `<path d="M8 20 C8 12 12 8 12 4 C12 8 16 12 16 20"/><path d="M6 9 L12 4 L18 9"/>`,
+  dwarf: `<path d="M6 18 H18"/><path d="M8 18 V10 H16 V18"/><path d="M5 10 H19"/>`,
+  gnome: `<path d="M12 4 L16 12 L12 20 L8 12 Z"/>`,
+  goliath: `<path d="M4 18 L9 8 L12 12 L15 6 L20 18 Z"/>`,
+  halfling: `<path d="M7 14 C7 8 12 6 16 8 L18 16 C14 20 8 18 7 14 Z"/>`,
+  orc: `<path d="M7 8 C8 4 10 6 12 8 C14 6 16 4 17 8 L19 18 H5 Z"/>`,
+  tiefling: `<path d="M8 8 C6 3 4 6 6 9"/><path d="M16 8 C18 3 20 6 18 9"/><circle cx="12" cy="13" r="5"/>`,
+  dragonborn: `<path d="M4 16 L8 8 L12 12 L16 6 L20 16 Z"/><path d="M9 16 H15"/>`,
+  acolyte: `<path d="M12 4 V14"/><path d="M9 8 H15"/><path d="M8 18 H16"/>`,
+  criminal: `<path d="M4 10 H20 V14 C16 18 8 18 4 14 Z"/><path d="M8 10 V8 H16 V10"/>`,
+  sage: `<path d="M6 5 H16 L18 7 V19 H6 Z"/><path d="M6 9 H16"/>`,
+  soldier: `<path d="M5 12 L12 5 L19 12 V18 H5 Z"/><path d="M9 18 V13 H15 V18"/>`,
+};
+
+function crest(id: string): string {
+  const mark = GLYPH[id] ?? `<circle cx="12" cy="12" r="6"/>`;
+  return `<span class="hw-crest" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#f6ead6" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${mark}</svg></span>`;
+}
+
+function roleLine(caster: string, spellAbility?: string): string {
+  if (caster === "none") return "Martial";
+  if (caster === "pact") return "Pact";
+  if (spellAbility === "wis") return "Divine caster";
+  if (caster === "half") return "Half caster";
+  return "Arcane caster";
+}
+
 function injectCss(): void {
   if (document.getElementById("forge-wizard-css")) return;
   const style = document.createElement("style");
   style.id = "forge-wizard-css";
   style.textContent = `
-    .hw { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(16rem, 0.7fr); gap: 1rem; min-height: 70vh; color: var(--ink, #f6ead6); font-family: var(--font-body, Georgia, serif); }
-    .hw.phone { grid-template-columns: 1fr; min-height: 100%; }
-    .hw-main { display: flex; flex-direction: column; gap: 0.8rem; min-width: 0; }
-    .hw-top { display: flex; align-items: center; gap: 0.6rem; }
-    .hw-top h2 { font-family: var(--font-display, Cinzel, serif); margin: 0; font-size: 1.35rem; letter-spacing: 0.04em; }
-    .hw-progress { display: flex; gap: 0.35rem; flex-wrap: wrap; }
-    .hw-dot { width: 0.7rem; height: 0.7rem; border-radius: 99px; border: 1px solid rgba(240,160,90,0.45); background: transparent; padding: 0; }
-    .hw-dot.on { background: #f0a05a; box-shadow: 0 0 10px rgba(255,140,60,0.7); }
-    .hw-dot.done { background: rgba(241,196,107,0.45); }
-    .hw-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr)); gap: 0.65rem; }
-    .hw.phone .hw-grid { grid-template-columns: 1fr 1fr; }
+    .hw { display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(17rem, 0.62fr); gap: 1.1rem; min-height: 70vh; color: #f6ead6; font-family: var(--font-body, Georgia, serif); background: #120c09; }
+    .hw-main { display: flex; flex-direction: column; gap: 0.75rem; min-width: 0; min-height: 0; }
+    .hw-top { display: flex; align-items: center; gap: 0.75rem; }
+    .hw-top h2 { font-family: var(--font-display, Cinzel, serif); margin: 0; font-size: 1.7rem; letter-spacing: 0.06em; text-transform: uppercase; }
+    .hw-kicker { margin: 0; color: #f0a05a; letter-spacing: 0.16em; text-transform: uppercase; font-size: 0.72rem; font-family: var(--font-display, Cinzel, serif); }
+    .hw-progress { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+    .hw-dot { width: 0.85rem; height: 0.85rem; border-radius: 99px; border: 1px solid rgba(240,160,90,0.55); background: #1c130e; padding: 0; }
+    .hw-dot.on { background: #f0a05a; box-shadow: 0 0 12px rgba(255,140,60,0.85); }
+    .hw-dot.done { background: #8a5a32; }
+    .hw-body { min-height: 0; }
+    .hw-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr)); gap: 0.7rem; }
     .hw-card, .hw-chip, .hw-nav button, .hw-ghost {
-      appearance: none; border: 1px solid rgba(246,234,214,0.16); background: rgba(16,11,8,0.72);
-      color: inherit; border-radius: 12px; cursor: pointer; text-align: left;
+      appearance: none; border: 1px solid rgba(246,234,214,0.18); background: #1c130e;
+      color: inherit; border-radius: 14px; cursor: pointer; text-align: left;
     }
-    .hw-card { padding: 0.85rem 0.9rem; min-height: 5.2rem; display: grid; gap: 0.25rem; }
-    .hw-card strong { font-family: var(--font-display, Cinzel, serif); font-size: 1rem; }
+    .hw-card { padding: 0.85rem 0.95rem 0.95rem; min-height: 7.4rem; display: grid; gap: 0.2rem; align-content: start;
+      background: linear-gradient(180deg, #2a1c14 0%, #140e0b 100%);
+      transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease; }
+    .hw-card:hover { transform: translateY(-2px); border-color: rgba(240,160,90,0.7); }
+    .hw-card strong { font-family: var(--font-display, Cinzel, serif); font-size: 1.05rem; letter-spacing: 0.03em; }
     .hw-card em, .hw-meta { font-style: normal; color: #cdbb9e; font-size: 0.82rem; }
-    .hw-card.picked, .hw-chip.picked { border-color: #f0a05a; box-shadow: 0 0 0 2px rgba(255,160,70,0.35), 0 0 22px rgba(255,120,40,0.25); }
-    .hw-card:focus-visible, .hw-chip:focus-visible, .hw-nav button:focus-visible, .hw-ghost:focus-visible {
-      outline: 3px solid #ffd08a; outline-offset: 2px;
+    .hw-card.picked, .hw-chip.picked { border-color: #f0a05a; box-shadow: 0 0 0 2px rgba(255,160,70,0.45), 0 0 26px rgba(255,120,40,0.32); background: linear-gradient(180deg, #3d2618, #1a100c); }
+    .hw-card:focus-visible, .hw-chip:focus-visible, .hw-nav button:focus-visible, .hw-ghost:focus-visible, .hw-dot:focus-visible {
+      outline: 3px solid #ffd08a; outline-offset: 3px;
     }
-    .hw-crest { width: 2.2rem; height: 2.2rem; border-radius: 50%; display: grid; place-items: center;
-      font-family: var(--font-display, Cinzel, serif); background: radial-gradient(circle at 40% 35%, #c8662c, #1c130e 70%); }
-    .hw-chip { padding: 0.55rem 0.7rem; min-height: 2.75rem; }
+    .hw-crest { width: 2.8rem; height: 2.8rem; border-radius: 12px; display: grid; place-items: center;
+      background: radial-gradient(circle at 40% 30%, #e07a32, #3a2014 42%, #120c09 74%);
+      box-shadow: inset 0 0 0 1px rgba(255,210,160,0.25), 0 8px 18px rgba(0,0,0,0.35); margin-bottom: 0.35rem; }
+    .hw-crest svg { width: 1.55rem; height: 1.55rem; }
+    .hw-chip { padding: 0.6rem 0.85rem; min-height: 2.9rem; border-radius: 999px; }
     .hw-row { display: flex; flex-wrap: wrap; gap: 0.45rem; }
-    .hw-score { display: grid; grid-template-columns: 3rem 1fr auto; gap: 0.4rem; align-items: center; margin-bottom: 0.35rem; }
-    .hw-nav { display: flex; gap: 0.5rem; margin-top: auto; }
-    .hw-nav button, .hw-ghost { padding: 0.7rem 1rem; min-height: 2.75rem; }
-    .hw-nav .go { background: linear-gradient(180deg, #e07a32, #9a3e16); border-color: transparent; font-family: var(--font-display, Cinzel, serif); }
-    .hw-sheet { background: rgba(16,11,8,0.78); border: 1px solid rgba(246,234,214,0.13); border-radius: 14px; padding: 0.9rem 1rem; }
-    .hw-sheet h3 { font-family: var(--font-display, Cinzel, serif); margin: 0 0 0.4rem; }
+    .hw-score { display: grid; grid-template-columns: 3.2rem 1fr auto; gap: 0.45rem; align-items: center; margin-bottom: 0.4rem; }
+    .hw-nav { display: flex; gap: 0.6rem; margin-top: auto; }
+    .hw-nav button, .hw-ghost { padding: 0.75rem 1.1rem; min-height: 3rem; font-size: 1rem; }
+    .hw-nav .go { background: linear-gradient(180deg, #e07a32, #9a3e16); border-color: transparent; font-family: var(--font-display, Cinzel, serif); letter-spacing: 0.08em; text-transform: uppercase; box-shadow: 0 8px 22px rgba(200,80,20,0.35); }
+    .hw-nav button:disabled { opacity: 0.4; }
+    .hw-sheet { background: #1a120e; border: 1px solid rgba(240,160,90,0.4); border-radius: 16px; padding: 1rem 1.05rem; box-shadow: 0 0 0 1px rgba(0,0,0,0.4), 0 16px 40px rgba(0,0,0,0.35); }
+    .hw-sheet h3 { font-family: var(--font-display, Cinzel, serif); margin: 0 0 0.35rem; font-size: 1.25rem; }
+    .hw-sheet p { margin: 0.15rem 0; }
     .hw-err { color: #e6735f; min-height: 1.2rem; }
-    .hw.phone .hw-sheet { position: static; }
-    .hw.phone .hw-nav { position: sticky; bottom: 0; background: #120c09; padding-top: 0.4rem; }
-    .hw-field { display: grid; gap: 0.25rem; margin-bottom: 0.6rem; }
+    .hw-field { display: grid; gap: 0.3rem; margin-bottom: 0.7rem; }
     .hw-field input, .hw-field textarea {
-      background: #120c09; color: inherit; border: 1px solid rgba(246,234,214,0.2); border-radius: 10px; padding: 0.65rem; font: inherit;
+      background: #120c09; color: inherit; border: 1px solid rgba(246,234,214,0.22); border-radius: 12px; padding: 0.75rem; font: inherit; min-height: 2.9rem;
     }
+    .hw.phone { display: flex; flex-direction: column; height: 100%; min-height: 0; gap: 0; background: #120c09; }
+    .hw.phone .hw-grid { grid-template-columns: 1fr 1fr; }
+    .hw.phone .hw-main { flex: 1 1 0; min-height: 0; overflow: hidden; }
+    .hw.phone .hw-body { flex: 1; overflow: auto; padding-right: 0.1rem; }
+    .hw.phone .hw-top h2 { font-size: 1.25rem; }
+    .hw.phone .hw-card { min-height: 6.6rem; }
+    .hw.phone .hw-chip, .hw.phone .hw-nav button, .hw.phone .hw-ghost { min-height: 3rem; }
+    .hw.phone .hw-nav { position: static; padding: 0.45rem 0 0.35rem; background: #120c09; }
+    .hw.phone .hw-sheet { flex: 0 0 auto; max-height: 12.5rem; overflow: auto; border-radius: 16px 16px 0 0; margin: 0; font-size: 0.92rem; }
+    .hw.phone .hw-sheet p { line-height: 1.25; }
   `;
   document.head.appendChild(style);
 }
@@ -89,14 +145,28 @@ function injectCss(): void {
 function sheetHtml(sheet: DerivedSheet | null): string {
   if (!sheet) return `<aside class="hw-sheet"><h3>Sheet</h3><p class="hw-meta">Choices update this panel.</p></aside>`;
   const abs = ABILITIES.map((a) => `${a.toUpperCase()} ${sheet.abilities[a].score}`).join(" · ");
-  const skills = sheet.skills.filter((s) => s.proficient).map((s) => s.label).join(", ") || "—";
+  const skills = sheet.skills
+    .filter((s) => s.proficient)
+    .map((s) => `${s.label} ${s.mod >= 0 ? "+" : ""}${s.mod}${s.expertise ? " (Expertise)" : ""}`)
+    .join(", ") || "—";
+  const saves = sheet.savingThrows.map((s) => `${s.ability.toUpperCase()} ${s.mod >= 0 ? "+" : ""}${s.mod}`).join(" · ") || "—";
+  const slots = sheet.spellSlots
+    ? Object.entries(sheet.spellSlots)
+        .filter(([, n]) => n > 0)
+        .map(([level, n]) => `L${level} ×${n}`)
+        .join(" · ")
+    : "";
   return `<aside class="hw-sheet" aria-live="polite">
+    <p class="hw-kicker">Live sheet</p>
     <h3>${esc(sheet.name || "Unnamed")}</h3>
     <p>L${sheet.level} ${esc(sheet.speciesName)} ${esc(sheet.className)}</p>
     <p>${esc(sheet.backgroundName)}</p>
-    <p>HP ${sheet.hp} · AC ${sheet.ac} · PP ${sheet.passivePerception}</p>
+    <p>HP ${sheet.hp} · AC ${sheet.ac} · Prof +${sheet.proficiencyBonus} · PP ${sheet.passivePerception}</p>
+    <p class="hw-meta">Saves ${esc(saves)}</p>
     <p class="hw-meta">${esc(abs)}</p>
     <p class="hw-meta">${esc(skills)}</p>
+    ${slots ? `<p class="hw-meta">Slots ${esc(slots)}</p>` : ""}
+    ${(sheet.cantripIds?.length || sheet.preparedSpellIds?.length) ? `<p class="hw-meta">Cantrips ${sheet.cantripIds?.length ?? 0} · Prepared ${sheet.preparedSpellIds?.length ?? 0}</p>` : ""}
     ${sheet.errors.length ? `<p class="hw-err">${sheet.errors.map(esc).join(", ")}</p>` : ""}
   </aside>`;
 }
@@ -142,6 +212,7 @@ export async function mountForgeWizard(host: HTMLElement, opts: ForgeWizardOptio
     const c = cls();
     if (id === "training") {
       if (draft.classSkills.length !== c.skillChoices) return `Pick ${c.skillChoices} class skills.`;
+      if (draft.classId === "rogue" && (draft.expertiseSkills?.length ?? 0) !== 2) return "Pick 2 skills for Expertise.";
       if (c.fightingStyleRequired && !draft.fightingStyleFeatId) return "Pick a fighting style.";
       if (draft.speciesId === "human" && !draft.speciesSkill) return "Humans pick one extra skill.";
       if (draft.speciesId === "human" && !draft.originFeatId) return "Humans pick an origin feat.";
@@ -198,21 +269,21 @@ export async function mountForgeWizard(host: HTMLElement, opts: ForgeWizardOptio
       body = `<div class="hw-grid">${catalog.classes
         .map(
           (row) =>
-            `<button type="button" class="hw-card ${row.id === draft.classId ? "picked" : ""}" data-class="${esc(row.id)}"><span class="hw-crest">${esc(row.name.slice(0, 1))}</span><strong>${esc(row.name)}</strong><em>${esc(row.caster === "none" ? "Martial" : row.caster)}</em></button>`,
+            `<button type="button" class="hw-card ${row.id === draft.classId ? "picked" : ""}" data-class="${esc(row.id)}">${crest(row.id)}<strong>${esc(row.name)}</strong><em>${esc(roleLine(row.caster, row.spellAbility))}</em></button>`,
         )
         .join("")}</div>`;
     } else if (id === "origin") {
       body = `<div class="hw-grid">${catalog.backgrounds
         .map(
           (row) =>
-            `<button type="button" class="hw-card ${row.id === draft.backgroundId ? "picked" : ""}" data-bg="${esc(row.id)}"><span class="hw-crest">${esc(row.name.slice(0, 1))}</span><strong>${esc(row.name)}</strong><em>${row.skills.map((s) => catalog.skills[s]?.label ?? s).join(", ")}</em></button>`,
+            `<button type="button" class="hw-card ${row.id === draft.backgroundId ? "picked" : ""}" data-bg="${esc(row.id)}">${crest(row.id)}<strong>${esc(row.name)}</strong><em>${row.skills.map((s) => catalog.skills[s]?.label ?? s).join(", ")}</em></button>`,
         )
         .join("")}</div>`;
     } else if (id === "species") {
       body = `<div class="hw-grid">${catalog.species
         .map(
           (row) =>
-            `<button type="button" class="hw-card ${row.id === draft.speciesId ? "picked" : ""}" data-species="${esc(row.id)}"><span class="hw-crest">${esc(row.name.slice(0, 1))}</span><strong>${esc(row.name)}</strong><em>${esc(row.traits.slice(0, 2).join(" · ") || "SRD species")}</em></button>`,
+            `<button type="button" class="hw-card ${row.id === draft.speciesId ? "picked" : ""}" data-species="${esc(row.id)}">${crest(row.id)}<strong>${esc(row.name)}</strong><em>${esc(row.traits.slice(0, 2).join(" · ") || "SRD species")}</em></button>`,
         )
         .join("")}</div>`;
     } else if (id === "scores") {
@@ -245,6 +316,12 @@ export async function mountForgeWizard(host: HTMLElement, opts: ForgeWizardOptio
             .map((fid) => `<button type="button" class="hw-chip ${draft.fightingStyleFeatId === fid ? "picked" : ""}" data-style="${esc(fid)}">${esc(catalog.feats.find((f) => f.id === fid)?.name ?? fid)}</button>`)
             .join("")}</div>`
         : "";
+      const expert =
+        c.id === "rogue"
+          ? `<p class="hw-meta">Expertise (2)</p><div class="hw-row">${[...new Set([...(bg()?.skills ?? []), ...draft.classSkills, ...(draft.speciesSkill ? [draft.speciesSkill] : [])])]
+              .map((sk) => `<button type="button" class="hw-chip ${draft.expertiseSkills?.includes(sk) ? "picked" : ""}" data-expert="${esc(sk)}">${esc(catalog.skills[sk]?.label ?? sk)}</button>`)
+              .join("")}</div>`
+          : "";
       const human =
         draft.speciesId === "human"
           ? `<p class="hw-meta">Human skill</p><div class="hw-row">${Object.entries(catalog.skills)
@@ -255,7 +332,7 @@ export async function mountForgeWizard(host: HTMLElement, opts: ForgeWizardOptio
                .map((f) => `<button type="button" class="hw-chip ${draft.originFeatId === f.id ? "picked" : ""}" data-ofeat="${esc(f.id)}">${esc(f.name)}</button>`)
                .join("")}</div>`
           : "";
-      body = `<p class="hw-meta">Pick ${c.skillChoices} class skills</p><div class="hw-row">${skills}</div>${styles}${human}`;
+      body = `<p class="hw-meta">Pick ${c.skillChoices} class skills</p><div class="hw-row">${skills}</div>${expert}${styles}${human}`;
     } else if (id === "gear") {
       body = `<p class="hw-meta">Class kit</p><div class="hw-grid">${c.equipChoices
         .map((e) => `<button type="button" class="hw-card ${draft.equipChoice === e.id ? "picked" : ""}" data-equip="${e.id}"><strong>${e.id}</strong><em>${esc(e.label)}</em></button>`)
@@ -284,7 +361,7 @@ export async function mountForgeWizard(host: HTMLElement, opts: ForgeWizardOptio
 
     host.innerHTML = `<div class="hw ${opts.layout === "phone" ? "phone" : ""}">
       <div class="hw-main">
-        <div class="hw-top"><button type="button" class="hw-ghost" id="hwClose">Close</button><h2>${esc(STEP_TITLE[id])}</h2></div>
+        <div class="hw-top"><button type="button" class="hw-ghost" id="hwClose">Close</button><div><p class="hw-kicker">Step ${step + 1} of ${steps.length}</p><h2>${esc(STEP_TITLE[id])}</h2></div></div>
         <div class="hw-progress">${steps.map((s, i) => `<button type="button" class="hw-dot ${i === step ? "on" : ""} ${i < step ? "done" : ""}" data-dot="${i}" aria-label="${esc(STEP_TITLE[s])}"></button>`).join("")}</div>
         <div class="hw-body">${body}</div>
         <p class="hw-err" id="hwErr">${esc(localError)}</p>
@@ -300,7 +377,7 @@ export async function mountForgeWizard(host: HTMLElement, opts: ForgeWizardOptio
     host.querySelector("#hwPrev")!.addEventListener("click", () => go(-1));
     host.querySelector("#hwNext")!.addEventListener("click", () => void go(1));
     host.querySelectorAll<HTMLButtonElement>("[data-dot]").forEach((b) => b.addEventListener("click", () => { step = Number(b.dataset.dot); localError = ""; paint(); }));
-    host.querySelectorAll<HTMLButtonElement>("[data-class]").forEach((b) => b.addEventListener("click", () => { draft.classId = b.dataset.class!; draft.classSkills = []; draft.cantrips = []; draft.spellsPrepared = []; draft.spellsKnown = []; paint(); }));
+    host.querySelectorAll<HTMLButtonElement>("[data-class]").forEach((b) => b.addEventListener("click", () => { draft.classId = b.dataset.class!; draft.classSkills = []; draft.expertiseSkills = []; draft.cantrips = []; draft.spellsPrepared = []; draft.spellsKnown = []; paint(); }));
     host.querySelectorAll<HTMLButtonElement>("[data-bg]").forEach((b) =>
       b.addEventListener("click", () => {
         draft.backgroundId = b.dataset.bg!;
@@ -346,6 +423,18 @@ export async function mountForgeWizard(host: HTMLElement, opts: ForgeWizardOptio
         const sk = b.dataset.skill!;
         if (draft.classSkills.includes(sk)) draft.classSkills = draft.classSkills.filter((x) => x !== sk);
         else if (draft.classSkills.length < c.skillChoices) draft.classSkills = [...draft.classSkills, sk];
+        const allowed = new Set([...(bg().skills ?? []), ...draft.classSkills, ...(draft.speciesSkill ? [draft.speciesSkill] : [])]);
+        draft.expertiseSkills = (draft.expertiseSkills ?? []).filter((id) => allowed.has(id));
+        paint();
+      }),
+    );
+    host.querySelectorAll<HTMLButtonElement>("[data-expert]").forEach((b) =>
+      b.addEventListener("click", () => {
+        const sk = b.dataset.expert!;
+        const cur = new Set(draft.expertiseSkills ?? []);
+        if (cur.has(sk)) cur.delete(sk);
+        else if (cur.size < 2) cur.add(sk);
+        draft.expertiseSkills = [...cur];
         paint();
       }),
     );

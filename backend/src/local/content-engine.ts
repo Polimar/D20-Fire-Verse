@@ -165,7 +165,7 @@ function monsterView(id: string, game: CatalogMonster, inPlay: boolean): EngineV
     headline: missed.length
       ? `The engine fields it as ${engineId} but skips ${missed.length} of its moves.`
       : `The engine fields it as ${engineId} and runs every action in the stat block.`,
-    source: "backend/src/local/srd-monsters.ts compiles content/srd/monsters-A-Z.md at startup; dice roll in backend/src/local/dice.ts",
+    source: "backend/src/local/srd-monsters.ts compiles content/srd-5.2.1/monsters.json; dice roll in backend/src/local/dice.ts",
     lines,
     mismatches,
     notes,

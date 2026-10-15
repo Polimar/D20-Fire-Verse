@@ -61,7 +61,7 @@ export function commitBuilderDraft(user: SessionUser, draft: BuilderDraft): Hero
       `INSERT INTO heroes (id, user_id, name, classes_json, species, background, alignment, level, xp, ability_scores_json,
         skills_json, portrait, respec_free_credits, features_json, spells_json, loadout_json, created_at,
         cantrips_json, spells_prepared_json, spellbook_json, builder_meta_json)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, 0, '[]', ?, '{"trinkets":[],"consumables":[]}', ?, ?, ?, ?, ?)`,
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, 0, ?, ?, '{"trinkets":[],"consumables":[]}', ?, ?, ?, ?, ?)`,
     )
     .run(
       heroId,
@@ -75,6 +75,7 @@ export function commitBuilderDraft(user: SessionUser, draft: BuilderDraft): Hero
       JSON.stringify(abilities),
       JSON.stringify([...new Set([...(catalog.backgrounds.find((b) => b.id === draft.backgroundId)?.skills ?? []), ...draft.classSkills, ...(draft.speciesSkill ? [draft.speciesSkill] : [])])]),
       draft.portraitId ?? null,
+      JSON.stringify((draft.expertiseSkills ?? []).map((id) => `expertise:${id}`)),
       JSON.stringify(spells),
       new Date().toISOString(),
       JSON.stringify(draft.cantrips ?? []),

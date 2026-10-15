@@ -5,7 +5,6 @@ import "@fontsource-variable/literata/opsz-italic.css";
 import "./styles.css";
 import { describeError, scriptRuns, srdLabel, type CastMember } from "@d20-fireverse/protocol";
 import { normalizeScene, sceneLabel, unlockAudio, type RoomScene } from "./audio";
-import { mountChargen, type ChargenCatalog } from "./chargen-ui";
 import { mountForgeWizard, type ForgeWizardHandle } from "@d20-fireverse/protocol/forge-wizard";
 import { CombatUi } from "./combat-ui";
 import { ARENA_FORMATS, ARENA_THEMES, suggestedSize, type OpenArena } from "./arena-ui";
@@ -237,7 +236,6 @@ let state: RoomState | null = null;
 let playerId: string | null = null;
 let pregens: Pregen[] = [];
 let portraits: Array<{ id: string; url: string }> = [];
-let chargenApi: ReturnType<typeof mountChargen> | null = null;
 let heroWizard: ForgeWizardHandle | null = null;
 
 async function builderApi<T>(url: string, init?: RequestInit): Promise<T> {
@@ -254,6 +252,7 @@ async function builderApi<T>(url: string, init?: RequestInit): Promise<T> {
 function closeHeroWizard(): void {
   heroWizard = null;
   $("heroWizard").hidden = true;
+  document.body.classList.remove("wizard-open");
   renderHome();
   requestAnimationFrame(() => restoreFocus());
 }
@@ -265,6 +264,7 @@ async function openHeroWizard(): Promise<void> {
   }
   const modal = $("heroWizard");
   modal.hidden = false;
+  document.body.classList.add("wizard-open");
   heroWizard = await mountForgeWizard($("heroWizardHost"), {
     api: builderApi,
     layout: window.matchMedia("(max-width: 800px)").matches ? "phone" : "tv",
@@ -354,8 +354,6 @@ function scopeRoot(): HTMLElement {
   if (gate) return gate;
   const modal = settingsOpen() ?? document.querySelector<HTMLElement>(".modal:not([hidden])");
   if (modal) return modal;
-  const cg = document.querySelector<HTMLElement>(".chargen-panel.is-open");
-  if (cg) return cg;
   return document.querySelector<HTMLElement>(".page.active") ?? document.body;
 }
 setScopeProvider(scopeRoot);
@@ -1511,7 +1509,7 @@ function onError(code: string, action?: string) {
     else renderLobby();
     return;
   }
-  if (action === "CREATE_CHARACTER" || action === "ROLL_ABILITIES") chargenApi?.failed();
+  if (action === "CREATE_CHARACTER" || action === "ROLL_ABILITIES") toast(describeError(code), "bad");
   if (action === "REJOIN" || (code === "ROOM_NOT_FOUND" && pendingRejoin)) {
     const session = pendingRejoin;
     const mode: SessionMode = session?.mode === "arena" ? "arena" : "campaign";
@@ -1575,10 +1573,6 @@ function connect() {
         pregens = msg.payload.pregens ?? [];
         portraits = msg.payload.portraits ?? [];
         arenaMonsters = msg.payload.arena?.monsters ?? arenaMonsters;
-        const catalog = msg.payload.chargen as ChargenCatalog | undefined;
-        if (catalog && !chargenApi) {
-          chargenApi = mountChargen({ root: $("chargenHost"), catalog, portraits, send, onCreated: (id) => (selectedHero = id) });
-        } else if (catalog) chargenApi?.refresh(catalog);
         if (page === "lobby") renderLobby();
         reportView(true);
         if (!state?.roomCode) flushPendingTable();
@@ -1608,7 +1602,6 @@ function connect() {
         pregens = msg.payload.pregens ?? pregens;
         const hero = msg.payload.character;
         if (hero?.id) selectedHero = hero.id;
-        chargenApi?.onCreatedClose();
         renderLobby();
         requestAnimationFrame(() => $("heroGrid").querySelector<HTMLElement>(`[data-hero="${CSS.escape(hero?.id ?? "")}"]`)?.focus());
         sfx("seal", { gain: 0.6 });
@@ -1616,7 +1609,6 @@ function connect() {
         break;
       }
       case "ABILITY_ROLLS":
-        chargenApi?.applyRolls(msg.payload.scores ?? []);
         break;
       case "SAVE_ACK":
         toast(`Saved. Code: ${msg.payload.saveId}`, "ok");
@@ -1657,11 +1649,6 @@ function handleBack(): boolean {
   }
   if (!$("heroWizard").hidden && heroWizard) {
     heroWizard.back();
-    return true;
-  }
-  const cg = document.querySelector(".chargen-panel.is-open");
-  if (cg) {
-    chargenApi?.back();
     return true;
   }
   if (page === "lobby") {

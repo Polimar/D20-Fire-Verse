@@ -30,16 +30,7 @@ import { listPublished } from "./catalog.js";
 import { WebSocketServer, type WebSocket } from "ws";
 import { loadCampaign, listPregens, getManifest, portraitForCharacter, PORTRAITS, portraitUrl } from "./campaign.js";
 import { listHeroes } from "./hero.js";
-import {
-  createCustomCharacter,
-  deleteCustomCharacter,
-  getChargenCatalog,
-  loadChargen,
-  reforgeCustomCharacter,
-  renameCustomCharacter,
-  rollAbilityScores,
-  type ChargenDraft,
-} from "./chargen.js";
+import { deleteCustomCharacter, getChargenCatalog, loadChargen, renameCustomCharacter } from "./chargen.js";
 import { announceTable } from "./announce.js";
 import { ARENA_FORMATS, arenaRoster } from "./arena.js";
 import { ARENA_THEMES } from "./arena-maps.js";
@@ -118,7 +109,6 @@ type ClientMsg = {
   accept?: boolean;
   saveId?: string;
   intent?: string;
-  draft?: ChargenDraft;
   sequence?: string[];
   format?: string;
   theme?: string;
@@ -370,19 +360,8 @@ app.post("/api/characters/:id/rename", (req, res) => {
   }
 });
 
-app.post("/api/characters/:id/reforge", (req, res) => {
-  const user = requestUser(req);
-  if (!user) {
-    res.status(401).json({ error: "AUTH_REQUIRED" });
-    return;
-  }
-  try {
-    reforgeCustomCharacter(req.params.id, user.id, req.body as ChargenDraft, undefined, characterIsSeated(req.params.id));
-    pushLibrary(user.id);
-    res.json({ ok: true, pregens: pregenList(user.id) });
-  } catch (err) {
-    res.status(400).json({ error: err instanceof Error ? err.message : "ERROR" });
-  }
+app.post("/api/characters/:id/reforge", (_req, res) => {
+  res.status(410).json({ error: "FORGE_51_REMOVED", hint: "Use the Hero builder on the title menu." });
 });
 
 app.delete("/api/characters/:id", (req, res) => {

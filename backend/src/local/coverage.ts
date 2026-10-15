@@ -7,6 +7,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { featureStatus } from "./feature-status.js";
 
 export type CoverageStatus = "runs" | "partial" | "missing" | "progression" | "no_combat";
 
@@ -79,7 +80,9 @@ const REGISTRY: CoverageRow[] = [
   row("wizard", 1, "Arcane Recovery", "runs"),
 ];
 
-const CLASSES_FILE = path.join(path.dirname(fileURLToPath(import.meta.url)), "../../../content/srd-5.2.1/classes.json");
+const CONTENT_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), "../../../content/srd-5.2.1");
+const CLASSES_FILE = path.join(CONTENT_DIR, "classes.json");
+const SUBCLASSES_FILE = path.join(CONTENT_DIR, "subclasses.json");
 
 function classifyPackAFeature(feature: string): CoverageStatus {
   if (/ability score improvement/i.test(feature)) return "progression";
@@ -116,26 +119,58 @@ function packARowsFromCatalog(existing: CoverageRow[]): CoverageRow[] {
   return out;
 }
 
-const OTHER = [
-  "bard",
-  "cleric",
-  "druid",
-  "monk",
-  "paladin",
-  "ranger",
-  "sorcerer",
-  "warlock",
-] as const;
-
-function otherClassRows(): CoverageRow[] {
+function catalogClassRows(existing: CoverageRow[]): CoverageRow[] {
+  const keys = new Set(existing.map((r) => `${r.classId}:${r.level}:${r.feature}`));
+  const raw = JSON.parse(fs.readFileSync(CLASSES_FILE, "utf8")) as {
+    entries: Array<{ id: string; levels: Array<{ level: number; features: string[] }> }>;
+  };
   const out: CoverageRow[] = [];
-  for (const id of OTHER) {
-    out.push(row(id, 1, "Class features", "partial", "Sheet and some shared actions run; the L1–10 table is not fully executed yet"));
+  for (const cls of raw.entries) {
+    if (PACK_A_CLASS_IDS.includes(cls.id as (typeof PACK_A_CLASS_IDS)[number])) continue;
+    for (const levelRow of cls.levels) {
+      if (levelRow.level > 20) continue;
+      for (const feature of levelRow.features) {
+        const key = `${cls.id}:${levelRow.level}:${feature}`;
+        if (keys.has(key)) continue;
+        const status = featureStatus(feature);
+        out.push(row(cls.id, levelRow.level, feature, status.status, status.note));
+        keys.add(key);
+      }
+    }
   }
   return out;
 }
 
-export const COVERAGE: CoverageRow[] = [...REGISTRY, ...packARowsFromCatalog(REGISTRY), ...otherClassRows()];
+function catalogSubclassRows(existing: CoverageRow[]): CoverageRow[] {
+  const keys = new Set(existing.map((r) => `${r.classId}:${r.subclassId ?? ""}:${r.level}:${r.feature}`));
+  const raw = JSON.parse(fs.readFileSync(SUBCLASSES_FILE, "utf8")) as {
+    entries: Array<{
+      id: string;
+      classId: string;
+      featuresByLevel?: Array<{ level: number; features: string[] }>;
+    }>;
+  };
+  const out: CoverageRow[] = [];
+  for (const sub of raw.entries) {
+    for (const levelRow of sub.featuresByLevel ?? []) {
+      for (const feature of levelRow.features) {
+        const key = `${sub.classId}:${sub.id}:${levelRow.level}:${feature}`;
+        if (keys.has(key)) continue;
+        const status = featureStatus(feature);
+        out.push(row(sub.classId, levelRow.level, feature, status.status, status.note, sub.id));
+        keys.add(key);
+      }
+    }
+  }
+  return out;
+}
+
+export const COVERAGE: CoverageRow[] = [
+  ...REGISTRY,
+  ...packARowsFromCatalog(REGISTRY),
+  ...catalogClassRows(REGISTRY),
+  ...catalogSubclassRows([...REGISTRY, ...packARowsFromCatalog(REGISTRY)]),
+];
 
 export function coverageFor(classId: string, subclassId?: string): CoverageRow[] {
   return COVERAGE.filter((row) => row.classId === classId && (row.subclassId ?? "") === (subclassId ?? ""));

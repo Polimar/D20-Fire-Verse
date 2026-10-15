@@ -5,6 +5,7 @@ import { clampExhaustion, effectiveMaxHp, longRestExhaustionDelta, setExhaustion
 import type { Pregen } from "./campaign.js";
 import type { CombatToken } from "./combat.js";
 import { buildKit, type ClassKit, type KitClass } from "./class-kit.js";
+import { classMenus, onClassLongRest, onClassShortRest, seedClassResources } from "./class-runtime.js";
 import type { GearSheet } from "./hero-pregen.js";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -133,7 +134,7 @@ type SheetPregen = Pregen & {
 };
 
 const ABILITY_KEYS = ["str", "dex", "con", "int", "wis", "cha"] as const;
-export const FIGHTING_STYLES = ["archery", "defense", "great_weapon_fighting", "dueling"] as const;
+export const FIGHTING_STYLES = ["archery", "defense", "great_weapon_fighting", "dueling", "two_weapon_fighting"] as const;
 
 /** The class kit for any seat: account heroes carry their classes, campaign pregens name one class and level. */
 export function kitForPregen(pregen: Pregen, level = pregen.level ?? 1): ClassKit {
@@ -204,6 +205,10 @@ export function initSheet(token: CombatToken, pregen: Pregen, saved?: Vitals): v
   if (pregen.class === "paladin" && level >= 2 && !token.features.includes("divine_smite")) {
     token.features.push("divine_smite");
   }
+  if (pregen.class === "paladin" && level >= 2 && !token.features.includes("paladins_smite")) {
+    token.features.push("paladins_smite");
+  }
+  seedClassResources(token, level, pregen.abilities, true);
   const gear = extra.gear;
   if (gear) {
     token.gearAttackBonus = gear.attack;
@@ -355,6 +360,13 @@ export function refreshMenus(token: CombatToken, pregen: Pregen | undefined, loo
     }
   }
   if ((token.spiritualRounds ?? 0) > 0) pushUnique(bonus, "spell_spiritual_weapon_strike");
+  const extra = classMenus(token);
+  for (const id of extra.actions) pushUnique(actions, id);
+  for (const id of extra.bonus) pushUnique(bonus, id);
+  for (const id of extra.reactions) {
+    token.reactionIds = token.reactionIds ?? [];
+    pushUnique(token.reactionIds, id);
+  }
   if ((token.sorceryPoints ?? 0) >= 2 && !token.castLeveled && !token.castBonusSpell) {
     for (const id of [...(token.cantrips ?? []), ...(token.spells ?? [])]) {
       const ability = lookup(id);
@@ -414,6 +426,7 @@ export function shortRestResources(token: CombatToken, pregen: Pregen | undefine
     token.bardicLeft = cha;
   }
   if (kit?.channelDivinity && (token.channelDivinity ?? 0) < kit.channelDivinity) token.channelDivinity = (token.channelDivinity ?? 0) + 1;
+  notes.push(...onClassShortRest(token, pregen?.level ?? 1, pregen?.abilities ?? {}, knownSlots));
   return notes;
 }
 
@@ -442,6 +455,7 @@ export function longRestResources(token: CombatToken, pregen: Pregen | undefined
     token.bardicLeft = Math.max(1, Math.floor(((pregen.abilities.cha ?? 10) - 10) / 2));
   }
   token.arcaneRecovery = false;
+  onClassLongRest(token, pregen?.level ?? 1, pregen?.abilities ?? {});
   token.exhaustionLevel = longRestExhaustionDelta(token.exhaustionLevel ?? 0);
   if ((token.exhaustionLevel ?? 0) > 0) token.conditions = [...(token.conditions ?? []).filter((c) => c !== "exhaustion"), "exhaustion"];
   else token.conditions = (token.conditions ?? []).filter((c) => c !== "exhaustion");

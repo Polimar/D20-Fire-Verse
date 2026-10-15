@@ -47,6 +47,34 @@ import {
   type Vitals,
 } from "./srd-sheet.js";
 import type { ClassKit } from "./class-kit.js";
+import {
+  auraCells,
+  auraSaveBonus,
+  castClassFeature,
+  checkBonusAdjust,
+  classDamageRider,
+  classMenus,
+  evasionDamage,
+  favoredMarkFree,
+  fiendLuck,
+  freeCast,
+  ignorePhysicalResistance,
+  onClassLongRest,
+  onClassShortRest,
+  onClassTurn,
+  onKillBlessing,
+  openHandProne,
+  potentCantripHalf,
+  prowessSavesMiss,
+  reliableFloor,
+  sculptSucceeds,
+  seedClassResources,
+  spellRecall,
+  strokeSavesMiss,
+  stunOnHit,
+  wantsSpellAdvantage,
+  wantsSteadyAdvantage,
+} from "./class-runtime.js";
 import { actionCategory, actionSummary, type ActionCategory } from "./action-menu.js";
 import type { Player } from "./types.js";
 
@@ -188,6 +216,22 @@ export type CombatToken = {
   slowedBy?: { by: string; cells: number };
   /** Vex: advantage on the next attack roll against this target id. */
   vexTarget?: string;
+  countercharm?: boolean;
+  wildShaped?: boolean;
+  innateSorcery?: boolean;
+  steadyAim?: boolean;
+  channelAttack?: number;
+  auraBonus?: number;
+  blessedStrikeUsed?: boolean;
+  furyUsed?: boolean;
+  preyUsed?: boolean;
+  foeUsed?: boolean;
+  affinityUsed?: boolean;
+  evokeUsed?: boolean;
+  prowessUsed?: boolean;
+  stunPrimed?: boolean;
+  nickNext?: boolean;
+  nickMod?: number;
 };
 
 export type StrikeHit = {
@@ -951,6 +995,28 @@ function hasCondition(token: CombatToken, id: string): boolean {
   return Boolean(token.conditions?.includes(id));
 }
 
+function refreshAuras(combat: CombatState): void {
+  for (const token of combat.tokens) token.auraBonus = 0;
+  for (const source of combat.tokens) {
+    if (source.dead) continue;
+    const cells = auraCells(source);
+    if (!cells) continue;
+    const abilities = (source.characterId ? getPregen(source.characterId)?.abilities : undefined) ?? {};
+    const bonus = auraSaveBonus(source, abilities);
+    for (const ally of combat.tokens) {
+      if (ally.dead || ally.kind !== source.kind) continue;
+      if (chebyshev(source.x, source.y, ally.x, ally.y) > cells) continue;
+      ally.auraBonus = (ally.auraBonus ?? 0) + bonus;
+      if (source.features?.includes("aura_of_courage") || source.kit?.flags.includes("aura_of_courage")) {
+        ally.conditions = (ally.conditions ?? []).filter((c) => c !== "frightened");
+      }
+      if (source.features?.includes("aura_of_devotion") || source.kit?.flags.includes("aura_of_devotion")) {
+        ally.conditions = (ally.conditions ?? []).filter((c) => c !== "charmed");
+      }
+    }
+  }
+}
+
 function hasFeature(token: CombatToken, flag: string): boolean {
   return Boolean(token.features?.includes(flag) || token.kit?.flags.includes(flag));
 }
@@ -1120,6 +1186,12 @@ function beginTurn(combat: CombatState): void {
   t.freeMove = 0;
   t.rageKept = false;
   if (hasFeature(t, "heroic_warrior") && !t.heroicInspiration) t.heroicInspiration = true;
+  if (hasFeature(t, "countercharm")) {
+    for (const other of combat.tokens) other.countercharm = false;
+  }
+  const pregenTurn = t.characterId ? getPregen(t.characterId) : undefined;
+  onClassTurn(t, t.level ?? pregenTurn?.level ?? 1, pregenTurn?.abilities ?? {}, combat.round);
+  refreshAuras(combat);
   if (t.raging && hasFeature(t, "mindless_rage")) {
     t.conditions = (t.conditions ?? []).filter((c) => c !== "charmed" && c !== "frightened");
   }
@@ -1314,9 +1386,10 @@ function creatureSave(
   let advantage = Boolean(isMagic && token.traits?.includes("magic_resistance"));
   let disadvantage = false;
   if (key === "dex" && hasFeature(token, "danger_sense") && !cannotAct(token) && !hasCondition(token, "blinded")) advantage = true;
+  if (token.countercharm && (key === "wis" || key === "cha")) advantage = true;
   if (key === "str" && token.raging) advantage = true;
   if (hasCondition(token, "poisoned") || hasCondition(token, "frightened")) disadvantage = true;
-  const bonus = saveBonus(token, key);
+  const bonus = saveBonus(token, key) + (token.auraBonus ?? 0);
   const label = `${ability.toUpperCase()} save`;
   const once = (mode: D20Mode, extra = 0) =>
     rollCheck({
@@ -1330,6 +1403,14 @@ function creatureSave(
   let mode = d20Mode(advantage, disadvantage);
   let roll = once(mode);
   let ok = roll.outcome === "success";
+  if (!ok) {
+    const luck = fiendLuck(token);
+    if (luck) {
+      const total = roll.total + luck;
+      roll = { ...roll, total, outcome: total >= dc ? "success" : "fail" };
+      ok = roll.outcome === "success";
+    }
+  }
   if (!ok && (token.indomitableLeft ?? 0) > 0) {
     token.indomitableLeft = (token.indomitableLeft ?? 0) - 1;
     const extra = token.kit?.fighterLevel ?? token.level ?? 1;
@@ -1848,6 +1929,21 @@ function castSpecial(
   dest: Cell | undefined,
   castId: string,
 ): { rolls: DiceRoll[] } | null {
+  const classCast = castClassFeature(t, String(effect.type ?? ""), {
+    allies: combat.tokens.filter((a) => isFriend(combat, t, a) && !a.dead),
+    foes: combat.tokens.filter((a) => isFoe(combat, t, a) && !a.dead),
+    target: targetId ? combat.tokens.find((x) => x.id === targetId) : undefined,
+    level: pregen?.level ?? t.level ?? 1,
+    abilities: pregen?.abilities ?? {},
+    prof: pregen?.proficiencyBonus ?? 2,
+    maxSlots: (pregen as { spellSlots?: Record<string, number> } | undefined)?.spellSlots,
+  });
+  if (classCast) {
+    spendEconomy(t, isBonus);
+    statusEvent(combat, t, name, classCast.line, classCast.rolls);
+    refreshReachable(combat);
+    return { rolls: classCast.rolls };
+  }
   if (effect.type === "rage") {
     if ((t.ragesLeft ?? 0) <= 0) throw new Error("ALREADY_USED");
     if (t.heavyArmor) throw new Error("HEAVY_ARMOR");
@@ -1929,6 +2025,7 @@ function castSpecial(
     if ((t.ki ?? 0) < 1) throw new Error("NO_KI");
     t.ki = (t.ki ?? 0) - 1;
     t.dodging = true;
+    if (hasFeature(t, "heightened_focus")) t.tempHp = Math.max(t.tempHp ?? 0, pregen?.level ?? 1);
     spendEconomy(t, true);
     statusEvent(combat, t, name, `${t.name} spends ki and dodges.`);
     return { rolls: [] };
@@ -1936,7 +2033,7 @@ function castSpecial(
   if (effect.type === "ki_step") {
     if ((t.ki ?? 0) < 1) throw new Error("NO_KI");
     t.ki = (t.ki ?? 0) - 1;
-    t.disengaging = true;
+    t.disengaging = true || hasFeature(t, "fleet_step");
     t.movementLeft += t.speedCells;
     spendEconomy(t, true);
     statusEvent(combat, t, name, `${t.name} spends ki, steps clear, and dashes.`);
@@ -1953,6 +2050,9 @@ function castSpecial(
     if (!blow) throw new Error("NO_EFFECT");
     const first = resolveSpellAttack(combat, t, pregen, "Flurry of Blows", { ...blow, type: "attack" }, targetId, true, true);
     if (combat.status === "active" && !combat.pending) {
+      resolveSpellAttack(combat, t, pregen, "Flurry of Blows", { ...blow, type: "attack" }, targetId, true, true);
+    }
+    if (hasFeature(t, "heightened_focus") && combat.status === "active" && !combat.pending) {
       resolveSpellAttack(combat, t, pregen, "Flurry of Blows", { ...blow, type: "attack" }, targetId, true, true);
     }
     return first;
@@ -2108,7 +2208,11 @@ export function performPcAction(
   if (abilityId.startsWith("quicken:")) {
     quicken = true;
     castId = abilityId.slice("quicken:".length);
-    if ((t.sorceryPoints ?? 0) < 2) throw new Error("NO_SORCERY");
+    const freeMeta =
+      (hasFeature(t, "arcane_apotheosis") && !t.abilityUses?.meta_spent) ||
+      (hasFeature(t, "sorcery_incarnate") && Boolean(t.innateSorcery));
+    if (!freeMeta && (t.sorceryPoints ?? 0) < 2) throw new Error("NO_SORCERY");
+    t.abilityUses = { ...(t.abilityUses ?? {}), quicken_free: freeMeta ? 1 : 0 };
   }
   const split = splitVariant(castId);
   const variant: AttackVariant | undefined = split.variant;
@@ -2141,7 +2245,7 @@ export function performPcAction(
   if (!ability.effects[0]) throw new Error("NO_EFFECT");
   const pregen = t.characterId ? getPregen(t.characterId) : undefined;
   const prof = pregen?.proficiencyBonus ?? 2;
-  if (t.raging && (castId.startsWith("spell_") || t.cantrips?.includes(castId) || t.spells?.includes(castId))) {
+  if (t.raging && !(t.wildShaped && hasFeature(t, "beast_spells")) && (castId.startsWith("spell_") || t.cantrips?.includes(castId) || t.spells?.includes(castId))) {
     throw new Error("RAGING");
   }
   if (variant === "reckless" || variant === "brutal_force" || variant === "brutal_hamstring") t.reckless = true;
@@ -2153,8 +2257,15 @@ export function performPcAction(
   const fromItem = t.sheetDriven && level > 0 && charges > 0 && !(t.spells?.includes(castId) && slotReady(t, level));
   if (fromItem) {
     t.gearCharges![pool!] = charges - 1;
-  } else if (t.sheetDriven && level > 0 && castId !== "spell_spiritual_weapon_strike") {
+  } else if (
+    t.sheetDriven &&
+    level > 0 &&
+    castId !== "spell_spiritual_weapon_strike" &&
+    !(castId === "spell_hunters_mark" && favoredMarkFree(t)) &&
+    !freeCast(t, level)
+  ) {
     slotUsed = spendSlot(t, level);
+    if (spellRecall(t, slotUsed) && t.slots) t.slots[String(slotUsed)] = (t.slots[String(slotUsed)] ?? 0) + 1;
     const grown = scaledDice(effect, slotUsed);
     if (grown && Array.isArray(effect.damage)) {
       const parts = effect.damage as Array<{ dice: string }>;
@@ -2162,7 +2273,8 @@ export function performPcAction(
     }
     if (grown && typeof effect.dice === "string") effect.dice = grown;
   }
-  if (quicken) t.sorceryPoints = (t.sorceryPoints ?? 0) - 2;
+  if (quicken && !t.abilityUses?.quicken_free) t.sorceryPoints = (t.sorceryPoints ?? 0) - 2;
+  if (quicken) t.abilityUses = { ...(t.abilityUses ?? {}), meta_spent: 1, quicken_free: 0 };
   if (level > 0) {
     t.castLeveled = true;
     if (isBonus || quicken) t.castBonusSpell = true;
@@ -2223,8 +2335,8 @@ export function performPcAction(
     const hide = effect.type === "hide";
     const key = hide ? "dex" : "wis";
     const skill = hide ? "stealth" : "perception";
-    const skilled = (pregen as { skills?: string[] } | undefined)?.skills?.includes(skill);
-    const bonus = abilityMod(pregen?.abilities[key] ?? 10) + (skilled ? prof : 0);
+    const skilled = Boolean((pregen as { skills?: string[] } | undefined)?.skills?.includes(skill));
+    const bonus = abilityMod(pregen?.abilities[key] ?? 10) + checkBonusAdjust(t, skilled, prof, skill);
     const dc = hide ? 12 : 10;
     let roll = rollCheck({
       roller: t.name,
@@ -2232,7 +2344,14 @@ export function performPcAction(
       bonus,
       dc,
       purpose: "check",
+      mode: hide && hasFeature(t, "supreme_sneak") ? "advantage" : "normal",
     });
+    const natural = roll.values[roll.kept ?? 0] ?? roll.total;
+    const floored = reliableFloor(t, skilled, natural);
+    if (floored !== natural) {
+      const total = roll.total + (floored - natural);
+      roll = { ...roll, total, outcome: total >= dc ? "success" : "fail" };
+    }
     if (roll.outcome !== "success" && hasFeature(t, "tactical_mind") && (t.secondWindLeft ?? 0) > 0) {
       t.secondWindLeft = (t.secondWindLeft ?? 0) - 1;
       t.secondWindUsed = (t.secondWindLeft ?? 0) <= 0;
@@ -2268,8 +2387,8 @@ export function performPcAction(
   if (effect.type === "influence" || effect.type === "study") {
     const key = effect.type === "influence" ? "cha" : "int";
     const skill = effect.type === "influence" ? "persuasion" : "investigation";
-    const skilled = (pregen as { skills?: string[] } | undefined)?.skills?.includes(skill);
-    const bonus = abilityMod(pregen?.abilities[key] ?? 10) + (skilled ? prof : 0);
+    const skilled = Boolean((pregen as { skills?: string[] } | undefined)?.skills?.includes(skill));
+    const bonus = abilityMod(pregen?.abilities[key] ?? 10) + checkBonusAdjust(t, skilled, prof, skill);
     const roll = rollCheck({
       roller: t.name,
       label: ability.name,
@@ -2471,6 +2590,7 @@ export function performPcAction(
   const strongSwing = strengthWeapon(atkEffect, pregen);
   if (styleHas(t, "archery") && ranged && weaponSwing) attackBonus += 2;
   if (styleHas(t, "dueling") && !ranged && weaponSwing) attackBonus += 2;
+  if (!atkEffect.spellAttack && t.channelAttack) attackBonus += t.channelAttack;
   const magicWeapon = t.weaponGear?.[castId];
   attackBonus += (t.gearAttackBonus ?? 0) + (magicWeapon?.attack ?? 0);
   const foeAdjacent = combat.tokens.some(
@@ -2488,14 +2608,20 @@ export function performPcAction(
     (hasCondition(target, "prone") && !ranged) ||
     Boolean(target.reckless) ||
     t.vexTarget === target.id;
-  const advantage = t.hidden || Boolean(t.helpingTargetId) || t.invisible || recklessAdv || easyTarget;
+  const advantage =
+    (t.hidden || Boolean(t.helpingTargetId) || t.invisible || recklessAdv || easyTarget || (Boolean(atkEffect.spellAttack) && wantsSpellAdvantage(t)) || wantsSteadyAdvantage(t)) &&
+    !hasFeature(target, "elusive");
   const disadvantage =
     (ranged && foeAdjacent) ||
     hasCondition(t, "prone") ||
     hasCondition(t, "restrained") ||
     hasCondition(t, "frightened") ||
     hasCondition(t, "blinded") ||
-    Boolean(target.invisible) ||
+    (Boolean(target.invisible) &&
+      !(
+        (hasFeature(t, "feral_senses") || hasFeature(t, "boon_of_truesight")) &&
+        chebyshev(t.x, t.y, target.x, target.y) <= (hasFeature(t, "boon_of_truesight") ? 12 : 6)
+      )) ||
     Boolean(target.blur) ||
     Boolean(t.sappedBy) ||
     (hasCondition(target, "prone") && ranged);
@@ -2522,12 +2648,14 @@ export function performPcAction(
     if (t.vexTarget === target.id) t.vexTarget = undefined;
     if (t.sappedBy) t.sappedBy = undefined;
     t.rolledAttack = true;
+    t.steadyAim = false;
     spendEconomy(t, isBonus, { attack: weaponSwing });
     if (t.raging && (weaponSwing || effect.type === "save")) keepRage(t, true);
   }
 
   const crit = resumed ? resumed.crit : attackRoll.outcome === "crit";
-  const landed = crit || attackRoll.outcome === "hit";
+  let landed = crit || attackRoll.outcome === "hit";
+  if (!resumed && !landed && weaponSwing && (prowessSavesMiss(t) || strokeSavesMiss(t))) landed = true;
   const style = resumed ? resumed.style : atkEffect.spellAttack ? "spell" : ranged ? "ranged" : "melee";
   if (!resumed && !landed) {
     const fumble = attackRoll.outcome === "fumble";
@@ -2635,6 +2763,27 @@ export function performPcAction(
   if (target.brand?.by === t.id) {
     dmgTotal += pushPartDamage(rolls, t.name, target.brand.dice, weaponType, "brand", crit);
   }
+  if (t.nickNext) {
+    dmgTotal += t.nickMod ?? 0;
+    t.nickNext = false;
+    t.nickMod = 0;
+  }
+  const riderDie = classDamageRider(t, pregen?.level ?? t.level ?? 1, pregen?.abilities ?? {}, {
+    weapon: weaponSwing,
+    cantrip: Boolean(atkEffect.spellAttack) && level === 0,
+    spell: Boolean(atkEffect.spellAttack),
+    targetHurt: target.hp < target.maxHp,
+    marked: Boolean(target.brand),
+  });
+  if (riderDie?.dice) dmgTotal += pushPartDamage(rolls, t.name, riderDie.dice, riderDie.type, riderDie.type, crit);
+  if (riderDie?.flat) dmgTotal += riderDie.flat;
+  if (stunOnHit(t)) {
+    const dc = 8 + prof + abilityMod(pregen?.abilities.wis ?? 10);
+    const { roll: saveRoll, ok } = creatureSave(target, "con", dc, false);
+    rolls.push(saveRoll);
+    if (!ok) addCondition(target, "stunned");
+  }
+  if (openHandProne(t) && String(ability.name).toLowerCase().includes("flurry")) addCondition(target, "prone");
   const rageBonus = t.kit?.rageDamage || 2;
   if (t.raging && strongSwing) {
     dmgTotal += rageBonus;
@@ -2675,6 +2824,14 @@ export function performPcAction(
     if (rider.slowFeet) target.slowedBy = { by: t.id, cells: Math.ceil(rider.slowFeet / 5) };
     if (rider.pushFeet) pushAway(combat, t, target, Math.ceil(rider.pushFeet / 5));
     if (rider.vexAdvantageNext || rider.sap) target.marked = true;
+    if (rider.nickBonusAttack && !t.nickNext) {
+      t.nickNext = true;
+      t.attacksLeft = (t.attacksLeft ?? 0) + 1;
+      if (styleHas(t, "two_weapon_fighting")) {
+        const key = strengthWeapon(atkEffect, pregen) ? "str" : "dex";
+        t.nickMod = abilityMod(pregen?.abilities[key] ?? 10);
+      }
+    }
   }
   if (crit && hasFeature(t, "remarkable_athlete")) grantFreeMove(t, Math.floor(t.speedCells / 2));
   const dtype = weaponType;
@@ -2733,6 +2890,8 @@ export function performPcAction(
       : `${t.name} hits ${target.name} with ${ability.name}: ${attackRoll.total} vs AC ${effectiveAc(target)}, ${dmgTotal} damage.`,
   });
   applyDamage(combat, target, dmgTotal, crit, dtype);
+  if (target.hp <= 0) onKillBlessing(t, pregen?.abilities ?? {}, pregen?.level ?? t.level ?? 1);
+  if (hasFeature(t, "boon_of_dimensional_travel")) grantFreeMove(t, 6);
   if (combat.status === "active") offerRetaliation(combat, t, target);
   checkEnd(combat);
   refreshReachable(combat);
@@ -2814,7 +2973,11 @@ function castSaveArea(
     }
     const { roll: save, ok: saved } = creatureSave(e, saveKey, dc, true);
     rolls.push(save);
-    const dmg = saved ? (effect.halfOnSuccess ? Math.floor(rolled.total / 2) : 0) : rolled.total;
+    const cantrip = Number(effect.slot ?? effect.level ?? 1) === 0;
+    let dmg = saved ? (effect.halfOnSuccess || potentCantripHalf(t, cantrip, true) ? Math.floor(rolled.total / 2) : 0) : rolled.total;
+    if (sculptSucceeds(t, isFriend(combat, t, e))) dmg = 0;
+    const evaded = evasionDamage(e, saveKey, saved, rolled.total, Boolean(effect.halfOnSuccess));
+    if (evaded != null) dmg = evaded;
     if (!saved && effect.onFail) addCondition(e, String(effect.onFail));
     hits.push({
       targetId: e.id,
@@ -2912,7 +3075,25 @@ function effectiveAc(token: CombatToken): number {
 
 export function applyDamage(combat: CombatState, target: CombatToken, amount: number, crit = false, damageType = "untyped"): void {
   let harm = harmAmount(target, amount, damageType);
+  if (ignorePhysicalResistance(target, damageType)) {
+    harm = amount;
+    if (target.damageVulnerabilities?.includes(damageType)) harm *= 2;
+  }
   if (target.raging && ["bludgeoning", "piercing", "slashing"].includes(damageType)) harm = Math.floor(harm / 2);
+  const physical = ["bludgeoning", "piercing", "slashing"].includes(damageType);
+  if (target.reactionReady && hasFeature(target, "uncanny_dodge") && physical) {
+    target.reactionReady = false;
+    harm = Math.floor(harm / 2);
+  } else if (target.reactionReady && hasFeature(target, "deflect_attacks") && (physical || hasFeature(target, "deflect_energy"))) {
+    target.reactionReady = false;
+    const pregen = target.characterId ? getPregen(target.characterId) : undefined;
+    const reduce = rollNotation("1d10").total + abilityMod(pregen?.abilities.dex ?? 10) + (target.level ?? pregen?.level ?? 1);
+    harm = Math.max(0, harm - reduce);
+  }
+  if (hasFeature(target, "superior_hunters_defense") && harm > 0) {
+    const attacker = combat.tokens.find((x) => x.id !== target.id && !x.dead && chebyshev(x.x, x.y, target.x, target.y) <= 1);
+    if (attacker) attacker.hp = Math.max(0, attacker.hp - rollNotation("1d8").total);
+  }
   if (target.kind === "pc" && (target.dying || target.stable || target.hp <= 0)) {
     if (harm > 0) {
       target.stable = false;
@@ -2964,6 +3145,7 @@ function markDead(combat: CombatState, target: CombatToken): void {
 function concentrationCheck(combat: CombatState, token: CombatToken, damage: number): void {
   const focus = token.concentrating;
   if (!focus) return;
+  if (hasFeature(token, "relentless_hunter") && /hunter/.test(focus.spellId)) return;
   const pregen = token.characterId ? getPregen(token.characterId) : undefined;
   const proficient = (pregen as { savingThrows?: string[] } | undefined)?.savingThrows?.includes("con");
   const bonus = abilityMod(pregen?.abilities.con ?? 10) + (proficient ? pregen?.proficiencyBonus ?? 2 : 0);

@@ -2,7 +2,7 @@
 
 Documento di riferimento per implementazione e **brief Cursor**.  
 Organizzato in **CHECKPOINT** (fette verticali giocabili).  
-**Ultimo aggiornamento:** 2026-10-15. Il builder giocabile è la **modal a passi** (Hero builder). CK-10…CK-14 non sono chiusi al 100% del motore: vedi sezione residui in fondo.
+**Ultimo aggiornamento:** 2026-10-15. Il builder giocabile è la **modal a passi**. Il motore segna le 12 classi a cap 20: ogni feature di tabella è `runs`, `progression` o `no_combat`, con i limiti scritti in fondo.
 
 ### Stato CK-2…CK-9 (agent)
 
@@ -548,9 +548,11 @@ Aggiornare ☐ → ☑ nel PR che chiude il checkpoint indicato.
 
 ## Flusso PG Builder (UX)
 
-Step: `Classe → Specie → Background → Abilità → Feat → Skill → Incantesimi → Equipaggiamento → About (opz.) → Review`
+Step della modal (Hero builder dal menu home; `/forge` apre la stessa modal):
 
-Panel scheda: output `DerivedSheet` sempre da preview server.
+`Class → Origin → Species → Ability scores → Training (skills / fighting style / expertise) → Equipment → Spells (se lanciatore) → Details → Review`
+
+Panel scheda: output `DerivedSheet` sempre da preview server. D-pad: frecce per il focus, OK per scegliere, Back chiude o torna, Rewind/Forward cambiano passo.
 
 ---
 
@@ -563,7 +565,7 @@ Panel scheda: output `DerivedSheet` sempre da preview server.
 | UI forge | `packages/protocol/src/forge-app.ts`, `tv/src/forge-v2.ts`, `companion/src/pocket.ts` |
 | Combat / sheet | `combat.ts`, `hero-pregen.ts`, `protocol/sheet.ts` |
 | Content | `content/srd-5.2.1/`, `content-catalog.ts` |
-| Legacy (rimosso CK-11) | `chargen.ts`, `chargen-ui.ts`, `srd51.json` |
+| Legacy (CK-11) | `tv/src/chargen-ui.ts` rimosso. `GET/POST /api/chargen` e reforge rispondono **410** `FORGE_51_REMOVED`. `chargen.ts` resta per la migrazione e il test fixture |
 
 ---
 
@@ -600,13 +602,15 @@ English per UI e codice. Non fare deploy in produzione.
 | CK-13 | Mostri SRD arena |
 | CK-14 | Gate finale 100% |
 
-## Residui onesti (dopo la modal wizard)
+## Residui onesti (CK-10…CK-14, 2026-10-15)
 
-| CK | Stato |
-|----|--------|
-| Wizard UX (sostituisce il form `/forge`) | Fatto: modal TV + layout telefono, passi guidati, preview server |
-| CK-10 classi/sottoclassi/feat al 100% combat | Non fatto. `buildKit` legge le tabelle SRD di tutte le classi; il fight engine esegue in modo completo solo il pack A |
-| CK-11 item/mastery/spell 100% | Parziale. Forge 5.1 HTTP e websocket `CREATE_CHARACTER` rispondono `FORGE_51_REMOVED`. Ritual/mastery swap non sono un sistema nuovo |
-| CK-12 `custom_*` → `hero_*` | Script `FIREVERSE_MIGRATE_CUSTOM=1` (`migrate-custom.ts`). Non è stato eseguito sui dati di produzione |
-| CK-13 235 mostri | Il compilatore arena esiste già; non c’è una prova 235/235 in questo rilascio |
-| CK-14 coverage zero gap | Non verde sull’intero SRD |
+Il motore segna le 12 classi a cap 20 (`runs` / `progression` / `no_combat`). Non è un playtest frase-per-frase del PHB.
+
+| CK | Stato | Limite residuo |
+|----|--------|----------------|
+| Wizard UX | Fatto. Modal TV + layout telefono, passi guidati, preview server, Expertise del ladro a L1 | La CA in anteprima è spesso senza armatura finché l’equip dello stash non è indossato. AC da armatura starter non si applica da sola al forge |
+| CK-10 | Fatto sul perimetro eseguibile. `class-runtime.ts` + `class-pack-b.test.ts` (channel, wild shape, countercharm, innate sorcery, tireless, patron, steed). `coverage:report` cap 20, blocked 0 | Wild Shape = HP temporanei pari al livello e CA minima 13, non la scheda di una bestia. Molte feature alte sono un numero una volta a turno (danno, velocità, aura). Deflect Attacks e Uncanny Dodge spendono la reazione da soli quando ridurrebbero il danno. Slow Fall, Druidic, Thieves’ Cant sono `no_combat`. Divine Order, Primal Order, Fighting Style, ASI, Magical Secrets, Eldritch Invocations sono `progression` |
+| CK-11 | UI Forge 5.1 rimossa. HTTP/websocket create e reforge → 410. `POST /api/heroes/:id/ritual` e `POST /api/heroes/:id/mastery-swap` (dopo long rest). D-pad: frecce + MediaTrack su un passo | Il rituale registra minuti e non spende lo slot; non c’è una scena di esplorazione da 10 minuti. Lo swap sostituisce una delle due maestrie note, non riscrive da solo l’arma equipaggiata. Non ogni oggetto magico ha uno script proprio. `curl /api/chargen` è **410**, non 404 |
+| CK-12 | `migrate-custom.ts` produce un draft legale per `derive` e il test fixture passa. I `custom_*` non compaiono in `listPregens` | `FIREVERSE_MIGRATE_CUSTOM=1` non è stato eseguito sui dati di produzione. Punteggi sopra 18 vengono tagliati a 18. Un id `custom_*` già noto si può ancora sedere |
+| CK-13 | `monsters.json` (235) compilato in `loadSrdCatalog`. Test A/M/N/Z, HP, CA, azioni | I blocchi senza danno di attacco o di tiro salvezza ricevono uno Strike di riserva. Il conteggio di quei fallback resta sotto 40 |
+| CK-14 | `npm run coverage:report` esce 1 se una feature di `classes.json` non è verde | Il laboratorio di progressione simula ancora fino al livello 10. Il gate non è una prova di ogni frase del libro |

@@ -464,14 +464,137 @@ function knownSpellIds(): Set<string> {
   return ids;
 }
 
+type JsonMonster = {
+  id: string;
+  name: string;
+  creatureType?: string;
+  ac: number;
+  hp: number;
+  cr?: string;
+  crValue?: number;
+  speed?: string;
+  abilities?: Record<string, number>;
+  saves?: Record<string, number>;
+  traits?: Array<{ name: string; text?: string; uses?: string }>;
+  actions?: JsonMove[];
+  bonusActions?: JsonMove[];
+  legendaryActions?: JsonMove[];
+  damageResistances?: string[];
+  damageImmunities?: string[];
+  damageVulnerabilities?: string[];
+};
+
+type JsonMove = {
+  name: string;
+  text?: string;
+  attack?: { kind?: string; bonus?: number; reachFt?: number };
+  damage?: Array<{ dice: string; damageType: string }>;
+  save?: { ability: string; dc: number; onSuccess?: string };
+  uses?: string;
+};
+
+function moveAbility(monsterId: string, move: JsonMove, section: "action" | "bonus" | "legendary"): AbilityDef {
+  const id = abilityId(monsterId, move.name);
+  const parts = (move.damage ?? []).map((part) => ({ dice: part.dice, damageType: part.damageType }));
+  const ranged = (move.attack?.reachFt ?? 5) > 10 || /ranged/i.test(move.attack?.kind ?? "");
+  if (move.attack && parts.length) {
+    return {
+      id,
+      name: move.name,
+      actionType: section === "bonus" ? "bonus_action" : section === "legendary" ? "legendary" : "action",
+      needsTarget: true,
+      effects: [
+        {
+          type: "attack",
+          attackBonus: move.attack.bonus ?? 0,
+          rangeCells: ftToCells(move.attack.reachFt ?? (ranged ? 30 : 5)),
+          damage: parts,
+        },
+      ],
+    };
+  }
+  if (move.save && parts.length) {
+    return {
+      id,
+      name: move.name,
+      actionType: section === "bonus" ? "bonus_action" : "action",
+      needsTarget: true,
+      effects: [
+        {
+          type: "save",
+          ability: move.save.ability,
+          dc: move.save.dc,
+          halfOnSuccess: move.save.onSuccess === "half",
+          damage: parts,
+          rangeCells: 6,
+        },
+      ],
+    };
+  }
+  return {
+    id,
+    name: move.name,
+    actionType: "action",
+    needsTarget: true,
+    effects: [{ type: "attack", attackBonus: 0, rangeCells: 1, damage: [{ dice: "1d4", damageType: "bludgeoning" }] }],
+  };
+}
+
+/** Every structured SRD monster becomes a fightable stat block. */
+export function compileCatalogMonsters(): SrdCompiled {
+  const file = path.join(CONTENT_ROOT, "srd-5.2.1", "monsters.json");
+  const raw = JSON.parse(fs.readFileSync(file, "utf8")) as { entries: JsonMonster[] };
+  const monsters: Record<string, MonsterDef> = {};
+  const abilities: Record<string, AbilityDef> = {};
+  const skipped: string[] = [];
+  for (const entry of raw.entries) {
+    const id = srdMonsterId(entry.name);
+    const actions: string[] = [];
+    const bonusActions: string[] = [];
+    const legendaryActions: string[] = [];
+    const add = (move: JsonMove, section: "action" | "bonus" | "legendary") => {
+      if (/^multiattack$/i.test(move.name)) return;
+      const ability = moveAbility(id, move, section);
+      abilities[ability.id] = ability;
+      if (section === "bonus") bonusActions.push(ability.id);
+      else if (section === "legendary") legendaryActions.push(ability.id);
+      else actions.push(ability.id);
+    };
+    for (const move of entry.actions ?? []) add(move, "action");
+    for (const move of entry.bonusActions ?? []) add(move, "bonus");
+    for (const move of entry.legendaryActions ?? []) add(move, "legendary");
+    if (!actions.length) {
+      const fallback = moveAbility(id, { name: "Strike", attack: { bonus: 2, reachFt: 5 }, damage: [{ dice: "1d6", damageType: "bludgeoning" }] }, "action");
+      abilities[fallback.id] = fallback;
+      actions.push(fallback.id);
+      skipped.push(entry.name);
+    }
+    const speed = Number(entry.speed?.match(/(\d+)\s*ft/i)?.[1] ?? 30);
+    const traits = (entry.traits ?? []).map((t) => slug(t.name));
+    monsters[id] = {
+      id,
+      name: entry.name,
+      ac: entry.ac,
+      hp: entry.hp,
+      speedCells: ftToCells(speed),
+      abilities: entry.abilities ?? { str: 10, dex: 10, con: 10, int: 10, wis: 10, cha: 10 },
+      actions,
+      bonusActions,
+      legendaryActions,
+      cr: entry.cr,
+      crValue: entry.crValue ?? crValue(entry.cr),
+      creatureType: (entry.creatureType ?? "monstrosity").toLowerCase(),
+      saves: entry.saves,
+      traits,
+      legendaryUses: legendaryActions.length ? 3 : undefined,
+    };
+  }
+  return { monsters, abilities, skipped };
+}
+
 export function loadSrdCatalog(): SrdCompiled {
   if (cache) return cache;
-  const file = path.join(CONTENT_ROOT, "srd", "monsters-A-Z.md");
-  if (!fs.existsSync(file)) {
-    cache = { monsters: {}, abilities: {}, skipped: [] };
-    return cache;
-  }
-  cache = parseSrdMarkdown(fs.readFileSync(file, "utf8"), knownSpellIds());
+  cache = compileCatalogMonsters();
   return cache;
 }
 

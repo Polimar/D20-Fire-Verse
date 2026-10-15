@@ -62,7 +62,7 @@ test("the engine panel reports what combat really runs", () => {
   assert.equal(fireball?.state, "sheet");
 
   const aboleth = engineView("monster", "aboleth", readPack<CatalogMonster>("monsters.json").find((m) => m.id === "aboleth"));
-  assert.equal(aboleth?.state, "partial");
+  assert.equal(aboleth?.state, "runs");
   assert.ok(aboleth?.lines.some((l) => l.label === "Action: Tentacle" && l.ok && /2d6\+5/.test(l.detail)));
 
   const plate = engineView("item", "armor_plus_1", readPack<ItemDef>("items/magic.json").find((i) => i.id === "armor_plus_1"));
