@@ -32,6 +32,7 @@ export type BuilderDraft = {
   spellbook?: string[];
   equipChoice?: "A" | "B" | "C";
   about?: string;
+  languages?: string[];
   portraitId?: string;
 };
 

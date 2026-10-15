@@ -83,6 +83,9 @@ export function commitBuilderDraft(user: SessionUser, draft: BuilderDraft): Hero
       JSON.stringify(draft.spellbook ?? []),
       meta,
     );
+  if (draft.languages?.length) {
+    accountDb().prepare("UPDATE heroes SET languages_json = ? WHERE id = ?").run(JSON.stringify(draft.languages), heroId);
+  }
 
   const pack = STARTER_ITEMS[draft.classId]?.[draft.equipChoice ?? "A"] ?? [`${draft.classId === "wizard" ? "quarterstaff" : "longsword"}`];
   for (const itemId of pack) giveStash(user.id, itemId);
