@@ -22,6 +22,21 @@ test("ensureForgeContentDefaults enables playable builder catalog on a fresh fla
   }
 });
 
+test("ensureForgeContentDefaults enables valid reviewed monsters and leaves the rest", () => {
+  ensureForgeContentDefaults();
+  const monsters = listCatalog().filter((row) => row.kind === "monster");
+  const playable = monsters.filter((row) => row.valid && (row.reviewStatus === "auto_ok" || row.reviewStatus === "resolved" || row.reviewStatus === "none"));
+  const held = monsters.filter((row) => row.reviewStatus === "needs_review" || !row.valid);
+  assert.ok(playable.length > 2, `expected the reviewed monster set, got ${playable.length}`);
+  assert.ok(playable.every((row) => row.enabled && row.inPlay));
+  assert.ok(held.length > 0, "needs_review monsters should stay out of the seed");
+  assert.ok(held.every((row) => !row.enabled));
+  setContentEnabled("monster", "goblin_warrior", false);
+  ensureForgeContentDefaults();
+  assert.equal(listCatalog().find((row) => row.kind === "monster" && row.id === "goblin_warrior")?.enabled, false);
+  setContentEnabled("monster", "goblin_warrior", true);
+});
+
 test("ensureForgeContentDefaults does not re-enable content an admin turned off", () => {
   ensureForgeContentDefaults();
   const fighter = listCatalog().find((r) => r.kind === "class" && r.id === "fighter");

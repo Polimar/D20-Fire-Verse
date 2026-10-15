@@ -4,6 +4,7 @@
  */
 
 import type { AbilityKey, BuilderCatalog, BuilderDraft, DerivedSheet } from "./builder.js";
+import { describeError } from "./index.js";
 
 const ABILITIES: AbilityKey[] = ["str", "dex", "con", "int", "wis", "cha"];
 const STEPS = ["class", "origin", "species", "scores", "training", "gear", "spells", "details", "review"] as const;
@@ -113,7 +114,10 @@ function injectCss(): void {
       background: radial-gradient(circle at 40% 30%, #e07a32, #3a2014 42%, #120c09 74%);
       box-shadow: inset 0 0 0 1px rgba(255,210,160,0.25), 0 8px 18px rgba(0,0,0,0.35); margin-bottom: 0.35rem; }
     .hw-crest svg { width: 1.55rem; height: 1.55rem; }
-    .hw-chip { padding: 0.6rem 0.85rem; min-height: 2.9rem; border-radius: 999px; }
+    .hw-chip { width: auto; padding: 0.6rem 0.85rem; min-height: 2.9rem; border-radius: 999px; }
+    .hw-card { width: 100%; }
+    .hw-ghost { width: auto; }
+    .hw-dot { width: 0.85rem; height: 0.85rem; flex: 0 0 0.85rem; padding: 0; }
     .hw-row { display: flex; flex-wrap: wrap; gap: 0.45rem; }
     .hw-score { display: grid; grid-template-columns: 3.2rem 1fr auto; gap: 0.45rem; align-items: center; margin-bottom: 0.4rem; }
     .hw-nav { display: flex; gap: 0.6rem; margin-top: auto; }
@@ -128,22 +132,65 @@ function injectCss(): void {
     .hw-field input, .hw-field textarea {
       background: #120c09; color: inherit; border: 1px solid rgba(246,234,214,0.22); border-radius: 12px; padding: 0.75rem; font: inherit; min-height: 2.9rem;
     }
-    .hw.phone { display: flex; flex-direction: column; height: 100%; min-height: 0; gap: 0; background: #120c09; }
+    .hw.phone { display: flex; flex-direction: column; height: auto; min-height: 0; flex: 1 1 auto; gap: 0; overflow: hidden; background: #120c09; }
     .hw.phone .hw-grid { grid-template-columns: 1fr 1fr; }
     .hw.phone .hw-main { flex: 1 1 0; min-height: 0; overflow: hidden; }
-    .hw.phone .hw-body { flex: 1; overflow: auto; padding-right: 0.1rem; }
-    .hw.phone .hw-top h2 { font-size: 1.25rem; }
+    .hw.phone .hw-body { flex: 1 1 auto; min-height: 0; overflow: auto; -webkit-overflow-scrolling: touch; padding-right: 0.1rem; padding-bottom: 0.4rem; }
+    .hw.phone .hw-top { align-items: flex-start; }
+    .hw.phone .hw-top > div { flex: 1; min-width: 0; text-align: right; }
+    .hw.phone .hw-kicker { white-space: nowrap; }
+    .hw.phone .hw-top h2 { font-size: 1.2rem; line-height: 1.05; }
     .hw.phone .hw-card { min-height: 6.6rem; }
+    .hw.phone .hw-score { grid-template-columns: auto 1fr; }
+    .hw.phone .hw-score .hw-row { grid-column: 1 / -1; }
     .hw.phone .hw-chip, .hw.phone .hw-nav button, .hw.phone .hw-ghost { min-height: 3rem; }
-    .hw.phone .hw-nav { position: static; padding: 0.45rem 0 0.35rem; background: #120c09; }
-    .hw.phone .hw-sheet { flex: 0 0 auto; max-height: 12.5rem; overflow: auto; border-radius: 16px 16px 0 0; margin: 0; font-size: 0.92rem; }
-    .hw.phone .hw-sheet p { line-height: 1.25; }
+    .hw-peek { display: none; }
+    .hw-scrim { display: none; position: fixed; inset: 0; z-index: 25; background: rgba(0, 0, 0, 0.55); border: 0; padding: 0; }
+    .hw-scrim.on { display: block; }
+    .hw.phone .hw-nav button { width: 100%; }
+    .hw.phone .hw-nav {
+      flex: 0 0 auto; display: grid; grid-template-columns: auto minmax(0, 1fr) auto;
+      align-items: stretch; gap: 0.45rem; padding: 0.45rem 0 0.15rem;
+      background: #120c09; border-top: 1px solid rgba(240, 160, 90, 0.4); z-index: 4;
+    }
+    .hw.phone .hw-peek { display: grid; place-items: center; text-align: center; min-height: 3rem; padding: 0.35rem 0.6rem; border-radius: 999px; font-size: 0.82rem; }
+    .hw.phone .hw-sheet {
+      display: none; position: fixed; left: 0; right: 0; bottom: 0; z-index: 30;
+      max-height: min(72vh, 32rem); overflow: auto; margin: 0;
+      border-radius: 18px 18px 0 0; padding: 0.85rem 1rem max(1rem, env(safe-area-inset-bottom));
+      box-shadow: 0 -18px 48px rgba(0, 0, 0, 0.55);
+    }
+    .hw.phone .hw-sheet.open { display: block; }
+    .hw-sheet-close { display: none; margin-bottom: 0.45rem; }
+    .hw.phone .hw-sheet .hw-sheet-close { display: inline-flex; }
   `;
   document.head.appendChild(style);
 }
 
-function sheetHtml(sheet: DerivedSheet | null): string {
-  if (!sheet) return `<aside class="hw-sheet"><h3>Sheet</h3><p class="hw-meta">Choices update this panel.</p></aside>`;
+function guidance(codes: string[], draft: BuilderDraft, catalog: BuilderCatalog): string {
+  const cls = catalog.classes.find((row) => row.id === draft.classId);
+  return codes
+    .map((code) => {
+      const skills = code.match(/^NEED_(\d+)_CLASS_SKILLS$/);
+      if (skills) return `Pick ${skills[1]} class skills (${draft.classSkills.length}/${skills[1]}).`;
+      const cantrips = code.match(/^NEED_(\d+)_CANTRIPS$/);
+      if (cantrips) return `Pick ${cantrips[1]} cantrips (${draft.cantrips?.length ?? 0}/${cantrips[1]}).`;
+      const spells = code.match(/^NEED_(\d+)_SPELLS$/);
+      if (spells) {
+        const n = Number(spells[1]);
+        if ((cls?.level1.preparedSpells ?? 0) === n) return `Prepare ${n} spells (${draft.spellsPrepared?.length ?? 0}/${n}).`;
+        if ((cls?.level1.spellsKnown ?? 0) === n) return `Learn ${n} spells (${draft.spellsKnown?.length ?? 0}/${n}).`;
+        if ((cls?.level1.spellbookSize ?? 0) === n) return `Put ${n} spells in your spellbook (${draft.spellbook?.length ?? 0}/${n}).`;
+        return `Pick ${n} spells.`;
+      }
+      if (code === "NEED_2_EXPERTISE") return `Pick 2 skills for Expertise (${draft.expertiseSkills?.length ?? 0}/2).`;
+      return describeError(code);
+    })
+    .join(" ");
+}
+
+function sheetHtml(sheet: DerivedSheet | null, draft: BuilderDraft, catalog: BuilderCatalog, open: boolean): string {
+  if (!sheet) return `<aside class="hw-sheet" id="hwSheet"><h3>Sheet</h3><p class="hw-meta">Choices update this panel.</p></aside>`;
   const abs = ABILITIES.map((a) => `${a.toUpperCase()} ${sheet.abilities[a].score}`).join(" · ");
   const skills = sheet.skills
     .filter((s) => s.proficient)
@@ -156,7 +203,7 @@ function sheetHtml(sheet: DerivedSheet | null): string {
         .map(([level, n]) => `L${level} ×${n}`)
         .join(" · ")
     : "";
-  return `<aside class="hw-sheet" aria-live="polite">
+  return `<aside class="hw-sheet${open ? " open" : ""}" id="hwSheet" aria-live="polite">
     <p class="hw-kicker">Live sheet</p>
     <h3>${esc(sheet.name || "Unnamed")}</h3>
     <p>L${sheet.level} ${esc(sheet.speciesName)} ${esc(sheet.className)}</p>
@@ -167,8 +214,18 @@ function sheetHtml(sheet: DerivedSheet | null): string {
     <p class="hw-meta">${esc(skills)}</p>
     ${slots ? `<p class="hw-meta">Slots ${esc(slots)}</p>` : ""}
     ${(sheet.cantripIds?.length || sheet.preparedSpellIds?.length) ? `<p class="hw-meta">Cantrips ${sheet.cantripIds?.length ?? 0} · Prepared ${sheet.preparedSpellIds?.length ?? 0}</p>` : ""}
-    ${sheet.errors.length ? `<p class="hw-err">${sheet.errors.map(esc).join(", ")}</p>` : ""}
+    ${sheet.errors.length ? `<p class="hw-err">${esc(guidance(sheet.errors, draft, catalog))}</p>` : ""}
+    <button type="button" class="hw-ghost hw-sheet-close" id="hwSheetClose">Close sheet</button>
   </aside>`;
+}
+
+function peekLabel(sheet: DerivedSheet | null, draft: BuilderDraft, catalog: BuilderCatalog): string {
+  if (!sheet) return "Sheet";
+  if (sheet.errors.length) {
+    const line = guidance(sheet.errors, draft, catalog).split(/(?<=\.)\s/)[0] ?? "Sheet";
+    return line.length > 42 ? `${line.slice(0, 40)}…` : line;
+  }
+  return `HP ${sheet.hp} · AC ${sheet.ac}`;
 }
 
 export async function mountForgeWizard(host: HTMLElement, opts: ForgeWizardOptions): Promise<ForgeWizardHandle> {
@@ -199,6 +256,7 @@ export async function mountForgeWizard(host: HTMLElement, opts: ForgeWizardOptio
   let step = 0;
   let preview: DerivedSheet | null = null;
   let localError = "";
+  let sheetOpen = false;
 
   const cls = () => catalog.classes.find((c) => c.id === draft.classId)!;
   const bg = () => catalog.backgrounds.find((b) => b.id === draft.backgroundId)!;
@@ -253,7 +311,9 @@ export async function mountForgeWizard(host: HTMLElement, opts: ForgeWizardOptio
       (body) => {
         preview = body.sheet;
         const aside = host.querySelector(".hw-sheet");
-        if (aside) aside.outerHTML = sheetHtml(preview);
+        if (aside) aside.outerHTML = sheetHtml(preview, draft, catalog, sheetOpen);
+        const peek = host.querySelector("#hwSheetPeek");
+        if (peek) peek.textContent = peekLabel(preview, draft, catalog);
       },
       () => undefined,
     );
@@ -359,7 +419,7 @@ export async function mountForgeWizard(host: HTMLElement, opts: ForgeWizardOptio
       body = `<p>Create this hero. Gear lands in your stash. You begin at level 1.</p>`;
     }
 
-    host.innerHTML = `<div class="hw ${opts.layout === "phone" ? "phone" : ""}">
+    host.innerHTML = `<button type="button" class="hw-scrim${sheetOpen ? " on" : ""}" id="hwScrim" aria-label="Close sheet"></button><div class="hw ${opts.layout === "phone" ? "phone" : ""}">
       <div class="hw-main">
         <div class="hw-top"><button type="button" class="hw-ghost" id="hwClose">Close</button><div><p class="hw-kicker">Step ${step + 1} of ${steps.length}</p><h2>${esc(STEP_TITLE[id])}</h2></div></div>
         <div class="hw-progress">${steps.map((s, i) => `<button type="button" class="hw-dot ${i === step ? "on" : ""} ${i < step ? "done" : ""}" data-dot="${i}" aria-label="${esc(STEP_TITLE[s])}"></button>`).join("")}</div>
@@ -367,10 +427,11 @@ export async function mountForgeWizard(host: HTMLElement, opts: ForgeWizardOptio
         <p class="hw-err" id="hwErr">${esc(localError)}</p>
         <div class="hw-nav">
           <button type="button" id="hwPrev" ${step === 0 ? "disabled" : ""}>Back</button>
+          <button type="button" class="hw-chip hw-peek" id="hwSheetPeek">${esc(peekLabel(preview, draft, catalog))}</button>
           <button type="button" class="go" id="hwNext">${id === "review" ? "Create hero" : "Next"}</button>
         </div>
       </div>
-      ${sheetHtml(preview)}
+      ${sheetHtml(preview, draft, catalog, sheetOpen)}
     </div>`;
 
     host.querySelector("#hwClose")!.addEventListener("click", () => opts.onClose());
@@ -461,7 +522,7 @@ export async function mountForgeWizard(host: HTMLElement, opts: ForgeWizardOptio
     host.querySelector<HTMLInputElement>("#hwLang")?.addEventListener("input", (ev) => {
       draft.languages = (ev.target as HTMLInputElement).value.split(",").map((s) => s.trim()).filter(Boolean);
     });
-    const first = host.querySelector<HTMLButtonElement>(".hw-card, .hw-chip, #hwNext");
+    const first = host.querySelector<HTMLButtonElement>(".hw-body .hw-card, .hw-body .hw-chip, #hwName, #hwNext");
     first?.focus();
     syncPreview();
   };
@@ -491,6 +552,20 @@ export async function mountForgeWizard(host: HTMLElement, opts: ForgeWizardOptio
     localError = "";
     paint();
   };
+
+  host.addEventListener("click", (ev) => {
+    const target = ev.target as HTMLElement | null;
+    if (!target) return;
+    if (target.closest("#hwSheetPeek")) {
+      sheetOpen = !sheetOpen;
+      paint();
+      return;
+    }
+    if (target.closest("#hwScrim") || target.closest("#hwSheetClose")) {
+      sheetOpen = false;
+      paint();
+    }
+  });
 
   paint();
   return {

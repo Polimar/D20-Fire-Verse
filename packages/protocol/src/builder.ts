@@ -94,7 +94,7 @@ export type BuilderCatalogClass = {
   };
   fightingStyleRequired?: boolean;
   fightingStyleFeatIds: string[];
-  equipChoices: Array<{ id: "A" | "B" | "C"; label: string }>;
+  equipChoices: Array<{ id: "A" | "B" | "C"; label: string; items?: string[] }>;
 };
 
 export type BuilderCatalog = {

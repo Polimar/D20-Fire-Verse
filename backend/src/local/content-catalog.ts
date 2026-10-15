@@ -461,8 +461,12 @@ export function queryCatalog(query: CatalogQuery) {
   };
 }
 
-/** Kinds needed for PG Builder V2 + L1 heroes (CK-1…CK-9). */
-const FORGE_BOOTSTRAP_KINDS: ReadonlySet<Bucket> = new Set(["class", "species", "background", "feat", "spell", "item"]);
+/**
+ * Kinds the seed turns on for a fresh table.
+ * Monsters join the arena roster only when the stat block is valid and the review is clear
+ * (`auto_ok`, `resolved`, or `none`). `needs_review` stays off until an admin resolves it.
+ */
+const FORGE_BOOTSTRAP_KINDS: ReadonlySet<Bucket> = new Set(["class", "species", "background", "feat", "spell", "item", "monster"]);
 
 /**
  * On a fresh table, enable valid SRD rows for the forge without touching explicit admin toggles.

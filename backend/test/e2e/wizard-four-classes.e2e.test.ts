@@ -37,6 +37,22 @@ async function shot(page: Page, name: string): Promise<void> {
   await page
     .waitForFunction(() => /HP \d+/.test(document.querySelector(".hw-sheet")?.textContent ?? ""), undefined, { timeout: 8_000 })
     .catch(() => undefined);
+  await page.evaluate(async () => {
+    const finite = document.getAnimations().filter((anim) => {
+      if (anim.playState !== "running") return false;
+      return anim.effect?.getTiming().iterations !== Infinity;
+    });
+    await Promise.all(finite.map((anim) => anim.finished.catch(() => undefined)));
+  });
+  const opacity = await page.evaluate(() => {
+    const modal = document.querySelector<HTMLElement>("#heroWizard");
+    const card = document.querySelector<HTMLElement>(".hero-wizard-card");
+    const modalOpacity = modal ? Number(getComputedStyle(modal).opacity) : 1;
+    const cardOpacity = card ? Number(getComputedStyle(card).opacity) : 1;
+    return { modalOpacity, cardOpacity };
+  });
+  assert.ok(opacity.modalOpacity >= 0.99, `modal opacity ${opacity.modalOpacity} on ${name}`);
+  assert.ok(opacity.cardOpacity >= 0.99, `card opacity ${opacity.cardOpacity} on ${name}`);
   await page.screenshot({ path: path.join(SHOT, `${name}.png`) });
 }
 

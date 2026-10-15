@@ -50,6 +50,53 @@ function unarmedAttack(scores: Record<AbilityKey, number>, prof: number): Derive
   };
 }
 
+/** SRD armor: dexCap null means the full Dexterity modifier. */
+const ARMOR: Record<string, { base: number; dexCap: number | null }> = {
+  padded_armor: { base: 11, dexCap: null },
+  leather_armor: { base: 11, dexCap: null },
+  studded_leather_armor: { base: 12, dexCap: null },
+  hide_armor: { base: 12, dexCap: 2 },
+  chain_shirt: { base: 13, dexCap: 2 },
+  scale_mail: { base: 14, dexCap: 2 },
+  breastplate: { base: 14, dexCap: 2 },
+  half_plate_armor: { base: 15, dexCap: 2 },
+  ring_mail: { base: 14, dexCap: 0 },
+  chain_mail: { base: 16, dexCap: 0 },
+  splint_armor: { base: 17, dexCap: 0 },
+  plate_armor: { base: 18, dexCap: 0 },
+};
+
+const WEAPONS = new Set([
+  "greatsword", "longsword", "shortsword", "scimitar", "rapier", "dagger", "handaxe", "greataxe",
+  "mace", "quarterstaff", "spear", "sickle", "flail", "javelin", "shortbow", "longbow", "light_crossbow",
+]);
+const FINESSE = new Set(["dagger", "scimitar", "rapier", "shortsword", "whip"]);
+const RANGED = new Set(["shortbow", "longbow", "light_crossbow", "dart"]);
+
+function labelItem(id: string): string {
+  return id.replace(/_/g, " ").replace(/\b\w/g, (ch) => ch.toUpperCase());
+}
+
+function starterKit(cls: BuilderCatalog["classes"][number] | undefined, choice: BuilderDraft["equipChoice"]): string[] {
+  const pick = cls?.equipChoices.find((row) => row.id === (choice ?? "A")) ?? cls?.equipChoices[0];
+  return pick?.items ?? [];
+}
+
+function wornArmor(items: string[]): { armored: boolean; ac: number; dexCap: number | null; shield: boolean } {
+  const piece = items.map((id) => ARMOR[id]).find(Boolean);
+  return {
+    armored: Boolean(piece),
+    ac: piece?.base ?? 10,
+    dexCap: piece?.dexCap ?? null,
+    shield: items.includes("shield"),
+  };
+}
+
+function dexModBonus(worn: { dexCap: number | null }, dexMod: number): number {
+  if (worn.dexCap === null) return dexMod;
+  return Math.min(dexMod, worn.dexCap);
+}
+
 function weaponAttack(
   itemId: string,
   name: string,
@@ -58,8 +105,8 @@ function weaponAttack(
   useDex: boolean,
 ): DerivedAttackRow {
   const mod = abilityMod(useDex ? scores.dex : scores.str);
-  const dice = itemId.includes("greatsword") ? "2d6" : itemId.includes("longbow") || itemId.includes("shortbow") ? "1d8" : "1d8";
-  const type = itemId.includes("bow") ? "piercing" : "slashing";
+  const dice = itemId.includes("greatsword") || itemId.includes("greataxe") ? "2d6" : itemId === "dagger" || itemId === "sickle" || itemId === "handaxe" ? "1d4" : itemId === "spear" || itemId === "javelin" || itemId === "mace" || itemId === "quarterstaff" ? "1d6" : "1d8";
+  const type = RANGED.has(itemId) || itemId === "javelin" || itemId === "spear" ? "piercing" : itemId === "mace" || itemId === "quarterstaff" || itemId === "flail" ? "bludgeoning" : "slashing";
   return {
     id: itemId,
     name,
@@ -131,16 +178,19 @@ export function deriveHero(draft: BuilderDraft, catalog: BuilderCatalog, classHi
   const hitDie = classHint?.hitDie ?? 10;
   const hp = hpAtLevelOne({ id: draft.classId, hitDie, caster: "none", primary: [], multiclass: {}, levels: [] }, scores.con);
 
-  let ac = 10 + abilityMod(scores.dex);
-  if (draft.classId === "barbarian") ac += abilityMod(scores.con);
-  if (draft.classId === "monk") ac += abilityMod(scores.wis);
+  const kit = starterKit(clsMeta, draft.equipChoice);
+  const worn = wornArmor(kit);
+  const dexMod = abilityMod(scores.dex);
+  let ac = worn.armored ? worn.ac + dexModBonus(worn, dexMod) : 10 + dexMod;
+  if (!worn.armored && draft.classId === "barbarian") ac += abilityMod(scores.con);
+  if (!worn.armored && !worn.shield && draft.classId === "monk") ac += abilityMod(scores.wis);
+  if (worn.shield) ac += 2;
+  if (worn.armored && draft.fightingStyleFeatId === "defense") ac += 1;
   const attacks: DerivedAttackRow[] = [unarmedAttack(scores, prof)];
-  if (draft.classId === "fighter" && draft.equipChoice === "A") {
-    ac = 16;
-    attacks.push(weaponAttack("greatsword", "Greatsword", scores, prof, false));
-  } else if (draft.classId === "fighter" && draft.equipChoice === "B") {
-    ac = 12 + Math.min(abilityMod(scores.dex), 2);
-    attacks.push(weaponAttack("longbow", "Longbow", scores, prof, true));
+  const weaponId = kit.find((id) => WEAPONS.has(id));
+  if (weaponId) {
+    const useDex = RANGED.has(weaponId) || (FINESSE.has(weaponId) && abilityMod(scores.dex) >= abilityMod(scores.str));
+    attacks.push(weaponAttack(weaponId, labelItem(weaponId), scores, prof, useDex));
   }
 
   const saves = (classHint?.saves ?? ["str", "con"]).map((ability) => ({
