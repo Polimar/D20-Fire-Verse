@@ -2,7 +2,7 @@
 
 Documento di riferimento per implementazione e **brief Cursor**.  
 Organizzato in **CHECKPOINT** (fette verticali giocabili).  
-**Ultimo aggiornamento:** 2026-10-15 (CK-2…CK-9 + gap pre-merge su branch `cursor/pg-builder-v2-plan-e574`).
+**Ultimo aggiornamento:** 2026-10-15. Il builder giocabile è la **modal a passi** (Hero builder). CK-10…CK-14 non sono chiusi al 100% del motore: vedi sezione residui in fondo.
 
 ### Stato CK-2…CK-9 (agent)
 
@@ -599,3 +599,14 @@ English per UI e codice. Non fare deploy in produzione.
 | CK-12 | Migrazione `custom_*` → `hero_*` |
 | CK-13 | Mostri SRD arena |
 | CK-14 | Gate finale 100% |
+
+## Residui onesti (dopo la modal wizard)
+
+| CK | Stato |
+|----|--------|
+| Wizard UX (sostituisce il form `/forge`) | Fatto: modal TV + layout telefono, passi guidati, preview server |
+| CK-10 classi/sottoclassi/feat al 100% combat | Non fatto. `buildKit` legge le tabelle SRD di tutte le classi; il fight engine esegue in modo completo solo il pack A |
+| CK-11 item/mastery/spell 100% | Parziale. Forge 5.1 HTTP e websocket `CREATE_CHARACTER` rispondono `FORGE_51_REMOVED`. Ritual/mastery swap non sono un sistema nuovo |
+| CK-12 `custom_*` → `hero_*` | Script `FIREVERSE_MIGRATE_CUSTOM=1` (`migrate-custom.ts`). Non è stato eseguito sui dati di produzione |
+| CK-13 235 mostri | Il compilatore arena esiste già; non c’è una prova 235/235 in questo rilascio |
+| CK-14 coverage zero gap | Non verde sull’intero SRD |

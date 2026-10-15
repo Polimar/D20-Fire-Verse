@@ -43,6 +43,7 @@ import {
 import { announceTable } from "./announce.js";
 import { ARENA_FORMATS, arenaRoster } from "./arena.js";
 import { ARENA_THEMES } from "./arena-maps.js";
+import { migrateCustomCharacters } from "./migrate-custom.js";
 import { ensureDataDir, REPO_ROOT } from "./paths.js";
 import { audioPath, narrationStatus, prewarmNarration, waitForNarration } from "./narration.js";
 import {
@@ -311,28 +312,15 @@ app.get("/api/portraits", (_req, res) => {
 });
 
 app.get("/api/chargen", (_req, res) => {
-  res.json(getChargenCatalog());
+  res.status(410).json({ error: "FORGE_51_REMOVED", hint: "Use the Hero builder on the title menu." });
 });
 
-app.post("/api/chargen", (req, res) => {
-  try {
-    const user = requestUser(req);
-    if (!user) {
-      res.status(401).json({ error: "AUTH_REQUIRED" });
-      return;
-    }
-    const built = createCustomCharacter(req.body as ChargenDraft, undefined, user.id);
-    pushLibrary(user.id);
-    res.json(built);
-  } catch (err) {
-    res.status(400).json({
-      error: err instanceof Error ? err.message : "ERROR",
-    });
-  }
+app.post("/api/chargen", (_req, res) => {
+  res.status(410).json({ error: "FORGE_51_REMOVED", hint: "Use the Hero builder on the title menu." });
 });
 
 app.post("/api/chargen/roll", (_req, res) => {
-  res.json({ scores: rollAbilityScores() });
+  res.status(410).json({ error: "FORGE_51_REMOVED" });
 });
 
 function pushLibrary(userId: string): void {
@@ -916,36 +904,9 @@ function handle(sock: Sock, msg: ClientMsg): void {
       broadcast(arenaKick(msg.roomCode, sock.user?.id, msg.playerId).roomCode);
       return;
     }
-    case "CREATE_CHARACTER": {
-      if (!msg.draft) throw new Error("MISSING_DRAFT");
-      const rolledPool = msg.draft.method === "roll" ? sock.abilityRolls : undefined;
-      const built = createCustomCharacter(msg.draft, rolledPool, sock.user!.id);
-      send(sock, {
-        eventType: "CHARACTER_CREATED",
-        payload: {
-          character: {
-            id: built.id,
-            name: built.name,
-            summary: built.summary,
-            class: built.class,
-            level: built.level,
-            hp: built.hp,
-            ac: built.ac,
-            abilities: built.abilities,
-            portrait: portraitForCharacter(built.id),
-            custom: true,
-          },
-          pregens: pregenList(sock.user!.id),
-        },
-      });
-      return;
-    }
-    case "ROLL_ABILITIES": {
-      const scores = rollAbilityScores();
-      sock.abilityRolls = scores;
-      send(sock, { eventType: "ABILITY_ROLLS", payload: { scores } });
-      return;
-    }
+    case "CREATE_CHARACTER":
+    case "ROLL_ABILITIES":
+      throw new Error("FORGE_51_REMOVED");
     case "JOIN_ROOM": {
       if (!msg.roomCode || !msg.characterId) throw new Error("MISSING_FIELDS");
       const { room, playerId } = joinRoom(msg.roomCode, msg.displayName || "Player", msg.characterId, sock.user!.id);
@@ -1108,6 +1069,11 @@ const heartbeat = setInterval(() => {
   }
 }, 15000);
 wss.on("close", () => clearInterval(heartbeat));
+
+if (process.env.FIREVERSE_MIGRATE_CUSTOM === "1") {
+  const report = migrateCustomCharacters();
+  console.log("custom→hero migration", report);
+}
 
 server.listen(PORT, "0.0.0.0", () => {
   console.log(`D20 FireVerse LOCAL server on http://0.0.0.0:${PORT}`);

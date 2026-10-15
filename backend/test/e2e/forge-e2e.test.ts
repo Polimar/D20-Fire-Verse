@@ -86,18 +86,16 @@ test("forge page shows builder form when logged in", async () => {
       if (msg.type() === "error") consoleErrors.push(msg.text());
     });
     page.on("pageerror", (err) => consoleErrors.push(String(err)));
-    await page.goto(`${base}/forge`, { waitUntil: "domcontentloaded" });
-    const form = page.locator("#forgeForm");
+    await page.goto(`${base}/?builder=open`, { waitUntil: "domcontentloaded" });
+    const form = page.locator(".hw");
     try {
       await form.waitFor({ state: "visible", timeout: 20_000 });
     } catch (err) {
       const snippet = await page.locator("body").innerText().catch(() => "");
       throw new Error(`${err instanceof Error ? err.message : err}\n--- page ---\n${snippet.slice(0, 800)}`);
     }
-    const nameField = page.locator("#fgName");
-    assert.equal(await nameField.count(), 1);
-    const classSelect = page.locator("#fgClass");
-    assert.ok((await classSelect.count()) >= 1);
+    assert.ok((await page.locator("[data-class]").count()) >= 1);
+    assert.ok((await page.locator("#hwNext").count()) === 1);
     const uncaughtPageError = consoleErrors.find((line) => /uncaught|unhandled/i.test(line));
     assert.equal(uncaughtPageError, undefined, consoleErrors.join("\n"));
   } finally {
