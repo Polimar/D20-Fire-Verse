@@ -225,9 +225,10 @@ export class Board {
     const contrast = settings().highContrast;
     const w = this.cols * c;
     const h = this.rows * c;
-    const art = Boolean(this.mapArt);
-    g.rect(this.ox - 480, this.oy - 480, w + 960, h + 960).fill({ color: 0x0a0705, alpha: 1 });
-    if (!art) {
+    /** Floor art is under this layer; only draw opaque tiles when the texture is actually loaded. */
+    const painted = Boolean(this.mapSprite);
+    if (!painted) {
+      g.rect(this.ox - 480, this.oy - 480, w + 960, h + 960).fill({ color: 0x0a0705, alpha: 1 });
       g.roundRect(this.ox - 12, this.oy - 12, w + 24, h + 24, 16).fill({ color: 0x0a0705, alpha: 0.96 });
     }
     g.roundRect(this.ox - 12, this.oy - 12, w + 24, h + 24, 16).stroke({ width: 2, color: 0x8a5a30, alpha: 0.8 });
@@ -237,7 +238,7 @@ export class Board {
         const px = this.ox + x * c;
         const py = this.oy + y * c;
         const n = hash2(x, y);
-        if (art) {
+        if (painted) {
           g.rect(px + 0.5, py + 0.5, c - 1, c - 1).stroke({ width: 1, color: 0x000000, alpha: contrast ? 0.55 : 0.28 });
         } else if (this.isWall(x, y)) {
           g.rect(px, py, c, c).fill({ color: contrast ? 0x000000 : 0x0d0907 });
@@ -261,10 +262,10 @@ export class Board {
           if (!contrast && n > 0.72) g.circle(px + c * (0.25 + 0.5 * hash2(y, x)), py + c * (0.3 + 0.4 * n), Math.max(1, c * 0.04)).fill({ color: 0x1a130d, alpha: 0.6 });
           if (!contrast) g.rect(px + 1, py + 1, c - 2, 1).fill({ color: 0xffe0b0, alpha: 0.05 });
         }
-        if (art && this.isWall(x, y)) {
+        if (painted && this.isWall(x, y)) {
           g.rect(px, py, c, c).fill({ color: 0x050302, alpha: contrast ? 0.78 : 0.55 });
         } else if (this.isHazard(x, y) && !this.isWall(x, y)) {
-          g.rect(px, py, c, c).fill({ color: contrast ? 0x2450c8 : 0x3a78c8, alpha: art ? 0.42 : 0.32 });
+          g.rect(px, py, c, c).fill({ color: contrast ? 0x2450c8 : 0x3a78c8, alpha: painted ? 0.42 : 0.32 });
           g.rect(px + 2, py + c * 0.55, c - 4, Math.max(2, c * 0.28)).fill({ color: 0x9ec4ff, alpha: contrast ? 0.55 : 0.28 });
         }
       }
@@ -378,7 +379,7 @@ export class Board {
       this.drawFloor();
       return;
     }
-    void Assets.load<Texture>(next).then((tex) => {
+    const applyTexture = (tex: Texture) => {
       if (this.mapArt !== next) return;
       this.dropMapSprite();
       const sprite = new Sprite(tex);
@@ -388,7 +389,25 @@ export class Board {
       this.world.addChildAt(sprite, 0);
       this.layoutMap();
       this.drawFloor();
-    });
+    };
+    const failArt = () => {
+      if (this.mapArt !== next) return;
+      this.mapArt = "";
+      this.mapCrop = null;
+      this.dropMapSprite();
+      this.drawFloor();
+    };
+    void Assets.load<Texture>(next)
+      .then(applyTexture)
+      .catch(() => {
+        if (this.mapArt !== next) return;
+        if (next.endsWith(".png")) {
+          const svg = next.replace(/\.png$/, ".svg");
+          void Assets.load<Texture>(svg).then(applyTexture).catch(failArt);
+          return;
+        }
+        failArt();
+      });
   }
 
   // ------------------------------------------------------------------ board & tokens

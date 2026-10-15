@@ -18,7 +18,13 @@ import {
   type MapDef,
   type Pregen,
 } from "./campaign.js";
-import { getArenaMap, isCustomArenaId, scalePregenToLevel, type ArenaMapDef } from "./arena-maps.js";
+import {
+  getArenaMap,
+  isCustomArenaId,
+  resolveArenaArtPublicPath,
+  scalePregenToLevel,
+  type ArenaMapDef,
+} from "./arena-maps.js";
 import {
   critNotation,
   makeDiceRoll,
@@ -3863,13 +3869,7 @@ export function publicCombat(combat: CombatState, viewerPlayerId?: string) {
     pvp: combat.pvp ?? null,
     pve: Boolean(combat.pve),
     pvpWinner: combat.pvpWinner ?? null,
-    art: (() => {
-      const fromMap = getArenaMap(combat.mapId)?.art;
-      if (fromMap?.startsWith("/")) return fromMap;
-      if (isCustomArenaId(combat.mapId)) return null;
-      const m = /^arena_(.+)_(small|medium|large)$/.exec(combat.mapId);
-      return m ? `/art/arena/${m[1]}-${m[2]}.png` : null;
-    })(),
+    art: resolveArenaArtPublicPath(combat.mapId),
     width: combat.width,
     height: combat.height,
     walls: combat.walls,

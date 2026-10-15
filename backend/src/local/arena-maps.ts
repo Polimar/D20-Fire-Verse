@@ -217,6 +217,31 @@ export function defaultArenaArt(theme: ArenaThemeId, size: ArenaSize): string {
   return `/art/arena/${theme}-${size}.png`;
 }
 
+/** Public URL for arena floor art (png preferred, svg fallback). */
+export function resolveArenaArtPublicPath(mapId: string): string | null {
+  const map = getArenaMap(mapId);
+  const tryPublic = (rel: string): string | null => {
+    const clean = rel.startsWith("/") ? rel.slice(1) : rel;
+    const full = path.join(REPO_ROOT, "tv", "public", clean);
+    return fs.existsSync(full) ? `/${clean}` : null;
+  };
+  if (map?.art?.startsWith("/")) {
+    const hit = tryPublic(map.art);
+    if (hit) return hit;
+    if (map.art.endsWith(".png")) {
+      const svg = map.art.replace(/\.png$/, ".svg");
+      const svgHit = tryPublic(svg);
+      if (svgHit) return svgHit;
+    }
+    return map.art;
+  }
+  if (isCustomArenaId(mapId)) return null;
+  const m = /^arena_(.+)_(small|medium|large)$/.exec(mapId);
+  if (!m) return null;
+  const base = `art/arena/${m[1]}-${m[2]}`;
+  return tryPublic(`${base}.png`) ?? tryPublic(`${base}.svg`) ?? `/${base}.png`;
+}
+
 export function ensureArenaMapFile(id: string): ArenaMapDef {
   const existing = readArenaFile(id);
   if (existing?.id) return existing;
