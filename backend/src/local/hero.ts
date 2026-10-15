@@ -33,6 +33,7 @@ import { recordEvent } from "./events.js";
 import { CONTENT_ROOT, DATA_DIR } from "./paths.js";
 import { resolveHeroId } from "./hero-redirect.js";
 import { insertStashItem } from "./stash-mut.js";
+import { getEconomyConfig } from "./economy-config.js";
 
 type Ability = "str" | "dex" | "con" | "int" | "wis" | "cha";
 const ABILITIES: Ability[] = ["str", "dex", "con", "int", "wis", "cha"];
@@ -677,7 +678,7 @@ export function noteMilestone(heroId: string, kind: string, count: number): { go
        ON CONFLICT(hero_id, kind) DO UPDATE SET count = excluded.count, achieved_at = excluded.achieved_at`,
     )
     .run(heroId, kind, count, new Date().toISOString());
-  const reward = milestoneReward(kind, count);
+  const reward = milestoneReward(kind, count, getEconomyConfig());
   if (!reward) return null;
   ensureWallet(hero.userId);
   accountDb().prepare("UPDATE account_wallet SET gold_balance = gold_balance + ? WHERE user_id = ?").run(reward.gold, hero.userId);
@@ -688,7 +689,7 @@ export function noteMilestone(heroId: string, kind: string, count: number): { go
 }
 
 export function itemPrice(item: ItemDef): number {
-  return item.priceGold ?? placeholderPrice(item.rarity);
+  return item.priceGold ?? placeholderPrice(item.rarity, getEconomyConfig());
 }
 
 export function archiveV1Once(): { characters: number; saves: number } {

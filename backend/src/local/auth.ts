@@ -66,6 +66,7 @@ function database(): DatabaseSync {
   if (!cols.has("confirm_token")) db.exec("ALTER TABLE users ADD COLUMN confirm_token TEXT");
   if (!cols.has("confirm_room")) db.exec("ALTER TABLE users ADD COLUMN confirm_room TEXT");
   if (!cols.has("amazon_user_id")) db.exec("ALTER TABLE users ADD COLUMN amazon_user_id TEXT");
+  if (!cols.has("friend_tag")) db.exec("ALTER TABLE users ADD COLUMN friend_tag TEXT");
   db.exec("CREATE UNIQUE INDEX IF NOT EXISTS users_email ON users(email) WHERE email IS NOT NULL");
   db.exec("CREATE UNIQUE INDEX IF NOT EXISTS users_amazon ON users(amazon_user_id) WHERE amazon_user_id IS NOT NULL");
   const sessionCols = new Set(
@@ -73,11 +74,17 @@ function database(): DatabaseSync {
   );
   if (!sessionCols.has("surface")) db.exec("ALTER TABLE sessions ADD COLUMN surface TEXT");
   if (!cols.has("selected_hero_id")) db.exec("ALTER TABLE users ADD COLUMN selected_hero_id TEXT");
+  const friendCols = new Set(
+    (db.prepare("PRAGMA table_info(friendships)").all() as Array<{ name: string }>).map((c) => c.name),
+  );
+  if (!friendCols.has("requested_by")) db.exec("ALTER TABLE friendships ADD COLUMN requested_by TEXT");
   ensureProgressTables(db);
   const count = db.prepare("SELECT COUNT(*) AS n FROM users").get() as { n: number };
   if (count.n === 0) {
     createUser("admin", "admin", "admin");
   }
+  backfillFriendTags(db);
+  db.exec("CREATE UNIQUE INDEX IF NOT EXISTS users_friend_tag ON users(friend_tag) WHERE friend_tag IS NOT NULL");
   return db;
 }
 
@@ -113,6 +120,7 @@ export function createUser(username: string, password: string, role: Role = "pla
     if (String(err).includes("UNIQUE")) throw new Error("USERNAME_TAKEN");
     throw err;
   }
+  assignFriendTag(id);
   return { id, username: name, role, disabled: false };
 }
 
@@ -332,7 +340,25 @@ function ensureProgressTables(databaseHandle: DatabaseSync): void {
       body_json TEXT NOT NULL,
       PRIMARY KEY (kind, entry_id)
     );
+    CREATE TABLE IF NOT EXISTS economy_config (
+      id TEXT PRIMARY KEY CHECK (id = 'live'),
+      json TEXT NOT NULL,
+      updated_at TEXT,
+      updated_by TEXT
+    );
+    CREATE TABLE IF NOT EXISTS vendor_schedule (
+      day TEXT NOT NULL,
+      position INTEGER NOT NULL,
+      item_id TEXT NOT NULL,
+      price_gold INTEGER,
+      PRIMARY KEY (day, position)
+    );
   `);
+  const matchCols = new Set(
+    (databaseHandle.prepare("PRAGMA table_info(match_board)").all() as Array<{ name: string }>).map((column) => column.name),
+  );
+  if (!matchCols.has("format")) databaseHandle.exec("ALTER TABLE match_board ADD COLUMN format TEXT");
+  if (!matchCols.has("placements_json")) databaseHandle.exec("ALTER TABLE match_board ADD COLUMN placements_json TEXT");
   const heroCols = new Set(
     (databaseHandle.prepare("PRAGMA table_info(heroes)").all() as Array<{ name: string }>).map((column) => column.name),
   );
@@ -428,6 +454,7 @@ export function signInWithAmazon(profile: { amazonUserId: string; name?: string 
       "INSERT INTO users (id, username, password, role, disabled, created_at, amazon_user_id) VALUES (?, ?, ?, 'player', 0, ?, ?)",
     )
     .run(id, username, hashPassword(randomBytes(24).toString("hex")), new Date().toISOString(), amazonId);
+  assignFriendTag(id);
   return { token: openSession(id), user: { id, username, role: "player", disabled: false } };
 }
 
@@ -455,6 +482,7 @@ export async function registerPlayer(input: {
       "INSERT INTO users (id, username, password, role, disabled, created_at, email, confirm_token, confirm_room) VALUES (?, ?, ?, 'player', 1, ?, ?, ?, ?)",
     )
     .run(id, name, hashPassword(input.password), new Date().toISOString(), email, token, roomCode);
+  assignFriendTag(id);
   try {
     const letter = confirmationLetter(token);
     await sendMail(email, letter.subject, letter.html);
@@ -536,6 +564,68 @@ function pairKey(a: string, b: string): [string, string] {
   return a < b ? [a, b] : [b, a];
 }
 
+const FRIEND_TAG_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+const FRIEND_TAG_RE = /^[A-HJ-NP-Z2-9]{6}$/;
+
+function mintFriendTag(): string {
+  let out = "";
+  for (let i = 0; i < 6; i += 1) {
+    out += FRIEND_TAG_ALPHABET[Math.floor(Math.random() * FRIEND_TAG_ALPHABET.length)]!;
+  }
+  return out;
+}
+
+function assignFriendTag(userId: string): string {
+  for (let i = 0; i < 64; i += 1) {
+    const tag = mintFriendTag();
+    try {
+      database().prepare("UPDATE users SET friend_tag = ? WHERE id = ?").run(tag, userId);
+      return tag;
+    } catch (err) {
+      if (!String(err).includes("UNIQUE")) throw err;
+    }
+  }
+  throw new Error("BAD_FRIEND_TAG");
+}
+
+function backfillFriendTags(handle: DatabaseSync): void {
+  const missing = handle.prepare("SELECT id FROM users WHERE friend_tag IS NULL OR friend_tag = ''").all() as Array<{
+    id: string;
+  }>;
+  for (const row of missing) assignFriendTag(row.id);
+}
+
+function userByTag(tag: string): SessionUser | null {
+  const normalized = tag.trim().toUpperCase();
+  if (!FRIEND_TAG_RE.test(normalized)) return null;
+  const row = database()
+    .prepare("SELECT id, username, role, disabled FROM users WHERE friend_tag = ?")
+    .get(normalized) as { id: string; username: string; role: Role; disabled: number } | undefined;
+  if (!row) return null;
+  return { id: row.id, username: row.username, role: row.role, disabled: row.disabled === 1 };
+}
+
+export function friendTagOf(userId: string): string {
+  const row = database().prepare("SELECT friend_tag FROM users WHERE id = ?").get(userId) as
+    | { friend_tag: string | null }
+    | undefined;
+  if (!row) throw new Error("USER_NOT_FOUND");
+  return row.friend_tag && FRIEND_TAG_RE.test(row.friend_tag) ? row.friend_tag : assignFriendTag(userId);
+}
+
+export function rerollFriendTag(userId: string): string {
+  if (!userRow(userId)) throw new Error("USER_NOT_FOUND");
+  return assignFriendTag(userId);
+}
+
+export type FriendRow = {
+  id: string;
+  username: string;
+  friendTag: string;
+  status: string;
+  incoming: boolean;
+};
+
 /** The account behind a paired phone. Null once the account is gone or disabled. */
 export function activeUserById(id: string): SessionUser | null {
   const u = userRow(id);
@@ -550,6 +640,14 @@ function userRow(id: string): SessionUser | null {
   return { id: row.id, username: row.username, role: row.role, disabled: row.disabled === 1 };
 }
 
+export function accountUsername(userId: string): string {
+  return userRow(userId)?.username ?? userId;
+}
+
+export function findUserByUsername(username: string): SessionUser | null {
+  return userByName(username);
+}
+
 function userByName(username: string): SessionUser | null {
   const row = database()
     .prepare("SELECT id, username, role, disabled FROM users WHERE username = ? COLLATE NOCASE")
@@ -558,37 +656,75 @@ function userByName(username: string): SessionUser | null {
   return { id: row.id, username: row.username, role: row.role, disabled: row.disabled === 1 };
 }
 
-export function requestFriend(fromUserId: string, username: string): void {
-  const target = userByName(username);
+export function requestFriend(fromUserId: string, ident: string): void {
+  const raw = ident.trim();
+  if (!raw) throw new Error("BAD_FRIEND_TAG");
+  const target = userByTag(raw) ?? userByName(raw);
   if (!target) throw new Error("USER_NOT_FOUND");
   if (target.id === fromUserId) throw new Error("FRIEND_SELF");
   const [a, b] = pairKey(fromUserId, target.id);
   const row = database()
-    .prepare("SELECT status FROM friendships WHERE user_a = ? AND user_b = ?")
-    .get(a, b) as { status: string } | undefined;
+    .prepare("SELECT status, requested_by FROM friendships WHERE user_a = ? AND user_b = ?")
+    .get(a, b) as { status: string; requested_by: string | null } | undefined;
   if (row?.status === "accepted") return;
+  if (row?.status === "pending" && row.requested_by && row.requested_by !== fromUserId) {
+    database()
+      .prepare("UPDATE friendships SET status = 'accepted' WHERE user_a = ? AND user_b = ?")
+      .run(a, b);
+    return;
+  }
   database()
     .prepare(
-      "INSERT INTO friendships (user_a, user_b, status, created_at) VALUES (?, ?, 'pending', ?) ON CONFLICT(user_a, user_b) DO UPDATE SET status = 'pending'",
+      "INSERT INTO friendships (user_a, user_b, status, created_at, requested_by) VALUES (?, ?, 'pending', ?, ?) ON CONFLICT(user_a, user_b) DO UPDATE SET status = 'pending', requested_by = excluded.requested_by",
     )
-    .run(a, b, new Date().toISOString());
+    .run(a, b, new Date().toISOString(), fromUserId);
 }
 
 export function acceptFriend(userId: string, otherUserId: string): void {
   const [a, b] = pairKey(userId, otherUserId);
+  const row = database()
+    .prepare("SELECT status, requested_by FROM friendships WHERE user_a = ? AND user_b = ?")
+    .get(a, b) as { status: string; requested_by: string | null } | undefined;
+  if (!row || row.status !== "pending") throw new Error("FRIEND_NOT_PENDING");
+  if (row.requested_by && row.requested_by === userId) throw new Error("FRIEND_NOT_PENDING");
   database()
     .prepare("UPDATE friendships SET status = 'accepted' WHERE user_a = ? AND user_b = ?")
     .run(a, b);
 }
 
-export function listFriends(userId: string): { id: string; username: string; status: string }[] {
+export function rejectFriend(userId: string, otherUserId: string): void {
+  const [a, b] = pairKey(userId, otherUserId);
+  const row = database()
+    .prepare("SELECT status FROM friendships WHERE user_a = ? AND user_b = ?")
+    .get(a, b) as { status: string } | undefined;
+  if (!row || row.status !== "pending") throw new Error("FRIEND_NOT_PENDING");
+  database().prepare("DELETE FROM friendships WHERE user_a = ? AND user_b = ?").run(a, b);
+}
+
+export function removeFriend(userId: string, otherUserId: string): void {
+  const [a, b] = pairKey(userId, otherUserId);
+  const row = database()
+    .prepare("SELECT status FROM friendships WHERE user_a = ? AND user_b = ?")
+    .get(a, b) as { status: string } | undefined;
+  if (!row || row.status !== "accepted") throw new Error("FRIEND_NOT_PENDING");
+  database().prepare("DELETE FROM friendships WHERE user_a = ? AND user_b = ?").run(a, b);
+}
+
+export function listFriends(userId: string): FriendRow[] {
   const rows = database()
-    .prepare("SELECT user_a, user_b, status FROM friendships WHERE user_a = ? OR user_b = ?")
-    .all(userId, userId) as { user_a: string; user_b: string; status: string }[];
+    .prepare("SELECT user_a, user_b, status, requested_by FROM friendships WHERE user_a = ? OR user_b = ?")
+    .all(userId, userId) as Array<{ user_a: string; user_b: string; status: string; requested_by: string | null }>;
   return rows.map((r) => {
     const other = r.user_a === userId ? r.user_b : r.user_a;
     const u = userRow(other);
-    return { id: other, username: u?.username ?? other, status: r.status };
+    const incoming = r.status === "pending" && r.requested_by !== userId;
+    return {
+      id: other,
+      username: u?.username ?? other,
+      friendTag: u ? friendTagOf(other) : "",
+      status: r.status,
+      incoming,
+    };
   });
 }
 

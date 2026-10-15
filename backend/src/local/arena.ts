@@ -1,3 +1,4 @@
+import { ffaEloDeltas, teamEloDeltas, type EconomyConfig, type RankedFormat } from "@d20-fireverse/rules";
 import { assertCanPlayCharacter, getPregen, portraitForCharacter } from "./campaign.js";
 import type { Player } from "./types.js";
 import {
@@ -9,6 +10,8 @@ import {
   type ArenaThemeId,
 } from "./arena-maps.js";
 import { startArenaCombat, type CombatState } from "./combat.js";
+import { accountElo, recordMatch, setAccountElo, type ArenaMode } from "./arena-queue.js";
+import { getEconomyConfig } from "./economy-config.js";
 import { heroPending } from "./hero.js";
 import { settleHero } from "./rewards.js";
 import type { Room } from "./room.js";
@@ -63,6 +66,9 @@ export type ArenaConfig = {
   /** Ranked counts a 45s absence as a loss. Arcade and test keep Dodge. */
   mode?: "ranked" | "arcade" | "test";
   queueType?: "solo" | "duo" | "full_team";
+  autoStartAt?: number;
+  economy?: EconomyConfig;
+  rewards?: Array<{ playerId: string; gold: number; xp: number; eloDelta: number; placement: number }>;
 };
 
 const HERO_SWAP_MS = 30_000;
@@ -171,6 +177,9 @@ export function publicArena(room: Room) {
     phase: a.phase,
     heroSwapEndsAt: a.heroSwapEndsAt ?? null,
     lastResult: a.lastResult ?? null,
+    mode: a.mode ?? "arcade",
+    autoStartAt: a.autoStartAt ?? null,
+    rewards: a.rewards ?? [],
     cap,
     teams,
     pve: a.format === "pve_1v1",
@@ -208,6 +217,7 @@ export function joinArenaSeat(
   displayName: string,
   characterId: string,
   userId?: string,
+  teamId?: "a" | "b",
 ): string {
   if (!room.arena) throw new Error("NOT_ARENA");
   if (room.arena.phase === "active") throw new Error("ARENA_IN_FIGHT");
@@ -217,7 +227,8 @@ export function joinArenaSeat(
   const raw = getPregen(characterId);
   if (!raw) throw new Error("BAD_CHARACTER");
   assertCanPlayCharacter(raw, userId);
-  const pregen = scalePregenToLevel(raw, room.arena.level);
+  const ranked = room.arena.mode === "ranked";
+  const pregen = ranked ? raw : scalePregenToLevel(raw, room.arena.level);
   if (userId && room.players.some((p) => p.userId === userId)) throw new Error("ALREADY_SEATED");
   let n = 1;
   while (room.players.some((p) => p.playerId === `P${n}`)) n += 1;
@@ -229,6 +240,7 @@ export function joinArenaSeat(
     characterName: pregen.name,
     userId,
     ready: true,
+    teamId,
   };
   room.players.push(seat);
   return playerId;
@@ -254,6 +266,7 @@ export function setArenaReady(room: Room, playerId: string, ready: boolean): voi
 
 export function pickArenaHero(room: Room, playerId: string, characterId: string, userId?: string): void {
   if (!room.arena) throw new Error("NOT_ARENA");
+  if (room.arena.mode === "ranked") throw new Error("ARENA_NO_SWAP");
   if (room.arena.phase !== "hero_swap" && room.arena.phase !== "lobby") throw new Error("ARENA_NO_SWAP");
   const raw = getPregen(characterId);
   if (!raw) throw new Error("BAD_CHARACTER");
@@ -292,31 +305,135 @@ export function beginArenaFight(room: Room, holdPcIds: string[] = []): CombatSta
     pve,
     monsterId: room.arena.monsterId,
     holdPcIds,
+    keepHeroLevels: room.arena.mode === "ranked",
   });
   room.arena.phase = "active";
   room.arena.heroSwapEndsAt = undefined;
+  room.arena.autoStartAt = undefined;
+  room.arena.economy = getEconomyConfig();
   room.combat = combat;
   return combat;
 }
 
 export function finishArena(room: Room, combat: CombatState): void {
   if (!room.arena) return;
-  if (room.arena.mode === "ranked" || room.arena.mode === "arcade" || room.arena.mode === "test" || !room.arena.mode) {
-    for (const player of room.players) {
+  const winningTeamId: "a" | "b" | null = combat.pvp === "teams"
+    ? combat.pvpWinner === "Team A"
+      ? "a"
+      : combat.pvpWinner === "Team B"
+        ? "b"
+        : null
+    : null;
+  const seats = room.players as ArenaPlayer[];
+  const heroLevels = seats
+    .map((p) => (p.characterId ? getPregen(p.characterId)?.level : undefined))
+    .filter((n): n is number => typeof n === "number");
+  const opponentLevelAvg = heroLevels.length
+    ? Math.round(heroLevels.reduce((n, v) => n + v, 0) / heroLevels.length)
+    : undefined;
+  const config = room.arena.economy ?? getEconomyConfig();
+  const mode: ArenaMode = room.arena.mode === "test" ? "test" : room.arena.mode === "ranked" ? "ranked" : "arcade";
+  const placeOf = (player: ArenaPlayer): number => {
+    if (combat.pvp === "teams") {
+      if (winningTeamId == null) return 2;
+      return player.teamId === winningTeamId ? 1 : 2;
+    }
+    const tok = combat.tokens.find((t) => t.playerId === player.playerId);
+    if (tok && combat.placements?.[tok.id]) return combat.placements[tok.id]!;
+    return combat.pvpWinner === player.characterName ? 1 : 2;
+  };
+  const elosBefore: Record<string, number> = {};
+  for (const player of seats) {
+    if (player.userId) elosBefore[player.userId] = accountElo(player.userId);
+  }
+  const eloDeltaByUser: Record<string, number> = {};
+  if (mode === "ranked") {
+    if (combat.pvp === "teams") {
+      const teamA = seats.filter((p) => p.teamId === "a" && p.userId);
+      const teamB = seats.filter((p) => p.teamId === "b" && p.userId);
+      const deltas = teamEloDeltas(
+        [teamA.map((p) => elosBefore[p.userId!]!), teamB.map((p) => elosBefore[p.userId!]!)],
+        winningTeamId === "a" ? 0 : winningTeamId === "b" ? 1 : null,
+        config,
+      );
+      teamA.forEach((p, i) => {
+        eloDeltaByUser[p.userId!] = deltas[0]![i] ?? 0;
+      });
+      teamB.forEach((p, i) => {
+        eloDeltaByUser[p.userId!] = deltas[1]![i] ?? 0;
+      });
+    } else {
+      const rankedSeats = seats.filter((p) => p.userId);
+      const deltas = ffaEloDeltas(
+        rankedSeats.map(placeOf),
+        rankedSeats.map((p) => elosBefore[p.userId!]!),
+        config,
+      );
+      rankedSeats.forEach((p, i) => {
+        eloDeltaByUser[p.userId!] = deltas[i] ?? 0;
+      });
+    }
+    for (const [userId, delta] of Object.entries(eloDeltaByUser)) {
+      setAccountElo(userId, (elosBefore[userId] ?? 0) + delta);
+    }
+  }
+  const rewards: NonNullable<ArenaConfig["rewards"]> = [];
+  if (mode === "ranked" || mode === "arcade" || mode === "test" || !room.arena.mode) {
+    for (const player of seats) {
       if (!player.characterId?.startsWith("hero_")) continue;
-      const won = combat.pvpWinner === player.characterName;
-      settleHero({ heroId: player.characterId, mode: room.arena.mode === "test" ? "test" : room.arena.mode === "ranked" ? "ranked" : "arcade", won });
+      const placement = placeOf(player);
+      const won = placement === 1;
+      const outcome = settleHero({
+        heroId: player.characterId,
+        mode,
+        won,
+        opponentLevel: opponentLevelAvg,
+        placement,
+        playerCount: seats.length,
+        config,
+      });
+      rewards.push({
+        playerId: player.playerId,
+        gold: outcome.goldGained,
+        xp: outcome.xpGained,
+        eloDelta: player.userId ? eloDeltaByUser[player.userId] ?? 0 : 0,
+        placement,
+      });
       if (heroPending(player.characterId)) room.levelUpPending = { heroId: player.characterId, playerId: player.playerId };
     }
   }
+  room.arena.rewards = rewards;
+  const goldLine = rewards.length ? ` ${rewards.map((r) => `+${r.gold} gold`).join(" · ")}` : "";
   const line =
     combat.status === "draw"
-      ? "The last blow drops every remaining fighter. Draw."
+      ? `The last blow drops every remaining fighter. Draw.${goldLine}`
       : combat.pvpWinner
-        ? `${combat.pvpWinner} stands. The arena is still.`
-        : "The arena falls quiet.";
-  room.arena.phase = "hero_swap";
-  room.arena.heroSwapEndsAt = Date.now() + HERO_SWAP_MS;
+        ? `${combat.pvpWinner} stands. The arena is still.${goldLine}`
+        : `The arena falls quiet.${goldLine}`;
+  if (mode === "ranked") {
+    room.arena.phase = "ended";
+    room.arena.heroSwapEndsAt = undefined;
+    const winner = seats.find((p) => placeOf(p) === 1);
+    const eloAfter: Record<string, { before: number; after: number; delta: number }> = {};
+    for (const player of seats) {
+      if (!player.userId) continue;
+      const before = elosBefore[player.userId] ?? 0;
+      const delta = eloDeltaByUser[player.userId] ?? 0;
+      eloAfter[player.userId] = { before, after: before + delta, delta };
+    }
+    recordMatch({
+      mode,
+      queue: room.arena.queueType ?? "solo",
+      format: room.arena.format as RankedFormat,
+      winnerUserId: winner?.userId,
+      loadout: seats.map((p) => ({ userId: p.userId, heroId: p.characterId, placement: placeOf(p) })),
+      elo: eloAfter,
+      placements: seats.map((p) => ({ userId: p.userId, placement: placeOf(p) })),
+    });
+  } else {
+    room.arena.phase = "hero_swap";
+    room.arena.heroSwapEndsAt = Date.now() + HERO_SWAP_MS;
+  }
   room.arena.lastResult = line;
   room.combat = undefined;
   room.outro = { combat, text: line };

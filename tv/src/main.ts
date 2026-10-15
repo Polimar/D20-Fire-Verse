@@ -30,6 +30,7 @@ import { ART, sceneForNode } from "./scenes";
 import { clearSession, loadSession, saveSession, type Session, type SessionMode } from "./session";
 import { arenaEditorOpen, closeArenaEditor, handleArenaEditorKey, openArenaEditor } from "./arena-editor-ui";
 import { armoryOpen, closeArmory, openArmory } from "./armory-ui";
+import { closeProfile, openProfile, profileOpen } from "./profile-ui";
 import { closeSettings, openSettings, settingsOpen } from "./settings-ui";
 import { onSettings, settings } from "./settings";
 import { sfx } from "./sfx";
@@ -669,12 +670,40 @@ function openTableSettings() {
   });
 }
 
-function openAccountArmory(): void {
+function openAccountArmory(heroId?: string): void {
   if (!account) {
     showLoginGate();
     return;
   }
-  void openArmory({ inCombat: page === "combat", onMessage: (text, kind) => toast(text, kind ?? "info") });
+  void openArmory({ inCombat: page === "combat", heroId, onMessage: (text, kind) => toast(text, kind ?? "info") });
+}
+
+async function loadRankedHeroes(): Promise<void> {
+  try {
+    const data = await fetch("/api/heroes", { credentials: "same-origin" }).then(
+      (r) => r.json() as Promise<{ heroes: Array<{ id: string; name: string; level: number; pendingLevelUp?: boolean }> }>,
+    );
+    rankedHeroes = (data.heroes ?? []).map((h) => ({
+      id: h.id,
+      name: h.name,
+      level: h.level,
+      pendingLevelUp: h.pendingLevelUp,
+    }));
+  } catch {
+    rankedHeroes = [];
+  }
+}
+
+function openAccountProfile(): void {
+  if (!account) {
+    showLoginGate();
+    return;
+  }
+  void openProfile({
+    onMessage: (text, kind) => toast(text, kind ?? "info"),
+    onForge: () => void openHeroWizard(),
+    onCustomize: (heroId) => openAccountArmory(heroId),
+  });
 }
 
 /** The portal is a desktop tool; a TV WebView that blocks new tabs navigates in place. */
@@ -687,7 +716,51 @@ function openAdminPortal() {
 
 // ------------------------------------------------------------------ home
 
-let homeView: "modes" | "campaign" | "arena" | "create" | "join" = "modes";
+let homeView: "modes" | "campaign" | "arena" | "create" | "join" | "ranked" | "rankedSearch" = "modes";
+const RANKED_FORMATS = [
+  { id: "ffa_1v1", label: "1v1" },
+  { id: "teams_2v2", label: "2v2" },
+  { id: "ffa_3", label: "FFA 3" },
+  { id: "ffa_4", label: "FFA 4" },
+] as const;
+let rankedPick = { format: "ffa_1v1" as string, heroId: "" };
+const RANKED_HERO_KEY = "fv_ranked_hero";
+const RANKED_FORMAT_KEY = "fv_ranked_format";
+function persistRankedPick(): void {
+  try {
+    sessionStorage.setItem(RANKED_HERO_KEY, rankedPick.heroId);
+    sessionStorage.setItem(RANKED_FORMAT_KEY, rankedPick.format);
+  } catch {
+    /* private mode */
+  }
+}
+function restoreRankedPick(): void {
+  try {
+    rankedPick.heroId = sessionStorage.getItem(RANKED_HERO_KEY) || rankedPick.heroId;
+    const format = sessionStorage.getItem(RANKED_FORMAT_KEY);
+    if (format && RANKED_FORMATS.some((f) => f.id === format)) rankedPick.format = format;
+  } catch {
+    /* private mode */
+  }
+}
+function rankedHeroId(): string {
+  return rankedPick.heroId || selectedHero || (() => {
+    try {
+      return sessionStorage.getItem(RANKED_HERO_KEY) ?? "";
+    } catch {
+      return "";
+    }
+  })();
+}
+let rankedLobbyTick: number | null = null;
+let rankedSearch: { format: string; waitMs: number; found: number; needed: number; elo: number } | null = null;
+let rankedParty: {
+  partyId: string;
+  leaderId: string;
+  members: Array<{ userId: string; username: string; characterId: string | null; accepted: boolean }>;
+} | null = null;
+let rankedHeroes: Array<{ id: string; name: string; level: number; pendingLevelUp?: boolean }> = [];
+let lastGoldToast = "";
 let arenaList: OpenArena[] = [];
 let arenaCreate = {
   format: "ffa_1v1",
@@ -739,8 +812,7 @@ function renderHome() {
       <button type="button" class="primary" id="btnModeCampaign" data-autofocus>Campaign</button>
       <button type="button" id="btnModeArena">Arena</button>
       ${account ? `<button type="button" id="btnModeArenaEditor">Arena editor</button>` : ""}
-      ${account ? `<button type="button" id="btnHeroBuilder">Hero builder</button>` : ""}
-      ${account ? `<button type="button" id="btnArmory">Armory &amp; stash</button>` : ""}
+      ${account ? `<button type="button" id="btnProfile">Profile</button>` : ""}
       <button type="button" class="ghost" id="btnSettings">Settings</button>
       ${account?.role === "admin" ? `<button type="button" class="ghost" id="btnAdmin">Admin portal</button>` : ""}`;
     $("btnModeCampaign").addEventListener("click", () => {
@@ -752,8 +824,7 @@ function renderHome() {
       renderHome();
     });
     $("btnModeArenaEditor")?.addEventListener("click", () => openArenaEditor());
-    $("btnHeroBuilder")?.addEventListener("click", () => openHeroWizard());
-    $("btnArmory")?.addEventListener("click", () => openAccountArmory());
+    $("btnProfile")?.addEventListener("click", () => openAccountProfile());
   } else if (homeView === "campaign") {
     cta.innerHTML = `${campaign ? continueMarkup(campaign) : ""}
     ${camp}
@@ -786,6 +857,7 @@ function renderHome() {
       ${arena ? continueMarkup(arena) : ""}
       <button type="button" class="${arena ? "" : "primary"}" id="btnArenaCreate" ${arena ? "" : "data-autofocus"}>Create arena</button>
       <button type="button" id="btnArenaJoin">Join an arena</button>
+      ${account ? `<button type="button" id="btnRanked">Ranked</button>` : ""}
       <button type="button" class="ghost" id="btnHomeBack">↩ Modes</button>
       <button type="button" class="ghost" id="btnSettings">Settings</button>`;
     $("btnContinue")?.addEventListener("click", () => continueSession("arena"));
@@ -797,6 +869,11 @@ function renderHome() {
       homeView = "join";
       send({ action: "LIST_ARENAS" });
       renderHome();
+    });
+    $("btnRanked")?.addEventListener("click", () => {
+      homeView = "ranked";
+      restoreRankedPick();
+      void loadRankedHeroes().then(() => renderHome());
     });
     $("btnHomeBack").addEventListener("click", () => {
       homeView = "modes";
@@ -902,6 +979,70 @@ function renderHome() {
       homeView = "arena";
       renderHome();
     });
+  } else if (homeView === "ranked") {
+    const queueable = rankedHeroes.filter((h) => !h.pendingLevelUp);
+    if (!rankedPick.heroId || !queueable.some((h) => h.id === rankedPick.heroId)) rankedPick.heroId = queueable[0]?.id ?? "";
+    const mePending = rankedParty?.members.find(
+      (m) => !m.accepted && account && m.username.toLowerCase() === account.username.toLowerCase(),
+    );
+    const friends = rankedParty
+      ? rankedParty.members.map((m) => `${esc(m.username)}${m.accepted ? "" : " (invite)"} · ${m.characterId ? "hero ready" : "pick a hero"}`).join("<br/>")
+      : "Invite an accepted friend for a 2v2 duo.";
+    cta.innerHTML = `
+      <p class="meta">Pick a format and a hero. 2v2 accepts solo fill or a premade duo.</p>
+      <label>Format <select id="rankedFormat">${RANKED_FORMATS.map((f) => `<option value="${f.id}" ${rankedPick.format === f.id ? "selected" : ""}>${esc(f.label)}</option>`).join("")}</select></label>
+      <label>Hero <select id="rankedHero">${queueable.map((h) => `<option value="${esc(h.id)}" ${rankedPick.heroId === h.id ? "selected" : ""}>${esc(h.name)} · L${h.level}</option>`).join("")}</select></label>
+      <div class="profile-list" id="rankedParty"><p class="meta">${friends}</p>
+        ${rankedPick.format === "teams_2v2" ? `<label>Friend <input id="rankedFriend" maxlength="32" placeholder="Username" /></label><button type="button" class="ghost sm" id="btnPartyInvite">Invite</button>` : ""}
+        ${mePending ? `<button type="button" class="primary sm" id="btnPartyAccept">Accept</button>` : ""}
+        ${rankedParty ? `<button type="button" class="ghost sm" id="btnPartyLeave">Leave party</button>` : ""}
+      </div>
+      <button type="button" class="primary" id="btnRankedQueue" ${rankedPick.heroId ? "" : "disabled"}>Find match</button>
+      <button type="button" class="ghost" id="btnHomeBack">↩ Arena</button>`;
+    $("rankedFormat").addEventListener("change", () => {
+      rankedPick.format = ($("rankedFormat") as HTMLSelectElement).value;
+      persistRankedPick();
+      renderHome();
+    });
+    $("rankedHero").addEventListener("change", () => {
+      rankedPick.heroId = ($("rankedHero") as HTMLSelectElement).value;
+      persistRankedPick();
+      if (rankedParty) send({ action: "PARTY_HERO", characterId: rankedPick.heroId });
+    });
+    $("btnRankedQueue").addEventListener("click", () => {
+      if (!rankedPick.heroId) return;
+      persistRankedPick();
+      if (rankedParty) send({ action: "PARTY_HERO", characterId: rankedPick.heroId });
+      send({ action: "RANKED_QUEUE", format: rankedPick.format, characterId: rankedPick.heroId });
+    });
+    $("btnPartyInvite")?.addEventListener("click", () => {
+      const username = ($("rankedFriend") as HTMLInputElement | null)?.value.trim();
+      if (!username) return;
+      if (rankedPick.heroId) send({ action: "PARTY_HERO", characterId: rankedPick.heroId });
+      send({ action: "PARTY_INVITE", username });
+    });
+    $("btnPartyAccept")?.addEventListener("click", () => {
+      if (!rankedParty) return;
+      if (rankedPick.heroId) send({ action: "PARTY_HERO", characterId: rankedPick.heroId });
+      send({ action: "PARTY_ACCEPT", partyId: rankedParty.partyId });
+    });
+    $("btnPartyLeave")?.addEventListener("click", () => send({ action: "PARTY_LEAVE" }));
+    $("btnHomeBack").addEventListener("click", () => {
+      homeView = "arena";
+      renderHome();
+    });
+  } else if (homeView === "rankedSearch") {
+    const s = rankedSearch;
+    cta.innerHTML = `
+      <p class="meta">Searching ${esc(s?.format ?? rankedPick.format)}</p>
+      <p class="meta">${s ? `${s.found} / ${s.needed} players · ${Math.floor((s.waitMs ?? 0) / 1000)}s · Elo ${s.elo}` : "Looking for a table…"}</p>
+      <button type="button" class="primary" id="btnRankedCancel">Cancel</button>`;
+    $("btnRankedCancel").addEventListener("click", () => {
+      send({ action: "RANKED_CANCEL" });
+      rankedSearch = null;
+      homeView = "ranked";
+      renderHome();
+    });
   } else {
     cta.innerHTML = `
       <label>Code <input id="arenaJoinCode" maxlength="6" autocapitalize="characters" placeholder="ABC123" /></label>
@@ -996,6 +1137,8 @@ function renderLobby() {
   const taken = new Set(arena ? [] : (state?.players ?? []).map((p) => p.characterId));
   const level = state?.arena?.level;
   const swapping = state?.arena?.phase === "hero_swap";
+  const ranked = state?.arena?.mode === "ranked";
+  const rankedEnded = ranked && state?.arena?.phase === "ended";
   grid.innerHTML =
     pregens
       .map((p) => {
@@ -1054,7 +1197,7 @@ function renderLobby() {
       tag.textContent = `vs ${foe}`;
     } else tag?.remove();
   }
-  const teams = (state?.arena?.teams ?? 0) > 0;
+  const teams = (state?.arena?.teams ?? 0) > 0 && !ranked;
   $("lobbySeats").innerHTML = (state?.players ?? [])
     .map((p) => {
       const mine = p.playerId === playerId;
@@ -1062,7 +1205,9 @@ function renderLobby() {
         ? `<button type="button" data-team="a" data-pid="${esc(p.playerId)}" ${p.teamId === "a" ? "class='primary'" : ""}>A</button>
            <button type="button" data-team="b" data-pid="${esc(p.playerId)}" ${p.teamId === "b" ? "class='primary'" : ""}>B</button>`
         : "";
-      const ready = arena
+      const ready = ranked
+        ? `<em>${p.teamId ? `team ${p.teamId}` : "seated"}</em>`
+        : arena
         ? `<em>${p.ready ? "ready" : "waiting"}</em>${mine ? `<button type="button" data-ready="${p.ready ? "0" : "1"}">${p.ready ? "Unready" : "Ready"}</button>` : ""}`
         : `<em>${mine ? "this TV" : "another TV"}</em>`;
       return `<li><img src="${esc(p.portrait)}" alt="" /><span>${esc(p.characterName)}</span>${team}${ready}</li>`;
@@ -1083,12 +1228,47 @@ function renderLobby() {
   const watch = $("btnLobbyWatch");
   if (arena) {
     const cap = state?.arena?.cap ?? 0;
+    const mineReward = (state?.arena?.rewards ?? []).find((r) => r.playerId === playerId);
+    if (ranked) {
+      watch.hidden = true;
+      const left = state?.arena?.autoStartAt ? Math.max(0, Math.ceil((state.arena.autoStartAt - Date.now()) / 1000)) : 0;
+      if (rankedEnded) {
+        const bits = [
+          state?.arena?.lastResult ?? "Ranked match over.",
+          mineReward ? `Place ${mineReward.placement} · ${mineReward.eloDelta >= 0 ? "+" : ""}${mineReward.eloDelta} Elo · +${mineReward.gold} gold` : "",
+        ].filter(Boolean);
+        $("lobbyStatus").textContent = bits.join(" ");
+        watch.hidden = false;
+        watch.textContent = "Queue again";
+        $("btnLobbyBack").textContent = "Leave";
+      } else {
+        $("lobbyStatus").textContent = left
+          ? `Ranked ${state?.arena?.formatLabel ?? ""} — fight starts in ${left}s.`
+          : `Ranked ${state?.arena?.formatLabel ?? ""} · ${phones}/${cap}`;
+        if (rankedLobbyTick == null) {
+          rankedLobbyTick = window.setInterval(() => {
+            if (page !== "lobby" || state?.arena?.mode !== "ranked" || state.arena.phase !== "lobby") {
+              if (rankedLobbyTick != null) window.clearInterval(rankedLobbyTick);
+              rankedLobbyTick = null;
+              return;
+            }
+            const remain = state.arena.autoStartAt ? Math.max(0, Math.ceil((state.arena.autoStartAt - Date.now()) / 1000)) : 0;
+            const n = (state.players ?? []).length;
+            const need = state.arena.cap ?? 0;
+            $("lobbyStatus").textContent = remain
+              ? `Ranked ${state.arena.formatLabel ?? ""} — fight starts in ${remain}s.`
+              : `Ranked ${state.arena.formatLabel ?? ""} · ${n}/${need}`;
+          }, 1000);
+        }
+      }
+    } else {
     watch.hidden = !state?.isHost;
     watch.textContent = swapping ? "Hero swap — wait for Ready" : `Start arena (${phones}/${cap})`;
     const left = state?.arena?.heroSwapEndsAt ? Math.max(0, Math.ceil((state.arena.heroSwapEndsAt - Date.now()) / 1000)) : 0;
     $("lobbyStatus").textContent = swapping
       ? `${state?.arena?.lastResult ?? "Round over."} ${left}s to change heroes.`
       : `Friends join from their own TV with this code. ${state?.arena?.formatLabel ?? ""} · L${state?.arena?.level ?? ""} · ${state?.arena?.theme ?? ""}`;
+    }
   } else {
     watch.hidden = phones === 0;
     watch.textContent = phones === 1 ? "Begin with the hero at the table" : `Begin with the ${phones} heroes at the table`;
@@ -1126,6 +1306,26 @@ function seatHero(id: string): void {
     lobbyArmory.addEventListener("click", () => openAccountArmory());
   }
   $("btnLobbyWatch").addEventListener("click", () => {
+  if (state?.arena?.mode === "ranked" && state.arena.phase === "ended") {
+    restoreRankedPick();
+    const heroId = rankedHeroId();
+    if (!heroId) {
+      toast("Pick a hero on the Ranked screen first.", "bad");
+      showPage("home");
+      homeView = "ranked";
+      void loadRankedHeroes().then(() => renderHome());
+      return;
+    }
+    rankedPick.heroId = heroId;
+    persistRankedPick();
+    sfx("uiConfirm");
+    showPage("home");
+    homeView = "rankedSearch";
+    renderHome();
+    send({ action: "RANKED_QUEUE", format: rankedPick.format, characterId: heroId });
+    return;
+  }
+  if (state?.arena?.mode === "ranked") return;
   if (!state?.players.length) return;
   sfx("uiConfirm");
   if (state.mode === "arena") {
@@ -1500,6 +1700,11 @@ async function routeNow() {
 
 function onRoomState(next: RoomState) {
   state = next;
+  const goldLine = (next.arena?.rewards ?? []).find((r) => r.playerId === (playerId ?? next.localPlayerId))?.gold;
+  if (goldLine && next.arena?.lastResult && lastGoldToast !== next.arena.lastResult) {
+    lastGoldToast = next.arena.lastResult;
+    toast(`+${goldLine} gold`, "ok");
+  }
   if (next.levelUp && next.levelUp.playerId === playerId) {
     const existing = document.getElementById("levelUpLive");
     if (!existing) {
@@ -1652,6 +1857,48 @@ function connect() {
         arenaList = msg.payload?.arenas ?? [];
         if (page === "home" && homeView === "join") renderHome();
         break;
+      case "RANKED_STATUS": {
+        const payload = msg.payload as { state?: string; format?: string; waitMs?: number; elo?: number; found?: number; needed?: number };
+        if (payload.state === "searching") {
+          rankedSearch = {
+            format: payload.format ?? rankedPick.format,
+            waitMs: payload.waitMs ?? 0,
+            found: payload.found ?? 0,
+            needed: payload.needed ?? 2,
+            elo: payload.elo ?? 1000,
+          };
+          homeView = "rankedSearch";
+          if (page === "home") renderHome();
+        } else if (payload.state === "idle") {
+          rankedSearch = null;
+          if (homeView === "rankedSearch") {
+            homeView = "ranked";
+            if (page === "home") renderHome();
+          }
+        }
+        break;
+      }
+      case "RANKED_MATCH":
+        rankedSearch = null;
+        break;
+      case "PARTY_STATE": {
+        const payload = msg.payload as {
+          partyId?: string;
+          leaderId?: string;
+          members?: Array<{ userId: string; username: string; characterId: string | null; accepted: boolean }>;
+        };
+        rankedParty = payload.partyId
+          ? { partyId: payload.partyId, leaderId: payload.leaderId ?? "", members: payload.members ?? [] }
+          : null;
+        if (rankedParty && rankedParty.members.length === 0) rankedParty = null;
+        const mine = rankedParty?.members.find(
+          (m) => account && m.username.toLowerCase() === account.username.toLowerCase(),
+        );
+        const heroId = rankedHeroId();
+        if (mine && !mine.characterId && heroId) send({ action: "PARTY_HERO", characterId: heroId });
+        if (page === "home" && (homeView === "ranked" || homeView === "rankedSearch")) renderHome();
+        break;
+      }
       case "ROOM_STATE":
         onRoomState(msg.payload as RoomState);
         break;
@@ -1712,6 +1959,10 @@ function handleBack(): boolean {
     closeArmory();
     return true;
   }
+  if (profileOpen()) {
+    closeProfile();
+    return true;
+  }
   if (!$("heroWizard").hidden && heroWizard) {
     heroWizard.back();
     return true;
@@ -1729,6 +1980,18 @@ function handleBack(): boolean {
   }
   if (page === "story" || page === "combat") {
     openLeaveModal();
+    return true;
+  }
+  if (page === "home" && homeView === "rankedSearch") {
+    send({ action: "RANKED_CANCEL" });
+    rankedSearch = null;
+    homeView = "ranked";
+    renderHome();
+    return true;
+  }
+  if (page === "home" && homeView === "ranked") {
+    homeView = "arena";
+    renderHome();
     return true;
   }
   if (page === "home" && isNarrating()) {

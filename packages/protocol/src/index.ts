@@ -50,7 +50,13 @@ export type ClientAction =
   | "UNEQUIP"
   | "FORCE_UNEQUIP"
   | "TOGGLE_ATTUNE"
-  | "SET_LOADOUT_PRESET";
+  | "SET_LOADOUT_PRESET"
+  | "RANKED_QUEUE"
+  | "RANKED_CANCEL"
+  | "PARTY_INVITE"
+  | "PARTY_ACCEPT"
+  | "PARTY_LEAVE"
+  | "PARTY_HERO";
 
 export type ServerEvent =
   | "HELLO"
@@ -61,7 +67,10 @@ export type ServerEvent =
   | "PONG"
   | "ERROR"
   | "SAVE_ACK"
-  | "ARENA_LIST";
+  | "ARENA_LIST"
+  | "RANKED_STATUS"
+  | "RANKED_MATCH"
+  | "PARTY_STATE";
 
 export type ClientMessage = {
   action: ClientAction;
@@ -102,6 +111,8 @@ export type ClientMessage = {
   alignment?: string;
   presetId?: string;
   inCombat?: boolean;
+  username?: string;
+  partyId?: string;
 };
 
 export const VOICE_INTENTS = [
@@ -152,6 +163,9 @@ const ERROR_TEXT: Record<string, string> = {
   BAD_CONTENT_BODY: "The entry must be a JSON object.",
   NOT_EDITED: "This entry has no admin edit to revert.",
   FRIEND_SELF: "You cannot add yourself as a friend.",
+  FRIEND_NOT_PENDING: "There is no friend request to answer.",
+  FRIEND_ALREADY: "You are already friends.",
+  BAD_FRIEND_TAG: "Enter a Friend ID or a username.",
   BAD_ABILITY_EFFECT: "That ability uses an effect the table does not know.",
   BAD_CAMPAIGN_ID: "The campaign id may use lowercase letters, numbers, and dashes.",
   BAD_START_NODE: "The campaign has no starting scene.",
@@ -308,6 +322,20 @@ const ERROR_TEXT: Record<string, string> = {
   BAD_RECEIPT: "That payment receipt isn't valid.",
   RECEIPT_USED: "That payment was already claimed.",
   NOT_IN_SHOP: "That item isn't in today's shop.",
+  PAST_DAY: "You cannot change a shop day that has already passed.",
+  TOO_MANY_SLOTS: "That day has too many shop slots.",
+  ITEM_NOT_ENABLED: "That item is not enabled for play.",
+  BAD_DAY: "Use a calendar day like 2026-10-15.",
+  BAD_PRICE: "That gold price isn't valid.",
+  BAD_ECONOMY: "One of the economy numbers is out of range.",
+  ALREADY_QUEUED: "You are already searching for a ranked match.",
+  QUEUE_CANCELLED: "You left the ranked queue.",
+  RANKED_BUSY: "Finish the current ranked fight before you queue again.",
+  PARTY_FULL: "That party already has two people.",
+  PARTY_NOT_FRIEND: "You can only party with an accepted friend.",
+  PARTY_NOT_FOUND: "That party is gone.",
+  NOT_PARTY_LEADER: "Only the party leader can queue.",
+  BAD_FORMAT: "That ranked format isn't available.",
   BAD_ITEM: "That item can't be bought here.",
   BAD_PARTY: "That party doesn't fit this queue.",
   BAD_SURFACE: "Say whether this is the TV, the web, or the companion.",

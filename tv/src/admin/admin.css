@@ -237,6 +237,7 @@ table.data th .arrow { color: var(--accent); margin-left: 4px; }
 table.data th.check, table.data td.check { width: 36px; padding-right: 0; }
 table.data tbody tr:hover td { background: rgba(255, 255, 255, 0.025); }
 table.data tbody tr.sel td { background: var(--info-soft); }
+table.data tbody tr.on td { background: var(--accent-soft); }
 table.data tbody tr.clickable { cursor: pointer; }
 table.data td.actions { white-space: nowrap; text-align: right; }
 table.data td.actions button + button { margin-left: 4px; }

@@ -57,6 +57,9 @@ export type ArenaPublic = {
   phase: string;
   heroSwapEndsAt?: number | null;
   lastResult?: string | null;
+  mode?: string;
+  autoStartAt?: number | null;
+  rewards?: Array<{ playerId: string; gold: number; xp: number; eloDelta: number; placement: number }>;
   cap: number;
   teams: number;
   pve?: boolean;

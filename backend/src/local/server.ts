@@ -33,6 +33,19 @@ import { listHeroes } from "./hero.js";
 import { deleteCustomCharacter, getChargenCatalog, loadChargen, renameCustomCharacter } from "./chargen.js";
 import { announceTable } from "./announce.js";
 import { ARENA_FORMATS, arenaRoster } from "./arena.js";
+import { getEconomyConfig } from "./economy-config.js";
+import {
+  armRankedStart,
+  cancelRanked,
+  partyAccept,
+  partyHero,
+  partyInvite,
+  partyLeave,
+  rankedAttach,
+  rankedDetach,
+  rankedQueue,
+  tickRanked,
+} from "./ranked.js";
 import { ARENA_THEMES } from "./arena-maps.js";
 import { migrateCustomCharacters } from "./migrate-custom.js";
 import { setHeroLibraryPush } from "./hero-library.js";
@@ -135,6 +148,8 @@ type ClientMsg = {
   dy?: number;
   on?: boolean;
   factor?: number;
+  username?: string;
+  partyId?: string;
 };
 
 /** What a paired phone may do at the table, always as the hero its TV sat with. */
@@ -157,6 +172,8 @@ const PHONE_ACTIONS = new Set([
   "SET_ARENA_TEAM",
   "COMMIT_ROLL",
 ]);
+
+const PARTY_ACTIONS = new Set(["PARTY_INVITE", "PARTY_ACCEPT", "PARTY_LEAVE", "PARTY_HERO", "RANKED_QUEUE", "RANKED_CANCEL"]);
 
 const TABLE_VIEWS: ReadonlySet<ConsoleView> = new Set(["lobby", "story", "combat"]);
 
@@ -449,6 +466,7 @@ type Sock = WebSocket & {
   consoleId?: string;
   /** A paired phone: the console it follows. Never holds a seat of its own. */
   companionOf?: string;
+  rankedClientId?: string;
 };
 
 const dropTimers = new Map<string, NodeJS.Timeout>();
@@ -624,6 +642,10 @@ function handlePhone(sock: Sock, msg: ClientMsg): boolean {
       if (tv) send(tv, { eventType: "POINTER", payload: { kind: msg.on ? "show" : "hide" } });
       return true;
     default:
+      if (PARTY_ACTIONS.has(msg.action)) {
+        handle(sock, msg);
+        return true;
+      }
       break;
   }
   if (!PHONE_ACTIONS.has(msg.action)) throw new Error("NOT_ALLOWED");
@@ -720,8 +742,41 @@ function armDropTimer(roomCode: string, playerId: string) {
       }
       const room = playerDisconnect(roomCode, playerId);
       if (room) broadcast(room.roomCode);
-    }, ranked ? 45_000 : DROP_GRACE_MS),
+    }, ranked ? getEconomyConfig().elo.disconnectMs : DROP_GRACE_MS),
   );
+}
+
+function sockForUser(userId: string): Sock | undefined {
+  return openSockets().find((s) => s.user?.id === userId && !s.companionOf);
+}
+
+function bindRankedMatch(made: ReturnType<typeof tickRanked>[number]): void {
+  for (const b of made.binds) {
+    const sock = sockForUser(b.userId);
+    if (!sock) continue;
+    bind(sock, made.room, b.playerId);
+    send(sock, { eventType: "RANKED_MATCH", payload: { roomCode: made.room.roomCode } });
+  }
+  broadcast(made.room.roomCode);
+  armRankedStart(made.room.roomCode, (code) => {
+    try {
+      broadcast(arenaStart(code).roomCode);
+    } catch {
+      /* lobby not full anymore */
+    }
+  });
+}
+
+function attachTvRanked(sock: Sock): void {
+  if (!sock.user || !sock.consoleId) return;
+  sock.rankedClientId = sock.rankedClientId ?? `tv:${sock.consoleId}:${Date.now().toString(36)}`;
+  rankedAttach({
+    userId: sock.user.id,
+    username: sock.user.username,
+    send: (event) => send(sock, event),
+    surface: "tv",
+    id: sock.rankedClientId,
+  });
 }
 
 wss.on("connection", (ws, req) => {
@@ -734,6 +789,7 @@ wss.on("connection", (ws, req) => {
     if (known && known.userId !== sock.user.id) dropPhone(consoleId, "signed_out");
     claimConsole(consoleId, sock.user.id);
     sock.consoleId = consoleId;
+    attachTvRanked(sock);
   }
   sock.on("pong", () => {
     sock.alive = true;
@@ -763,6 +819,9 @@ wss.on("connection", (ws, req) => {
   }
 
   ws.on("close", () => {
+    if (sock.user && sock.rankedClientId) {
+      rankedDetach(sock.user.id, { id: sock.rankedClientId, dropQueue: Boolean(sock.consoleId) });
+    }
     const { roomCode, playerId, consoleId: tvConsole, companionOf } = sock;
     if (tvConsole && !consoleTv(tvConsole)) {
       pushCompanion(tvConsole);
@@ -1033,10 +1092,54 @@ function handle(sock: Sock, msg: ClientMsg): void {
     case "PING":
       send(sock, { eventType: "PONG", payload: { t: Date.now() } });
       return;
+    case "RANKED_QUEUE": {
+      if (!msg.format || !msg.characterId) throw new Error("MISSING_FIELDS");
+      attachTvRanked(sock);
+      const seated = sock.roomCode ? getRoom(sock.roomCode) : undefined;
+      if (seated?.arena?.mode === "ranked") {
+        if (seated.arena.phase !== "ended") throw new Error("RANKED_BUSY");
+        sock.roomCode = undefined;
+        sock.playerId = undefined;
+      }
+      rankedQueue(sock.user!.id, sock.user!.username, msg.format, msg.characterId);
+      for (const made of tickRanked()) bindRankedMatch(made);
+      return;
+    }
+    case "RANKED_CANCEL":
+      cancelRanked(sock.user!.id);
+      return;
+    case "PARTY_INVITE": {
+      if (!msg.username) throw new Error("MISSING_FIELDS");
+      attachTvRanked(sock);
+      partyInvite(sock.user!.id, sock.user!.username, msg.username);
+      return;
+    }
+    case "PARTY_ACCEPT": {
+      if (!msg.partyId) throw new Error("MISSING_FIELDS");
+      attachTvRanked(sock);
+      partyAccept(sock.user!.id, sock.user!.username, msg.partyId);
+      return;
+    }
+    case "PARTY_LEAVE":
+      partyLeave(sock.user!.id);
+      return;
+    case "PARTY_HERO": {
+      if (!msg.characterId) throw new Error("MISSING_FIELDS");
+      partyHero(sock.user!.id, msg.characterId);
+      return;
+    }
     default:
       send(sock, { eventType: "ERROR", payload: { code: "UNKNOWN_ACTION", action: msg.action } });
   }
 }
+
+const matcher = setInterval(() => {
+  try {
+    for (const made of tickRanked()) bindRankedMatch(made);
+  } catch (err) {
+    console.error("ranked matcher", err);
+  }
+}, 3000);
 
 const heartbeat = setInterval(() => {
   for (const client of wss.clients) {
@@ -1049,7 +1152,10 @@ const heartbeat = setInterval(() => {
     s.ping();
   }
 }, 15000);
-wss.on("close", () => clearInterval(heartbeat));
+wss.on("close", () => {
+  clearInterval(heartbeat);
+  clearInterval(matcher);
+});
 
 if (process.env.FIREVERSE_MIGRATE_CUSTOM === "1" || process.env.FIREVERSE_REGEN_CUSTOM === "1") {
   const report = migrateCustomCharacters();

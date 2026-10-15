@@ -1,13 +1,18 @@
-/** A season lasts 60 days. The pass resets. Unlocked cosmetics stay. */
+/** A season lasts for config.elo.seasonDays. The pass resets. Unlocked cosmetics stay. */
 
-import { SEASON_MS, seasonResetElo } from "@d20-fireverse/rules";
+import { seasonResetElo } from "@d20-fireverse/rules";
 import { accountDb } from "./auth.js";
 import { softResetElos } from "./arena-queue.js";
+import { getEconomyConfig } from "./economy-config.js";
 
 export type Season = { id: string; startsAt: string; endsAt: string };
 
 function map(row: { id: string; starts_at: string; ends_at: string }): Season {
   return { id: row.id, startsAt: row.starts_at, endsAt: row.ends_at };
+}
+
+function seasonMsFromConfig(): number {
+  return getEconomyConfig().elo.seasonDays * 24 * 60 * 60 * 1000;
 }
 
 export function currentSeason(now = new Date()): Season {
@@ -17,7 +22,7 @@ export function currentSeason(now = new Date()): Season {
     | undefined;
   if (open) return map(open);
   const start = now;
-  const end = new Date(start.getTime() + SEASON_MS);
+  const end = new Date(start.getTime() + seasonMsFromConfig());
   let id = `season_${start.toISOString().slice(0, 10)}`;
   const inserted = accountDb().prepare("INSERT OR IGNORE INTO seasons (id, starts_at, ends_at) VALUES (?, ?, ?)").run(id, start.toISOString(), end.toISOString());
   if (inserted.changes === 0) {
@@ -33,7 +38,7 @@ export function closeSeasonIfDue(now = new Date()): Season {
   softResetElos();
   accountDb().prepare("UPDATE season_pass SET xp = 0 WHERE season_id = ?").run(season.id);
   const start = now;
-  const end = new Date(start.getTime() + SEASON_MS);
+  const end = new Date(start.getTime() + seasonMsFromConfig());
   const id = `season_${start.toISOString().slice(0, 10)}_${start.getTime().toString(36)}`;
   accountDb().prepare("INSERT INTO seasons (id, starts_at, ends_at) VALUES (?, ?, ?)").run(id, start.toISOString(), end.toISOString());
   return { id, startsAt: start.toISOString(), endsAt: end.toISOString() };
@@ -47,7 +52,11 @@ export function closeSeasonNow(now = new Date()): { closed: Season; opened: Seas
   db.prepare("UPDATE seasons SET ends_at = ? WHERE id = ?").run(iso, closed.id);
   softResetElos();
   db.prepare("UPDATE season_pass SET xp = 0 WHERE season_id = ?").run(closed.id);
-  const opened = { id: `season_${iso.slice(0, 10)}_${now.getTime().toString(36)}`, startsAt: iso, endsAt: new Date(now.getTime() + SEASON_MS).toISOString() };
+  const opened = {
+    id: `season_${iso.slice(0, 10)}_${now.getTime().toString(36)}`,
+    startsAt: iso,
+    endsAt: new Date(now.getTime() + seasonMsFromConfig()).toISOString(),
+  };
   db.prepare("INSERT INTO seasons (id, starts_at, ends_at) VALUES (?, ?, ?)").run(opened.id, opened.startsAt, opened.endsAt);
   return { closed: { ...closed, endsAt: iso }, opened };
 }

@@ -17,6 +17,7 @@ import {
   grantGold,
   levelOptions,
   listHeroes,
+  heroPending,
   listPresets,
   renameHero,
   respec,
@@ -31,15 +32,20 @@ import { contentDetail, listCatalog, playbook, savePending, setPlaybook } from "
 import { engineView } from "./content-engine.js";
 import { coverageSummary } from "./coverage.js";
 import { labCatalog, simulateHero, stampLabHero } from "./rules-lab.js";
-import { buyVendorSlot, declarePayToWin, vendorStock } from "./vendor.js";
+import { buyVendorSlot, declarePayToWin, vendorStock, autoStockFor, clearScheduledDay, fillFromAuto, setScheduledDay, vendorCalendar } from "./vendor.js";
 import { enqueue, leaderboard, takeMatch, type ArenaMode } from "./arena-queue.js";
 import { buyPremium, closeSeasonNow, currentSeason, skipPassTier } from "./seasons.js";
 import { createCampaignHero, listCampaignHeroes } from "./campaign-hero.js";
 import { addGold } from "./stash-mut.js";
 import { recordEvent } from "./events.js";
+import { economyMeta, getEconomyConfig, resetEconomyConfig, setEconomyConfig } from "./economy-config.js";
+import { DEFAULT_ECONOMY, matchGold, modeXp, type RewardMode } from "@d20-fireverse/rules";
+import { enabledItems } from "./content-catalog.js";
 import { mountBuilderRoutes } from "./builder-http.js";
 import { swapWeaponMastery } from "./mastery-swap.js";
 import { listHeroRedirects } from "./hero-redirect.js";
+import { meProfile } from "./profile.js";
+import { partyAccept, partyHero, partyInvite, partyLeave, rankedPartyState } from "./ranked.js";
 
 function user(req: Request): SessionUser {
   const found = requestUser(req);
@@ -86,10 +92,23 @@ export function mountV2Routes(app: Express): void {
     }
   });
 
+  app.get("/api/me/profile", (req, res) => {
+    try {
+      const who = user(req);
+      res.json(meProfile(who.id, who.username, who.role));
+    } catch (err) {
+      fail(res, err);
+    }
+  });
+
   app.get("/api/heroes", (req, res) => {
     try {
       const who = user(req);
-      res.json({ heroes: listHeroes(who.id), wallet: wallet(who.id), payToWin: declarePayToWin() });
+      res.json({
+        heroes: listHeroes(who.id).map((h) => ({ ...h, pendingLevelUp: heroPending(h.id) })),
+        wallet: wallet(who.id),
+        payToWin: declarePayToWin(),
+      });
     } catch (err) {
       fail(res, err);
     }
@@ -461,8 +480,10 @@ export function mountV2Routes(app: Express): void {
     try {
       user(req);
       const mode = req.query.mode === "arcade" || req.query.mode === "test" ? req.query.mode : "ranked";
-      const queue = req.query.queue === "duo" || req.query.queue === "full_team" ? req.query.queue : "solo";
-      res.json({ mode, queue, rows: leaderboard(mode, queue) });
+      const queue =
+        req.query.queue === "duo" || req.query.queue === "full_team" || req.query.queue === "solo" ? req.query.queue : undefined;
+      const format = typeof req.query.format === "string" ? req.query.format : undefined;
+      res.json({ mode, queue: queue ?? "all", format: format ?? null, rows: leaderboard(mode, queue, format) });
     } catch (err) {
       fail(res, err);
     }
@@ -490,6 +511,196 @@ export function mountV2Routes(app: Express): void {
     try {
       const who = user(req);
       res.json({ heroes: listCampaignHeroes(who.id, String(req.query.campaignId ?? "luppolandia-brew")) });
+    } catch (err) {
+      fail(res, err);
+    }
+  });
+
+  // -------- Admin: Economy (balance) --------
+
+  app.get("/api/admin/economy", (req, res) => {
+    try {
+      admin(req);
+      const meta = economyMeta();
+      res.json({ config: getEconomyConfig(), defaults: DEFAULT_ECONOMY, updatedAt: meta.updatedAt, updatedBy: meta.updatedBy });
+    } catch (err) {
+      fail(res, err);
+    }
+  });
+
+  app.put("/api/admin/economy", (req, res) => {
+    try {
+      const actor = admin(req);
+      const next = setEconomyConfig(req.body ?? {}, actor);
+      audit(actor, "economy.update", "live", {});
+      res.json({ config: next, ...economyMeta() });
+    } catch (err) {
+      fail(res, err);
+    }
+  });
+
+  app.post("/api/admin/economy/reset", (req, res) => {
+    try {
+      const actor = admin(req);
+      const next = resetEconomyConfig(actor);
+      audit(actor, "economy.reset", "live", {});
+      res.json({ config: next, ...economyMeta() });
+    } catch (err) {
+      fail(res, err);
+    }
+  });
+
+  app.post("/api/admin/economy/preview", (req, res) => {
+    try {
+      admin(req);
+      const body = (req.body ?? {}) as {
+        mode?: string;
+        won?: boolean;
+        heroLevel?: number;
+        opponentLevel?: number;
+        placement?: number;
+        playerCount?: number;
+        arcadeMatches?: number;
+      };
+      const mode = (body.mode === "ranked" || body.mode === "arcade" || body.mode === "pve" || body.mode === "test" || body.mode === "story")
+        ? body.mode as RewardMode
+        : "ranked";
+      const config = getEconomyConfig();
+      const heroLevel = Number(body.heroLevel ?? 1);
+      const opponentLevel = Number(body.opponentLevel ?? heroLevel);
+      const won = Boolean(body.won);
+      const xp = modeXp(mode, { won, heroLevel, opponentLevel, arcadeMatches: Number(body.arcadeMatches ?? 0), monsterXp: [] }, config);
+      const gold = matchGold(mode, { won, placement: body.placement, playerCount: body.playerCount, matchesToday: Number(body.arcadeMatches ?? 0) }, config);
+      const dropsBag = mode === "ranked" || mode === "arcade" || mode === "pve" ? config.drops[mode] : undefined;
+      const dropChance = dropsBag ? (won ? dropsBag.win : dropsBag.loss) : 0;
+      const unlocks = config.rarityUnlock;
+      const level = mode === "ranked" ? Math.max(1, opponentLevel) : heroLevel;
+      const legal = (["common", "uncommon", "rare", "very_rare", "legendary"] as const).filter((r) => level >= unlocks[r]);
+      const highestRarity = legal[legal.length - 1] ?? "common";
+      res.json({ mode, xp, gold, dropChance, highestRarity });
+    } catch (err) {
+      fail(res, err);
+    }
+  });
+
+  // -------- Admin: Shop (vendor schedule) --------
+
+  app.get("/api/admin/shop/items", (req, res) => {
+    try {
+      admin(req);
+      const config = getEconomyConfig();
+      res.json({
+        items: enabledItems().map((item) => ({
+          id: item.id,
+          name: item.name,
+          rarity: item.rarity,
+          priceGold: item.priceGold ?? config.vendor.priceByRarity[item.rarity],
+        })),
+      });
+    } catch (err) {
+      fail(res, err);
+    }
+  });
+
+  app.get("/api/admin/shop", (req, res) => {
+    try {
+      admin(req);
+      const from = String(req.query.from ?? "");
+      const days = Math.max(1, Math.min(60, Number(req.query.days ?? 14)));
+      const base = /^\d{4}-\d{2}-\d{2}$/.test(from) ? new Date(`${from}T00:00:00Z`) : new Date();
+      res.json({ from: base.toISOString().slice(0, 10), days, calendar: vendorCalendar(base, days) });
+    } catch (err) {
+      fail(res, err);
+    }
+  });
+
+  app.get("/api/admin/shop/:day/auto", (req, res) => {
+    try {
+      admin(req);
+      res.json({ day: req.params.day, slots: autoStockFor(req.params.day) });
+    } catch (err) {
+      fail(res, err);
+    }
+  });
+
+  app.put("/api/admin/shop/:day", (req, res) => {
+    try {
+      const actor = admin(req);
+      const slots = Array.isArray(req.body?.slots) ? (req.body.slots as Array<{ itemId: string; priceGold?: number | null }>) : [];
+      const day = setScheduledDay(req.params.day, slots);
+      audit(actor, "shop.update", req.params.day, { slots: slots.length });
+      res.json({ day });
+    } catch (err) {
+      fail(res, err);
+    }
+  });
+
+  app.post("/api/admin/shop/:day/fill-auto", (req, res) => {
+    try {
+      const actor = admin(req);
+      const day = fillFromAuto(req.params.day);
+      audit(actor, "shop.fill-auto", req.params.day, {});
+      res.json({ day });
+    } catch (err) {
+      fail(res, err);
+    }
+  });
+
+  app.delete("/api/admin/shop/:day", (req, res) => {
+    try {
+      const actor = admin(req);
+      clearScheduledDay(req.params.day);
+      audit(actor, "shop.reset", req.params.day, {});
+      res.json({ ok: true });
+    } catch (err) {
+      fail(res, err);
+    }
+  });
+
+  app.get("/api/party", (req, res) => {
+    try {
+      const who = user(req);
+      res.json({ party: rankedPartyState(who.id) ?? null });
+    } catch (err) {
+      fail(res, err);
+    }
+  });
+
+  app.post("/api/party/invite", (req, res) => {
+    try {
+      const who = user(req);
+      partyInvite(who.id, who.username, String(req.body?.username ?? ""));
+      res.json({ party: rankedPartyState(who.id) ?? null });
+    } catch (err) {
+      fail(res, err);
+    }
+  });
+
+  app.post("/api/party/accept", (req, res) => {
+    try {
+      const who = user(req);
+      partyAccept(who.id, who.username, String(req.body?.partyId ?? ""));
+      res.json({ party: rankedPartyState(who.id) ?? null });
+    } catch (err) {
+      fail(res, err);
+    }
+  });
+
+  app.post("/api/party/leave", (req, res) => {
+    try {
+      const who = user(req);
+      partyLeave(who.id);
+      res.json({ ok: true });
+    } catch (err) {
+      fail(res, err);
+    }
+  });
+
+  app.post("/api/party/hero", (req, res) => {
+    try {
+      const who = user(req);
+      partyHero(who.id, String(req.body?.characterId ?? ""));
+      res.json({ party: rankedPartyState(who.id) ?? null });
     } catch (err) {
       fail(res, err);
     }

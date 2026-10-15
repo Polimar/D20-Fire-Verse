@@ -21,6 +21,7 @@ type HeroSummary = { id: string; name: string; level: number; classes: Array<{ i
 
 export type ArmoryOptions = {
   inCombat?: boolean;
+  heroId?: string;
   onMessage?: (text: string, kind?: "bad" | "ok" | "info") => void;
 };
 
@@ -55,7 +56,8 @@ async function reload(): Promise<void> {
   heroes = data.heroes;
   gold = data.wallet.gold;
   stash = bag.stash;
-  if (!heroId || !heroes.some((h) => h.id === heroId)) heroId = heroes[0]?.id ?? "";
+  if (opts.heroId && heroes.some((h) => h.id === opts.heroId)) heroId = opts.heroId;
+  else if (!heroId || !heroes.some((h) => h.id === heroId)) heroId = heroes[0]?.id ?? "";
 }
 
 function itemActions(item: StashRow): string {

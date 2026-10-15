@@ -1,18 +1,18 @@
 import type { HeroRules, ItemRules } from "./content-types.js";
-
-export const RARITY_UNLOCK_LEVEL = {
-  common: 1,
-  uncommon: 3,
-  rare: 7,
-  very_rare: 11,
-  legendary: 17,
-} as const;
+import { DEFAULT_ECONOMY, type EconomyConfig } from "./economy-config.js";
 
 export const RARITY_ORDER = ["common", "uncommon", "rare", "very_rare", "legendary"] as const;
 export type RarityId = (typeof RARITY_ORDER)[number];
 
-export function rarityUnlocked(rarity: RarityId, level: number): boolean {
-  return level >= RARITY_UNLOCK_LEVEL[rarity];
+/**
+ * Fallback unlock table — mirrors DEFAULT_ECONOMY.rarityUnlock. Prefer
+ * rarityUnlocked() with a live config; callers that pass no config get the
+ * defaults, which is the same behaviour as before.
+ */
+export const RARITY_UNLOCK_LEVEL: Record<RarityId, number> = DEFAULT_ECONOMY.rarityUnlock;
+
+export function rarityUnlocked(rarity: RarityId, level: number, config: EconomyConfig = DEFAULT_ECONOMY): boolean {
+  return level >= config.rarityUnlock[rarity];
 }
 
 export function oneTierAbove(rarity: RarityId): RarityId {
@@ -20,16 +20,8 @@ export function oneTierAbove(rarity: RarityId): RarityId {
   return RARITY_ORDER[Math.min(RARITY_ORDER.length - 1, i + 1)] ?? rarity;
 }
 
-const PRICE: Record<RarityId, number> = {
-  common: 100,
-  uncommon: 500,
-  rare: 3000,
-  very_rare: 20000,
-  legendary: 100000,
-};
-
-export function placeholderPrice(rarity: RarityId): number {
-  return PRICE[rarity];
+export function placeholderPrice(rarity: RarityId, config: EconomyConfig = DEFAULT_ECONOMY): number {
+  return config.vendor.priceByRarity[rarity];
 }
 
 export type EquipResult = { ok: true } | { ok: false; reason: string };
@@ -42,10 +34,10 @@ function spellcaster(hero: HeroRules): boolean {
   return hero.features.includes("spellcasting") || hero.spells.length > 0;
 }
 
-export function canEquip(hero: HeroRules, item: ItemRules, attunementUsed: number): EquipResult {
+export function canEquip(hero: HeroRules, item: ItemRules, attunementUsed: number, config: EconomyConfig = DEFAULT_ECONOMY): EquipResult {
   const req = item.requires;
-  if (!rarityUnlocked(item.rarity, hero.level)) {
-    return { ok: false, reason: `Requires level ${RARITY_UNLOCK_LEVEL[item.rarity]}.` };
+  if (!rarityUnlocked(item.rarity, hero.level, config)) {
+    return { ok: false, reason: `Requires level ${config.rarityUnlock[item.rarity]}.` };
   }
   if (req?.minLevel != null && hero.level < req.minLevel) {
     return { ok: false, reason: `Requires level ${req.minLevel}.` };

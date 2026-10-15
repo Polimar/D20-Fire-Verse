@@ -10,10 +10,13 @@ import {
   listFriends,
   logout,
   registerPlayer,
+  rejectFriend,
+  removeFriend,
   resendConfirmation,
   openAuth,
   readSessionCookie,
   requestFriend,
+  rerollFriendTag,
   sessionCookie,
   signInWithAmazon,
   userFromToken,
@@ -404,7 +407,7 @@ export function mountAccountRoutes(app: Express): void {
       return;
     }
     try {
-      requestFriend(user.id, String(req.body?.username ?? ""));
+      requestFriend(user.id, String(req.body?.tag ?? req.body?.username ?? ""));
       res.json({ ok: true, friends: listFriends(user.id) });
     } catch (err) {
       fail(res, err);
@@ -420,6 +423,47 @@ export function mountAccountRoutes(app: Express): void {
     try {
       acceptFriend(user.id, String(req.body?.userId ?? ""));
       res.json({ ok: true, friends: listFriends(user.id) });
+    } catch (err) {
+      fail(res, err);
+    }
+  });
+
+  app.post("/api/friends/reject", (req, res) => {
+    const user = requestUser(req);
+    if (!user) {
+      res.status(401).json({ error: "AUTH_REQUIRED" });
+      return;
+    }
+    try {
+      rejectFriend(user.id, String(req.body?.userId ?? ""));
+      res.json({ ok: true, friends: listFriends(user.id) });
+    } catch (err) {
+      fail(res, err);
+    }
+  });
+
+  app.post("/api/friends/remove", (req, res) => {
+    const user = requestUser(req);
+    if (!user) {
+      res.status(401).json({ error: "AUTH_REQUIRED" });
+      return;
+    }
+    try {
+      removeFriend(user.id, String(req.body?.userId ?? ""));
+      res.json({ ok: true, friends: listFriends(user.id) });
+    } catch (err) {
+      fail(res, err);
+    }
+  });
+
+  app.post("/api/friends/tag", (req, res) => {
+    const user = requestUser(req);
+    if (!user) {
+      res.status(401).json({ error: "AUTH_REQUIRED" });
+      return;
+    }
+    try {
+      res.json({ ok: true, friendTag: rerollFriendTag(user.id) });
     } catch (err) {
       fail(res, err);
     }

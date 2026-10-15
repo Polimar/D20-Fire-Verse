@@ -403,6 +403,12 @@ export type CombatState = {
   pvp?: "ffa" | "teams";
   pvpWinner?: string;
   pve?: boolean;
+  /** 1-indexed finishing place by token id. Shared when several fighters drop in the same blow. */
+  placements?: Record<string, number>;
+  /** Death order (token ids) for FFA placement. */
+  elimOrder?: string[];
+  /** Groups deaths that share a place (same attack / forfeit). */
+  elimPulse?: number;
 };
 
 function rectGrid(
@@ -873,6 +879,8 @@ export function startArenaCombat(opts: {
   pve?: boolean;
   monsterId?: string;
   holdPcIds?: string[];
+  /** Ranked keeps each hero's real level instead of scaling to the lobby number. */
+  keepHeroLevels?: boolean;
 }): CombatState {
   const map = opts.map;
   const walls = wallGrid(map as unknown as MapDef);
@@ -881,7 +889,7 @@ export function startArenaCombat(opts: {
   opts.players.forEach((p, i) => {
     const raw = getPregen(p.characterId);
     if (!raw) throw new Error("BAD_CHARACTER");
-    const pregen = scalePregenToLevel(raw, opts.level);
+    const pregen = opts.keepHeroLevels ? raw : scalePregenToLevel(raw, opts.level);
     const spot = opts.teams
       ? (p.teamId === "b" ? map.spawn.teamB : map.spawn.teamA)[opts.players.filter((x, j) => j < i && (x.teamId ?? "a") === (p.teamId ?? "a")).length] ??
         map.spawn.teamA[0]
@@ -953,6 +961,9 @@ export function startArenaCombat(opts: {
     seq: 0,
     pvp: opts.pve ? undefined : opts.teams ? "teams" : "ffa",
     pve: opts.pve || undefined,
+    placements: {},
+    elimOrder: [],
+    elimPulse: 0,
   };
   const holdIds = opts.holdPcIds ?? [];
   if (holdIds.length) {
@@ -1484,6 +1495,7 @@ function pickEnemyAttack(
 }
 
 function runEnemyTurn(combat: CombatState, enemy: CombatToken): void {
+  bumpElimPulse(combat);
   const pcs = combat.tokens.filter((t) => t.kind === "pc" && !t.dead);
   if (!pcs.length) {
     checkEnd(combat);
@@ -1810,6 +1822,44 @@ function enemyStrike(combat: CombatState, enemy: CombatToken, target: CombatToke
   if (combat.status === "active" && damage > 0) offerRetaliation(combat, enemy, target);
 }
 
+function bumpElimPulse(combat: CombatState): void {
+  combat.elimPulse = (combat.elimPulse ?? 0) + 1;
+}
+
+function recordElimination(combat: CombatState, target: CombatToken): void {
+  if (target.kind !== "pc" || !combat.pvp) return;
+  combat.elimOrder = combat.elimOrder ?? [];
+  if (combat.elimOrder.some((row) => row.startsWith(`${target.id}:`))) return;
+  combat.elimOrder.push(`${target.id}:${combat.elimPulse ?? 0}`);
+}
+
+function finalizePlacements(combat: CombatState): void {
+  if (!combat.pvp) return;
+  const pcs = combat.tokens.filter((t) => t.kind === "pc");
+  const placements: Record<string, number> = { ...(combat.placements ?? {}) };
+  const groups = new Map<number, string[]>();
+  for (const row of combat.elimOrder ?? []) {
+    const [id, pulse] = row.split(":");
+    if (!id) continue;
+    const wave = Number(pulse);
+    const list = groups.get(wave) ?? [];
+    list.push(id);
+    groups.set(wave, list);
+  }
+  const waves = [...groups.keys()].sort((a, b) => a - b);
+  let remaining = pcs.length;
+  for (const wave of waves) {
+    const ids = groups.get(wave) ?? [];
+    remaining -= ids.length;
+    const place = Math.max(1, remaining + 1);
+    for (const id of ids) placements[id] = place;
+  }
+  const survivors = pcs.filter((t) => !t.dead);
+  const survivorPlace = survivors.length > 1 && combat.status === "draw" ? 1 : 1;
+  for (const t of survivors) placements[t.id] = survivorPlace;
+  combat.placements = placements;
+}
+
 function checkEnd(combat: CombatState): void {
   if (combat.status !== "active") return;
   if (combat.pvp) {
@@ -1819,10 +1869,12 @@ function checkEnd(combat: CombatState): void {
         combat.status = "victory";
         combat.pvpWinner = live[0]!.name;
         combat.reachable = [];
+        finalizePlacements(combat);
         emit(combat, { kind: "end", outcome: "victory", line: `${live[0]!.name} is the last one standing.` });
       } else if (live.length === 0) {
         combat.status = "draw";
         combat.reachable = [];
+        finalizePlacements(combat);
         emit(combat, { kind: "end", outcome: "defeat", line: "No one remains standing. Draw." });
       }
       return;
@@ -1837,10 +1889,12 @@ function checkEnd(combat: CombatState): void {
       const name = id === "a" ? "Team A" : id === "b" ? "Team B" : "The last team";
       if (!id) {
         combat.status = "draw";
+        finalizePlacements(combat);
         emit(combat, { kind: "end", outcome: "defeat", line: "Both teams fall. Draw." });
       } else {
         combat.status = "victory";
         combat.pvpWinner = name;
+        finalizePlacements(combat);
         emit(combat, { kind: "end", outcome: "victory", line: `${name} holds the floor.` });
       }
       combat.reachable = [];
@@ -2225,6 +2279,7 @@ export function performPcAction(
   dest?: Cell,
   gate?: { phase: "d20" } | { phase: "damage"; strike: StrikeHold },
 ): { rolls: DiceRoll[]; strike?: StrikeHold } {
+  bumpElimPulse(combat);
   expireReactionIfStale(combat);
   if (combat.status !== "active") throw new Error("COMBAT_OVER");
   if (combat.pending) throw new Error("REACTION_PENDING");
@@ -3254,6 +3309,7 @@ function markDead(combat: CombatState, target: CombatToken): void {
   target.dead = true;
   target.dying = false;
   target.hp = 0;
+  recordElimination(combat, target);
   emit(combat, {
     kind: "down",
     tokenId: target.id,
@@ -3869,6 +3925,7 @@ export function publicCombat(combat: CombatState, viewerPlayerId?: string) {
     pvp: combat.pvp ?? null,
     pve: Boolean(combat.pve),
     pvpWinner: combat.pvpWinner ?? null,
+    placements: combat.placements ?? {},
     art: resolveArenaArtPublicPath(combat.mapId),
     width: combat.width,
     height: combat.height,
@@ -3949,6 +4006,23 @@ export function applyDisconnectDodge(combat: CombatState, playerId: string): voi
   t.dodging = true;
   statusEvent(combat, t, "Dodge", `${t.name} loses the thread — Dodges and passes the turn.`);
   advanceTurn(combat);
+}
+
+/** Ranked forfeit: the absent fighter is eliminated last among those still alive. */
+export function applyDisconnectForfeit(combat: CombatState, playerId: string): void {
+  if (combat.status !== "active") return;
+  const t = combat.tokens.find((tok) => tok.playerId === playerId && tok.kind === "pc" && !tok.dead);
+  if (!t) return;
+  bumpElimPulse(combat);
+  combat.awaiting = (combat.awaiting ?? []).filter((a) => a.playerId !== playerId);
+  statusEvent(combat, t, "Forfeit", `${t.name} is gone too long. The arena counts that as a forfeit.`);
+  markDead(combat, t);
+  if (currentToken(combat)?.id === t.id) {
+    t.hasAction = false;
+    t.movementLeft = 0;
+    advanceTurn(combat);
+  }
+  checkEnd(combat);
 }
 
 function deliverBlow(combat: CombatState, pending: PendingReaction, damage: number): void {

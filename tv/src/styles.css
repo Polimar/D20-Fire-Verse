@@ -1273,6 +1273,10 @@ body.wizard-open .pages { visibility: hidden; }
 .defeat-modal .modal-kicker { color: var(--danger); }
 
 .settings-modal .modal-card { width: min(42rem, 100%); }
+.profile-modal .modal-card { width: min(48rem, 100%); }
+.profile-list { list-style: none; margin: 0.6rem 0; padding: 0; display: grid; gap: 0.45rem; }
+.profile-list li, .profile-hero { display: flex; flex-wrap: wrap; gap: 0.4rem 0.8rem; align-items: center; }
+.profile-cards .meta { margin: 0.25rem 0; }
 
 .armory-modal .modal-card { width: min(46rem, 100%); max-height: 88vh; overflow: auto; }
 .armory-list { list-style: none; margin: 0.75rem 0 0; padding: 0; display: grid; gap: 0.45rem; }

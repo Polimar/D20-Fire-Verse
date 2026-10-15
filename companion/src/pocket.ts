@@ -26,7 +26,7 @@ type Catalog = {
   standardArray: number[];
   spellCatalog: Record<string, { name: string }>;
 };
-type Friend = { id: string; username: string; status: string };
+type Friend = { id: string; username: string; friendTag?: string; status: string; incoming?: boolean };
 type BoardRow = { username: string; wins: number; losses: number };
 
 const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]!);
@@ -45,6 +45,7 @@ export function mountPocket(host: HTMLElement, adopt: (key: string) => void, sca
     </section>`;
   const card = () => host.querySelector<HTMLElement>("#pocketCard")!;
   let user: string | null = null;
+  let gold = 0;
   let heroes: Pregen[] = [];
 
   const paintLogin = () => {
@@ -57,6 +58,7 @@ export function mountPocket(host: HTMLElement, adopt: (key: string) => void, sca
   const paintHome = () => {
     card().innerHTML = `
       <div class="pocket-head"><h2>${esc(user ?? "Heroes")}</h2><button type="button" class="ghost" id="pocketOut">Log out</button></div>
+      <p class="meta">${gold} gold</p>
       <div class="pocket-heroes">${
         heroes.length
           ? heroes.map((h) => `<button type="button" class="ghost pocket-hero" data-hero="${esc(h.id)}"><img src="${esc(h.portrait)}" alt="" /><span><strong>${esc(h.name)}</strong><em>${esc(h.summary)}</em></span></button>`).join("")
@@ -121,20 +123,41 @@ export function mountPocket(host: HTMLElement, adopt: (key: string) => void, sca
 
   const openSocial = async () => {
     const friends = await api<{ friends: Friend[] }>("/api/friends");
+    const me = await api<{ user: { friendTag?: string } }>("/api/me/profile").catch(
+      (): { user: { friendTag?: string } } => ({ user: {} }),
+    );
     const board = await api<{ rows: BoardRow[] }>("/api/arena/leaderboard?scope=global");
+    const partyWrap = await api<{
+      party: { id: string; leaderId: string; members: Array<{ userId: string; username: string; accepted: boolean }> } | null;
+    }>("/api/party").catch(() => ({ party: null }));
+    const pendingParty = partyWrap.party?.members.find(
+      (m) => !m.accepted && user && m.username.toLowerCase() === user.toLowerCase(),
+    );
+    const incoming = friends.friends.filter((f) => f.status === "pending" && f.incoming);
+    const outgoing = friends.friends.filter((f) => f.status === "pending" && !f.incoming);
+    const accepted = friends.friends.filter((f) => f.status === "accepted");
+    const line = (f: Friend, actions: string) =>
+      `<li>${esc(f.username)} · ${esc(f.friendTag ?? "")}${actions}</li>`;
     card().innerHTML = `
       <button type="button" class="ghost" id="pocketBack">← Heroes</button>
       <h2>Friends</h2>
-      <form id="friendForm" class="row2"><input id="friendName" placeholder="Username" maxlength="32" /><button type="submit">Ask</button></form>
-      <ul class="pocket-list">${friends.friends.map((f) => `<li>${esc(f.username)} · ${esc(f.status)}${f.status === "pending" ? ` <button type="button" data-accept="${esc(f.id)}">Accept</button>` : ""}</li>`).join("") || "<li>No friends yet.</li>"}</ul>
+      <p class="meta">Your Friend ID ${esc(me.user.friendTag ?? "------")}</p>
+      ${pendingParty && partyWrap.party ? `<p class="meta">Party invite waiting.</p><button type="button" class="primary" id="pocketPartyAccept">Accept party</button>` : ""}
+      <form id="friendForm" class="row2"><input id="friendName" placeholder="Friend ID" maxlength="32" /><button type="submit">Ask</button></form>
+      <h3>Incoming</h3>
+      <ul class="pocket-list">${incoming.map((f) => line(f, ` <button type="button" data-accept="${esc(f.id)}">Accept</button> <button type="button" data-reject="${esc(f.id)}">Decline</button>`)).join("") || "<li>No requests.</li>"}</ul>
+      <h3>Outgoing</h3>
+      <ul class="pocket-list">${outgoing.map((f) => line(f, ` <button type="button" data-reject="${esc(f.id)}">Cancel</button>`)).join("") || "<li>None waiting.</li>"}</ul>
+      <h3>Friends</h3>
+      <ul class="pocket-list">${accepted.map((f) => line(f, ` <button type="button" data-party="${esc(f.username)}">Invite to party</button> <button type="button" data-remove="${esc(f.id)}">Remove</button>`)).join("") || "<li>No friends yet.</li>"}</ul>
       <h2>Arena board</h2>
       <ul class="pocket-list">${board.rows.slice(0, 12).map((r) => `<li>${esc(r.username)} · ${r.wins}–${r.losses}</li>`).join("") || "<li>No arena games yet.</li>"}</ul>`;
     card().querySelector("#pocketBack")!.addEventListener("click", paintHome);
     card().querySelector("#friendForm")!.addEventListener("submit", async (ev) => {
       ev.preventDefault();
-      const username = (card().querySelector("#friendName") as HTMLInputElement).value.trim();
-      if (!username) return;
-      await api("/api/friends", { method: "POST", body: JSON.stringify({ username }) });
+      const ident = (card().querySelector("#friendName") as HTMLInputElement).value.trim();
+      if (!ident) return;
+      await api("/api/friends", { method: "POST", body: JSON.stringify({ username: ident, tag: ident }) });
       await openSocial();
     });
     card().querySelectorAll<HTMLElement>("[data-accept]").forEach((b) =>
@@ -143,6 +166,32 @@ export function mountPocket(host: HTMLElement, adopt: (key: string) => void, sca
         await openSocial();
       }),
     );
+    card().querySelectorAll<HTMLElement>("[data-reject]").forEach((b) =>
+      b.addEventListener("click", async () => {
+        await api("/api/friends/reject", { method: "POST", body: JSON.stringify({ userId: b.dataset.reject }) });
+        await openSocial();
+      }),
+    );
+    card().querySelectorAll<HTMLElement>("[data-remove]").forEach((b) =>
+      b.addEventListener("click", async () => {
+        await api("/api/friends/remove", { method: "POST", body: JSON.stringify({ userId: b.dataset.remove }) });
+        await openSocial();
+      }),
+    );
+    card().querySelectorAll<HTMLElement>("[data-party]").forEach((b) =>
+      b.addEventListener("click", async () => {
+        await api("/api/party/invite", { method: "POST", body: JSON.stringify({ username: b.dataset.party }) });
+        await openSocial();
+      }),
+    );
+    card().querySelector("#pocketPartyAccept")?.addEventListener("click", async () => {
+      const id = partyWrap.party?.id;
+      if (!id) return;
+      await api("/api/party/accept", { method: "POST", body: JSON.stringify({ partyId: id }) });
+      const heroId = heroes.find((h) => h.id.startsWith("hero_"))?.id;
+      if (heroId) await api("/api/party/hero", { method: "POST", body: JSON.stringify({ characterId: heroId }) }).catch(() => undefined);
+      await openSocial();
+    });
   };
 
   const openForgeV2 = async () => {
@@ -261,7 +310,8 @@ export function mountPocket(host: HTMLElement, adopt: (key: string) => void, sca
       user = me.user.username;
       void api("/api/session/surface", { method: "POST", body: JSON.stringify({ surface: "companion" }) });
       const legacy = (await api<Pregen[]>("/api/pregens")).filter((p) => p.custom || String(p.id).startsWith("custom_"));
-      const v2 = await api<{ heroes: Array<{ id: string; name: string; level: number; classes: Array<{ id: string }> }> }>("/api/heroes");
+      const v2 = await api<{ heroes: Array<{ id: string; name: string; level: number; classes: Array<{ id: string }> }>; wallet?: { gold: number } }>("/api/heroes");
+      gold = v2.wallet?.gold ?? gold;
       heroes = [
         ...v2.heroes.map((h) => ({
           id: h.id,

@@ -162,6 +162,7 @@ export * from "./mastery.js";
 export * from "./matchmaking.js";
 export * from "./requires.js";
 export * from "./rewards.js";
+export * from "./economy-config.js";
 export * from "./scale.js";
 export * from "./progression.js";
 export * from "./xp.js";

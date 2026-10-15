@@ -1,6 +1,5 @@
 import fs from "node:fs";
 import path from "node:path";
-import { accountElo, setAccountElo } from "./arena-queue.js";
 import { heroPending } from "./hero.js";
 import { finishCampaignRun } from "./campaign-hero.js";
 import {
@@ -18,6 +17,7 @@ import type { CombatToken } from "./combat.js";
 import { markMasterySwapReady } from "./mastery-swap.js";
 import {
   applyDisconnectDodge,
+  applyDisconnectForfeit,
   actionNeedsThrow,
   buildPcSheet,
   commitAreaSave,
@@ -275,6 +275,9 @@ export function createArena(opts: {
   privacy?: string;
   name?: string;
   monsterId?: string;
+  mode?: ArenaConfig["mode"];
+  queueType?: ArenaConfig["queueType"];
+  autoStartAt?: number;
 }): Room {
   const cfg = parseCreateArena(opts);
   let roomCode = code();
@@ -293,7 +296,13 @@ export function createArena(opts: {
     visitedRooms: [],
     mapTokens: [],
     mode: "arena",
-    arena: { ...cfg, phase: "lobby" },
+    arena: {
+      ...cfg,
+      phase: "lobby",
+      ...(opts.mode ? { mode: opts.mode } : {}),
+      ...(opts.queueType ? { queueType: opts.queueType } : {}),
+      ...(opts.autoStartAt ? { autoStartAt: opts.autoStartAt } : {}),
+    },
     updatedAt: new Date().toISOString(),
   };
   narrate(room, `Arena ${cfg.name || roomCode}. ${cfg.format.replace(/_/g, " ")} at level ${cfg.level}.`);
@@ -339,6 +348,13 @@ export function getRoom(roomCode: string): Room | undefined {
   return rooms.get(roomCode.toUpperCase());
 }
 
+export function roomSeatingUser(userId: string): Room | undefined {
+  for (const room of rooms.values()) {
+    if (room.players.some((p) => p.userId === userId)) return room;
+  }
+  return undefined;
+}
+
 function requireRoom(roomCode: string): Room {
   const room = getRoom(roomCode);
   if (!room) throw new Error("ROOM_NOT_FOUND");
@@ -351,10 +367,11 @@ export function joinRoom(
   displayName: string,
   characterId: string,
   userId?: string,
+  teamId?: "a" | "b",
 ): { room: Room; playerId: string } {
   const room = requireRoom(roomCode);
   if (room.mode === "arena") {
-    const playerId = joinArenaSeat(room, displayName, characterId, userId);
+    const playerId = joinArenaSeat(room, displayName, characterId, userId, teamId);
     touch(room);
     return { room, playerId };
   }
@@ -1680,7 +1697,7 @@ export function heroSheet(room: Room, playerId: string): ReturnType<typeof build
     const raw = player?.characterId ? getPregen(player.characterId) : undefined;
     if (!raw) return null;
     if (room.arena) {
-      const pregen = scalePregenToLevel(raw, room.arena.level);
+      const pregen = room.arena.mode === "ranked" ? raw : scalePregenToLevel(raw, room.arena.level);
       return buildPcSheet(restingToken(room, playerId, pregen, { fullHp: true }), null);
     }
     return buildPcSheet(restingToken(room, playerId, raw), null);
@@ -1779,7 +1796,8 @@ export function arenaPickHero(roomCode: string, playerId: string, characterId: s
 export function arenaStart(roomCode: string, actorUserId?: string): Room {
   const room = requireRoom(roomCode);
   assertCanStart(room, actorUserId);
-  beginArenaFight(room, room.players.map((p) => p.playerId).filter((id) => phoneHolds(id)));
+  const hold = room.arena?.mode === "ranked" ? [] : room.players.map((p) => p.playerId).filter((id) => phoneHolds(id));
+  beginArenaFight(room, hold);
   narrate(room, "Steel out. The arena will have a winner.");
   touch(room);
   autosave(room);
@@ -1801,6 +1819,7 @@ export function arenaKick(roomCode: string, actorUserId: string | undefined, tar
 }
 
 function armHeroSwap(room: Room): void {
+  if (room.arena?.mode === "ranked") return;
   const t = heroSwapTimers.get(room.roomCode);
   if (t) clearTimeout(t);
   const wait = Math.max(0, (room.arena?.heroSwapEndsAt ?? Date.now()) - Date.now());
@@ -2051,9 +2070,9 @@ export function playerDisconnect(roomCode: string, playerId: string): Room | und
   const room = getRoom(roomCode);
   if (!room?.combat) return undefined;
   if (room.arena?.mode === "ranked") {
-    const player = room.players.find((p) => p.playerId === playerId);
-    if (player?.userId) setAccountElo(player.userId, accountElo(player.userId) - 15);
-    room.arena.lastResult = "Gone for 45 seconds. Ranked counts that as a loss.";
+    applyDisconnectForfeit(room.combat, playerId);
+    afterCombatAction(room);
+    return room;
   }
   applyDisconnectDodge(room.combat, playerId);
   afterCombatAction(room);

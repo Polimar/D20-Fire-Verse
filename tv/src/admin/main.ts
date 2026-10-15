@@ -12,6 +12,8 @@ import { roomsPage } from "./pages/rooms";
 import { savesPage } from "./pages/saves";
 import { amazonPage, mailPage } from "./pages/settings";
 import { statsPage } from "./pages/stats";
+import { shopPage } from "./pages/shop";
+import { balancePage } from "./pages/balance";
 import { systemPage } from "./pages/system";
 import { usersPage } from "./pages/users";
 import type { Overview, Page } from "./types";
@@ -28,6 +30,8 @@ const PAGES: Page[] = [
   mapsPage,
   contentPage,
   labPage,
+  shopPage,
+  balancePage,
   statsPage,
   activityPage,
   mailPage,
