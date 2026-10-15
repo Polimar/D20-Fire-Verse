@@ -227,6 +227,12 @@ function itemEffectLine(effect: EffectDef, weapon: boolean): EngineLine {
         detail: `Drink as an action to regain ${effect.dice} Hit Points (combat menu when carried).`,
         ok: true,
       };
+    case "invisibility_drink":
+      return {
+        label: "Invisible",
+        detail: `Drink as an action to gain the Invisible condition for about an hour (ends if you attack, deal damage, or cast a spell).`,
+        ok: true,
+      };
     case "on_hit_rider": {
       const typeNote = effect.damageType ?? "the weapon's damage type";
       return weapon

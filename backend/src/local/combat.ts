@@ -100,6 +100,12 @@ import {
   GIANT_STRENGTH_EFFECT_ID,
   giantStrengthPotionByInventory,
 } from "./giant-strength-potions.js";
+import {
+  INVISIBILITY_POTION_DURATION_PC_TURNS,
+  INVISIBILITY_POTION_EFFECT_ID,
+  endPotionInvisibility,
+  invisibilityPotionByInventory,
+} from "./invisibility-potion.js";
 
 export type Cell = { x: number; y: number };
 
@@ -358,13 +364,27 @@ function bonusActionsFor(pregen: Pregen): string[] {
   return out;
 }
 
+function castsSpellAction(
+  castId: string,
+  ability: { level?: number; effects: Array<{ slot?: number; type?: string }> },
+  token: CombatToken,
+): boolean {
+  if (castId.startsWith("spell_")) return true;
+  if (token.cantrips?.includes(castId)) return true;
+  const level = Number(ability.level ?? ability.effects[0]?.slot ?? 0);
+  return level > 0;
+}
+
 function actionIdsFor(pregen: Pregen): string[] {
   const base = [...(pregen.actions ?? ["longsword_attack"]).filter((id) => id !== "second_wind")];
   for (const id of STANDARD_ACTIONS) {
     if (!base.includes(id)) base.push(id);
   }
   for (const token of pregen.inventory ?? []) {
-    const potion = healingPotionByInventory(token) ?? giantStrengthPotionByInventory(token);
+    const potion =
+      healingPotionByInventory(token) ??
+      giantStrengthPotionByInventory(token) ??
+      invisibilityPotionByInventory(token);
     if (potion && !base.includes(potion.abilityId)) base.push(potion.abilityId);
   }
   return base;
@@ -2400,6 +2420,8 @@ export function performPcAction(
   const ability = getAbility(castId);
   if (!ability) throw new Error("BAD_ABILITY");
 
+  if (gate?.phase !== "damage" && castsSpellAction(castId, ability, t)) endPotionInvisibility(t);
+
   const abilityLevel = Number(
     (ability as { level?: number }).level ?? (ability.effects[0] as { slot?: number } | undefined)?.slot ?? 0,
   );
@@ -2651,6 +2673,24 @@ export function performPcAction(
     refreshReachable(combat);
     return { rolls: [] };
   }
+  if (effect.type === "invisibility_drink") {
+    if (effect.consume) {
+      const item = String(effect.consume);
+      const idx = t.inventory.indexOf(item);
+      if (idx < 0) throw new Error("NO_ITEM");
+      t.inventory.splice(idx, 1);
+    }
+    const duration = Number(effect.durationPcTurns ?? INVISIBILITY_POTION_DURATION_PC_TURNS);
+    spendEconomy(t, isBonus);
+    t.invisible = true;
+    t.timedEffects = [
+      ...(t.timedEffects ?? []).filter((row) => row.spellId !== INVISIBILITY_POTION_EFFECT_ID),
+      { label: ability.name, pcTurnsLeft: duration, spellId: INVISIBILITY_POTION_EFFECT_ID },
+    ];
+    statusEvent(combat, t, ability.name, `${t.name} drinks ${ability.name} and fades from sight.`);
+    refreshReachable(combat);
+    return { rolls: [] };
+  }
   if (effect.type === "ready") {
     spendEconomy(t, isBonus);
     statusEvent(combat, t, ability.name, `${t.name} readies a strike and waits.`);
@@ -2864,6 +2904,7 @@ export function performPcAction(
       });
   const rolls: DiceRoll[] = resumed ? [...resumed.rolls] : [attackRoll];
   if (!resumed) {
+    endPotionInvisibility(t);
     t.hidden = false;
     t.helpingTargetId = undefined;
     target.marked = false;
@@ -3353,6 +3394,14 @@ function tickGlobalTimedEffects(combat: CombatState): void {
           token.saves.str = abilityMod(pregen.abilities.str ?? 10) + kitProf + (token.gearSaveBonus ?? 0);
         }
         statusEvent(combat, token, row.label, `${row.label} ends on ${token.name}.`);
+        continue;
+      }
+      if (row.spellId === INVISIBILITY_POTION_EFFECT_ID) {
+        const spellInvis =
+          token.concentrating?.spellId === "spell_invisibility" &&
+          (!token.concentrating.targetId || token.concentrating.targetId === token.id);
+        if (!spellInvis) token.invisible = false;
+        statusEvent(combat, token, row.label, `${row.label} wears off — ${token.name} is visible again.`);
         continue;
       }
       if (row.spellId === "wild_shape" && token.wildShaped) {

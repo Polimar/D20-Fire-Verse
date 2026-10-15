@@ -180,7 +180,7 @@ function requiresOf(line: string): ItemDef["requires"] | undefined {
 }
 
 const MECHANICAL =
-  /\b(Strength|Dexterity|Constitution|Intelligence|Wisdom|Charisma|bonus|penalty|Advantage|Disadvantage|saving throws?|Speed|charges?|Hit Points?|regains?|cast|Resistance|Immunity|condition|damage|Armor Class|attack rolls?|ability checks?|teleport|Darkvision|Truesight|Bonus Action|Reaction|Magic action|Long Rest|Short Rest)\b/;
+  /\b(Strength|Dexterity|Constitution|Intelligence|Wisdom|Charisma|bonus|penalty|Advantage|Disadvantage|saving throws?|Speed|charges?|Hit Points?|regains?|cast|Resistance|Immunity|condition|damage|Armor Class|attack rolls?|ability checks?|teleport|Darkvision|Truesight|Bonus Action|Reaction|Magic action|Long Rest|Short Rest|Concentration|Invisible|invisible|when you drink|Fly Speed|Climb Speed|hover|spell|Haste|Bless|Temporary Hit Points)\b/i;
 
 type Read = { effects: EffectDef[]; notModeled: string[]; ambiguities: Ambiguity[]; mechanical: number };
 
@@ -348,6 +348,10 @@ function readEffects(body: string, knownSpells: Set<string>, variantBonus?: numb
     const healDrink = s.match(/regain (\d+d\d+(?:\s*\+\s*\d+)?)\s+Hit Points when you drink/i);
     if (healDrink) {
       effects.push({ kind: "heal_drink", dice: cleanDice(healDrink[1]!.replace(/\s+/g, "")) });
+      covered = true;
+    }
+    if (/have the Invisible condition for 1 hour/i.test(s)) {
+      effects.push({ kind: "invisibility_drink", durationPcTurns: 60 });
       covered = true;
     }
     const vicious = s.match(/extra (\d+d\d+) damage/i);

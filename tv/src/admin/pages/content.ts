@@ -42,6 +42,8 @@ type Row = {
   edited: boolean;
   summary: string;
   notModeled: number;
+  missingMechanic: boolean;
+  fileReviewStatus: Status;
 };
 type EngineView = {
   state: "runs" | "partial" | "sheet" | "unused";
@@ -147,7 +149,7 @@ async function listView(host: HTMLElement, ctx: PageCtx): Promise<void> {
       key: "summary",
       label: "Mechanics",
       render: (r) =>
-        `<span class="mech">${esc(r.summary || "—")}</span>${r.notModeled ? `<span class="sub warn-text" title="Rules in the SRD text that the game does not apply">${fmtNum(r.notModeled)} SRD rule${r.notModeled === 1 ? "" : "s"} not applied</span>` : ""}`,
+        `<span class="mech">${esc(r.summary || "—")}</span>${r.missingMechanic ? `<span class="sub warn-text" title="Typed effects or drink rules are not runnable in combat yet">${badge("Missing mechanic", "warn")}</span>` : ""}${r.notModeled ? `<span class="sub warn-text" title="Rules in the SRD text that the game does not apply">${fmtNum(r.notModeled)} SRD rule${r.notModeled === 1 ? "" : "s"} not applied</span>` : ""}`,
     },
     {
       key: "status",
@@ -203,6 +205,7 @@ async function listView(host: HTMLElement, ctx: PageCtx): Promise<void> {
           <option value="">SRD rules: any</option>
           <option value="yes" ${filters.gaps === "yes" ? "selected" : ""}>Some rules not applied</option>
           <option value="no" ${filters.gaps === "no" ? "selected" : ""}>Every rule applied</option>
+          <option value="mechanic" ${filters.gaps === "mechanic" ? "selected" : ""}>Missing mechanic (combat)</option>
         </select>
         <span class="spacer"></span>
         <button type="button" class="ghost sm" id="cResetF">Clear filters</button>
@@ -652,6 +655,8 @@ function effectSentence(e: Loose): string {
         : `Extra ${str(e.damage)} damage on every hit (weapon's damage type)`;
     case "heal_drink":
       return `Drink to regain ${str(e.dice)} hit points`;
+    case "invisibility_drink":
+      return `Drink to become invisible (${str(e.durationPcTurns ?? 60)} PC turns)`;
     case "resistance":
       return `Resistance to ${str(e.damageType)} damage`;
     case "immunity":
@@ -746,7 +751,8 @@ async function openDetail(row: { kind: string; id: string; name?: string }, onCh
     const playBlock = d.reviewStatus === "needs_review" ? "Approve it first" : d.reviewStatus === "rejected" ? "Reopen it first" : !d.valid ? "Fix the schema errors first" : "";
     drawer.body.innerHTML = `
       <section>
-        <div class="row">${statusBadge(d.reviewStatus, d.confidence)} ${d.enabled ? badge("Enabled for players", "ok") : badge("Off for players")} ${d.valid ? badge("Schema valid", "ok") : badge("Schema invalid", "bad")} ${sourceBadges(d)} ${d.inPlay ? badge("In play", "info") : ""}</div>
+        <div class="row">${statusBadge(d.reviewStatus, d.confidence)} ${d.missingMechanic ? badge("Missing mechanic", "warn") : ""} ${d.enabled ? badge("Enabled for players", "ok") : badge("Off for players")} ${d.valid ? badge("Schema valid", "ok") : badge("Schema invalid", "bad")} ${sourceBadges(d)} ${d.inPlay ? badge("In play", "info") : ""}</div>
+        ${d.missingMechanic && d.fileReviewStatus === "auto_ok" ? `<div class="notice warn"><b>Missing mechanic</b> The import file says Parser OK, but combat cannot run every rule on this entry yet. It stays in <em>Needs review</em> until you implement it or approve without effects.</div>` : ""}
         <dl class="kv">
           <dt>Used for</dt><dd>${esc(d.usage || "—")}</dd>
           <dt>Last decision</dt><dd>${d.reviewedAt ? `${fmtDate(d.reviewedAt)}${d.adminNote ? ` · “${esc(d.adminNote)}”` : ""}` : `<span class="faint">None. Parser said ${esc(STATUSES.find(([s]) => s === d.fileStatus)?.[1] ?? d.fileStatus)}.</span>`}</dd>

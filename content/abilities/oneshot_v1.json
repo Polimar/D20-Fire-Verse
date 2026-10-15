@@ -535,6 +535,19 @@
     "needsTarget": false,
     "effects": [{ "type": "heal", "dice": "10d4+20", "self": true, "consume": "potion_healing_supreme" }]
   },
+  "use_potion_invisibility": {
+    "id": "use_potion_invisibility",
+    "name": "Use Object: Potion of Invisibility",
+    "actionType": "action",
+    "needsTarget": false,
+    "effects": [
+      {
+        "type": "invisibility_drink",
+        "durationPcTurns": 60,
+        "consume": "potion_invisibility"
+      }
+    ]
+  },
   "use_potion_giant_strength_hill": {
     "id": "use_potion_giant_strength_hill",
     "name": "Use Object: Potion of Giant Strength (Hill)",

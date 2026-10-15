@@ -24,6 +24,7 @@ import {
 import type { ZodTypeAny } from "zod";
 import { accountDb } from "./auth.js";
 import { ARENA_MAGIC_PRIORITY_IDS } from "./arena-magic-items.js";
+import { itemMechanicGap } from "./content-mechanic-gaps.js";
 import { CONTENT_ROOT } from "./paths.js";
 
 const ROOT = path.join(CONTENT_ROOT, "srd-5.2.1");
@@ -48,6 +49,10 @@ export type CatalogRow = {
   summary: string;
   /** SRD rules this entry states that the game does not apply. */
   notModeled: number;
+  /** Parser or combat engine cannot run every mechanical rule on this entry. */
+  missingMechanic: boolean;
+  /** Review status from the import file before runtime gap promotion. */
+  fileReviewStatus: ReviewStatus;
 };
 
 export const CONTENT_KINDS = ["class", "subclass", "species", "background", "spell", "feat", "item", "monster"] as const;
@@ -268,10 +273,19 @@ function enabledSet(): Set<string> {
   return new Set(rows.map((row) => `${row.kind}:${row.entry_id}`));
 }
 
+function effectiveReviewStatus(row: Stored, fileStatus: ReviewStatus): ReviewStatus {
+  if (fileStatus === "resolved" || fileStatus === "rejected") return fileStatus;
+  if (row.kind === "item" && row.valid && itemMechanicGap(row.parsed as ItemDef, row.review)) return "needs_review";
+  return fileStatus;
+}
+
 function toRow(row: Stored, on: Set<string>, saved: Map<string, Resolution>): CatalogRow {
   const key = `${row.kind}:${row.id}`;
   const enabled = on.has(key);
-  const status = (saved.get(key)?.status as ReviewStatus | undefined) || row.review?.status || "none";
+  const fileStatus = (saved.get(key)?.status as ReviewStatus | undefined) || row.review?.status || "none";
+  const status = effectiveReviewStatus(row, fileStatus);
+  const missingMechanic =
+    row.kind === "item" && row.valid && itemMechanicGap(row.parsed as ItemDef, row.review);
   return {
     kind: row.kind,
     id: row.id,
@@ -280,6 +294,8 @@ function toRow(row: Stored, on: Set<string>, saved: Map<string, Resolution>): Ca
     valid: row.valid,
     issues: row.issues,
     reviewStatus: status,
+    fileReviewStatus: fileStatus,
+    missingMechanic,
     confidence: row.review?.confidence ?? "none",
     unparsedFields: row.edited ? [] : (row.review?.unparsedFields ?? []),
     usage: row.review?.usage ?? "",
@@ -323,6 +339,8 @@ function effectShort(e: Loose): string {
         : `+${String(e.damage)} on hit (weapon type)`;
     case "heal_drink":
       return `drink ${String(e.dice)} HP`;
+    case "invisibility_drink":
+      return `invisible ${String(e.durationPcTurns ?? 60)} turns`;
     case "resistance":
       return `resist ${String(e.damageType)}`;
     case "immunity":
@@ -439,6 +457,7 @@ export function queryCatalog(query: CatalogQuery) {
     if (query.source === "queue" && row.source !== "queue") return false;
     if (query.gaps === "yes" && !row.notModeled) return false;
     if (query.gaps === "no" && row.notModeled) return false;
+    if (query.gaps === "mechanic" && !row.missingMechanic) return false;
     return true;
   };
   const kinds: Record<string, number> = {};
@@ -468,6 +487,7 @@ export function queryCatalog(query: CatalogQuery) {
       all: all.length,
       inPlay: all.filter((r) => r.inPlay).length,
       needsReview: all.filter((r) => r.reviewStatus === "needs_review").length,
+      missingMechanic: all.filter((r) => r.missingMechanic).length,
       invalid: all.filter((r) => !r.valid).length,
       edited: all.filter((r) => r.edited).length,
     },

@@ -194,7 +194,7 @@ function parseSpells(markdown: string, reviews: ReviewBundle[]): SpellDef[] {
   return entries;
 }
 
-function itemReview(parsed: ParsedItem): ReviewBundle {
+export function itemReview(parsed: ParsedItem): ReviewBundle {
   const { item } = parsed;
   const noEffects = item.effects.length === 0 && parsed.mechanical > 0 && !item.weapon && !item.armor;
   const open = noEffects || parsed.notModeled.length > 0 || parsed.ambiguities.length > 0;

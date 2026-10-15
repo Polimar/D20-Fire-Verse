@@ -94,6 +94,12 @@ export const effectDef = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("stat_increase_cap"), ability: abilityKey, cap: z.number().int() }).strict(),
   z.object({ kind: z.literal("save_bonus"), amount: z.number().int() }).strict(),
   z.object({ kind: z.literal("heal_drink"), dice: z.string().min(1) }).strict(),
+  z
+    .object({
+      kind: z.literal("invisibility_drink"),
+      durationPcTurns: z.number().int().positive().optional(),
+    })
+    .strict(),
   z.object({ kind: z.literal("grant_aura"), ...auraFields }).strict(),
   z.object({ kind: z.literal("plant_aura"), ...auraFields }).strict(),
 ]);

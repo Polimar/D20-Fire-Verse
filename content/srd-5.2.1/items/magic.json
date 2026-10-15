@@ -2403,7 +2403,7 @@
       "name": "Potion of Invisibility",
       "rarity": "rare",
       "slot": "consumable",
-      "effects": []
+      "effects": [{ "kind": "invisibility_drink", "durationPcTurns": 60 }]
     },
     {
       "id": "potion_of_invulnerability",

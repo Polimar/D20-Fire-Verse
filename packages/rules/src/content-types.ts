@@ -49,6 +49,7 @@ export type ItemRules = {
     | { kind: "stat_increase_cap"; ability: AbilityKey; cap: number }
     | { kind: "save_bonus"; amount: number }
     | { kind: "heal_drink"; dice: string }
+    | { kind: "invisibility_drink"; durationPcTurns?: number }
     | {
         kind: "grant_aura" | "plant_aura";
         radiusCells: number;

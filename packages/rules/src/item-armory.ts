@@ -61,6 +61,8 @@ function effectLine(effect: ItemRules["effects"][number]): string {
         : `+${effect.damage} on each hit (weapon's damage type)`;
     case "heal_drink":
       return `Drink to regain ${effect.dice} HP`;
+    case "invisibility_drink":
+      return "Drink to become invisible for about an hour";
     case "resistance":
       return `Resistance to ${prettyType(effect.damageType)}`;
     case "immunity":

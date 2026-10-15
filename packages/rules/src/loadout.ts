@@ -45,6 +45,7 @@ function applyEffects(bonus: PassiveBonuses, item: ItemRules): void {
       case "plant_aura":
       case "heal_drink":
       case "stat_drink":
+      case "invisibility_drink":
         break;
       case "attack_bonus":
         bonus.attack += effect.amount;

@@ -11,6 +11,7 @@ import { catalogEntry } from "./content-catalog.js";
 import { gearAttackId } from "./gear-abilities.js";
 import { giantStrengthPotionByItemId } from "./giant-strength-potions.js";
 import { healingPotionByItemId } from "./healing-potions.js";
+import { invisibilityPotionByItemId } from "./invisibility-potion.js";
 import { classPackWeapon, equippedGear, getHero, listHeroes, type EquippedItem, type HeroRow } from "./hero.js";
 
 type Ability = "str" | "dex" | "con" | "int" | "wis" | "cha";
@@ -269,6 +270,7 @@ export function heroPregen(heroId: string, lookup: Lookup): HeroPregen | undefin
         }
         case "heal_drink":
         case "stat_drink":
+        case "invisibility_drink":
           break;
         case "resistance":
           sheet.resistances.push(effect.damageType);
@@ -315,7 +317,12 @@ export function heroPregen(heroId: string, lookup: Lookup): HeroPregen | undefin
   const slots = row?.spellSlots ? { ...row.spellSlots } : row?.pactSlots ? { [String(row.pactSlots.slotLevel)]: row.pactSlots.count } : undefined;
   const inventory = live
     .filter((e) => e.slot === "consumables")
-    .map((e) => healingPotionByItemId(e.item.id)?.inventoryToken ?? giantStrengthPotionByItemId(e.item.id)?.inventoryToken)
+    .map(
+      (e) =>
+        healingPotionByItemId(e.item.id)?.inventoryToken ??
+        giantStrengthPotionByItemId(e.item.id)?.inventoryToken ??
+        invisibilityPotionByItemId(e.item.id)?.inventoryToken,
+    )
     .filter((id): id is string => Boolean(id));
 
   const className = cls?.name ?? primary.id;
