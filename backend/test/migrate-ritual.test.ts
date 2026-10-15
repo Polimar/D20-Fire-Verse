@@ -1,0 +1,68 @@
+import assert from "node:assert/strict";
+import { test, before } from "node:test";
+import { randomUUID } from "node:crypto";
+import { createUser, openAuth, accountDb } from "../src/local/auth.js";
+import { createCustomCharacter, type ChargenDraft } from "../src/local/chargen.js";
+import { ensureForgeContentDefaults } from "../src/local/content-catalog.js";
+import { listPregens } from "../src/local/campaign.js";
+import { migrateCustomCharacters } from "../src/local/migrate-custom.js";
+import { castRitual } from "../src/local/ritual.js";
+import { markMasterySwapReady, swapWeaponMastery } from "../src/local/mastery-swap.js";
+import { getHero } from "../src/local/hero.js";
+import { boot } from "./helpers.js";
+
+before(() => {
+  boot();
+  openAuth();
+  ensureForgeContentDefaults();
+});
+
+function fighter(name: string): ChargenDraft {
+  return {
+    name,
+    level: 1,
+    raceId: "human",
+    classId: "fighter",
+    backgroundId: "soldier",
+    method: "standard_array",
+    baseAbilities: { str: 15, dex: 13, con: 14, int: 8, wis: 12, cha: 10 },
+    classSkills: ["perception", "survival"],
+    fightingStyle: "defense",
+  };
+}
+
+test("a legacy custom file becomes a hero and leaves the public list", () => {
+  const user = createUser(`mig${randomUUID().replace(/-/g, "").slice(0, 8)}`, "password", "player");
+  const custom = createCustomCharacter(fighter("Old Aldric"), undefined, user.id);
+  assert.equal(listPregens(user.id).some((p) => p.id === custom.id), false);
+  const report = migrateCustomCharacters();
+  assert.equal(report.failed.filter((line) => line.includes("Old Aldric") || line.includes(custom.id)).join(";"), "");
+  assert.ok(report.migrated >= 1);
+  const heroes = listPregens(user.id).filter((p) => p.name === "Old Aldric");
+  assert.equal(heroes.length, 1);
+  assert.ok(heroes[0]!.id.startsWith("hero_"));
+});
+
+test("ritual casting spends no slot and mastery swaps after a long rest", () => {
+  const user = createUser(`rit${randomUUID().replace(/-/g, "").slice(0, 8)}`, "password", "admin");
+  const hero = createCustomCharacter(fighter("Rite Wren"), undefined, user.id);
+  const report = migrateCustomCharacters();
+  const mine = report.failed.filter((line) => line.includes("Rite") || line.includes(hero.id));
+  assert.equal(mine.join(";"), "");
+  const row = listPregens(user.id).find((p) => p.name === "Rite Wren");
+  assert.ok(row);
+  accountDb().prepare("UPDATE heroes SET spellbook_json = ? WHERE id = ?").run(JSON.stringify(["alarm"]), row!.id);
+  const stored = getHero(row!.id);
+  assert.ok(stored);
+  stored!.classes = [{ id: "wizard", level: 1 }];
+  accountDb().prepare("UPDATE heroes SET classes_json = ? WHERE id = ?").run(JSON.stringify(stored!.classes), row!.id);
+  const ritual = castRitual(user.id, row!.id, "alarm");
+  assert.equal(ritual.slotSpent, false);
+  assert.equal(ritual.minutes >= 10, true);
+  assert.throws(() => swapWeaponMastery(user.id, row!.id, "nick", "push"), /MASTERY_LOCKED/);
+  markMasterySwapReady(row!.id);
+  const swapped = swapWeaponMastery(user.id, row!.id, "cleave", "nick");
+  assert.ok(swapped.masteries.includes("nick"));
+  assert.throws(() => swapWeaponMastery(user.id, row!.id, "nick", "sap"), /MASTERY_LOCKED/);
+  void hero;
+});

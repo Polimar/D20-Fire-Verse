@@ -5,7 +5,7 @@ import "@fontsource-variable/literata/opsz-italic.css";
 import "./styles.css";
 import { describeError, scriptRuns, srdLabel, type CastMember } from "@d20-fireverse/protocol";
 import { normalizeScene, sceneLabel, unlockAudio, type RoomScene } from "./audio";
-import { mountChargen, type ChargenCatalog } from "./chargen-ui";
+import { mountForgeWizard, type ForgeWizardHandle } from "@d20-fireverse/protocol/forge-wizard";
 import { CombatUi } from "./combat-ui";
 import { ARENA_FORMATS, ARENA_THEMES, suggestedSize, type OpenArena } from "./arena-ui";
 import { isD20, rollD20 } from "./dice";
@@ -218,6 +218,9 @@ appRoot.innerHTML = `
       </div>
     </div>
   </div>
+  <div class="modal hero-wizard-modal" id="heroWizard" hidden role="dialog" aria-label="Hero builder">
+    <div class="modal-card hero-wizard-card" id="heroWizardHost"></div>
+  </div>
   <div class="toast" id="toast" role="status" hidden></div>
 `;
 
@@ -233,7 +236,46 @@ let state: RoomState | null = null;
 let playerId: string | null = null;
 let pregens: Pregen[] = [];
 let portraits: Array<{ id: string; url: string }> = [];
-let chargenApi: ReturnType<typeof mountChargen> | null = null;
+let heroWizard: ForgeWizardHandle | null = null;
+
+async function builderApi<T>(url: string, init?: RequestInit): Promise<T> {
+  const res = await fetch(url, {
+    credentials: "same-origin",
+    ...init,
+    headers: { "Content-Type": "application/json", ...(init?.headers ?? {}) },
+  });
+  const body = (await res.json().catch(() => ({}))) as T & { error?: string };
+  if (!res.ok) throw new Error(body.error || res.statusText);
+  return body;
+}
+
+function closeHeroWizard(): void {
+  heroWizard = null;
+  $("heroWizard").hidden = true;
+  document.body.classList.remove("wizard-open");
+  renderHome();
+  requestAnimationFrame(() => restoreFocus());
+}
+
+async function openHeroWizard(): Promise<void> {
+  if (!account) {
+    showLoginGate();
+    return;
+  }
+  const modal = $("heroWizard");
+  modal.hidden = false;
+  document.body.classList.add("wizard-open");
+  heroWizard = await mountForgeWizard($("heroWizardHost"), {
+    api: builderApi,
+    layout: window.matchMedia("(max-width: 800px)").matches ? "phone" : "tv",
+    onClose: closeHeroWizard,
+    onDone: () => {
+      toast("Hero forged. They wait in your stash of heroes.", "info");
+      closeHeroWizard();
+    },
+  });
+  requestAnimationFrame(() => restoreFocus());
+}
 let page: PageId = "home";
 let campaigns: Array<{ id: string; title: string; version: number }> = [];
 let resumedFirstState = true;
@@ -312,8 +354,6 @@ function scopeRoot(): HTMLElement {
   if (gate) return gate;
   const modal = settingsOpen() ?? document.querySelector<HTMLElement>(".modal:not([hidden])");
   if (modal) return modal;
-  const cg = document.querySelector<HTMLElement>(".chargen-panel.is-open");
-  if (cg) return cg;
   return document.querySelector<HTMLElement>(".page.active") ?? document.body;
 }
 setScopeProvider(scopeRoot);
@@ -657,9 +697,7 @@ function renderHome() {
       renderHome();
     });
     $("btnModeArenaEditor")?.addEventListener("click", () => openArenaEditor());
-    $("btnHeroBuilder")?.addEventListener("click", () => {
-      window.location.href = "/forge";
-    });
+    $("btnHeroBuilder")?.addEventListener("click", () => openHeroWizard());
   } else if (homeView === "campaign") {
     cta.innerHTML = `${campaign ? continueMarkup(campaign) : ""}
     ${camp}
@@ -920,7 +958,7 @@ function renderLobby() {
       .join("") +
     `<button type="button" class="hero-card forge" id="btnForge">
       <span class="hero-portrait forge-mark" aria-hidden="true">✦</span>
-      <span class="hero-copy"><strong>Forge a new hero</strong><em>SRD 5.1 · ${arena && level ? `level ${level}` : "levels 1–3"}</em><span>Race, class, background, ability scores and a painted portrait.</span></span>
+      <span class="hero-copy"><strong>Forge a new hero</strong><em>Level 1</em><span>Guided steps. The table keeps the rules.</span></span>
     </button>`;
   if (!grid.querySelector("[data-autofocus]")) grid.querySelector("button:not([disabled])")?.setAttribute("data-autofocus", "");
   grid.querySelectorAll<HTMLElement>("[data-hero]").forEach((b) =>
@@ -943,7 +981,7 @@ function renderLobby() {
   );
   $("btnForge").addEventListener("click", () => {
     sfx("uiConfirm");
-    chargenApi?.open(arena && level ? { lockLevel: level as 1 | 2 | 3 } : undefined);
+    void openHeroWizard();
   });
   const code = state?.roomCode ?? "······";
   $("roomCode").textContent = code;
@@ -1471,7 +1509,7 @@ function onError(code: string, action?: string) {
     else renderLobby();
     return;
   }
-  if (action === "CREATE_CHARACTER" || action === "ROLL_ABILITIES") chargenApi?.failed();
+  if (action === "CREATE_CHARACTER" || action === "ROLL_ABILITIES") toast(describeError(code), "bad");
   if (action === "REJOIN" || (code === "ROOM_NOT_FOUND" && pendingRejoin)) {
     const session = pendingRejoin;
     const mode: SessionMode = session?.mode === "arena" ? "arena" : "campaign";
@@ -1535,10 +1573,6 @@ function connect() {
         pregens = msg.payload.pregens ?? [];
         portraits = msg.payload.portraits ?? [];
         arenaMonsters = msg.payload.arena?.monsters ?? arenaMonsters;
-        const catalog = msg.payload.chargen as ChargenCatalog | undefined;
-        if (catalog && !chargenApi) {
-          chargenApi = mountChargen({ root: $("chargenHost"), catalog, portraits, send, onCreated: (id) => (selectedHero = id) });
-        } else if (catalog) chargenApi?.refresh(catalog);
         if (page === "lobby") renderLobby();
         reportView(true);
         if (!state?.roomCode) flushPendingTable();
@@ -1568,7 +1602,6 @@ function connect() {
         pregens = msg.payload.pregens ?? pregens;
         const hero = msg.payload.character;
         if (hero?.id) selectedHero = hero.id;
-        chargenApi?.onCreatedClose();
         renderLobby();
         requestAnimationFrame(() => $("heroGrid").querySelector<HTMLElement>(`[data-hero="${CSS.escape(hero?.id ?? "")}"]`)?.focus());
         sfx("seal", { gain: 0.6 });
@@ -1576,7 +1609,6 @@ function connect() {
         break;
       }
       case "ABILITY_ROLLS":
-        chargenApi?.applyRolls(msg.payload.scores ?? []);
         break;
       case "SAVE_ACK":
         toast(`Saved. Code: ${msg.payload.saveId}`, "ok");
@@ -1615,9 +1647,8 @@ function handleBack(): boolean {
     closeSettings();
     return true;
   }
-  const cg = document.querySelector(".chargen-panel.is-open");
-  if (cg) {
-    chargenApi?.back();
+  if (!$("heroWizard").hidden && heroWizard) {
+    heroWizard.back();
     return true;
   }
   if (page === "lobby") {
@@ -1694,7 +1725,16 @@ window.addEventListener("keydown", (e) => {
       replayNarration();
       return;
     case "rew":
+      if (!$("heroWizard").hidden && heroWizard) {
+        e.preventDefault();
+        heroWizard.prev();
+      }
+      return;
     case "ff":
+      if (!$("heroWizard").hidden && heroWizard) {
+        e.preventDefault();
+        heroWizard.next();
+      }
       return;
     case "ok":
       if (target instanceof HTMLButtonElement) sfx("uiMove", { gain: 0.001 });
@@ -1919,6 +1959,12 @@ async function ensureLogin(): Promise<void> {
       body: JSON.stringify({ surface: onFireTv() ? "tv" : "web" }),
     });
     $("loginGate").hidden = true;
+    if (new URLSearchParams(location.search).get("builder") === "open") {
+      history.replaceState(null, "", "/");
+      renderHome();
+      void openHeroWizard();
+      return;
+    }
     if (followReturnPath()) return;
     renderHome();
     return;

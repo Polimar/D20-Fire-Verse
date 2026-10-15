@@ -68,6 +68,14 @@ button:focus-visible { outline: 3px solid #ffd08a; outline-offset: 2px; }
 
 .scan { display: grid; gap: 0.7rem; justify-items: center; text-align: center; padding-top: 1rem; }
 .pocket { width: min(32rem, 100%); text-align: left; display: grid; gap: 0.6rem; margin-top: 0.4rem; }
+.pocket-forge {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  background: #120c09;
+  overflow: auto;
+  padding: max(0.7rem, env(safe-area-inset-top)) 0.85rem max(0.7rem, env(safe-area-inset-bottom));
+}
 .pocket h2 { margin: 0; }
 .pocket-head, .pocket .row2 { display: flex; gap: 0.5rem; align-items: center; justify-content: space-between; }
 .pocket-login { display: block; text-align: center; text-decoration: none; padding: 0.8rem 1rem; border-radius: 12px; }

@@ -24,6 +24,8 @@ export type BuilderDraft = {
   /** Human Versatile — origin feat id. */
   originFeatId?: string;
   classSkills: string[];
+  /** Rogue (and later bard) expertise picks. Must already be proficient. */
+  expertiseSkills?: string[];
   fightingStyleFeatId?: string;
   cantrips?: string[];
   spellsPrepared?: string[];

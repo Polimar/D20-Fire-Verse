@@ -15,6 +15,7 @@ import {
   type StoryNode,
 } from "./campaign.js";
 import type { CombatToken } from "./combat.js";
+import { markMasterySwapReady } from "./mastery-swap.js";
 import {
   applyDisconnectDodge,
   actionNeedsThrow,
@@ -1745,6 +1746,7 @@ export function longRest(roomCode: string): Room {
   eachHero(room, (playerId, pregen) => {
     const token = restingToken(room, playerId, pregen, { fullHp: true });
     longRestResources(token, pregen);
+    if (pregen.id.startsWith("hero_")) markMasterySwapReady(pregen.id);
     room.wounds![playerId] = 0;
     room.vitals![playerId] = exportVitals(token);
   });

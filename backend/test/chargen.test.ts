@@ -90,12 +90,12 @@ test("class skill count, fighting style and background overlap are enforced", ()
   assert.throws(() => buildCharacter(fighter({ name: "  " })), /NEED_NAME/);
 });
 
-test("a custom hero is listed and playable only for the account that built it", () => {
+test("a legacy custom hero is not on the public list", () => {
   const mine = createCustomCharacter(fighter({ name: "Private Aldric" }), undefined, "user_owner");
   assert.equal(mine.ownerUserId, "user_owner");
-  assert.ok(listPregens("user_owner").some((p) => p.id === mine.id));
-  assert.ok(!listPregens("user_other").some((p) => p.id === mine.id));
-  assert.ok(!listPregens(null).some((p) => p.id === mine.id));
+  assert.equal(listPregens("user_owner").some((p) => p.id === mine.id), false);
+  assert.equal(listPregens("user_other").some((p) => p.id === mine.id), false);
+  assert.equal(listPregens(null).some((p) => p.id === mine.id), false);
 
   const room = createRoom({ ownerUserId: "user_owner" });
   assert.throws(() => joinRoom(room.roomCode, "Thief", mine.id, "user_other"), /BAD_CHARACTER/);

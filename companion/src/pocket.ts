@@ -3,7 +3,7 @@
  * for the same account signing in on a TV.
  */
 
-import { mountForgeApp } from "@d20-fireverse/protocol/forge-app";
+import { mountForgeWizard } from "@d20-fireverse/protocol/forge-wizard";
 import { isSheetTab, pcSheetHtml, type PcSheet, type SheetTab } from "@d20-fireverse/protocol/sheet";
 
 type Pregen = { id: string; name: string; summary: string; portrait: string; level: number; custom?: boolean };
@@ -45,7 +45,6 @@ export function mountPocket(host: HTMLElement, adopt: (key: string) => void, sca
     </section>`;
   const card = () => host.querySelector<HTMLElement>("#pocketCard")!;
   let user: string | null = null;
-  let catalog: Catalog | null = null;
   let heroes: Pregen[] = [];
 
   const paintLogin = () => {
@@ -93,10 +92,10 @@ export function mountPocket(host: HTMLElement, adopt: (key: string) => void, sca
         <div class="pocket-sheet">${pcSheetHtml(data.sheet, tab, { isMyTurn: false, showEconomy: false })}</div>
         <div class="row2">
           <button type="button" id="pocketRename" ${data.seated ? "disabled" : ""}>Rename</button>
-          <button type="button" id="pocketReforge" ${data.seated ? "disabled" : ""}>Reforge</button>
+          <button type="button" id="pocketForgeNew">Forge another</button>
           <button type="button" id="pocketDelete" ${data.seated ? "disabled" : ""}>Delete</button>
         </div>
-        ${data.seated ? `<p class="meta">This hero is seated. Reforge and delete wait until that table closes.</p>` : ""}`;
+        ${data.seated ? `<p class="meta">This hero is seated. Delete waits until that table closes.</p>` : ""}`;
       card().querySelector("#pocketBack")!.addEventListener("click", paintHome);
       card().querySelector(".pocket-sheet")!.addEventListener("click", (ev) => {
         const t = (ev.target as HTMLElement).closest<HTMLElement>("[data-sheet-tab]");
@@ -110,7 +109,7 @@ export function mountPocket(host: HTMLElement, adopt: (key: string) => void, sca
         await api(`/api/characters/${id}/rename`, { method: "POST", body: JSON.stringify({ name }) });
         await refresh();
       });
-      card().querySelector("#pocketReforge")!.addEventListener("click", () => void openForge(id));
+      card().querySelector("#pocketForgeNew")!.addEventListener("click", () => void openForgeV2());
       card().querySelector("#pocketDelete")!.addEventListener("click", async () => {
         if (!window.confirm("Delete this hero?")) return;
         await api(`/api/characters/${id}`, { method: "DELETE" });
@@ -148,97 +147,23 @@ export function mountPocket(host: HTMLElement, adopt: (key: string) => void, sca
 
   const openForgeV2 = async () => {
     card().innerHTML = `<div id="pocketForgeHost" class="pocket-forge"></div>`;
-    const host = card().querySelector<HTMLElement>("#pocketForgeHost")!;
-    await mountForgeApp(host, {
+    const hostEl = card().querySelector<HTMLElement>("#pocketForgeHost")!;
+    await mountForgeWizard(hostEl, {
       api,
-      backLabel: "← Heroes",
-      onBack: () => void refresh().then(paintHome),
+      layout: "phone",
+      onClose: () => void refresh().then(paintHome),
       onDone: () => void refresh().then(paintHome),
     });
   };
 
   const openForge = async (reforgeId?: string) => {
-    if (!reforgeId?.startsWith("custom_")) {
-      await openForgeV2();
+    if (reforgeId?.startsWith("custom_")) {
+      card().innerHTML = `<button type="button" class="ghost" id="pocketBack">← Heroes</button><h2>Legacy hero</h2><p class="meta">This portrait was forged on the old bench. Forge a new level-1 hero with the guided steps. A keeper can run the one-shot custom migration on the server.</p><button type="button" class="primary" id="pocketForgeNew">Forge a new hero</button>`;
+      card().querySelector("#pocketBack")!.addEventListener("click", paintHome);
+      card().querySelector("#pocketForgeNew")!.addEventListener("click", () => void openForgeV2());
       return;
     }
-    catalog = catalog ?? (await api<Catalog>("/api/chargen"));
-    const cat = catalog;
-    const abilities = ["str", "dex", "con", "int", "wis", "cha"] as const;
-    const values = [...cat.standardArray];
-    const assigned: Record<string, number> = { str: values[0]!, dex: values[1]!, con: values[2]!, int: values[3]!, wis: values[4]!, cha: values[5]! };
-    card().innerHTML = `
-      <button type="button" class="ghost" id="pocketBack">← Heroes</button>
-      <h2>${reforgeId ? "Reforge" : "Forge a hero"}</h2>
-      <form id="forgeForm" class="forge">
-        <label>Name <input id="fgName" maxlength="40" required /></label>
-        <label>Level <select id="fgLevel"><option>1</option><option>2</option><option>3</option></select></label>
-        <label>Race <select id="fgRace">${cat.races.map((r) => `<option value="${esc(r.id)}">${esc(r.label)}</option>`).join("")}</select></label>
-        <label>Class <select id="fgClass">${cat.classes.map((c) => `<option value="${esc(c.id)}">${esc(c.label)}</option>`).join("")}</select></label>
-        <label>Background <select id="fgBg">${cat.backgrounds.map((b) => `<option value="${esc(b.id)}">${esc(b.label)}</option>`).join("")}</select></label>
-        <div id="fgScores"></div>
-        <div id="fgExtra"></div>
-        <p class="meta" id="fgError"></p>
-        <button type="submit" class="primary">Save hero</button>
-      </form>`;
-    const scores = card().querySelector<HTMLElement>("#fgScores")!;
-    const extra = card().querySelector<HTMLElement>("#fgExtra")!;
-    const paintScores = () => {
-      scores.innerHTML = abilities
-        .map(
-          (a) =>
-            `<label>${a.toUpperCase()} <select data-ab="${a}">${cat.standardArray.map((n) => `<option ${assigned[a] === n ? "selected" : ""}>${n}</option>`).join("")}</select></label>`,
-        )
-        .join("");
-      scores.querySelectorAll<HTMLSelectElement>("select").forEach((s) =>
-        s.addEventListener("change", () => {
-          assigned[s.dataset.ab!] = Number(s.value);
-        }),
-      );
-    };
-    const paintExtra = () => {
-      const cls = cat.classes.find((c) => c.id === (card().querySelector("#fgClass") as HTMLSelectElement).value)!;
-      const bg = cat.backgrounds.find((b) => b.id === (card().querySelector("#fgBg") as HTMLSelectElement).value);
-      const taken = new Set(bg?.skills ?? []);
-      const skills = cls.skillList.filter((id) => !taken.has(id));
-      extra.innerHTML = `
-        <p class="meta">Pick ${cls.skillChoices} class skills.</p>
-        <div class="skill-picks">${skills.map((id) => `<label><input type="checkbox" value="${esc(id)}" /> ${esc(cat.skills[id]?.label ?? id)}</label>`).join("")}</div>
-        ${
-          cls.fightingStyleRequired
-            ? `<label>Fighting style <select id="fgStyle">${(cls.fightingStyleOptions ?? cat.fightingStyles.map((f) => f.id)).map((id) => `<option value="${esc(id)}">${esc(cat.fightingStyles.find((f) => f.id === id)?.label ?? id)}</option>`).join("")}</select></label>`
-            : ""
-        }`;
-    };
-    paintScores();
-    paintExtra();
-    card().querySelector("#fgClass")!.addEventListener("change", paintExtra);
-    card().querySelector("#fgBg")!.addEventListener("change", paintExtra);
-    card().querySelector("#pocketBack")!.addEventListener("click", paintHome);
-    card().querySelector("#forgeForm")!.addEventListener("submit", async (ev) => {
-      ev.preventDefault();
-      const cls = cat.classes.find((c) => c.id === (card().querySelector("#fgClass") as HTMLSelectElement).value)!;
-      const classSkills = [...extra.querySelectorAll<HTMLInputElement>("input:checked")].map((i) => i.value).slice(0, cls.skillChoices);
-      const draft = {
-        name: (card().querySelector("#fgName") as HTMLInputElement).value,
-        level: Number((card().querySelector("#fgLevel") as HTMLSelectElement).value),
-        raceId: (card().querySelector("#fgRace") as HTMLSelectElement).value,
-        classId: cls.id,
-        backgroundId: (card().querySelector("#fgBg") as HTMLSelectElement).value,
-        method: "standard_array",
-        baseAbilities: assigned,
-        classSkills,
-        fightingStyle: (card().querySelector("#fgStyle") as HTMLSelectElement | null)?.value,
-      };
-      try {
-        if (reforgeId) await api(`/api/characters/${reforgeId}/reforge`, { method: "POST", body: JSON.stringify(draft) });
-        else await api("/api/chargen", { method: "POST", body: JSON.stringify(draft) });
-        await refresh();
-      } catch (err) {
-        const note = card().querySelector("#fgError");
-        if (note) note.textContent = err instanceof Error ? err.message : "Could not save.";
-      }
-    });
+    await openForgeV2();
   };
 
   const openArmory = async () => {

@@ -153,6 +153,11 @@ export function heroPregen(heroId: string, lookup: Lookup): HeroPregen | undefin
   let speedFt = species?.speedFt ?? 30;
   if (!heavyArmor) speedFt += kit.fastMovementFt;
   if (!armor && !shieldEntry) speedFt += kit.unarmoredMovementFt;
+  if (hasFlag(kit, "roving")) speedFt += 10;
+  if (hasFlag(kit, "second_story_work")) speedFt += 5;
+  if (hasFlag(kit, "dragon_wings")) speedFt += 10;
+  if (!armor && hasFlag(kit, "draconic_resilience")) ac = Math.max(ac, 13 + mod("dex"));
+  if (hasFlag(kit, "body_and_mind") && !armor && classIds.has("monk")) ac += 4;
   let speedCells = Math.floor(speedFt / FEET_PER_CELL);
   if (armor?.strength && abilities.str < armor.strength) {
     speedCells = Math.max(1, speedCells - 2);
@@ -244,7 +249,7 @@ export function heroPregen(heroId: string, lookup: Lookup): HeroPregen | undefin
     level: hero.level,
     class: primary.id,
     race: hero.species,
-    hp: maxHp(hero, mod("con"), species),
+    hp: maxHp(hero, mod("con"), species) + (hasFlag(kit, "draconic_resilience") ? primary.level : 0),
     ac,
     abilities,
     speedCells,
@@ -256,7 +261,7 @@ export function heroPregen(heroId: string, lookup: Lookup): HeroPregen | undefin
     spellAbility: cls?.spellAbility,
     cantrips,
     spellsKnown,
-    features: kit.flags,
+    features: [...kit.flags, ...hero.features.filter((f) => f.startsWith("expertise:"))],
     weapons,
     gear: sheet,
     classes: hero.classes.map((entry) => ({ ...entry })),

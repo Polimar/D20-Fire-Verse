@@ -132,6 +132,8 @@ export function deriveHero(draft: BuilderDraft, catalog: BuilderCatalog, classHi
   const hp = hpAtLevelOne({ id: draft.classId, hitDie, caster: "none", primary: [], multiclass: {}, levels: [] }, scores.con);
 
   let ac = 10 + abilityMod(scores.dex);
+  if (draft.classId === "barbarian") ac += abilityMod(scores.con);
+  if (draft.classId === "monk") ac += abilityMod(scores.wis);
   const attacks: DerivedAttackRow[] = [unarmedAttack(scores, prof)];
   if (draft.classId === "fighter" && draft.equipChoice === "A") {
     ac = 16;
@@ -143,11 +145,18 @@ export function deriveHero(draft: BuilderDraft, catalog: BuilderCatalog, classHi
 
   const saves = (classHint?.saves ?? ["str", "con"]).map((ability) => ({
     ability,
-    mod: abilityMod(scores[ability]),
+    mod: abilityMod(scores[ability]) + prof,
     proficient: true,
   }));
 
-  const skills = skillRows(scores, prof, proficient, catalog);
+  const expertise = new Set(draft.expertiseSkills ?? []);
+  if (draft.classId === "rogue") {
+    if (expertise.size !== 2) errors.push("NEED_2_EXPERTISE");
+    for (const id of expertise) {
+      if (!proficient.has(id)) errors.push("BAD_EXPERTISE");
+    }
+  }
+  const skills = skillRows(scores, prof, proficient, catalog, expertise);
   const perception = skills.find((s) => s.id === "perception");
   const passivePerception = 10 + (perception?.mod ?? abilityMod(scores.wis));
 

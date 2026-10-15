@@ -1,5 +1,5 @@
 import type { CastMember } from "@d20-fireverse/protocol";
-import { getCustomCharacter, listCustomCharacters } from "./chargen.js";
+import { getCustomCharacter } from "./chargen.js";
 import { srdAbility } from "./srd-sheet.js";
 import { gearAbility } from "./gear-abilities.js";
 import { heroPregen, listHeroPregens } from "./hero-pregen.js";
@@ -193,7 +193,7 @@ export function getNode(id: string): StoryNode | undefined {
 }
 
 export function listPregens(viewerUserId?: string | null): Pregen[] {
-  return [...Object.values(pack().pregens), ...listCustomCharacters(viewerUserId), ...listHeroPregens(viewerUserId, getAbility)];
+  return [...Object.values(pack().pregens), ...listHeroPregens(viewerUserId, getAbility)];
 }
 
 /** Old oneshot ids still resolve so existing tests and seats find the V2 sheets. */

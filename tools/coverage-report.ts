@@ -71,7 +71,7 @@ function main(): void {
   console.log(`Gaps (${gaps.length}):`);
   for (const line of gaps.slice(0, 200)) console.log(`  - ${line}`);
   if (gaps.length > 200) console.log(`  … and ${gaps.length - 200} more`);
-  process.exit(packOnly ? 1 : 0);
+  process.exit(1);
 }
 
 main();

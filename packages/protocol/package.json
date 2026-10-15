@@ -8,7 +8,8 @@
     ".": "./src/index.ts",
     "./sheet": "./src/sheet.ts",
     "./builder": "./src/builder.ts",
-    "./forge-app": "./src/forge-app.ts"
+    "./forge-app": "./src/forge-app.ts",
+    "./forge-wizard": "./src/forge-wizard.ts"
   },
   "types": "./src/index.ts"
 }
