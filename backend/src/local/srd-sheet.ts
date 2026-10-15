@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { longRestExhaustionDelta } from "@d20-fireverse/rules";
+import { clampExhaustion, effectiveMaxHp, longRestExhaustionDelta, setExhaustion } from "@d20-fireverse/rules";
 import type { Pregen } from "./campaign.js";
 import type { CombatToken } from "./combat.js";
 import { buildKit, type ClassKit, type KitClass } from "./class-kit.js";
@@ -42,7 +42,20 @@ export type Vitals = {
   exhaustionLevel?: number;
 };
 
-const STANDARD = ["std_dash", "std_disengage", "std_dodge", "std_help", "std_hide", "std_search"] as const;
+const STANDARD = [
+  "std_attack",
+  "std_dash",
+  "std_disengage",
+  "std_dodge",
+  "std_help",
+  "std_hide",
+  "std_influence",
+  "std_magic",
+  "std_ready",
+  "std_search",
+  "std_study",
+  "std_utilize",
+] as const;
 
 const HIT_DICE: Record<string, number> = {
   barbarian: 12,
@@ -203,6 +216,12 @@ export function initSheet(token: CombatToken, pregen: Pregen, saved?: Vitals): v
     token.gearCharges = { ...gear.charges };
     token.grantedSpells = Object.keys(gear.granted);
   }
+  if (token.baseMaxHp == null) token.baseMaxHp = token.maxHp;
+  const exhaustTier = clampExhaustion(token.exhaustionLevel ?? 0);
+  token.maxHp = effectiveMaxHp(token.baseMaxHp, exhaustTier);
+  if (token.hp > token.maxHp) token.hp = token.maxHp;
+  token.conditions =
+    exhaustTier > 0 ? setExhaustion((token.conditions ?? []).filter((c) => c !== "exhaustion"), exhaustTier) : (token.conditions ?? []).filter((c) => c !== "exhaustion");
 }
 
 export function exportVitals(token: CombatToken): Vitals {

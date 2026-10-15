@@ -1,4 +1,11 @@
-import { applyMastery, type MasteryId } from "@d20-fireverse/rules";
+import {
+  applyMastery,
+  clampExhaustion,
+  effectiveMaxHp,
+  exhaustionKills,
+  setExhaustion,
+  type MasteryId,
+} from "@d20-fireverse/rules";
 import {
   abilityMod,
   getAbility,
@@ -53,6 +60,8 @@ export type CombatToken = {
   y: number;
   hp: number;
   maxHp: number;
+  /** Unmodified maximum HP before exhaustion tier 4 halves it. */
+  baseMaxHp?: number;
   /** Damage absorbs here before real HP (5e temp HP). */
   tempHp?: number;
   ac: number;
@@ -128,6 +137,8 @@ export type CombatToken = {
   sorceryPoints?: number;
   castLeveled?: boolean;
   castBonusSpell?: boolean;
+  /** Magic standard action: next leveled spell skips the action cost once. */
+  magicActionReady?: boolean;
   spiritualRounds?: number;
   concentrating?: { spellId: string; targetId?: string };
   brand?: { by: string; dice: string };
@@ -208,12 +219,18 @@ export type CombatEvent = { seq: number; line: string } & (
 type EventInput = CombatEvent extends infer E ? (E extends CombatEvent ? Omit<E, "seq"> : never) : never;
 
 const STANDARD_ACTIONS = [
+  "std_attack",
   "std_dash",
   "std_disengage",
   "std_dodge",
   "std_help",
   "std_hide",
+  "std_influence",
+  "std_magic",
+  "std_ready",
   "std_search",
+  "std_study",
+  "std_utilize",
 ] as const;
 
 export type PendingReaction = {
@@ -989,6 +1006,20 @@ function cannotAct(token: CombatToken): boolean {
   return hasCondition(token, "incapacitated") || hasCondition(token, "paralyzed") || hasCondition(token, "unconscious");
 }
 
+function syncExhaustionCap(token: CombatToken): void {
+  if (token.baseMaxHp == null) token.baseMaxHp = token.maxHp;
+  const tier = clampExhaustion(token.exhaustionLevel ?? 0);
+  token.maxHp = effectiveMaxHp(token.baseMaxHp, tier);
+  if (token.hp > token.maxHp) token.hp = token.maxHp;
+  token.conditions = tier > 0 ? setExhaustion(token.conditions ?? [], tier) : (token.conditions ?? []).filter((c) => c !== "exhaustion");
+}
+
+export function applyExhaustionLevel(combat: CombatState, token: CombatToken, level: number): void {
+  token.exhaustionLevel = clampExhaustion(level);
+  syncExhaustionCap(token);
+  if (exhaustionKills(token.exhaustionLevel)) markDead(combat, token);
+}
+
 function wakeFromDying(token: CombatToken): void {
   token.dying = false;
   token.stable = false;
@@ -1007,6 +1038,12 @@ function beginTurn(combat: CombatState): void {
   let guard = 0;
   while (guard < combat.turnOrder.length + 1) {
     const t = currentToken(combat);
+    if (t && exhaustionKills(t.exhaustionLevel ?? 0)) {
+      markDead(combat, t);
+      stepIndex(combat);
+      guard += 1;
+      continue;
+    }
     if (!t || t.dead) {
       stepIndex(combat);
       guard += 1;
@@ -2084,11 +2121,17 @@ export function performPcAction(
   const ability = getAbility(castId);
   if (!ability) throw new Error("BAD_ABILITY");
 
+  const abilityLevel = Number(
+    (ability as { level?: number }).level ?? (ability.effects[0] as { slot?: number } | undefined)?.slot ?? 0,
+  );
+  const magicSkip = !isBonus && abilityLevel > 0 && t.magicActionReady && isAction;
+  if (magicSkip) t.magicActionReady = false;
+
   if (gate?.phase !== "damage") {
     const undoingDash = dashStillUndoable(t, abilityId);
     if (isBonus) {
       if (!t.hasBonusAction && !undoingDash) throw new Error("NO_BONUS");
-    } else if (!t.hasAction && !t.extraAction && !undoingDash) {
+    } else if (!t.hasAction && !t.extraAction && !undoingDash && !magicSkip) {
       const extraSwing = isWeaponAttack(ability.effects[0]) && (t.attacksLeft ?? 0) > 0;
       if (!extraSwing) throw new Error("NO_ACTION");
     }
@@ -2214,6 +2257,61 @@ export function performPcAction(
     );
     refreshReachable(combat);
     return { rolls: [roll] };
+  }
+  if (effect.type === "attack_action") {
+    spendEconomy(t, isBonus);
+    t.attacksLeft = (t.kit?.extraAttacks ?? 0) + 1;
+    statusEvent(combat, t, ability.name, `${t.name} takes the Attack action — weapon strikes are ready.`);
+    refreshReachable(combat);
+    return { rolls: [] };
+  }
+  if (effect.type === "influence" || effect.type === "study") {
+    const key = effect.type === "influence" ? "cha" : "int";
+    const skill = effect.type === "influence" ? "persuasion" : "investigation";
+    const skilled = (pregen as { skills?: string[] } | undefined)?.skills?.includes(skill);
+    const bonus = abilityMod(pregen?.abilities[key] ?? 10) + (skilled ? prof : 0);
+    const roll = rollCheck({
+      roller: t.name,
+      label: ability.name,
+      bonus,
+      dc: 12,
+      purpose: "check",
+    });
+    spendEconomy(t, isBonus);
+    statusEvent(
+      combat,
+      t,
+      ability.name,
+      roll.outcome === "success"
+        ? `${t.name} succeeds at ${ability.name} (${roll.total} vs DC 12).`
+        : `${t.name} fails ${ability.name} (${roll.total} vs DC 12).`,
+      [roll],
+    );
+    refreshReachable(combat);
+    return { rolls: [roll] };
+  }
+  if (effect.type === "magic_action") {
+    spendEconomy(t, isBonus);
+    t.magicActionReady = true;
+    statusEvent(combat, t, ability.name, `${t.name} uses the Magic action — the next leveled spell needs no action.`);
+    refreshReachable(combat);
+    return { rolls: [] };
+  }
+  if (effect.type === "utilize") {
+    const potion = t.inventory.find((id) => id === "potion_healing");
+    if (potion) {
+      const idx = t.inventory.indexOf(potion);
+      t.inventory.splice(idx, 1);
+      const healed = rollNotation("2d4+2").total;
+      t.hp = Math.min(t.maxHp, t.hp + healed);
+      spendEconomy(t, isBonus);
+      statusEvent(combat, t, ability.name, `${t.name} utilizes an object and drinks a potion (+${healed} HP).`);
+    } else {
+      spendEconomy(t, isBonus);
+      statusEvent(combat, t, ability.name, `${t.name} utilizes an object.`);
+    }
+    refreshReachable(combat);
+    return { rolls: [] };
   }
   if (effect.type === "ready") {
     spendEconomy(t, isBonus);
