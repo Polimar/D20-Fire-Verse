@@ -29,14 +29,20 @@ function mountSite(): express.Express {
   app.use(express.json());
   mountAccountRoutes(app);
   mountV2Routes(app);
+  app.get("/api/pregens", (_req, res) => {
+    res.json([]);
+  });
   app.use("/companion", express.static(companionDist));
   return app;
 }
 
 async function shot(page: Page, name: string): Promise<void> {
   await page.evaluate(async () => {
-    const running = document.getAnimations().filter((anim) => anim.playState === "running");
-    await Promise.all(running.map((anim) => anim.finished.catch(() => undefined)));
+    const finite = document.getAnimations().filter((anim) => {
+      if (anim.playState !== "running") return false;
+      return anim.effect?.getTiming().iterations !== Infinity;
+    });
+    await Promise.all(finite.map((anim) => anim.finished.catch(() => undefined)));
   });
   const opacity = await page.evaluate(() => {
     const shell = document.querySelector<HTMLElement>(".pocket-forge") ?? document.querySelector<HTMLElement>(".hw");
@@ -56,9 +62,11 @@ before(() => {
 test("iPhone 13 companion PWA forges a wizard with touch", async () => {
   const iphone = devices["iPhone 13"];
   assert.equal(iphone.viewport?.width, 390);
-  assert.equal(iphone.viewport?.height, 844);
   assert.equal(iphone.hasTouch, true);
   assert.equal(iphone.isMobile, true);
+  // Playwright's iPhone 13 viewport is 390×664 (page area under Safari chrome).
+  // The clip we are fixing was reported at the full 390×844 screen, so the run keeps
+  // the iPhone user agent, touch, and mobile flags and forces that screen size.
 
   const user = `cp${randomUUID().replace(/-/g, "").slice(0, 8)}`;
   createUser(user, "password", "player");
@@ -73,7 +81,7 @@ test("iPhone 13 companion PWA forges a wizard with touch", async () => {
     args: ["--use-fake-ui-for-media-stream", "--use-fake-device-for-media-stream"],
   });
   try {
-    const context = await browser.newContext({ ...iphone });
+    const context = await browser.newContext({ ...iphone, viewport: { width: 390, height: 844 } });
     await context.addCookies([{ name: "fv_session", value: token, url: base }]);
     const page = await context.newPage();
     const catRes = await fetch(`${base}/api/builder/catalog`, { headers: { Cookie: `fv_session=${token}` } });
@@ -86,6 +94,9 @@ test("iPhone 13 companion PWA forges a wizard with touch", async () => {
     const species = originFeats.length ? cat.species.find((row) => row.id === "human") ?? cat.species[0]! : cat.species.find((row) => row.id !== "human") ?? cat.species[0]!;
 
     await page.goto(`${base}/companion/`, { waitUntil: "domcontentloaded" });
+    await page.waitForSelector("#installLater", { timeout: 20_000 });
+    await shot(page, "00-install");
+    await page.locator("#installLater").tap();
     await page.waitForSelector("#pocketForge", { timeout: 20_000 });
     assert.equal(await page.locator("#heroWizard").count(), 0, "this run is the companion PWA, not the TV modal");
     await page.locator("#pocketForge").scrollIntoViewIfNeeded();
@@ -94,11 +105,14 @@ test("iPhone 13 companion PWA forges a wizard with touch", async () => {
     await page.locator("#pocketForge").tap();
     await page.waitForSelector(".hw.phone h2", { timeout: 20_000 });
     await page.waitForFunction(() => /HP \d+/.test(document.querySelector(".hw-sheet")?.textContent ?? ""), undefined, { timeout: 8_000 });
+    await page.waitForFunction(() => /Pick \d+ class skills \(\d+\/\d+\)/.test(document.querySelector("#hwSheetPeek")?.textContent ?? ""), undefined, { timeout: 8_000 });
     await shot(page, "01-class");
 
     const peek = (await page.locator("#hwSheetPeek").innerText()).trim();
     assert.match(peek, /Pick \d+ class skills \(\d+\/\d+\)/);
     assert.doesNotMatch(peek, /NEED_/);
+    await page.locator('[data-class="wizard"]').tap();
+    await page.waitForFunction(() => /cantrips \(\d+\/\d+\)/.test(document.querySelector(".hw-sheet")?.textContent ?? ""), undefined, { timeout: 8_000 });
     await page.locator("#hwSheetPeek").tap();
     await page.waitForSelector(".hw-sheet.open");
     const sheet = (await page.locator("#hwSheet").innerText()).trim();
@@ -201,6 +215,7 @@ test("iPhone 13 companion PWA forges a wizard with touch", async () => {
     await shot(page, "09-review");
     const err = ((await page.locator("#hwErr").textContent()) ?? "").trim();
     assert.equal(err, "", err);
+    await page.locator("#hwSheetClose").tap();
     await page.locator("#hwNext").tap();
     await page.waitForSelector("#pocketForge", { timeout: 20_000 });
     await shot(page, "10-saved");

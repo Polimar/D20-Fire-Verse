@@ -114,7 +114,10 @@ function injectCss(): void {
       background: radial-gradient(circle at 40% 30%, #e07a32, #3a2014 42%, #120c09 74%);
       box-shadow: inset 0 0 0 1px rgba(255,210,160,0.25), 0 8px 18px rgba(0,0,0,0.35); margin-bottom: 0.35rem; }
     .hw-crest svg { width: 1.55rem; height: 1.55rem; }
-    .hw-chip { padding: 0.6rem 0.85rem; min-height: 2.9rem; border-radius: 999px; }
+    .hw-chip { width: auto; padding: 0.6rem 0.85rem; min-height: 2.9rem; border-radius: 999px; }
+    .hw-card { width: 100%; }
+    .hw-ghost { width: auto; }
+    .hw-dot { width: 0.85rem; height: 0.85rem; flex: 0 0 0.85rem; padding: 0; }
     .hw-row { display: flex; flex-wrap: wrap; gap: 0.45rem; }
     .hw-score { display: grid; grid-template-columns: 3.2rem 1fr auto; gap: 0.45rem; align-items: center; margin-bottom: 0.4rem; }
     .hw-nav { display: flex; gap: 0.6rem; margin-top: auto; }
@@ -133,12 +136,18 @@ function injectCss(): void {
     .hw.phone .hw-grid { grid-template-columns: 1fr 1fr; }
     .hw.phone .hw-main { flex: 1 1 0; min-height: 0; overflow: hidden; }
     .hw.phone .hw-body { flex: 1 1 auto; min-height: 0; overflow: auto; -webkit-overflow-scrolling: touch; padding-right: 0.1rem; padding-bottom: 0.4rem; }
-    .hw.phone .hw-top h2 { font-size: 1.25rem; }
+    .hw.phone .hw-top { align-items: flex-start; }
+    .hw.phone .hw-top > div { flex: 1; min-width: 0; text-align: right; }
+    .hw.phone .hw-kicker { white-space: nowrap; }
+    .hw.phone .hw-top h2 { font-size: 1.2rem; line-height: 1.05; }
     .hw.phone .hw-card { min-height: 6.6rem; }
+    .hw.phone .hw-score { grid-template-columns: auto 1fr; }
+    .hw.phone .hw-score .hw-row { grid-column: 1 / -1; }
     .hw.phone .hw-chip, .hw.phone .hw-nav button, .hw.phone .hw-ghost { min-height: 3rem; }
     .hw-peek { display: none; }
     .hw-scrim { display: none; position: fixed; inset: 0; z-index: 25; background: rgba(0, 0, 0, 0.55); border: 0; padding: 0; }
     .hw-scrim.on { display: block; }
+    .hw.phone .hw-nav button { width: 100%; }
     .hw.phone .hw-nav {
       flex: 0 0 auto; display: grid; grid-template-columns: auto minmax(0, 1fr) auto;
       align-items: stretch; gap: 0.45rem; padding: 0.45rem 0 0.15rem;
@@ -303,6 +312,8 @@ export async function mountForgeWizard(host: HTMLElement, opts: ForgeWizardOptio
         preview = body.sheet;
         const aside = host.querySelector(".hw-sheet");
         if (aside) aside.outerHTML = sheetHtml(preview, draft, catalog, sheetOpen);
+        const peek = host.querySelector("#hwSheetPeek");
+        if (peek) peek.textContent = peekLabel(preview, draft, catalog);
       },
       () => undefined,
     );

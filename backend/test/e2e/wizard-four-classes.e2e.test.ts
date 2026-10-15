@@ -38,8 +38,11 @@ async function shot(page: Page, name: string): Promise<void> {
     .waitForFunction(() => /HP \d+/.test(document.querySelector(".hw-sheet")?.textContent ?? ""), undefined, { timeout: 8_000 })
     .catch(() => undefined);
   await page.evaluate(async () => {
-    const running = document.getAnimations().filter((anim) => anim.playState === "running");
-    await Promise.all(running.map((anim) => anim.finished.catch(() => undefined)));
+    const finite = document.getAnimations().filter((anim) => {
+      if (anim.playState !== "running") return false;
+      return anim.effect?.getTiming().iterations !== Infinity;
+    });
+    await Promise.all(finite.map((anim) => anim.finished.catch(() => undefined)));
   });
   const opacity = await page.evaluate(() => {
     const modal = document.querySelector<HTMLElement>("#heroWizard");
