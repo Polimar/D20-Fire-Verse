@@ -1023,6 +1023,105 @@
         "stealthDisadvantage": false
       },
       "weightLb": 6
+    },
+    {
+      "id": "component_pouch",
+      "name": "Component Pouch",
+      "rarity": "common",
+      "slot": "trinket",
+      "effects": [],
+      "priceGold": 25,
+      "weightLb": 2
+    },
+    {
+      "id": "holy_symbol",
+      "name": "Holy Symbol",
+      "rarity": "common",
+      "slot": "trinket",
+      "effects": [],
+      "priceGold": 5,
+      "weightLb": 0
+    },
+    {
+      "id": "druidic_focus",
+      "name": "Druidic Focus",
+      "rarity": "common",
+      "slot": "trinket",
+      "effects": [],
+      "priceGold": 5,
+      "weightLb": 1
+    },
+    {
+      "id": "arcane_focus",
+      "name": "Arcane Focus",
+      "rarity": "common",
+      "slot": "trinket",
+      "effects": [],
+      "priceGold": 5,
+      "weightLb": 1
+    },
+    {
+      "id": "thieves_tools",
+      "name": "Thieves' Tools",
+      "rarity": "common",
+      "slot": "trinket",
+      "effects": [],
+      "priceGold": 25,
+      "weightLb": 1
+    },
+    {
+      "id": "herbalism_kit",
+      "name": "Herbalism Kit",
+      "rarity": "common",
+      "slot": "trinket",
+      "effects": [],
+      "priceGold": 5,
+      "weightLb": 3
+    },
+    {
+      "id": "explorers_pack",
+      "name": "Explorer's Pack",
+      "rarity": "common",
+      "slot": "trinket",
+      "effects": [],
+      "priceGold": 10,
+      "weightLb": 59
+    },
+    {
+      "id": "dungeoneers_pack",
+      "name": "Dungeoneer's Pack",
+      "rarity": "common",
+      "slot": "trinket",
+      "effects": [],
+      "priceGold": 12,
+      "weightLb": 61
+    },
+    {
+      "id": "burglars_pack",
+      "name": "Burglar's Pack",
+      "rarity": "common",
+      "slot": "trinket",
+      "effects": [],
+      "priceGold": 16,
+      "weightLb": 42
+    },
+    {
+      "id": "priests_pack",
+      "name": "Priest's Pack",
+      "rarity": "common",
+      "slot": "trinket",
+      "effects": [],
+      "priceGold": 33,
+      "weightLb": 29
+    },
+    {
+      "id": "scholars_pack",
+      "name": "Scholar's Pack",
+      "rarity": "common",
+      "slot": "trinket",
+      "effects": [],
+      "priceGold": 40,
+      "weightLb": 22
     }
   ]
 }

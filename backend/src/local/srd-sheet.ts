@@ -6,6 +6,7 @@ import type { Pregen } from "./campaign.js";
 import type { CombatToken } from "./combat.js";
 import { buildKit, type ClassKit, type KitClass } from "./class-kit.js";
 import { classMenus, onClassLongRest, onClassShortRest, seedClassResources } from "./class-runtime.js";
+import { wildShapeForm } from "./wild-shape-forms.js";
 import type { GearSheet } from "./hero-pregen.js";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -307,6 +308,29 @@ export function refreshMenus(token: CombatToken, pregen: Pregen | undefined, loo
   if (!token.sheetDriven || token.kind !== "pc") return;
   const actions: string[] = [];
   const bonus: string[] = [];
+  if (token.wildShaped) {
+    const form = token.wildShapeFormId ? wildShapeForm(token.wildShapeFormId) : undefined;
+    for (const id of form?.attacks ?? []) {
+      const ability = lookup(id);
+      if (ability && ability.actionType !== "reaction") pushUnique(actions, id);
+    }
+    pushUnique(bonus, "std_dodge");
+    const extra = classMenus(token);
+    for (const id of extra.bonus) pushUnique(bonus, id);
+    if (token.features?.includes("beast_spells")) {
+      for (const id of token.cantrips ?? []) {
+        const ability = lookup(id);
+        if (ability && ability.actionType !== "reaction") pushUnique(actions, id);
+      }
+      for (const id of token.spells ?? []) {
+        const ability = lookup(id);
+        if (ability && ability.actionType !== "reaction" && slotReady(token, spellLevel(ability))) pushUnique(actions, id);
+      }
+    }
+    token.actionIds = actions;
+    token.bonusActionIds = bonus;
+    return;
+  }
   const place = (id: string, charged = false) => {
     const ability = lookup(id);
     if (!ability || ability.actionType === "reaction") return;

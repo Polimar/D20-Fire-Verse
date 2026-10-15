@@ -1049,9 +1049,9 @@ const heartbeat = setInterval(() => {
 }, 15000);
 wss.on("close", () => clearInterval(heartbeat));
 
-if (process.env.FIREVERSE_MIGRATE_CUSTOM === "1") {
+if (process.env.FIREVERSE_MIGRATE_CUSTOM === "1" || process.env.FIREVERSE_REGEN_CUSTOM === "1") {
   const report = migrateCustomCharacters();
-  console.log("custom→hero migration", report);
+  console.log("custom→hero regen", report);
 }
 
 server.listen(PORT, "0.0.0.0", () => {

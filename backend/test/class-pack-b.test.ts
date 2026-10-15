@@ -100,11 +100,15 @@ test("the other eight classes change the fight", () => {
     assert.ok(foe.hp < foe.maxHp);
     assert.ok(foe.conditions?.includes("frightened"));
 
-    const druid = seat(["wild_shape"], { abilityUses: { wild_shape: 2 } });
+    const druid = seat(["wild_shape"], { abilityUses: { wild_shape: 2 }, level: 4 });
     refreshMenus(druid, undefined, getAbility);
-    performPcAction(fight(druid), "P1", "wild_shape");
+    performPcAction(fight(druid), "P1", "wild_shape:wolf");
     assert.equal(druid.wildShaped, true);
-    assert.ok((druid.tempHp ?? 0) > 0);
+    assert.equal(druid.wildShapeFormId, "wolf");
+    assert.equal(druid.hp, 11);
+    assert.equal(druid.ac, 13);
+    assert.ok(druid.bonusActionIds.includes("wild_shape_end"));
+    assert.ok(druid.actionIds.includes("ws_wolf_bite"));
 
     const bard = seat(["countercharm"]);
     performPcAction(fight(bard), "P1", "countercharm");

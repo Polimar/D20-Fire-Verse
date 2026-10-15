@@ -1,5 +1,5 @@
 /**
- * Admin rules lab: preview a 5.2.1 hero through level 10, including records
+ * Admin rules lab: preview a 5.2.1 hero through level 20, including records
  * that are not yet approved, then stamp it onto the admin's account to fight.
  */
 
@@ -34,10 +34,10 @@ function take<T extends { id: string }>(kind: "class" | "subclass" | "species" |
     .filter((row): row is T => Boolean(row));
 }
 
-/** Every valid catalog row, including ones the admin has not approved. Cap is 10 so the preview can walk the table. */
+/** Every valid catalog row, including ones the admin has not approved. Cap matches coverage (20). */
 export function labCatalog(): CatalogSlice {
   return {
-    classes: take<ClassDef>("class").map((row) => ({ ...row, cap: 10 })),
+    classes: take<ClassDef>("class").map((row) => ({ ...row, cap: 20 })),
     subclasses: take<SubclassDef>("subclass"),
     feats: take<CatalogSlice["feats"][number]>("feat"),
     spells: take<SpellDef>("spell"),
@@ -86,7 +86,7 @@ function walk(classId: string, speciesId: string, level: number, subclassId: str
   if (!cls) throw new Error("CLASS_DISABLED");
   const species = catalog.species?.find((row) => row.id === speciesId);
   if (!species) throw new Error("SPECIES_DISABLED");
-  const target = Math.min(10, Math.max(1, level));
+  const target = Math.min(20, Math.max(1, level));
   const xp = catalog.xpThresholds[target - 1] ?? catalog.xpThresholds[catalog.xpThresholds.length - 1] ?? 0;
   const abilities = { str: 15, dex: 14, con: 13, int: 10, wis: 12, cha: 8 } as Record<Ability, number>;
   if (cls.primary[0]) abilities[cls.primary[0]] = 15;

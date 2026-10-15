@@ -23,6 +23,7 @@ import {
 } from "@d20-fireverse/content-schema";
 import type { ZodTypeAny } from "zod";
 import { accountDb } from "./auth.js";
+import { ARENA_MAGIC_PRIORITY_IDS } from "./arena-magic-items.js";
 import { CONTENT_ROOT } from "./paths.js";
 
 const ROOT = path.join(CONTENT_ROOT, "srd-5.2.1");
@@ -472,6 +473,31 @@ const FORGE_BOOTSTRAP_KINDS: ReadonlySet<Bucket> = new Set(["class", "species", 
  * On a fresh table, enable valid SRD rows for the forge without touching explicit admin toggles.
  * Uses INSERT OR IGNORE: a row with enabled=0 (admin off) is left alone.
  */
+function monsterAutoResolveGate(monster: MonsterDef): boolean {
+  if (monster.hp <= 0 || monster.ac < 1 || monster.ac > 30) return false;
+  for (const action of monster.actions ?? []) {
+    if (action.attack?.bonus != null && action.damage?.length) return true;
+    if (action.save?.dc) return true;
+  }
+  return false;
+}
+
+/** needs_review + high parser confidence + stat gate → resolved (admin can reopen). */
+export function autoResolveHighConfidenceMonsters(): number {
+  const saved = resolutions();
+  let resolved = 0;
+  for (const row of load()) {
+    if (row.kind !== "monster") continue;
+    const status = (saved.get(`${row.kind}:${row.id}`)?.status as ReviewStatus | undefined) || row.review?.status || "none";
+    if (status !== "needs_review") continue;
+    if (row.review?.confidence !== "high") continue;
+    if (!row.valid || !monsterAutoResolveGate(row.parsed as MonsterDef)) continue;
+    resolveContent("monster", row.id, { adminNote: "auto-resolve: high confidence + stat gate" });
+    resolved += 1;
+  }
+  return resolved;
+}
+
 export function ensureForgeContentDefaults(): number {
   const saved = resolutions();
   const stmt = accountDb().prepare(
@@ -485,7 +511,26 @@ export function ensureForgeContentDefaults(): number {
     const result = stmt.run(row.kind, row.id);
     inserted += Number(result.changes);
   }
+  autoResolveHighConfidenceMonsters();
+  enableArenaMagicItems();
   return inserted;
+}
+
+/** Enable curated magic items for arena when valid and review-clear. */
+export function enableArenaMagicItems(): number {
+  let enabled = 0;
+  for (const id of ARENA_MAGIC_PRIORITY_IDS) {
+    const row = listCatalog().find((entry) => entry.kind === "item" && entry.id === id);
+    if (!row?.valid || row.reviewStatus === "needs_review" || row.reviewStatus === "rejected") continue;
+    if (row.enabled) continue;
+    try {
+      setContentEnabled("item", id, true);
+      enabled += 1;
+    } catch {
+      /* blocked */
+    }
+  }
+  return enabled;
 }
 
 export function setContentEnabled(kind: string, id: string, enabled: boolean): CatalogRow {

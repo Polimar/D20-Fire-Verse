@@ -8,6 +8,7 @@ import path from "node:path";
 import type { AbilityKey, BuilderDraft } from "@d20-fireverse/protocol/builder";
 import { DATA_DIR } from "./paths.js";
 import { commitBuilderDraft } from "./builder-commit.js";
+import { recordHeroRedirect } from "./hero-redirect.js";
 import { builderCatalog } from "./builder-catalog.js";
 import type { SessionUser } from "./auth.js";
 import { accountDb } from "./auth.js";
@@ -82,9 +83,14 @@ function draftFromLegacy(raw: Legacy): BuilderDraft {
   };
 }
 
-export function migrateCustomCharacters(): { migrated: number; skipped: number; failed: string[] } {
+export function migrateCustomCharacters(): {
+  migrated: number;
+  skipped: number;
+  failed: string[];
+  redirects: Array<{ oldId: string; newId: string; name: string }>;
+} {
   const dir = path.join(DATA_DIR, "custom-characters");
-  const out = { migrated: 0, skipped: 0, failed: [] as string[] };
+  const out = { migrated: 0, skipped: 0, failed: [] as string[], redirects: [] as Array<{ oldId: string; newId: string; name: string }> };
   if (!fs.existsSync(dir)) return out;
   for (const file of fs.readdirSync(dir)) {
     if (!file.endsWith(".json") || file.endsWith(".migrated.json")) {
@@ -102,7 +108,12 @@ export function migrateCustomCharacters(): { migrated: number; skipped: number; 
       const actor: SessionUser = { id: user.id, username: user.username, role: user.role, disabled: false };
       const draft = draftFromLegacy(raw);
       draft.level = user.role === "admin" ? raw.level : 1;
-      commitBuilderDraft(actor, draft);
+      const oldId = raw.id ?? file.replace(/\.json$/, "");
+      const hero = commitBuilderDraft(actor, draft);
+      if (oldId && oldId !== hero.id) {
+        recordHeroRedirect(oldId, hero.id, user.id, "FIREVERSE_REGEN_CUSTOM");
+        out.redirects.push({ oldId, newId: hero.id, name: hero.name });
+      }
       fs.renameSync(full, full.replace(/\.json$/, ".migrated.json"));
       out.migrated += 1;
     } catch (err) {

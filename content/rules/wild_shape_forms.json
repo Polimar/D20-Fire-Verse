@@ -1,0 +1,54 @@
+{
+  "forms": [
+    {
+      "id": "cat",
+      "label": "Cat",
+      "minLevel": 2,
+      "maxCr": 0.25,
+      "ac": 12,
+      "hp": 2,
+      "speedCells": 8,
+      "attacks": ["ws_cat_claw"]
+    },
+    {
+      "id": "wolf",
+      "label": "Wolf",
+      "minLevel": 2,
+      "maxCr": 0.25,
+      "ac": 13,
+      "hp": 11,
+      "speedCells": 8,
+      "attacks": ["ws_wolf_bite"]
+    },
+    {
+      "id": "boar",
+      "label": "Boar",
+      "minLevel": 2,
+      "maxCr": 0.25,
+      "ac": 11,
+      "hp": 13,
+      "speedCells": 6,
+      "attacks": ["ws_boar_tusk"]
+    },
+    {
+      "id": "panther",
+      "label": "Panther",
+      "minLevel": 2,
+      "maxCr": 0.25,
+      "ac": 12,
+      "hp": 13,
+      "speedCells": 10,
+      "attacks": ["ws_panther_bite", "ws_panther_claw"]
+    },
+    {
+      "id": "brown_bear",
+      "label": "Brown Bear",
+      "minLevel": 4,
+      "maxCr": 1,
+      "ac": 11,
+      "hp": 34,
+      "speedCells": 8,
+      "attacks": ["ws_bear_bite", "ws_bear_claw"]
+    }
+  ]
+}

@@ -107,6 +107,14 @@ function injectCss(): void {
     .hw-card strong { font-family: var(--font-display, Cinzel, serif); font-size: 1.05rem; letter-spacing: 0.03em; }
     .hw-card em, .hw-meta { font-style: normal; color: #cdbb9e; font-size: 0.82rem; }
     .hw-card.picked, .hw-chip.picked { border-color: #f0a05a; box-shadow: 0 0 0 2px rgba(255,160,70,0.45), 0 0 26px rgba(255,120,40,0.32); background: linear-gradient(180deg, #3d2618, #1a100c); }
+    .hw-chip.from-origin {
+      border-color: rgba(130, 190, 150, 0.55);
+      background: linear-gradient(180deg, #1e2a22, #121a14);
+      color: #b8d4c4;
+      cursor: not-allowed;
+      box-shadow: inset 0 0 0 1px rgba(100, 160, 120, 0.25);
+    }
+    .hw-chip.from-origin:disabled { opacity: 0.95; }
     .hw-card:focus-visible, .hw-chip:focus-visible, .hw-nav button:focus-visible, .hw-ghost:focus-visible, .hw-dot:focus-visible {
       outline: 3px solid #ffd08a; outline-offset: 3px;
     }
@@ -365,10 +373,12 @@ export async function mountForgeWizard(host: HTMLElement, opts: ForgeWizardOptio
         <div class="hw-row"><button type="button" class="hw-chip ${draft.backgroundAsi?.mode === "plus2plus1" ? "picked" : ""}" data-asi="plus2plus1">+2 and +1</button><button type="button" class="hw-chip ${draft.backgroundAsi?.mode === "plus1x3" ? "picked" : ""}" data-asi="plus1x3">+1 / +1 / +1</button></div>
         <div class="hw-row">${origin.abilityOptions.map((a) => `<button type="button" class="hw-chip" data-asi-ab="${a}">${a}</button>`).join("")}</div>`;
     } else if (id === "training") {
+      const bgSkills = new Set(bg()?.skills ?? []);
       const skills = c.skillList
         .map((sk) => {
           const on = draft.classSkills.includes(sk);
-          return `<button type="button" class="hw-chip ${on ? "picked" : ""}" data-skill="${esc(sk)}">${esc(catalog.skills[sk]?.label ?? sk)}</button>`;
+          const fromOrigin = bgSkills.has(sk);
+          return `<button type="button" class="hw-chip ${on ? "picked" : ""} ${fromOrigin ? "from-origin" : ""}" data-skill="${esc(sk)}"${fromOrigin ? " disabled title=\"Already from your origin\"" : ""}>${esc(catalog.skills[sk]?.label ?? sk)}</button>`;
         })
         .join("");
       const styles = c.fightingStyleRequired
@@ -392,7 +402,7 @@ export async function mountForgeWizard(host: HTMLElement, opts: ForgeWizardOptio
                .map((f) => `<button type="button" class="hw-chip ${draft.originFeatId === f.id ? "picked" : ""}" data-ofeat="${esc(f.id)}">${esc(f.name)}</button>`)
                .join("")}</div>`
           : "";
-      body = `<p class="hw-meta">Pick ${c.skillChoices} class skills</p><div class="hw-row">${skills}</div>${expert}${styles}${human}`;
+      body = `<p class="hw-meta">Pick ${c.skillChoices} class skills</p><p class="hw-meta">Green chips are already from your origin — choose different skills.</p><div class="hw-row">${skills}</div>${expert}${styles}${human}`;
     } else if (id === "gear") {
       body = `<p class="hw-meta">Class kit</p><div class="hw-grid">${c.equipChoices
         .map((e) => `<button type="button" class="hw-card ${draft.equipChoice === e.id ? "picked" : ""}" data-equip="${e.id}"><strong>${e.id}</strong><em>${esc(e.label)}</em></button>`)
@@ -442,6 +452,8 @@ export async function mountForgeWizard(host: HTMLElement, opts: ForgeWizardOptio
     host.querySelectorAll<HTMLButtonElement>("[data-bg]").forEach((b) =>
       b.addEventListener("click", () => {
         draft.backgroundId = b.dataset.bg!;
+        const originSkills = bg().skills ?? [];
+        draft.classSkills = draft.classSkills.filter((sk) => !originSkills.includes(sk));
         const options = bg().abilityOptions;
         draft.backgroundAsi = {
           mode: "plus2plus1",
@@ -482,6 +494,7 @@ export async function mountForgeWizard(host: HTMLElement, opts: ForgeWizardOptio
     host.querySelectorAll<HTMLButtonElement>("[data-skill]").forEach((b) =>
       b.addEventListener("click", () => {
         const sk = b.dataset.skill!;
+        if ((bg().skills ?? []).includes(sk)) return;
         if (draft.classSkills.includes(sk)) draft.classSkills = draft.classSkills.filter((x) => x !== sk);
         else if (draft.classSkills.length < c.skillChoices) draft.classSkills = [...draft.classSkills, sk];
         const allowed = new Set([...(bg().skills ?? []), ...draft.classSkills, ...(draft.speciesSkill ? [draft.speciesSkill] : [])]);

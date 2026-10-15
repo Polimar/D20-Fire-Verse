@@ -95,6 +95,7 @@ export async function mountForgeApp(host: HTMLElement, opts: ForgeAppOptions): P
   const paint = () => {
     const cls = catalog.classes.find((c) => c.id === draft.classId)!;
     const bg = catalog.backgrounds.find((b) => b.id === draft.backgroundId)!;
+    draft.classSkills = draft.classSkills.filter((id) => cls.skillList.includes(id) && !bg.skills.includes(id));
     const isHuman = draft.speciesId === "human";
     const originFeats = catalog.feats.filter((f) => f.category === "origin");
     host.innerHTML = `
@@ -139,8 +140,13 @@ export async function mountForgeApp(host: HTMLElement, opts: ForgeAppOptions): P
               <label>Skill <select id="fgSpeciesSkill"><option value="">—</option>${Object.entries(catalog.skills).map(([id, s]) => `<option value="${esc(id)}">${esc(s.label)}</option>`).join("")}</select></label>
               <label>Origin feat <select id="fgOriginFeat"><option value="">—</option>${originFeats.map((f) => `<option value="${esc(f.id)}">${esc(f.name)}</option>`).join("")}</select></label>
             </fieldset>` : ""}
-            <p class="meta">Pick ${cls.skillChoices} class skills.</p>
-            <div class="skill-picks">${cls.skillList.map((id) => `<label><input type="checkbox" data-skill="${esc(id)}" /> ${esc(catalog.skills[id]?.label ?? id)}</label>`).join("")}</div>
+            <p class="meta">Pick ${cls.skillChoices} class skills. Skills from your origin are marked and cannot be picked again.</p>
+            <div class="skill-picks">${cls.skillList
+              .map((id) => {
+                const fromOrigin = bg.skills.includes(id);
+                return `<label class="${fromOrigin ? "skill-from-origin" : ""}"><input type="checkbox" data-skill="${esc(id)}" ${fromOrigin ? "disabled" : ""} /> ${esc(catalog.skills[id]?.label ?? id)}</label>`;
+              })
+              .join("")}</div>
             ${cls.fightingStyleRequired ? `<label>Fighting style <select id="fgStyle">${cls.fightingStyleFeatIds.map((id) => `<option value="${esc(id)}">${esc(catalog.feats.find((f) => f.id === id)?.name ?? id)}</option>`).join("")}</select></label>` : ""}
             ${cls.equipChoices.length ? `<label>Class equipment <select id="fgEquip">${cls.equipChoices.map((e) => `<option value="${e.id}">${esc(e.label)}</option>`).join("")}</select></label>` : ""}
             ${bg.equipChoices.length ? `<label>Background equipment <select id="fgBgEquip">${bg.equipChoices.map((e) => `<option value="${e.id}">${esc(e.label)}</option>`).join("")}</select></label>` : ""}

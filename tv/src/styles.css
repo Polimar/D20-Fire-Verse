@@ -575,6 +575,9 @@ body.forge-page {
 }
 .forge-panel fieldset { border: 1px solid var(--line); border-radius: var(--radius-s); padding: 0.75rem; }
 .forge-error-title { font-family: var(--font-display); font-size: 1.1rem; margin: 0 0 0.5rem; }
+.skill-picks { display: grid; grid-template-columns: 1fr 1fr; gap: 0.2rem; }
+.skill-picks label.skill-from-origin { color: #6a9a78; }
+.skill-picks label.skill-from-origin input { pointer-events: none; }
 
 .lobby-side { display: grid; gap: 0.9rem; align-content: start; }
 .room-card { text-align: center; }

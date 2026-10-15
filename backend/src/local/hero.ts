@@ -30,6 +30,7 @@ import { enabledById, enabledClasses, enabledItems, enabledSpells, listCatalog, 
 import { classLevelCap } from "./coverage.js";
 import { recordEvent } from "./events.js";
 import { CONTENT_ROOT, DATA_DIR } from "./paths.js";
+import { resolveHeroId } from "./hero-redirect.js";
 
 type Ability = "str" | "dex" | "con" | "int" | "wis" | "cha";
 const ABILITIES: Ability[] = ["str", "dex", "con", "int", "wis", "cha"];
@@ -208,7 +209,8 @@ function asItem(def: ItemDef): ItemRules {
 }
 
 export function getHero(heroId: string): HeroRow | undefined {
-  const row = accountDb().prepare("SELECT * FROM heroes WHERE id = ? AND deleted_at IS NULL").get(heroId) as Record<string, unknown> | undefined;
+  const resolved = resolveHeroId(heroId);
+  const row = accountDb().prepare("SELECT * FROM heroes WHERE id = ? AND deleted_at IS NULL").get(resolved) as Record<string, unknown> | undefined;
   return row ? mapHero(row) : undefined;
 }
 

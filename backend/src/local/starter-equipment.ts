@@ -67,9 +67,28 @@ const ITEM_ALIASES: Record<string, string> = {
   "club": "club",
   "musket": "musket",
   "pistol": "pistol",
+  "component pouch": "component_pouch",
+  "holy symbol": "holy_symbol",
+  "druidic focus": "druidic_focus",
+  "druidic focus (quarterstaff)": "druidic_focus",
+  "druidic focus (sprig of mistletoe)": "druidic_focus",
+  "arcane focus": "arcane_focus",
+  "thieves' tools": "thieves_tools",
+  "thieves tools": "thieves_tools",
+  "herbalism kit": "herbalism_kit",
+  "explorer's pack": "explorers_pack",
+  "explorers pack": "explorers_pack",
+  "dungeoneer's pack": "dungeoneers_pack",
+  "dungeoneers pack": "dungeoneers_pack",
+  "burglar's pack": "burglars_pack",
+  "burglars pack": "burglars_pack",
+  "priest's pack": "priests_pack",
+  "priests pack": "priests_pack",
+  "scholar's pack": "scholars_pack",
+  "scholars pack": "scholars_pack",
 };
 
-const NON_ITEM = /arrow|quiver|pack|robe|book|parchment|supplies|tools|instrument|focus|gp|gold|mistl|sprig|orb|lore|prayer/i;
+const NON_ITEM = /arrow|quiver|robe|book|parchment|supplies|instrument|gp|gold|mistl|sprig|orb|lore/i;
 
 function slugItem(fragment: string): string | undefined {
   const clean = fragment

@@ -6,7 +6,6 @@ import { createCustomCharacter, type ChargenDraft } from "../src/local/chargen.j
 import { ensureForgeContentDefaults } from "../src/local/content-catalog.js";
 import { listPregens } from "../src/local/campaign.js";
 import { migrateCustomCharacters } from "../src/local/migrate-custom.js";
-import { castRitual } from "../src/local/ritual.js";
 import { markMasterySwapReady, swapWeaponMastery } from "../src/local/mastery-swap.js";
 import { getHero } from "../src/local/hero.js";
 import { boot } from "./helpers.js";
@@ -43,7 +42,7 @@ test("a legacy custom file becomes a hero and leaves the public list", () => {
   assert.ok(heroes[0]!.id.startsWith("hero_"));
 });
 
-test("ritual casting spends no slot and mastery swaps after a long rest", () => {
+test("mastery swaps after a long rest and legacy ritual API is retired", () => {
   const user = createUser(`rit${randomUUID().replace(/-/g, "").slice(0, 8)}`, "password", "admin");
   const hero = createCustomCharacter(fighter("Rite Wren"), undefined, user.id);
   const report = migrateCustomCharacters();
@@ -56,9 +55,6 @@ test("ritual casting spends no slot and mastery swaps after a long rest", () => 
   assert.ok(stored);
   stored!.classes = [{ id: "wizard", level: 1 }];
   accountDb().prepare("UPDATE heroes SET classes_json = ? WHERE id = ?").run(JSON.stringify(stored!.classes), row!.id);
-  const ritual = castRitual(user.id, row!.id, "alarm");
-  assert.equal(ritual.slotSpent, false);
-  assert.equal(ritual.minutes >= 10, true);
   assert.throws(() => swapWeaponMastery(user.id, row!.id, "nick", "push"), /MASTERY_LOCKED/);
   markMasterySwapReady(row!.id);
   const swapped = swapWeaponMastery(user.id, row!.id, "cleave", "nick");

@@ -91,6 +91,8 @@ button:focus-visible { outline: 3px solid #ffd08a; outline-offset: 2px; }
 .forge { display: grid; gap: 0.45rem; }
 .forge label, .skill-picks { display: grid; gap: 0.2rem; }
 .skill-picks { grid-template-columns: 1fr 1fr; }
+.skill-picks label.skill-from-origin { color: #9bc4a8; }
+.skill-picks label.skill-from-origin input { pointer-events: none; }
 .pocket-sheet { text-align: left; }
 .scan h1 { margin-bottom: 0.4rem; }
 .scan-emblem { width: 4.5rem; height: 4.5rem; border-radius: 1rem; box-shadow: 0 0 28px rgba(201, 106, 46, 0.35); }

@@ -2,12 +2,14 @@
  * Weapon mastery property swap. A long rest arms one swap; the hero then replaces one known property.
  */
 
+import type { ItemDef } from "@d20-fireverse/content-schema";
 import { accountDb } from "./auth.js";
-import { getHero } from "./hero.js";
+import { catalogEntry } from "./content-catalog.js";
+import { getHero, unequip } from "./hero.js";
 
 const PROPERTIES = ["cleave", "graze", "nick", "push", "sap", "slow", "topple", "vex"] as const;
 
-type Meta = { masteryReady?: boolean; masteries?: string[] };
+type Meta = { masteryReady?: boolean; masteries?: string[]; loadoutNote?: string };
 
 function readMeta(heroId: string): Meta {
   const row = accountDb().prepare("SELECT builder_meta_json FROM heroes WHERE id = ?").get(heroId) as { builder_meta_json?: string } | undefined;
@@ -43,6 +45,14 @@ export function swapWeaponMastery(userId: string, heroId: string, drop: string, 
   if (!known.includes(drop)) throw new Error("BAD_MASTERY");
   meta.masteries = known.map((id) => (id === drop ? take : id));
   meta.masteryReady = false;
+  meta.loadoutNote = "Weapon mastery changed — adjust equipped gear in your stash.";
   writeMeta(heroId, meta);
+  const rows = accountDb()
+    .prepare("SELECT id, item_def_id FROM account_stash WHERE user_id = ? AND equipped_by_hero_id = ?")
+    .all(userId, heroId) as Array<{ id: string; item_def_id: string }>;
+  for (const row of rows) {
+    const def = catalogEntry<ItemDef>("item", row.item_def_id);
+    if (def?.weaponMastery === drop) unequip(userId, heroId, row.id);
+  }
   return { masteries: meta.masteries };
 }

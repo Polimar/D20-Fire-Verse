@@ -39,7 +39,7 @@ import { addGold } from "./stash-mut.js";
 import { recordEvent } from "./events.js";
 import { mountBuilderRoutes } from "./builder-http.js";
 import { swapWeaponMastery } from "./mastery-swap.js";
-import { castRitual } from "./ritual.js";
+import { listHeroRedirects } from "./hero-redirect.js";
 
 function user(req: Request): SessionUser {
   const found = requestUser(req);
@@ -190,12 +190,8 @@ export function mountV2Routes(app: Express): void {
     }
   });
 
-  app.post("/api/heroes/:id/ritual", (req, res) => {
-    try {
-      res.json(castRitual(user(req).id, req.params.id, String(req.body?.spellId ?? "")));
-    } catch (err) {
-      fail(res, err);
-    }
+  app.post("/api/heroes/:id/ritual", (_req, res) => {
+    res.status(410).json({ error: "RITUAL_VIA_SPELL", message: "Cast ritual-tagged spells like any other spell in combat." });
   });
 
   app.post("/api/heroes/:id/starter-bundle", (req, res) => {
@@ -321,6 +317,15 @@ export function mountV2Routes(app: Express): void {
       const out = closeSeasonNow();
       audit(actor, "season.close", out.closed.id, { opened: out.opened.id });
       res.json({ season: out.opened, closed: out.closed });
+    } catch (err) {
+      fail(res, err);
+    }
+  });
+
+  app.get("/api/admin/migrate/redirects", (req, res) => {
+    try {
+      admin(req);
+      res.json({ redirects: listHeroRedirects() });
     } catch (err) {
       fail(res, err);
     }

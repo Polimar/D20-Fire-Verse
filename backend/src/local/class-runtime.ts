@@ -6,6 +6,7 @@
 
 import type { CombatToken } from "./combat.js";
 import { makeDiceRoll, rollCheck, rollNotation, type DiceRoll } from "./dice.js";
+import { legalWildShapeForms, wildShapeDurationPcTurns, wildShapeForm } from "./wild-shape-forms.js";
 
 function abilityMod(score: number): number {
   return Math.floor((score - 10) / 2);
@@ -22,6 +23,23 @@ function uses(token: CombatToken): Record<string, number> {
 
 function modOf(scores: Record<string, number> | undefined, key: string): number {
   return abilityMod(scores?.[key] ?? 10);
+}
+
+export function endWildShape(token: CombatToken): string {
+  if (!token.wildShaped) throw new Error("BAD_ABILITY");
+  const back = token.wildShapeBackup;
+  if (back) {
+    token.maxHp = back.maxHp;
+    token.hp = Math.min(back.hp, back.maxHp);
+    token.ac = back.ac;
+    token.speedCells = back.speedCells;
+  }
+  token.wildShaped = false;
+  token.wildShapeFormId = undefined;
+  token.wildShapeBackup = undefined;
+  token.timedEffects = (token.timedEffects ?? []).filter((row) => row.spellId !== "wild_shape");
+  if (!token.timedEffects?.length) token.timedEffects = undefined;
+  return `${token.name} returns to their own form.`;
 }
 
 export type ClassCtx = {
@@ -113,10 +131,30 @@ const ACTIONS: Record<string, (token: CombatToken, ctx: ClassCtx) => { line: str
   },
   wild_shape(token, ctx) {
     if (!has(token, "archdruid")) spend(token, "wild_shape");
+    const pick = token.wildShapePick ?? legalWildShapeForms(ctx.level)[0]?.id;
+    const form = pick ? wildShapeForm(pick) : undefined;
+    if (!form || !legalWildShapeForms(ctx.level).some((row) => row.id === form.id)) throw new Error("BAD_ABILITY");
+    if (!token.wildShaped) {
+      token.wildShapeBackup = { hp: token.hp, maxHp: token.maxHp, ac: token.ac, speedCells: token.speedCells };
+    }
     token.wildShaped = true;
-    token.tempHp = Math.max(token.tempHp ?? 0, ctx.level);
-    token.acFloor = Math.max(token.acFloor ?? 0, 13);
-    return { line: `${token.name} takes a wild shape. Temporary hit points ${token.tempHp}.`, rolls: [] };
+    token.wildShapeFormId = form.id;
+    token.wildShapePick = undefined;
+    token.maxHp = form.hp;
+    token.hp = form.hp;
+    token.ac = form.ac;
+    token.speedCells = form.speedCells;
+    token.tempHp = 0;
+    token.acFloor = 0;
+    const turns = wildShapeDurationPcTurns(ctx.level);
+    token.timedEffects = [
+      ...(token.timedEffects ?? []).filter((row) => row.spellId !== "wild_shape"),
+      { spellId: "wild_shape", label: "Wild Shape", pcTurnsLeft: turns },
+    ];
+    return { line: `${token.name} becomes a ${form.label}.`, rolls: [] };
+  },
+  wild_shape_end(token) {
+    return { line: endWildShape(token), rolls: [] };
   },
   wild_companion(token) {
     if (!has(token, "archdruid")) spend(token, "wild_shape");
@@ -323,10 +361,12 @@ export function classMenus(token: CombatToken): { actions: string[]; bonus: stri
   if ((token.channelDivinity ?? 0) > 0 && has(token, "lands_aid")) push(actions, "lands_aid");
   if ((token.channelDivinity ?? 0) > 0 && has(token, "sacred_weapon")) push(bonus, "sacred_weapon");
   if (has(token, "countercharm")) push(bonus, "countercharm");
-  if ((bag.wild_shape ?? 0) > 0 && has(token, "wild_shape")) {
-    push(bonus, "wild_shape");
+  if ((bag.wild_shape ?? 0) > 0 && has(token, "wild_shape") && !token.wildShaped) {
+    const level = token.level ?? 2;
+    for (const form of legalWildShapeForms(level)) push(bonus, `wild_shape:${form.id}`);
     push(actions, "wild_companion");
   }
+  if (token.wildShaped) push(bonus, "wild_shape_end");
   if (has(token, "wild_resurgence")) push(bonus, "wild_resurgence");
   if ((bag.innate ?? 0) > 0 && has(token, "innate_sorcery")) push(bonus, "innate_sorcery");
   if (has(token, "font_of_magic") && (token.sorceryPoints ?? 0) >= 0) push(actions, "font_of_magic");

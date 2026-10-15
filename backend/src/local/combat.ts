@@ -46,6 +46,9 @@ import {
   type AttackVariant,
   type Vitals,
 } from "./srd-sheet.js";
+import type { SpellDef } from "@d20-fireverse/content-schema";
+import { catalogEntry } from "./content-catalog.js";
+import { durationToPcTurns } from "./spell-duration.js";
 import type { ClassKit } from "./class-kit.js";
 import {
   auraCells,
@@ -54,6 +57,7 @@ import {
   checkBonusAdjust,
   classDamageRider,
   classMenus,
+  endWildShape,
   evasionDamage,
   favoredMarkFree,
   fiendLuck,
@@ -218,6 +222,11 @@ export type CombatToken = {
   vexTarget?: string;
   countercharm?: boolean;
   wildShaped?: boolean;
+  wildShapeFormId?: string;
+  wildShapePick?: string;
+  wildShapeBackup?: { hp: number; maxHp: number; ac: number; speedCells: number };
+  /** Spell and effect durations counted in PC-turn ticks (6s each). */
+  timedEffects?: Array<{ label: string; pcTurnsLeft: number; spellId?: string }>;
   innateSorcery?: boolean;
   steadyAim?: boolean;
   channelAttack?: number;
@@ -278,7 +287,7 @@ const STANDARD_ACTIONS = [
 ] as const;
 
 export type PendingReaction = {
-  kind: "shield" | "opportunity" | "smite" | "retaliation";
+  kind: "shield" | "opportunity" | "smite" | "retaliation" | "uncanny_dodge" | "deflect_attacks";
   playerId: string;
   tokenId: string;
   prompt: string;
@@ -304,6 +313,7 @@ export type PendingReaction = {
 };
 
 const EVENT_WINDOW = 80;
+const REACTION_WAIT_MS = 30_000;
 
 function bonusActionsFor(pregen: Pregen): string[] {
   const out: string[] = [];
@@ -359,6 +369,7 @@ export type CombatState = {
   events: CombatEvent[];
   seq: number;
   pending?: PendingReaction;
+  reactionExpiresAt?: number;
   aimRequest?: { playerId: string; abilityId: string };
   /** Player ids whose dice wait for a phone swipe. Set by the table for this action, not saved as authority. */
   phoneIds?: string[];
@@ -1901,6 +1912,19 @@ function statusEvent(combat: CombatState, t: CombatToken, ability: string, line:
   emit(combat, { kind: "status", tokenId: t.id, ability, rolls, line });
 }
 
+function attachSpellDuration(token: CombatToken, castId: string): void {
+  const bare = castId.replace(/^spell_/, "");
+  const spell = catalogEntry<SpellDef>("spell", bare);
+  const turns = durationToPcTurns(spell?.duration);
+  if (!turns || turns <= 0) return;
+  token.timedEffects = [...(token.timedEffects ?? []), { label: spell?.name ?? bare, pcTurnsLeft: turns, spellId: castId }];
+}
+
+function setConcentration(token: CombatToken, castId: string, targetId?: string): void {
+  token.concentrating = { spellId: castId, targetId };
+  attachSpellDuration(token, castId);
+}
+
 function tokenCastBlocked(token: CombatToken, level: number, asBonus: boolean): boolean {
   if (level <= 0) return false;
   if (token.castBonusSpell) return true;
@@ -2060,7 +2084,7 @@ function castSpecial(
   if (effect.type === "mage_armor") {
     const dex = abilityMod(pregen?.abilities.dex ?? 10);
     t.ac = 13 + dex;
-    if (effect.concentration) t.concentrating = { spellId: castId };
+    if (effect.concentration) setConcentration(t, castId);
     spendEconomy(t, isBonus);
     statusEvent(combat, t, name, `${t.name} is wrapped in mage armor. AC ${t.ac}.`);
     return { rolls: [] };
@@ -2072,7 +2096,7 @@ function castSpecial(
     if (effect.acFloor) who.acFloor = Number(effect.acFloor);
     if (effect.blur) who.blur = true;
     if (effect.invisible) who.invisible = true;
-    if (effect.concentration) t.concentrating = { spellId: castId, targetId: who.id };
+    if (effect.concentration) setConcentration(t, castId, who.id);
     spendEconomy(t, isBonus);
     statusEvent(combat, t, name, `${t.name} casts ${name}.`);
     return { rolls: [] };
@@ -2083,7 +2107,7 @@ function castSpecial(
     if (!foe) throw new Error("BAD_TARGET");
     demandShot(combat, t, foe);
     foe.brand = { by: t.id, dice: String(effect.dice ?? "1d6") };
-    t.concentrating = { spellId: castId, targetId: foe.id };
+    setConcentration(t, castId, foe.id);
     spendEconomy(t, isBonus);
     statusEvent(combat, t, name, `${t.name} brands ${foe.name}.`);
     return { rolls: [] };
@@ -2195,6 +2219,7 @@ export function performPcAction(
   dest?: Cell,
   gate?: { phase: "d20" } | { phase: "damage"; strike: StrikeHold },
 ): { rolls: DiceRoll[]; strike?: StrikeHold } {
+  expireReactionIfStale(combat);
   if (combat.status !== "active") throw new Error("COMBAT_OVER");
   if (combat.pending) throw new Error("REACTION_PENDING");
   combat.aimRequest = undefined;
@@ -2205,6 +2230,10 @@ export function performPcAction(
 
   let quicken = false;
   let castId = abilityId;
+  if (castId.startsWith("wild_shape:")) {
+    t.wildShapePick = castId.slice("wild_shape:".length);
+    castId = "wild_shape";
+  }
   if (abilityId.startsWith("quicken:")) {
     quicken = true;
     castId = abilityId.slice("quicken:".length);
@@ -2218,7 +2247,9 @@ export function performPcAction(
   const variant: AttackVariant | undefined = split.variant;
   castId = split.id;
 
-  const isBonus = t.bonusActionIds.includes(abilityId) || quicken;
+  const menuId = abilityId.startsWith("wild_shape:") ? castId : abilityId;
+  const isBonus =
+    t.bonusActionIds.includes(abilityId) || t.bonusActionIds.includes(menuId) || t.bonusActionIds.includes(castId) || quicken;
   const isAction = t.actionIds.includes(abilityId) || t.actionIds.includes(castId);
   if (!isBonus && !isAction) throw new Error("BAD_ABILITY");
 
@@ -2282,7 +2313,10 @@ export function performPcAction(
   if (t.sheetDriven && t.characterId) refreshMenus(t, pregen, getAbility);
 
   const special = castSpecial(combat, t, pregen, ability.name, effect, isBonus || quicken, targetId, dest, castId);
-  if (special) return special;
+  if (special) {
+    if (t.sheetDriven) refreshMenus(t, pregen, getAbility);
+    return special;
+  }
 
   if (effect.type === "dash") {
     if (dashStillUndoable(t, abilityId)) {
@@ -2988,7 +3022,7 @@ function castSaveArea(
   }
   t.hidden = false;
   spendEconomy(t, isBonus);
-  if (effect.concentration) t.concentrating = { spellId: name };
+  if (effect.concentration) setConcentration(t, name);
   const blow = hits
     .map((h) => {
       const foe = combat.tokens.find((x) => x.id === h.targetId);
@@ -3073,7 +3107,73 @@ function effectiveAc(token: CombatToken): number {
   return Math.max(token.ac, token.acFloor ?? 0) + (token.acBonus ?? 0);
 }
 
-export function applyDamage(combat: CombatState, target: CombatToken, amount: number, crit = false, damageType = "untyped"): void {
+function offerDamageDefense(
+  combat: CombatState,
+  target: CombatToken,
+  kind: "uncanny_dodge" | "deflect_attacks",
+  harm: number,
+  damageType: string,
+): boolean {
+  if (combat.pending || !target.playerId || harm <= 0) return false;
+  const label = kind === "uncanny_dodge" ? "Uncanny Dodge" : "Deflect Attacks";
+  combat.pending = {
+    kind,
+    playerId: target.playerId,
+    tokenId: target.id,
+    prompt: `${target.name} can use ${label}.`,
+    acceptLabel: kind === "uncanny_dodge" ? "Halve damage" : "Deflect",
+    declineLabel: "Take full damage",
+    damage: harm,
+    damageType,
+    rolls: [],
+    abilityName: label,
+    style: "melee",
+    attackerId: "",
+  };
+  combat.reactionExpiresAt = Date.now() + REACTION_WAIT_MS;
+  return true;
+}
+
+export function expireReactionIfStale(combat: CombatState): void {
+  if (!combat.pending || !combat.reactionExpiresAt) return;
+  if (Date.now() <= combat.reactionExpiresAt) return;
+  const pending = combat.pending;
+  combat.pending = undefined;
+  combat.reactionExpiresAt = undefined;
+  resolveReaction(combat, pending.playerId, false);
+}
+
+function tickGlobalTimedEffects(combat: CombatState): void {
+  for (const token of combat.tokens) {
+    if (!token.timedEffects?.length) continue;
+    const next = token.timedEffects
+      .map((row) => ({ ...row, pcTurnsLeft: row.pcTurnsLeft - 1 }))
+      .filter((row) => row.pcTurnsLeft > 0);
+    const ended = token.timedEffects.filter((row) => row.pcTurnsLeft === 1);
+    token.timedEffects = next.length ? next : undefined;
+    for (const row of ended) {
+      if (row.spellId === "wild_shape" && token.wildShaped) {
+        try {
+          statusEvent(combat, token, row.label, endWildShape(token));
+        } catch {
+          /* already reverted */
+        }
+        continue;
+      }
+      if (token.concentrating?.spellId === row.spellId) breakConcentration(combat, token);
+      statusEvent(combat, token, row.label, `${row.label} ends on ${token.name}.`);
+    }
+  }
+}
+
+export function applyDamage(
+  combat: CombatState,
+  target: CombatToken,
+  amount: number,
+  crit = false,
+  damageType = "untyped",
+  skipDefensePrompt = false,
+): void {
   let harm = harmAmount(target, amount, damageType);
   if (ignorePhysicalResistance(target, damageType)) {
     harm = amount;
@@ -3081,14 +3181,27 @@ export function applyDamage(combat: CombatState, target: CombatToken, amount: nu
   }
   if (target.raging && ["bludgeoning", "piercing", "slashing"].includes(damageType)) harm = Math.floor(harm / 2);
   const physical = ["bludgeoning", "piercing", "slashing"].includes(damageType);
-  if (target.reactionReady && hasFeature(target, "uncanny_dodge") && physical) {
-    target.reactionReady = false;
-    harm = Math.floor(harm / 2);
-  } else if (target.reactionReady && hasFeature(target, "deflect_attacks") && (physical || hasFeature(target, "deflect_energy"))) {
-    target.reactionReady = false;
-    const pregen = target.characterId ? getPregen(target.characterId) : undefined;
-    const reduce = rollNotation("1d10").total + abilityMod(pregen?.abilities.dex ?? 10) + (target.level ?? pregen?.level ?? 1);
-    harm = Math.max(0, harm - reduce);
+  if (
+    !skipDefensePrompt &&
+    target.reactionReady &&
+    physical &&
+    harm > 0 &&
+    target.kind === "pc" &&
+    hasFeature(target, "uncanny_dodge") &&
+    offerDamageDefense(combat, target, "uncanny_dodge", harm, damageType)
+  ) {
+    return;
+  }
+  if (
+    !skipDefensePrompt &&
+    target.reactionReady &&
+    harm > 0 &&
+    target.kind === "pc" &&
+    hasFeature(target, "deflect_attacks") &&
+    (physical || hasFeature(target, "deflect_energy")) &&
+    offerDamageDefense(combat, target, "deflect_attacks", harm, damageType)
+  ) {
+    return;
   }
   if (hasFeature(target, "superior_hunters_defense") && harm > 0) {
     const attacker = combat.tokens.find((x) => x.id !== target.id && !x.dead && chebyshev(x.x, x.y, target.x, target.y) <= 1);
@@ -3239,6 +3352,7 @@ function holdForShield(
     declineLabel: "Take the hit",
     ...blow,
   };
+  combat.reactionExpiresAt = Date.now() + REACTION_WAIT_MS;
   return true;
 }
 
@@ -3450,6 +3564,7 @@ function commitMove(combat: CombatState, mover: CombatToken, path: Cell[], cost:
       cost: rest.length - 1,
       dest: rest[rest.length - 1],
     };
+    combat.reactionExpiresAt = Date.now() + REACTION_WAIT_MS;
     return;
   }
   const attack = enemyAttacks(reactor).find((item) => item.range <= 1);
@@ -3569,6 +3684,7 @@ export function endTurn(combat: CombatState, playerId: string): void {
   if (!t || t.kind !== "pc" || t.playerId !== playerId) throw new Error("NOT_YOUR_TURN");
   if ((combat.awaiting ?? []).some((a) => a.step === "death" && a.playerId === playerId)) throw new Error("NO_ROLL");
   expireRage(combat, t);
+  tickGlobalTimedEffects(combat);
   runLegendaryWindow(combat, t);
   advanceTurn(combat);
 }
@@ -3886,6 +4002,27 @@ export function resolveReaction(combat: CombatState, playerId: string, accept: b
   const pending = combat.pending;
   if (!pending || pending.playerId !== playerId) throw new Error("NO_REACTION");
   combat.pending = undefined;
+  combat.reactionExpiresAt = undefined;
+  if (pending.kind === "uncanny_dodge" || pending.kind === "deflect_attacks") {
+    const target = combat.tokens.find((token) => token.id === pending.tokenId);
+    if (!target) {
+      continueAfterReaction(combat);
+      return;
+    }
+    let harm = pending.damage;
+    if (accept) {
+      target.reactionReady = false;
+      if (pending.kind === "uncanny_dodge") harm = Math.floor(harm / 2);
+      else {
+        const pregen = target.characterId ? getPregen(target.characterId) : undefined;
+        const reduce = rollNotation("1d10").total + abilityMod(pregen?.abilities.dex ?? 10) + (target.level ?? pregen?.level ?? 1);
+        harm = Math.max(0, harm - reduce);
+      }
+    }
+    applyDamage(combat, target, harm, false, pending.damageType ?? "untyped", true);
+    continueAfterReaction(combat);
+    return;
+  }
   if (pending.kind === "shield") {
     const target = combat.tokens.find((token) => token.id === pending.tokenId);
     let damage = pending.damage;

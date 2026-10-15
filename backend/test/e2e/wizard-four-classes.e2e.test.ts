@@ -193,6 +193,53 @@ test("phone 390x844 touch forges a fighter", async () => {
   }
 });
 
+test("TV D-pad forges a fighter through all wizard steps", async () => {
+  const user = `dpf${randomUUID().replace(/-/g, "").slice(0, 8)}`;
+  createUser(user, "password", "player");
+  const { token } = login(user, "password")!;
+  const app = mountSite();
+  const server = http.createServer(app);
+  await new Promise<void>((r) => server.listen(0, "127.0.0.1", r));
+  const port = (server.address() as { port: number }).port;
+  const base = `http://127.0.0.1:${port}`;
+  const browser = await chromium.launch({ headless: true });
+  try {
+    const context = await browser.newContext({ viewport: { width: 1920, height: 1080 } });
+    await context.addCookies([{ name: "fv_session", value: token, url: base }]);
+    const page = await context.newPage();
+    await page.goto(`${base}/?builder=open`, { waitUntil: "domcontentloaded" });
+    await page.waitForSelector(".hw");
+    const next = async () => {
+      await page.evaluate(() => window.dispatchEvent(new KeyboardEvent("keydown", { key: "MediaTrackNext", bubbles: true })));
+      await page.waitForTimeout(150);
+    };
+    const pick = async () => {
+      await page.keyboard.press("Enter");
+      await page.waitForTimeout(100);
+    };
+    await page.locator('[data-class="fighter"]').click();
+    await next();
+    await page.locator('[data-bg="soldier"]').click();
+    await next();
+    await page.locator('[data-species="elf"]').click();
+    await next();
+    await next();
+    await page.locator('[data-skill="persuasion"]').click();
+    await page.locator('[data-skill="insight"]').click();
+    await next();
+    await next();
+    await page.locator("#hwName").fill("Dpad Hero");
+    await next();
+    await page.locator("#hwNext").click();
+    const heroesRes = await fetch(`${base}/api/heroes`, { headers: { Cookie: `fv_session=${token}` } });
+    const body = (await heroesRes.json()) as { heroes: Array<{ name: string }> };
+    assert.ok(body.heroes.some((h) => h.name === "Dpad Hero"));
+  } finally {
+    await browser.close();
+    server.close();
+  }
+});
+
 test("TV D-pad moves the wizard with arrows and track skip", async () => {
   const user = `dp${randomUUID().replace(/-/g, "").slice(0, 8)}`;
   createUser(user, "password", "player");

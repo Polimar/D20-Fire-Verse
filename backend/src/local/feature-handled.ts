@@ -18,7 +18,7 @@ export const HANDLED: Record<string, string> = {
   greater_divine_intervention: "Divine Intervention also fills every ally",
   druidic: "Secret language; no grid effect",
   primal_order: "Warden or Magician is a level-up choice",
-  wild_shape: "Bonus action; temporary hit points equal to your level and AC at least 13",
+  wild_shape: "Bonus action; choose a PHB beast form (AC, HP, natural attacks); bonus action to end",
   wild_companion: "Spend a Wild Shape use; your next attack has advantage",
   wild_resurgence: "Spend a spell slot to regain one Wild Shape use",
   elemental_fury: "Once a turn, a weapon hit deals an extra 1d8",
