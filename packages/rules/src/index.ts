@@ -150,6 +150,9 @@ export function movementCostTo(
   return null;
 }
 
+export * from "./conditions.js";
+export * from "./builder-validate.js";
+export * from "./derive-hero.js";
 export * from "./chargen-rules.js";
 export * from "./content-types.js";
 export * from "./encounter-budget.js";

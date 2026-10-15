@@ -50,6 +50,10 @@ export type HeroRow = {
   respecFreeCredits: number;
   features: string[];
   spells: string[];
+  cantrips: string[];
+  spellsPrepared: string[];
+  spellbook: string[];
+  languages: string[];
   loadout: LoadoutSlots;
   pending: PendingAsk[];
   maxHp: number;
@@ -131,6 +135,10 @@ function mapHero(row: Record<string, unknown>): HeroRow {
     respecFreeCredits: Number(row.respec_free_credits ?? 0),
     features: parseJson(String(row.features_json ?? "[]"), []),
     spells: parseJson(String(row.spells_json ?? "[]"), []),
+    cantrips: parseJson(String(row.cantrips_json ?? "[]"), []),
+    spellsPrepared: parseJson(String(row.spells_prepared_json ?? "[]"), []),
+    spellbook: parseJson(String(row.spellbook_json ?? "[]"), []),
+    languages: parseJson(String(row.languages_json ?? "[]"), []),
     loadout,
     pending: parseJson(String(row.pending_choices_json ?? "[]"), []),
     maxHp: Number(row.hp_current ?? 0),
@@ -142,7 +150,8 @@ function saveHero(hero: HeroRow): void {
   accountDb()
     .prepare(
       `UPDATE heroes SET name=?, classes_json=?, species=?, background=?, alignment=?, level=?, xp=?,
-        ability_scores_json=?, skills_json=?, portrait=?, respec_free_credits=?, features_json=?, spells_json=?, loadout_json=?
+        ability_scores_json=?, skills_json=?, portrait=?, respec_free_credits=?, features_json=?, spells_json=?,
+        cantrips_json=?, spells_prepared_json=?, spellbook_json=?, languages_json=?, loadout_json=?
        WHERE id=?`,
     )
     .run(
@@ -159,6 +168,10 @@ function saveHero(hero: HeroRow): void {
       hero.respecFreeCredits,
       JSON.stringify(hero.features),
       JSON.stringify(hero.spells),
+      JSON.stringify(hero.cantrips),
+      JSON.stringify(hero.spellsPrepared),
+      JSON.stringify(hero.spellbook),
+      JSON.stringify(hero.languages),
       JSON.stringify(hero.loadout),
       hero.id,
     );
@@ -206,6 +219,12 @@ export function listHeroes(userId: string): HeroRow[] {
 
 function ensureWallet(userId: string): void {
   accountDb().prepare("INSERT OR IGNORE INTO account_wallet (user_id, gold_balance, hard_currency_balance) VALUES (?, 0, 0)").run(userId);
+}
+
+export function creditGold(userId: string, amount: number): void {
+  if (!Number.isInteger(amount) || amount <= 0) return;
+  ensureWallet(userId);
+  accountDb().prepare("UPDATE account_wallet SET gold_balance = gold_balance + ? WHERE user_id = ?").run(amount, userId);
 }
 
 export function wallet(userId: string): { gold: number; hard: number } {
@@ -506,7 +525,7 @@ export function canLevelUp(heroId: string): boolean {
   return levelForXp(hero.xp, xpThresholds()) > hero.level;
 }
 
-function progressionCatalog(): CatalogSlice {
+export function progressionCatalog(): CatalogSlice {
   const inPlay = new Set(listCatalog().filter((row) => row.inPlay).map((row) => `${row.kind}:${row.id}`));
   const take = <T extends { id: string }>(kind: string, rows: T[]) => rows.filter((row) => inPlay.has(`${kind}:${row.id}`));
   return {
@@ -520,9 +539,17 @@ function progressionCatalog(): CatalogSlice {
 }
 
 function toProgress(hero: HeroRow): ProgressionHero {
+  const cantrips = hero.cantrips.length ? hero.cantrips : hero.spells.filter((id) => {
+    const spell = enabledSpells().find((s) => s.id === id);
+    return spell?.level === 0;
+  });
+  const spells = hero.spellsPrepared.length
+    ? hero.spellsPrepared
+    : hero.spells.filter((id) => !cantrips.includes(id));
   return {
     ...toRules(hero),
-    cantrips: [],
+    cantrips,
+    spells,
     pending: hero.pending,
     maxHp: hero.maxHp || 1,
   };
@@ -562,7 +589,9 @@ export function applyLevelUp(heroId: string, picks?: LevelPick): HeroRow {
   hero.abilities = progress.abilities;
   hero.features = progress.features;
   hero.skills = progress.proficiency;
-  hero.spells = [...progress.spells, ...progress.cantrips];
+  hero.cantrips = [...progress.cantrips];
+  hero.spellsPrepared = [...progress.spells];
+  hero.spells = [...progress.cantrips, ...progress.spells];
   hero.pending = progress.pending;
   hero.maxHp = progress.maxHp;
   saveHero(hero);

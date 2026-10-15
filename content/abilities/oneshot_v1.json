@@ -423,6 +423,13 @@
       { "type": "heal", "dice": "1d10+3", "self": true }
     ]
   },
+  "std_attack": {
+    "id": "std_attack",
+    "name": "Attack",
+    "actionType": "action",
+    "needsTarget": false,
+    "effects": [{ "type": "attack_action" }]
+  },
   "std_dash": {
     "id": "std_dash",
     "name": "Dash",
@@ -458,6 +465,20 @@
     "needsTarget": false,
     "effects": [{ "type": "hide" }]
   },
+  "std_influence": {
+    "id": "std_influence",
+    "name": "Influence",
+    "actionType": "action",
+    "needsTarget": false,
+    "effects": [{ "type": "influence" }]
+  },
+  "std_magic": {
+    "id": "std_magic",
+    "name": "Magic",
+    "actionType": "action",
+    "needsTarget": false,
+    "effects": [{ "type": "magic_action" }]
+  },
   "std_ready": {
     "id": "std_ready",
     "name": "Ready",
@@ -465,12 +486,26 @@
     "needsTarget": false,
     "effects": [{ "type": "ready" }]
   },
+  "std_study": {
+    "id": "std_study",
+    "name": "Study",
+    "actionType": "action",
+    "needsTarget": false,
+    "effects": [{ "type": "study" }]
+  },
   "std_search": {
     "id": "std_search",
     "name": "Search",
     "actionType": "action",
     "needsTarget": false,
     "effects": [{ "type": "search" }]
+  },
+  "std_utilize": {
+    "id": "std_utilize",
+    "name": "Utilize",
+    "actionType": "action",
+    "needsTarget": false,
+    "effects": [{ "type": "utilize" }]
   },
   "use_potion_healing": {
     "id": "use_potion_healing",

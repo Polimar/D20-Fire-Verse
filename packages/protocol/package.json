@@ -6,7 +6,9 @@
   "main": "./src/index.ts",
   "exports": {
     ".": "./src/index.ts",
-    "./sheet": "./src/sheet.ts"
+    "./sheet": "./src/sheet.ts",
+    "./builder": "./src/builder.ts",
+    "./forge-app": "./src/forge-app.ts"
   },
   "types": "./src/index.ts"
 }

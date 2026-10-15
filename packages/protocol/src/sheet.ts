@@ -20,7 +20,9 @@ export type PcSheet = {
   background: string;
   hp: number;
   maxHp: number;
+  tempHp?: number;
   ac: number;
+  passivePerception?: number;
   speedCells: number;
   proficiencyBonus: number;
   abilities: Record<string, { score: number; mod: number; modLabel: string }>;

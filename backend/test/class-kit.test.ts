@@ -37,9 +37,9 @@ test("rogue sneak dice scale from the table", () => {
   assert.equal(buildKit([{ id: "rogue", level: 10 }]).sneakDice, 5);
 });
 
-test("playable cap is 10 for barbarian and fighter, and every runs row has a kit flag or a known engine hook", () => {
-  assert.equal(classLevelCap("barbarian"), 10);
-  assert.equal(classLevelCap("fighter"), 10);
+test("playable cap reaches 20 for barbarian and fighter when no blocking rows remain", () => {
+  assert.equal(classLevelCap("barbarian"), 20);
+  assert.equal(classLevelCap("fighter"), 20);
   const summary = coverageSummary();
   assert.ok(summary.find((row) => row.classId === "barbarian")!.blocked === 0);
   const barb = buildKit([{ id: "barbarian", level: 10, subclass: "path_of_the_berserker" }]);

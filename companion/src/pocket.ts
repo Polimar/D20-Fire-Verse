@@ -3,6 +3,7 @@
  * for the same account signing in on a TV.
  */
 
+import { mountForgeApp } from "@d20-fireverse/protocol/forge-app";
 import { isSheetTab, pcSheetHtml, type PcSheet, type SheetTab } from "@d20-fireverse/protocol/sheet";
 
 type Pregen = { id: string; name: string; summary: string; portrait: string; level: number; custom?: boolean };
@@ -141,7 +142,22 @@ export function mountPocket(host: HTMLElement, adopt: (key: string) => void, sca
     );
   };
 
+  const openForgeV2 = async () => {
+    card().innerHTML = `<div id="pocketForgeHost" class="pocket-forge"></div>`;
+    const host = card().querySelector<HTMLElement>("#pocketForgeHost")!;
+    await mountForgeApp(host, {
+      api,
+      backLabel: "← Heroes",
+      onBack: () => void refresh().then(paintHome),
+      onDone: () => void refresh().then(paintHome),
+    });
+  };
+
   const openForge = async (reforgeId?: string) => {
+    if (!reforgeId?.startsWith("custom_")) {
+      await openForgeV2();
+      return;
+    }
     catalog = catalog ?? (await api<Catalog>("/api/chargen"));
     const cat = catalog;
     const abilities = ["str", "dex", "con", "int", "wis", "cha"] as const;
@@ -260,7 +276,22 @@ export function mountPocket(host: HTMLElement, adopt: (key: string) => void, sca
       const me = await api<{ user: { username: string } }>("/api/me");
       user = me.user.username;
       void api("/api/session/surface", { method: "POST", body: JSON.stringify({ surface: "companion" }) });
-      heroes = (await api<Pregen[]>("/api/pregens")).filter((p) => p.custom || String(p.id).startsWith("custom_"));
+      const legacy = (await api<Pregen[]>("/api/pregens")).filter((p) => p.custom || String(p.id).startsWith("custom_"));
+      const v2 = await api<{ heroes: Array<{ id: string; name: string; level: number; classes: Array<{ id: string }> }> }>("/api/heroes");
+      heroes = [
+        ...v2.heroes.map((h) => ({
+          id: h.id,
+          name: h.name,
+          summary: `Level ${h.level} ${h.classes[0]?.id ?? "hero"}`,
+          portrait: "/art/portraits/human_fighter.png",
+          level: h.level,
+        })),
+        ...legacy,
+      ];
+      const scanFrame = document.getElementById("scanFrame");
+      const scanHint = document.getElementById("scanHint");
+      if (scanFrame) scanFrame.hidden = true;
+      if (scanHint) scanHint.textContent = "Signed in — forge heroes below. Scan a TV code from Home when you sit at a table.";
       paintHome();
     } catch {
       user = null;
