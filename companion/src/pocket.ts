@@ -181,6 +181,8 @@ export function mountPocket(host: HTMLElement, adopt: (key: string) => void, sca
           itemDefId: string;
           equippedBy?: string | null;
           boundToHeroId?: string | null;
+          description?: string;
+          equippedBonus?: string;
         }>;
       }>("/api/stash"),
       api<{ payToWin: string; slots: Array<{ itemId: string; name: string; priceGold: number }> }>("/api/vendor"),
@@ -198,7 +200,13 @@ export function mountPocket(host: HTMLElement, adopt: (key: string) => void, sca
       const onHero = hero && item.equippedBy === hero.id;
       const busy = item.inUseBy && !onHero;
       const tag = item.boundToHeroId ? " · personal" : item.inUseBy ? (onHero ? " · equipped" : ` · on ${item.inUseBy}`) : " · shared";
-      return `<li>${esc(item.name)}${tag}
+      const blurb =
+        item.description || item.equippedBonus
+          ? `<span class="armory-blurb">${item.description ? `<span>${esc(item.description)}</span>` : ""}${
+              item.equippedBonus ? `<span><strong>If equipped:</strong> ${esc(item.equippedBonus)}</span>` : ""
+            }</span>`
+          : "";
+      return `<li class="armory-row">${esc(item.name)}${tag}${blurb}
           ${hero && !busy && !onHero ? `<button type="button" data-equip="${esc(item.id)}">Equip</button>` : ""}
           ${onHero ? `<button type="button" data-unequip="${esc(item.id)}">Unequip</button>` : ""}</li>`;
     };

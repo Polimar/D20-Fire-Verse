@@ -20,6 +20,7 @@ import {
   type CatalogSlice,
   type HeroRules,
   type ItemRules,
+  itemArmoryCopy,
   type LevelPick,
   type LoadoutSlots,
   type PendingAsk,
@@ -358,12 +359,17 @@ export function listStash(userId: string): StashRow[] {
   }));
 }
 
-export function stashView(userId: string): Array<StashRow & { name: string; inUseBy?: string }> {
+export function stashView(
+  userId: string,
+): Array<StashRow & { name: string; description: string; equippedBonus: string; inUseBy?: string }> {
   const heroes = new Map(listHeroes(userId).map((hero) => [hero.id, hero.name]));
   return (accountDb().prepare("SELECT * FROM account_stash WHERE user_id = ?").all(userId) as Array<Record<string, unknown>>).map((row) => {
     const equippedBy = row.equipped_by_hero_id == null ? null : String(row.equipped_by_hero_id);
     const def = enabledItems().find((item) => item.id === String(row.item_def_id));
     const boundToHeroId = row.bound_hero_id == null ? null : String(row.bound_hero_id);
+    const copy = def
+      ? itemArmoryCopy({ ...asItem(def), weapon: def.weapon, armor: def.armor, charges: def.charges })
+      : { description: "", equippedBonus: "" };
     return {
       id: String(row.id),
       userId,
@@ -372,6 +378,8 @@ export function stashView(userId: string): Array<StashRow & { name: string; inUs
       attunedBy: row.attuned_by_hero_id == null ? null : String(row.attuned_by_hero_id),
       boundToHeroId,
       name: def?.name ?? String(row.item_def_id),
+      description: copy.description,
+      equippedBonus: copy.equippedBonus,
       ...(equippedBy ? { inUseBy: heroes.get(equippedBy) ?? equippedBy } : {}),
     };
   });

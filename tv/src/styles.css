@@ -1277,12 +1277,20 @@ body.wizard-open .pages { visibility: hidden; }
 .armory-modal .modal-card { width: min(46rem, 100%); max-height: 88vh; overflow: auto; }
 .armory-list { list-style: none; margin: 0.75rem 0 0; padding: 0; display: grid; gap: 0.45rem; }
 .armory-item {
-  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.5rem;
+  display: grid; grid-template-columns: minmax(6.5rem, 0.9fr) minmax(0, 2.2fr) auto; align-items: center; gap: 0.65rem 0.75rem;
   padding: 0.65rem 0.75rem; border-radius: 12px; border: 1px solid rgba(246, 234, 214, 0.14); background: rgba(0, 0, 0, 0.25);
 }
-.armory-item-name { display: grid; gap: 0.1rem; min-width: 8rem; }
+@media (max-width: 36rem) {
+  .armory-item { grid-template-columns: 1fr; }
+  .armory-item-actions { justify-content: flex-start; }
+}
+.armory-item-name { display: grid; gap: 0.1rem; min-width: 0; }
 .armory-item-name em { font-style: normal; color: var(--ink-dim); font-size: 0.85rem; }
-.armory-item-actions { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+.armory-item-detail { display: grid; gap: 0.2rem; min-width: 0; font-size: 0.86rem; line-height: 1.35; color: var(--ink-dim); }
+.armory-item-desc { color: var(--ink-mute, var(--ink-dim)); }
+.armory-item-bonus strong { color: var(--gold); font-weight: 600; margin-right: 0.25rem; }
+.armory-item-actions { display: flex; flex-wrap: wrap; gap: 0.35rem; justify-content: flex-end; align-self: center; }
+.armory-section { margin: 0.85rem 0 0.35rem; font-size: 0.95rem; color: var(--gold); font-family: var(--font-display, inherit); }
 .armory-heroes { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0.5rem 0; }
 .armory-heroes .picked { border-color: var(--ember); box-shadow: 0 0 0 2px rgba(240, 160, 90, 0.35); }
 button.sm { min-height: 2.4rem; padding: 0.35rem 0.75rem; font-size: 0.9rem; }

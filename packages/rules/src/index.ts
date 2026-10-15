@@ -157,6 +157,7 @@ export * from "./chargen-rules.js";
 export * from "./content-types.js";
 export * from "./encounter-budget.js";
 export * from "./loadout.js";
+export * from "./item-armory.js";
 export * from "./mastery.js";
 export * from "./matchmaking.js";
 export * from "./requires.js";

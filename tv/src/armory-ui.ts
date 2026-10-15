@@ -12,6 +12,8 @@ type StashRow = {
   equippedBy: string | null;
   attunedBy: string | null;
   boundToHeroId?: string | null;
+  description?: string;
+  equippedBonus?: string;
   inUseBy?: string;
 };
 
@@ -90,8 +92,15 @@ function renderItemList(items: StashRow[]): string {
             : item.boundToHeroId
               ? "Personal gear"
               : "Shared stash";
+      const detail = item.description || item.equippedBonus
+        ? `<span class="armory-item-detail">
+            ${item.description ? `<span class="armory-item-desc">${esc(item.description)}</span>` : ""}
+            ${item.equippedBonus ? `<span class="armory-item-bonus"><strong>If equipped:</strong> ${esc(item.equippedBonus)}</span>` : ""}
+          </span>`
+        : `<span class="armory-item-detail"></span>`;
       return `<li class="armory-item">
         <span class="armory-item-name"><strong>${esc(item.name)}</strong><em>${esc(status)}</em></span>
+        ${detail}
         <span class="armory-item-actions">${itemActions(item)}</span>
       </li>`;
     })
