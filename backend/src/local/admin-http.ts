@@ -79,8 +79,10 @@ function amazonRedirectUri(): string {
 }
 
 function safeNext(raw: unknown): string {
-  const s = String(raw ?? "");
-  if (s.startsWith("/companion") && !s.includes("//") && !s.includes("\\")) return s.slice(0, 200);
+  const s = String(raw ?? "").split("?")[0];
+  if (s.includes("//") || s.includes("\\")) return "/";
+  if (s.startsWith("/companion")) return s.slice(0, 200);
+  if (s === "/forge" || s.startsWith("/forge/")) return s.slice(0, 200);
   return "/";
 }
 

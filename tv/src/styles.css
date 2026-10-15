@@ -504,6 +504,54 @@ body[data-tone="victory"] .vignette {
 .forge-mark::after { display: none; }
 .hero-card.forge .hero-copy { margin-top: 0; padding-top: 0.9rem; }
 
+.home-welcome .home-forge-link { margin-inline: 0.35rem; }
+
+body.forge-page {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--oak);
+  color: var(--ink);
+  font-family: var(--font-body);
+}
+.forge-v2.forge-app {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: var(--safe);
+}
+.forge-head {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+.forge-head h1 {
+  font-family: var(--font-display);
+  font-size: 1.4rem;
+  margin: 0;
+}
+.forge-grid {
+  display: grid;
+  gap: 1.25rem;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+}
+@media (max-width: 900px) {
+  .forge-grid { grid-template-columns: 1fr; }
+}
+.forge-panel,
+.forge-review {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 1rem 1.1rem;
+}
+.forge-panel label,
+.forge-panel fieldset {
+  display: block;
+  margin-bottom: 0.65rem;
+}
+.forge-panel fieldset { border: 1px solid var(--line); border-radius: var(--radius-s); padding: 0.75rem; }
+.forge-error-title { font-family: var(--font-display); font-size: 1.1rem; margin: 0 0 0.5rem; }
+
 .lobby-side { display: grid; gap: 0.9rem; align-content: start; }
 .room-card { text-align: center; }
 .room-code {
