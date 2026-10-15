@@ -266,14 +266,42 @@ function readEffects(body: string, knownSpells: Set<string>, variantBonus?: numb
       });
     };
     const onlyAgainst = (found: RegExpMatchArray) => /^[^,.;]*\bagainst\b/i.test(s.slice(found.index! + found[0].length));
+    const plantedAura = /you and your allies gain/i.test(s) && /Armor Class and saving throws/i.test(s);
     const ac = s.match(/\+(\d) bonus to (?:Armor Class|AC)\b/i);
-    if (ac && onlyAgainst(ac)) {
+    if (plantedAura || /plant the haft end of the rod/i.test(s)) {
+      if (!effects.some((e) => e.kind === "plant_aura")) {
+        effects.push({ kind: "plant_aura", radiusCells: 12, filter: "ally", ac: 1, saves: 1 });
+      }
+      covered = true;
+    } else if (ac && onlyAgainst(ac)) {
       situational({ kind: "ac_bonus", amount: Number(ac[1]) }, "AC bonus");
       covered = true;
     } else if (ac) {
       effects.push({ kind: "ac_bonus", amount: Number(ac[1]) });
       covered = true;
-      if (/and saving throws/i.test(s)) notModeled.push(`+${ac[1]} bonus to saving throws.`);
+      if (/saving throws/i.test(s)) effects.push({ kind: "save_bonus", amount: Number(ac[1]) });
+    }
+    const saveOnly = !ac && !plantedAura ? s.match(/\+(\d) bonus to (?:ability checks and )?saving throws/i) : null;
+    if (saveOnly) {
+      effects.push({ kind: "save_bonus", amount: Number(saveOnly[1]) });
+      covered = true;
+      if (/ability checks/i.test(s)) notModeled.push("+1 bonus to ability checks.");
+    }
+    if (/Emanation originating from you/i.test(s) && /Advantage on saving throws against spells/i.test(s)) {
+      effects.push({ kind: "grant_aura", radiusCells: 2, filter: "ally", saveAdv: "vs_magic" });
+      covered = true;
+    }
+    const undeadAura = s.match(/Undead that starts its turn in that area takes (\d+d\d+) Radiant/i);
+    if (undeadAura) {
+      effects.push({
+        kind: "grant_aura",
+        radiusCells: 6,
+        filter: "all",
+        creatureTypes: ["undead"],
+        excludeSource: true,
+        onStartTurn: { dice: undeadAura[1]!, damageType: "radiant" },
+      });
+      covered = true;
     }
     if (variantBonus && !ac && /bonus to Armor Class/i.test(s)) {
       effects.push({ kind: "ac_bonus", amount: variantBonus });
@@ -317,6 +345,16 @@ function readEffects(body: string, knownSpells: Set<string>, variantBonus?: numb
       for (const t of types) effects.push({ kind: "immunity", damageType: t });
       if (types.length) covered = true;
     }
+    const healDrink = s.match(/regain (\d+d\d+(?:\s*\+\s*\d+)?)\s+Hit Points when you drink/i);
+    if (healDrink) {
+      effects.push({ kind: "heal_drink", dice: cleanDice(healDrink[1]!.replace(/\s+/g, "")) });
+      covered = true;
+    }
+    const vicious = s.match(/extra (\d+d\d+) damage/i);
+    if (vicious && /same type as the weapon/i.test(s)) {
+      effects.push({ kind: "on_hit_rider", damage: cleanDice(vicious[1]!) });
+      covered = true;
+    }
     const rider = s.match(/extra (\d+d\d+) ([A-Za-z]+) damage/i);
     if (rider && isDamageType(rider[2]!)) {
       const effect: EffectDef = { kind: "on_hit_rider", damage: cleanDice(rider[1]!), damageType: rider[2]!.toLowerCase() };
@@ -332,6 +370,9 @@ function readEffects(body: string, knownSpells: Set<string>, variantBonus?: numb
           parserChoice: 0,
         });
       } else effects.push(effect);
+      covered = true;
+    }
+    if (/your Strength score changes for 1 hour/i.test(s)) {
       covered = true;
     }
     const stat = s.match(/Your (Strength|Dexterity|Constitution|Intelligence|Wisdom|Charisma)(?: score)? (?:is|changes to|becomes) (\d+)/i);
@@ -429,16 +470,20 @@ export function parseMagicItems(markdown: string, knownSpells: Set<string>, gear
       const head = strTable[0]!;
       const scoreCol = head.findIndex((c) => /^Str\.?$/i.test(c));
       const rarityCol = head.findIndex((c) => /rarity/i.test(c));
+      const drink = /when you drink this potion/i.test(plainMarkdown(body)) || /potion of giant strength/i.test(plainMarkdown(body));
       const read = readEffects(body, knownSpells);
       for (const row of strTable.slice(1)) {
         const score = Number(row[scoreCol]);
         if (!row[0] || !Number.isFinite(score)) continue;
+        const strEffect = drink
+          ? ({ kind: "stat_drink" as const, ability: "str" as const, score, durationPcTurns: 60 })
+          : ({ kind: "stat_set" as const, ability: "str" as const, score });
         out.push({
           item: base({
             id: slug(row[0]),
             name: row[0],
             rarity: rarityOf(row[rarityCol] ?? "") ?? "rare",
-            effects: [{ kind: "stat_set", ability: "str", score }, ...read.effects.filter((e) => e.kind !== "stat_set")],
+            effects: [strEffect, ...read.effects.filter((e) => e.kind !== "stat_set" && e.kind !== "stat_drink")],
           }),
           text,
           line,

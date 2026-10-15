@@ -211,14 +211,36 @@ function itemEffectLine(effect: EffectDef, weapon: boolean): EngineLine {
   switch (effect.kind) {
     case "ac_bonus":
       return { label: "AC", detail: `+${effect.amount} Armor Class while equipped.`, ok: true };
+    case "save_bonus":
+      return { label: "Saves", detail: `+${effect.amount} to saving throws while equipped.`, ok: true };
+    case "grant_aura":
+      return { label: "Aura", detail: `${effect.radiusCells * 5}-foot aura while equipped.`, ok: true };
+    case "plant_aura":
+      return { label: "Aura", detail: `Plant a ${effect.radiusCells * 5}-foot aura as a Magic action.`, ok: true };
     case "attack_bonus":
       return { label: "Attack", detail: `+${effect.amount} to ${weapon ? "attack rolls with this weapon" : "every attack roll"}.`, ok: true };
     case "damage_bonus":
       return { label: "Damage", detail: `+${effect.amount} to ${weapon ? "damage with this weapon" : "every damage roll"}.`, ok: true };
-    case "on_hit_rider":
+    case "heal_drink":
+      return {
+        label: "Heal",
+        detail: `Drink as an action to regain ${effect.dice} Hit Points (combat menu when carried).`,
+        ok: true,
+      };
+    case "on_hit_rider": {
+      const typeNote = effect.damageType ?? "the weapon's damage type";
       return weapon
-        ? { label: "On hit", detail: `+${effect.damage} ${effect.damageType} rolled on every hit (doubled on a crit). Resistance reads the weapon's damage type for the whole hit.`, ok: true }
-        : { label: "On hit", detail: `+${effect.damage} ${effect.damageType}, but this item is not a weapon, so nothing carries it.`, ok: false };
+        ? {
+            label: "On hit",
+            detail: `+${effect.damage} ${typeNote} rolled on every hit (doubled on a crit). Resistance reads the weapon's damage type for the whole hit.`,
+            ok: true,
+          }
+        : {
+            label: "On hit",
+            detail: `+${effect.damage} ${typeNote}, but this item is not a weapon, so nothing carries it.`,
+            ok: false,
+          };
+    }
     case "resistance":
       return { label: "Resistance", detail: `Half ${effect.damageType} damage taken.`, ok: true };
     case "immunity":
@@ -233,6 +255,12 @@ function itemEffectLine(effect: EffectDef, weapon: boolean): EngineLine {
       return { label: "Feature", detail: `${effect.featureId}: not applied by the combat seat.`, ok: false };
     case "stat_set":
       return { label: "Ability", detail: `${ABILITY_NAMES[effect.ability]} becomes ${effect.score} unless already higher.`, ok: true };
+    case "stat_drink":
+      return {
+        label: "Drink",
+        detail: `Drink as an action to set ${ABILITY_NAMES[effect.ability]} to ${effect.score} for a short time unless already higher.`,
+        ok: true,
+      };
     case "stat_increase_cap":
       return { label: "Ability cap", detail: `${ABILITY_NAMES[effect.ability]} max ${effect.cap}: not applied by the combat seat.`, ok: false };
     default: {

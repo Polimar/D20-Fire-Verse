@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Friction log — D20 FireVerse</title>
+    <meta
+      name="description"
+      content="Friction log for the Amazon Developer Hackathon 2026, Fire TV track. Tasks, expected and actual results, severity, workarounds, and suggestions."
+    />
+    <meta name="theme-color" content="#120c09" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png" />
+    <style>
+      :root {
+        color-scheme: dark;
+        --ink: #f6ead6;
+        --dim: #cdbb9e;
+        --mute: #8f7d67;
+        --oak: #120c09;
+        --panel: #1d140f;
+        --gold: #f1c46b;
+        --copper: #f0a05a;
+        --line: rgba(246, 234, 214, 0.14);
+        --high: #e6735f;
+        --med: #f1c46b;
+        --low: #7fb46a;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        background: var(--oak);
+        color: var(--ink);
+        font: 18px/1.55 Georgia, "Iowan Old Style", Palatino, serif;
+      }
+      main {
+        max-width: 46rem;
+        margin: 0 auto;
+        padding: 2.5rem 1.25rem 4rem;
+      }
+      a { color: var(--copper); }
+      h1, h2 { font-family: Palatino, "Palatino Linotype", Georgia, serif; font-weight: 500; letter-spacing: 0.02em; }
+      h1 { font-size: 2.4rem; line-height: 1.15; margin: 0 0 0.4rem; }
+      .kicker { color: var(--gold); letter-spacing: 0.14em; text-transform: uppercase; font-size: 0.78rem; margin: 0 0 0.8rem; }
+      .lede { color: var(--dim); margin: 0 0 2rem; }
+      article {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        padding: 1.1rem 1.2rem 0.4rem;
+        margin: 0 0 1rem;
+      }
+      article h2 { font-size: 1.25rem; margin: 0 0 0.7rem; }
+      .meta { display: flex; gap: 0.6rem; align-items: center; margin: 0 0 0.8rem; color: var(--mute); font-size: 0.85rem; }
+      .badge { border-radius: 999px; padding: 0.1rem 0.55rem; font-size: 0.75rem; letter-spacing: 0.06em; text-transform: uppercase; }
+      .high { color: var(--high); border: 1px solid var(--high); }
+      .med { color: var(--med); border: 1px solid var(--med); }
+      .low { color: var(--low); border: 1px solid var(--low); }
+      dt { color: var(--gold); font-size: 0.78rem; letter-spacing: 0.08em; text-transform: uppercase; margin-top: 0.7rem; }
+      dd { margin: 0.15rem 0 0; }
+      code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 0.92em; color: var(--copper); }
+    </style>
+  </head>
+  <body>
+    <main>
+      <p class="kicker">Amazon Developer Hackathon 2026 · Fire TV</p>
+      <h1>Friction log</h1>
+      <p class="lede">
+        What we tried with Fire TV, Login with Amazon, and the surrounding tools, what we expected,
+        what actually happened, and what would have unblocked us. The game itself is at
+        <a href="https://www.d20fireverse.it/">www.d20fireverse.it</a>.
+        Source notes live in the repository at <code>docs/FRICTION_LOG.md</code>.
+      </p>
+
+      <article>
+        <h2>Restart the table server</h2>
+        <p class="meta"><span class="badge med">Medium</span> 28 September 2026</p>
+        <dl>
+          <dt>Task</dt>
+          <dd>Run the table server on the VPS.</dd>
+          <dt>Steps</dt>
+          <dd><code>npm run start</code>, listening on port 3100.</dd>
+          <dt>Expected</dt>
+          <dd>A clean boot after a restart.</dd>
+          <dt>Actual</dt>
+          <dd><code>EADDRINUSE</code>, and the process died with exit 137 while the port was still held.</dd>
+          <dt>Workaround</dt>
+          <dd><code>fuser -k 3100/tcp</code> before start. Written into the local dev notes.</dd>
+          <dt>Suggestion</dt>
+          <dd>A Fire TV sample for one WebSocket server on one port should include the restart, not only the happy path.</dd>
+        </dl>
+      </article>
+
+      <article>
+        <h2>Second attack on the Fire TV remote</h2>
+        <p class="meta"><span class="badge high">High</span> 28 September 2026</p>
+        <dl>
+          <dt>Task</dt>
+          <dd>Attack a second enemy after the first kill, using the remote.</dd>
+          <dt>Steps</dt>
+          <dd>Attack the first foe, then press OK on the next one.</dd>
+          <dt>Expected</dt>
+          <dd>A second attack, or a clear reason why not.</dd>
+          <dt>Actual</dt>
+          <dd>The action was already spent, and the press was read as a move onto the enemy. The fight felt stuck.</dd>
+          <dt>Workaround</dt>
+          <dd>End Turn. Later, OK on an enemy means strike, and a first-fight coach marks the recommended action.</dd>
+          <dt>Suggestion</dt>
+          <dd>Remote samples should show that OK confirms the focused action, and that a spent action stays visible. A game cursor is not a mouse click.</dd>
+        </dl>
+      </article>
+
+      <article>
+        <h2>Speech from the Fire TV remote</h2>
+        <p class="meta"><span class="badge high">High</span> 28 September 2026</p>
+        <dl>
+          <dt>Task</dt>
+          <dd>Speak a command into the Fire TV remote microphone.</dd>
+          <dt>Steps</dt>
+          <dd>Look for speech-to-text inside the Fire OS WebView.</dd>
+          <dt>Expected</dt>
+          <dd>The remote mic produces a transcript the game can turn into a move, an attack, or end turn.</dd>
+          <dt>Actual</dt>
+          <dd>The WebView has no speech-to-text. The remote cannot talk to the app.</dd>
+          <dt>Workaround</dt>
+          <dd>The phone is the second seat. It scans the TV's QR code and sends structured intents. The die is thrown on the phone and lands on the television.</dd>
+          <dt>Suggestion</dt>
+          <dd>Document whether the Fire TV remote microphone is available to third-party apps. If it is, publish a WebView sample. If it is not, say so on the track page.</dd>
+        </dl>
+      </article>
+
+      <article>
+        <h2>Room lights from game state</h2>
+        <p class="meta"><span class="badge high">High</span> 28 September 2026</p>
+        <dl>
+          <dt>Task</dt>
+          <dd>Change the room lights when the scene changes.</dd>
+          <dt>Steps</dt>
+          <dd>Look for an API a third-party app can use to trigger the customer's Alexa-linked lights.</dd>
+          <dt>Expected</dt>
+          <dd>The same server state that rolls the die can set the room.</dd>
+          <dt>Actual</dt>
+          <dd>There is no public API for a third-party app to command the customer's devices.</dd>
+          <dt>Workaround</dt>
+          <dd>The feature was cut. The game is fully playable on screen, remote, and phone.</dd>
+          <dt>Suggestion</dt>
+          <dd>A permissioned, per-household trigger, a routine or a narrow lighting scope, that an app can call without owning the customer's whole account.</dd>
+        </dl>
+      </article>
+
+      <article>
+        <h2>The Stick kept an old build</h2>
+        <p class="meta"><span class="badge low">Low</span> 28 September 2026</p>
+        <dl>
+          <dt>Task</dt>
+          <dd>Serve the TV client as the page the Fire TV app loads.</dd>
+          <dt>Steps</dt>
+          <dd>Build the PixiJS app and have Express serve <code>tv/dist</code>.</dd>
+          <dt>Expected</dt>
+          <dd>One URL, always current.</dd>
+          <dt>Actual</dt>
+          <dd>The Stick keeps the previous build until the client is rebuilt and the server is restarted.</dd>
+          <dt>Workaround</dt>
+          <dd>Rebuild the TV package, then restart. Day to day we use the Vite dev server.</dd>
+          <dt>Suggestion</dt>
+          <dd>Say in the WebView docs that a packaged page is a snapshot, and show a cache-busting header for local development.</dd>
+        </dl>
+      </article>
+
+      <article>
+        <h2>Login with Amazon in a public repository</h2>
+        <p class="meta"><span class="badge med">Medium</span> 13 October 2026</p>
+        <dl>
+          <dt>Task</dt>
+          <dd>Compile Login with Amazon from a clean clone.</dd>
+          <dt>Steps</dt>
+          <dd>Depend on the Login with Amazon Android SDK from Gradle.</dd>
+          <dt>Expected</dt>
+          <dd>A clean clone compiles the sign-in path.</dd>
+          <dt>Actual</dt>
+          <dd>The SDK may not be redistributed, so the jar is not in git. The app compiles a stub unless someone downloads the jar by hand. Sign-in stays off until a security profile, client id, and API key exist.</dd>
+          <dt>Workaround</dt>
+          <dd><code>scripts/fetch-lwa-sdk.sh</code> and a no-SDK source set. Without keys, the table offers a test account and plays the same.</dd>
+          <dt>Suggestion</dt>
+          <dd>Publish the SDK where Gradle can resolve it, and add a Fire OS sample that signs in with <code>profile</code> scope and shows the consent-screen privacy URL requirement up front.</dd>
+        </dl>
+      </article>
+    </main>
+  </body>
+</html>

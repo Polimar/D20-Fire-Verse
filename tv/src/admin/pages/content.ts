@@ -636,12 +636,22 @@ function effectSentence(e: Loose): string {
   switch (e.kind) {
     case "ac_bonus":
       return `+${str(e.amount)} to Armor Class`;
+    case "save_bonus":
+      return `+${str(e.amount)} to saving throws`;
+    case "grant_aura":
+      return `${str(e.radiusCells)}-cell aura while equipped`;
+    case "plant_aura":
+      return `Plant a ${str(e.radiusCells)}-cell aura`;
     case "attack_bonus":
       return `+${str(e.amount)} to attack rolls`;
     case "damage_bonus":
       return `+${str(e.amount)} to damage rolls${e.damageType ? ` (${str(e.damageType)})` : ""}`;
     case "on_hit_rider":
-      return `Extra ${str(e.damage)} ${str(e.damageType)} damage on every hit`;
+      return e.damageType
+        ? `Extra ${str(e.damage)} ${str(e.damageType)} damage on every hit`
+        : `Extra ${str(e.damage)} damage on every hit (weapon's damage type)`;
+    case "heal_drink":
+      return `Drink to regain ${str(e.dice)} hit points`;
     case "resistance":
       return `Resistance to ${str(e.damageType)} damage`;
     case "immunity":
@@ -652,6 +662,8 @@ function effectSentence(e: Loose): string {
       return `Grants the feature ${str(e.featureId)}`;
     case "stat_set":
       return `${str(e.ability).toUpperCase()} score becomes ${str(e.score)}`;
+    case "stat_drink":
+      return `Drink to set ${str(e.ability).toUpperCase()} to ${str(e.score)}`;
     case "stat_increase_cap":
       return `${str(e.ability).toUpperCase()} can rise to ${str(e.cap)}`;
     default:

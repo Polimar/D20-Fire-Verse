@@ -3,14 +3,12 @@
   "unparsedFields": [],
   "kind": "item",
   "id": "potion_of_giant_strength_hill",
-  "status": "needs_review",
+  "status": "auto_ok",
   "confidence": "medium",
   "usage": "Vendor, loot, and stash. Account heroes carry its typed effects into fights while it is equipped (and attuned, when required).",
   "srd": {
-    "line": "Potion, Rarity Varies",
-    "text": "_Potion, Rarity Varies_\n\nWhen you drink this potion, your Strength score changes for 1 hour. The type of giant determines the score (see the table below). The potion has no effect on you if your Strength is equal to or greater than that score.\n\nThis potion's transparent liquid has floating in it a sliver of light resembling a giant's fingernail.\n\n| Potion | Str. | Rarity |\n| --- | --- | --- |\n| Potion of Giant Strength (hill) | 21 | Uncommon |\n| Potion of Giant Strength (frost or stone) | 23 | Rare |\n| Potion of Giant Strength (fire) | 25 | Rare |\n| Potion of Giant Strength (cloud) | 27 | Very Rare |\n| Potion of Giant Strength (storm) | 29 | Legendary |"
+    "line": "Potion, Uncommon",
+    "text": "_Potion, Uncommon_\n\nWhen you drink this potion, your Strength score changes to 21 for 1 hour. The potion has no effect on you if your Strength is equal to or greater than that score."
   },
-  "notModeled": [
-    "When you drink this potion, your Strength score changes for 1 hour."
-  ]
+  "notModeled": []
 }

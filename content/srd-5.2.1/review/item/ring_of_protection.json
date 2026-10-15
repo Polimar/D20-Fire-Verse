@@ -3,14 +3,12 @@
   "unparsedFields": [],
   "kind": "item",
   "id": "ring_of_protection",
-  "status": "needs_review",
+  "status": "auto_ok",
   "confidence": "medium",
   "usage": "Vendor, loot, and stash. Account heroes carry its typed effects into fights while it is equipped (and attuned, when required).",
   "srd": {
     "line": "Ring, Rare (Requires Attunement)",
     "text": "_Ring, Rare (Requires Attunement)_\n\nYou gain a +1 bonus to Armor Class and saving throws while wearing this ring."
   },
-  "notModeled": [
-    "+1 bonus to saving throws."
-  ]
+  "notModeled": []
 }

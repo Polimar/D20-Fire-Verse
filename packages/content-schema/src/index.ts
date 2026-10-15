@@ -35,17 +35,67 @@ export const alignment = z.enum([
 export const rarity = z.enum(["common", "uncommon", "rare", "very_rare", "legendary"]);
 export type Rarity = z.infer<typeof rarity>;
 
+export const auraTick = z
+  .object({
+    dice: z.string().min(1).optional(),
+    damageType: z.string().min(1).optional(),
+    heal: z.number().int().optional(),
+    saveAbility: abilityKey.optional(),
+    saveDc: z.number().int().optional(),
+  })
+  .strict();
+export type AuraTick = z.infer<typeof auraTick>;
+
+const auraFields = {
+  radiusCells: z.number().int().positive(),
+  filter: z.enum(["ally", "enemy", "all"]),
+  excludeSource: z.boolean().optional(),
+  creatureTypes: z.array(z.string().min(1)).optional(),
+  ac: z.number().int().optional(),
+  saves: z.number().int().optional(),
+  stealth: z.number().int().optional(),
+  saveAdv: z.enum(["all", "vs_magic"]).optional(),
+  attackDisadvAgainst: z.boolean().optional(),
+  resistances: z.array(z.string().min(1)).optional(),
+  speedMult: z.number().optional(),
+  strip: z.array(z.enum(["frightened", "charmed"])).optional(),
+  heavilyObscured: z.boolean().optional(),
+  difficultTerrainFor: z.enum(["enemy"]).optional(),
+  onStartTurn: auraTick.optional(),
+  onEnterOrEndTurn: auraTick.optional(),
+  blocksMovement: z.boolean().optional(),
+  blocksSpellsFromOutside: z.boolean().optional(),
+};
+
 export const effectDef = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("ac_bonus"), amount: z.number().int() }).strict(),
   z.object({ kind: z.literal("attack_bonus"), amount: z.number().int() }).strict(),
   z.object({ kind: z.literal("damage_bonus"), amount: z.number().int(), damageType: z.string().min(1).optional() }).strict(),
-  z.object({ kind: z.literal("on_hit_rider"), damage: z.string().min(1), damageType: z.string().min(1) }).strict(),
+  z
+    .object({
+      kind: z.literal("on_hit_rider"),
+      damage: z.string().min(1),
+      damageType: z.string().min(1).optional(),
+    })
+    .strict(),
   z.object({ kind: z.literal("resistance"), damageType: z.string().min(1) }).strict(),
   z.object({ kind: z.literal("immunity"), damageType: z.string().min(1) }).strict(),
   z.object({ kind: z.literal("grant_spell"), spellId: z.string().min(1) }).strict(),
   z.object({ kind: z.literal("grant_feature"), featureId: z.string().min(1) }).strict(),
   z.object({ kind: z.literal("stat_set"), ability: abilityKey, score: z.number().int() }).strict(),
+  z
+    .object({
+      kind: z.literal("stat_drink"),
+      ability: abilityKey,
+      score: z.number().int(),
+      durationPcTurns: z.number().int().positive().optional(),
+    })
+    .strict(),
   z.object({ kind: z.literal("stat_increase_cap"), ability: abilityKey, cap: z.number().int() }).strict(),
+  z.object({ kind: z.literal("save_bonus"), amount: z.number().int() }).strict(),
+  z.object({ kind: z.literal("heal_drink"), dice: z.string().min(1) }).strict(),
+  z.object({ kind: z.literal("grant_aura"), ...auraFields }).strict(),
+  z.object({ kind: z.literal("plant_aura"), ...auraFields }).strict(),
 ]);
 export type EffectDef = z.infer<typeof effectDef>;
 

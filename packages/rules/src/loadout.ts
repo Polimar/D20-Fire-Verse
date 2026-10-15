@@ -4,11 +4,12 @@ export type PassiveBonuses = {
   ac: number;
   attack: number;
   damage: number;
+  saves: number;
   resistances: string[];
   immunities: string[];
   grantedSpells: string[];
   grantedFeatures: string[];
-  onHit: Array<{ damage: string; damageType: string }>;
+  onHit: Array<{ damage: string; damageType?: string }>;
 };
 
 export type LoadoutView = {
@@ -23,6 +24,7 @@ const emptyBonus = (): PassiveBonuses => ({
   ac: 0,
   attack: 0,
   damage: 0,
+  saves: 0,
   resistances: [],
   immunities: [],
   grantedSpells: [],
@@ -36,6 +38,14 @@ function applyEffects(bonus: PassiveBonuses, item: ItemRules): void {
       case "ac_bonus":
         bonus.ac += effect.amount;
         break;
+      case "save_bonus":
+        bonus.saves += effect.amount;
+        break;
+      case "grant_aura":
+      case "plant_aura":
+      case "heal_drink":
+      case "stat_drink":
+        break;
       case "attack_bonus":
         bonus.attack += effect.amount;
         break;
@@ -43,7 +53,11 @@ function applyEffects(bonus: PassiveBonuses, item: ItemRules): void {
         bonus.damage += effect.amount;
         break;
       case "on_hit_rider":
-        bonus.onHit.push({ damage: effect.damage, damageType: effect.damageType });
+        bonus.onHit.push(
+          effect.damageType !== undefined
+            ? { damage: effect.damage, damageType: effect.damageType }
+            : { damage: effect.damage },
+        );
         break;
       case "resistance":
         bonus.resistances.push(effect.damageType);

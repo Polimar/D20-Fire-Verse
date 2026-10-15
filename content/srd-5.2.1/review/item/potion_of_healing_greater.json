@@ -1,0 +1,14 @@
+{
+  "ambiguities": [],
+  "unparsedFields": [],
+  "kind": "item",
+  "id": "potion_of_healing_greater",
+  "status": "auto_ok",
+  "confidence": "medium",
+  "usage": "Vendor, loot, and stash. Account heroes carry its typed effects into fights while it is equipped (and attuned, when required).",
+  "srd": {
+    "line": "Potion, Uncommon",
+    "text": "_Potion, Uncommon_\n\nYou regain 4d4 + 4 Hit Points when you drink this potion."
+  },
+  "notModeled": []
+}

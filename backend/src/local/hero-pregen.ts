@@ -9,16 +9,19 @@ import type { AbilityDef, Pregen } from "./campaign.js";
 import { buildKit, hasFlag } from "./class-kit.js";
 import { catalogEntry } from "./content-catalog.js";
 import { gearAttackId } from "./gear-abilities.js";
+import { giantStrengthPotionByItemId } from "./giant-strength-potions.js";
+import { healingPotionByItemId } from "./healing-potions.js";
 import { classPackWeapon, equippedGear, getHero, listHeroes, type EquippedItem, type HeroRow } from "./hero.js";
 
 type Ability = "str" | "dex" | "con" | "int" | "wis" | "cha";
-type Rider = { damage: string; damageType: string };
+type Rider = { damage: string; damageType?: string };
 
 export type WeaponGear = { attack: number; damage: number; onHit: Rider[]; mastery?: string };
 
 export type GearSheet = {
   attack: number;
   damage: number;
+  saveBonus: number;
   resistances: string[];
   immunities: string[];
   /** Per weapon attack id: bonuses that only apply when swinging that weapon. */
@@ -29,6 +32,8 @@ export type GearSheet = {
   charges: Record<string, number>;
   masteries: string[];
   notes: string[];
+  followAuras: import("./combat-aura.js").AuraMods[];
+  plantAuras: import("./combat-aura.js").AuraMods[];
 };
 
 export type HeroPregen = Pregen & {
@@ -49,8 +54,6 @@ export type HeroPregen = Pregen & {
 type Lookup = (id: string) => AbilityDef | undefined;
 
 const FEET_PER_CELL = 5;
-const POTIONS: Record<string, string> = { potion_of_healing: "potion_healing" };
-
 function gearItem(id: string): ItemDef | undefined {
   return catalogEntry<ItemDef>("item", id);
 }
@@ -118,6 +121,7 @@ export function heroPregen(heroId: string, lookup: Lookup): HeroPregen | undefin
 
   const abilities = { ...hero.abilities } as Record<Ability, number>;
   for (const entry of live) {
+    if (entry.slot === "consumables") continue;
     for (const effect of effects(entry)) {
       if (effect.kind === "stat_set") abilities[effect.ability] = Math.max(abilities[effect.ability], effect.score);
     }
@@ -164,7 +168,20 @@ export function heroPregen(heroId: string, lookup: Lookup): HeroPregen | undefin
     notes.push(`Strength ${abilities.str} is under the armor's ${armor.strength}: Speed drops by 10 feet.`);
   }
 
-  const sheet: GearSheet = { attack: 0, damage: 0, resistances: [], immunities: [], weapons: {}, granted: {}, charges: {}, masteries: [], notes };
+  const sheet: GearSheet = {
+    attack: 0,
+    damage: 0,
+    saveBonus: 0,
+    resistances: [],
+    immunities: [],
+    weapons: {},
+    granted: {},
+    charges: {},
+    masteries: [],
+    notes,
+    followAuras: [],
+    plantAuras: [],
+  };
   const weapons: string[] = [];
   const masteryKnown = hasFlag(kit, "weapon_mastery");
   for (const entry of live) {
@@ -184,6 +201,53 @@ export function heroPregen(heroId: string, lookup: Lookup): HeroPregen | undefin
         case "ac_bonus":
           ac += effect.amount;
           break;
+        case "save_bonus":
+          sheet.saveBonus += effect.amount;
+          break;
+        case "grant_aura":
+          sheet.followAuras.push({
+            radiusCells: effect.radiusCells,
+            filter: effect.filter,
+            excludeSource: effect.excludeSource,
+            creatureTypes: effect.creatureTypes,
+            ac: effect.ac,
+            saves: effect.saves,
+            stealth: effect.stealth,
+            saveAdv: effect.saveAdv,
+            attackDisadvAgainst: effect.attackDisadvAgainst,
+            resistances: effect.resistances,
+            speedMult: effect.speedMult,
+            strip: effect.strip,
+            heavilyObscured: effect.heavilyObscured,
+            difficultTerrainFor: effect.difficultTerrainFor,
+            onStartTurn: effect.onStartTurn,
+            onEnterOrEndTurn: effect.onEnterOrEndTurn,
+            blocksMovement: effect.blocksMovement,
+            blocksSpellsFromOutside: effect.blocksSpellsFromOutside,
+          });
+          break;
+        case "plant_aura":
+          sheet.plantAuras.push({
+            radiusCells: effect.radiusCells,
+            filter: effect.filter,
+            ac: effect.ac,
+            saves: effect.saves,
+            excludeSource: effect.excludeSource,
+            creatureTypes: effect.creatureTypes,
+            stealth: effect.stealth,
+            saveAdv: effect.saveAdv,
+            attackDisadvAgainst: effect.attackDisadvAgainst,
+            resistances: effect.resistances,
+            speedMult: effect.speedMult,
+            strip: effect.strip,
+            heavilyObscured: effect.heavilyObscured,
+            difficultTerrainFor: effect.difficultTerrainFor,
+            onStartTurn: effect.onStartTurn,
+            onEnterOrEndTurn: effect.onEnterOrEndTurn,
+            blocksMovement: effect.blocksMovement,
+            blocksSpellsFromOutside: effect.blocksSpellsFromOutside,
+          });
+          break;
         case "attack_bonus":
           if (bucket) bucket.attack += effect.amount;
           else sheet.attack += effect.amount;
@@ -192,9 +256,19 @@ export function heroPregen(heroId: string, lookup: Lookup): HeroPregen | undefin
           if (bucket) bucket.damage += effect.amount;
           else sheet.damage += effect.amount;
           break;
-        case "on_hit_rider":
-          if (bucket) bucket.onHit.push({ damage: effect.damage, damageType: effect.damageType });
-          else notes.push(`${entry.item.name}: extra ${effect.damage} ${effect.damageType} needs a weapon to ride on.`);
+        case "on_hit_rider": {
+          const rider = effect.damageType !== undefined
+            ? { damage: effect.damage, damageType: effect.damageType }
+            : { damage: effect.damage };
+          if (bucket) bucket.onHit.push(rider);
+          else {
+            const typeNote = effect.damageType ?? "weapon damage type";
+            notes.push(`${entry.item.name}: extra ${effect.damage} ${typeNote} needs a weapon to ride on.`);
+          }
+          break;
+        }
+        case "heal_drink":
+        case "stat_drink":
           break;
         case "resistance":
           sheet.resistances.push(effect.damageType);
@@ -239,7 +313,10 @@ export function heroPregen(heroId: string, lookup: Lookup): HeroPregen | undefin
     if (spell && !spell.cantrip) spellsKnown.push(spell.id);
   }
   const slots = row?.spellSlots ? { ...row.spellSlots } : row?.pactSlots ? { [String(row.pactSlots.slotLevel)]: row.pactSlots.count } : undefined;
-  const inventory = live.filter((e) => e.slot === "consumables").map((e) => POTIONS[e.item.id]).filter((id): id is string => Boolean(id));
+  const inventory = live
+    .filter((e) => e.slot === "consumables")
+    .map((e) => healingPotionByItemId(e.item.id)?.inventoryToken ?? giantStrengthPotionByItemId(e.item.id)?.inventoryToken)
+    .filter((id): id is string => Boolean(id));
 
   const className = cls?.name ?? primary.id;
   return {

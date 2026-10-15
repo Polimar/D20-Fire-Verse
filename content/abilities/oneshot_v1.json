@@ -514,6 +514,62 @@
     "needsTarget": false,
     "effects": [{ "type": "heal", "dice": "2d4+2", "self": true, "consume": "potion_healing" }]
   },
+  "use_potion_healing_greater": {
+    "id": "use_potion_healing_greater",
+    "name": "Use Object: Potion of Healing (Greater)",
+    "actionType": "action",
+    "needsTarget": false,
+    "effects": [{ "type": "heal", "dice": "4d4+4", "self": true, "consume": "potion_healing_greater" }]
+  },
+  "use_potion_healing_superior": {
+    "id": "use_potion_healing_superior",
+    "name": "Use Object: Potion of Healing (Superior)",
+    "actionType": "action",
+    "needsTarget": false,
+    "effects": [{ "type": "heal", "dice": "8d4+8", "self": true, "consume": "potion_healing_superior" }]
+  },
+  "use_potion_healing_supreme": {
+    "id": "use_potion_healing_supreme",
+    "name": "Use Object: Potion of Healing (Supreme)",
+    "actionType": "action",
+    "needsTarget": false,
+    "effects": [{ "type": "heal", "dice": "10d4+20", "self": true, "consume": "potion_healing_supreme" }]
+  },
+  "use_potion_giant_strength_hill": {
+    "id": "use_potion_giant_strength_hill",
+    "name": "Use Object: Potion of Giant Strength (Hill)",
+    "actionType": "action",
+    "needsTarget": false,
+    "effects": [{ "type": "stat_drink", "ability": "str", "score": 21, "consume": "potion_giant_strength_hill" }]
+  },
+  "use_potion_giant_strength_frost_or_stone": {
+    "id": "use_potion_giant_strength_frost_or_stone",
+    "name": "Use Object: Potion of Giant Strength (Frost or Stone)",
+    "actionType": "action",
+    "needsTarget": false,
+    "effects": [{ "type": "stat_drink", "ability": "str", "score": 23, "consume": "potion_giant_strength_frost_or_stone" }]
+  },
+  "use_potion_giant_strength_fire": {
+    "id": "use_potion_giant_strength_fire",
+    "name": "Use Object: Potion of Giant Strength (Fire)",
+    "actionType": "action",
+    "needsTarget": false,
+    "effects": [{ "type": "stat_drink", "ability": "str", "score": 25, "consume": "potion_giant_strength_fire" }]
+  },
+  "use_potion_giant_strength_cloud": {
+    "id": "use_potion_giant_strength_cloud",
+    "name": "Use Object: Potion of Giant Strength (Cloud)",
+    "actionType": "action",
+    "needsTarget": false,
+    "effects": [{ "type": "stat_drink", "ability": "str", "score": 27, "consume": "potion_giant_strength_cloud" }]
+  },
+  "use_potion_giant_strength_storm": {
+    "id": "use_potion_giant_strength_storm",
+    "name": "Use Object: Potion of Giant Strength (Storm)",
+    "actionType": "action",
+    "needsTarget": false,
+    "effects": [{ "type": "stat_drink", "ability": "str", "score": 29, "consume": "potion_giant_strength_storm" }]
+  },
   "cunning_dash": {
     "id": "cunning_dash",
     "name": "Cunning Action: Dash",
@@ -546,5 +602,19 @@
         "requires": ["advantage_or_ally_adjacent"]
       }
     ]
+  },
+  "rod_plant": {
+    "id": "rod_plant",
+    "name": "Plant Rod of Alertness",
+    "actionType": "action",
+    "needsTarget": false,
+    "effects": [{ "type": "plant_aura" }]
+  },
+  "rod_pull": {
+    "id": "rod_pull",
+    "name": "Pull Rod of Alertness",
+    "actionType": "action",
+    "needsTarget": false,
+    "effects": [{ "type": "pull_aura" }]
   }
 }

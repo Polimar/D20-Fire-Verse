@@ -45,12 +45,22 @@ function effectLine(effect: ItemRules["effects"][number]): string {
   switch (effect.kind) {
     case "ac_bonus":
       return `+${effect.amount} AC`;
+    case "save_bonus":
+      return `+${effect.amount} to saving throws`;
+    case "grant_aura":
+      return `Aura ${effect.radiusCells * 5} ft`;
+    case "plant_aura":
+      return `Plant aura ${effect.radiusCells * 5} ft`;
     case "attack_bonus":
       return `+${effect.amount} to attack rolls`;
     case "damage_bonus":
       return `+${effect.amount} damage${effect.damageType ? ` (${prettyType(effect.damageType)})` : ""}`;
     case "on_hit_rider":
-      return `+${effect.damage} ${prettyType(effect.damageType)} on each hit`;
+      return effect.damageType
+        ? `+${effect.damage} ${prettyType(effect.damageType)} on each hit`
+        : `+${effect.damage} on each hit (weapon's damage type)`;
+    case "heal_drink":
+      return `Drink to regain ${effect.dice} HP`;
     case "resistance":
       return `Resistance to ${prettyType(effect.damageType)}`;
     case "immunity":
@@ -61,6 +71,8 @@ function effectLine(effect: ItemRules["effects"][number]): string {
       return `Grants ${prettyType(effect.featureId)}`;
     case "stat_set":
       return `${effect.ability.toUpperCase()} becomes ${effect.score}`;
+    case "stat_drink":
+      return `Drink to set ${effect.ability.toUpperCase()} to ${effect.score}`;
     case "stat_increase_cap":
       return `${effect.ability.toUpperCase()} can rise to ${effect.cap}`;
     default:
