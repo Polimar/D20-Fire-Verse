@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+import { createRequire } from "node:module";
 import { fileURLToPath } from "node:url";
 import { clampExhaustion, effectiveMaxHp, longRestExhaustionDelta, setExhaustion } from "@d20-fireverse/rules";
 import type { Pregen } from "./campaign.js";
@@ -12,9 +13,14 @@ import { HEALING_POTIONS } from "./healing-potions.js";
 import { GIANT_STRENGTH_POTIONS } from "./giant-strength-potions.js";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
-const catalog = JSON.parse(
+const curatedCatalog = JSON.parse(
   fs.readFileSync(path.resolve(here, "../../../content/rules/srd51_combat.json"), "utf8"),
 ) as Record<string, SrdAbility>;
+const generatedPath = path.resolve(here, "../../../content/rules/srd51_combat_generated.json");
+const generatedCatalog = fs.existsSync(generatedPath)
+  ? (JSON.parse(fs.readFileSync(generatedPath, "utf8")) as Record<string, SrdAbility>)
+  : {};
+const catalog: Record<string, SrdAbility> = { ...generatedCatalog, ...curatedCatalog };
 
 export type SrdAbility = {
   id: string;
@@ -321,6 +327,16 @@ function attackVariants(token: CombatToken, pregen: Pregen | undefined, id: stri
   return out;
 }
 
+const require = createRequire(import.meta.url);
+
+function spellListed(id: string): boolean {
+  if (!id.startsWith("spell_") && !id.startsWith("quicken:spell_")) return true;
+  const bare = id.replace(/^quicken:/, "").replace(/^spell_/, "");
+  const { listCatalog } = require("./content-catalog.js") as typeof import("./content-catalog.js");
+  const row = listCatalog().find((entry) => entry.kind === "spell" && entry.id === bare);
+  return !row?.missingMechanic;
+}
+
 export function refreshMenus(token: CombatToken, pregen: Pregen | undefined, lookup: Lookup): void {
   if (!token.sheetDriven || token.kind !== "pc") return;
   const actions: string[] = [];
@@ -349,6 +365,7 @@ export function refreshMenus(token: CombatToken, pregen: Pregen | undefined, loo
     return;
   }
   const place = (id: string, charged = false) => {
+    if (!spellListed(id)) return;
     const ability = lookup(id);
     if (!ability || ability.actionType === "reaction") return;
     const level = spellLevel(ability);
@@ -507,6 +524,16 @@ export function longRestResources(token: CombatToken, pregen: Pregen | undefined
   token.arcaneRecovery = false;
   onClassLongRest(token, pregen?.level ?? 1, pregen?.abilities ?? {});
   token.exhaustionLevel = longRestExhaustionDelta(token.exhaustionLevel ?? 0);
+  if (token.gearCharges) {
+    for (const key of Object.keys(token.gearCharges)) {
+      const rolled = 1 + Math.floor(Math.random() * 6);
+      if ((token.gearCharges[key] ?? 0) <= 0 && Math.floor(Math.random() * 20) + 1 === 1) {
+        delete token.gearCharges[key];
+        continue;
+      }
+      token.gearCharges[key] = rolled + 1;
+    }
+  }
   if ((token.exhaustionLevel ?? 0) > 0) token.conditions = [...(token.conditions ?? []).filter((c) => c !== "exhaustion"), "exhaustion"];
   else token.conditions = (token.conditions ?? []).filter((c) => c !== "exhaustion");
 }

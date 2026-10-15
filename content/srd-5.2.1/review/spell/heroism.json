@@ -9,5 +9,9 @@
   "srd": {
     "line": "Level 1 Enchantment (Bard, Paladin)",
     "text": "_Level 1 Enchantment (Bard, Paladin)_\n\n**Casting Time:** Action\n**Range:** Touch\n**Components:** V, S\n**Duration:** Concentration, up to 1 minute\n\nA willing creature you touch is imbued with bravery. Until the spell ends, the creature is immune to the Frightened condition and gains Temporary Hit Points equal to your spellcasting ability modifier at the start of each of its turns.\n\n_Using a Higher-Level Spell Slot._ You can target one additional creature for each spell slot level above 1."
-  }
+  },
+  "notModeled": [
+    "Upcast adds extra targets; combat scales dice only.",
+    "No battlefield effect is run for this spell yet."
+  ]
 }

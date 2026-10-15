@@ -9,5 +9,8 @@
   "srd": {
     "line": "Level 2 Abjuration (Cleric, Druid, Paladin, Ranger)",
     "text": "_Level 2 Abjuration (Cleric, Druid, Paladin, Ranger)_\n\n**Casting Time:** Action\n**Range:** Touch\n**Components:** V, S\n**Duration:** 1 hour\n\nYou touch a creature and end the Poisoned condition on it. For the duration, the target has Advantage on saving throws to avoid or end the Poisoned condition, and it has Resistance to Poison damage."
-  }
+  },
+  "notModeled": [
+    "No battlefield effect is run for this spell yet."
+  ]
 }

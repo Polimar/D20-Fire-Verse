@@ -9,5 +9,9 @@
   "srd": {
     "line": "Level 4 Abjuration (Bard, Cleric, Druid, Ranger)",
     "text": "_Level 4 Abjuration (Bard, Cleric, Druid, Ranger)_\n\n**Casting Time:** Action\n**Range:** Touch\n**Components:** V, S, M (a leather strap)\n**Duration:** 1 hour\n\nYou touch a willing creature. For the duration, the target's movement is unaffected by Difficult Terrain, and spells and other magical effects can neither reduce the target's Speed nor cause the target to have the Paralyzed or Restrained conditions. The target also has a Swim Speed equal to its Speed.\n\nIn addition, the target can spend 5 feet of movement to automatically escape from nonmagical restraints, such as manacles or a creature imposing the Grappled condition on it.\n\n_Using a Higher-Level Spell Slot._ You can target one additional creature for each spell slot level above 4."
-  }
+  },
+  "notModeled": [
+    "Upcast adds extra targets; combat scales dice only.",
+    "No battlefield effect is run for this spell yet."
+  ]
 }

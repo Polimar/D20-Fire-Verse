@@ -19,16 +19,15 @@ before(() => {
 
 const WIZARD_SPELLS = [
   "fire_bolt",
-  "light",
-  "mage_hand",
-  "prestidigitation",
+  "ray_of_frost",
+  "acid_splash",
   "chromatic_orb",
   "magic_missile",
   "shield",
   "sleep",
   "thunderwave",
-  "detect_magic",
-  "find_familiar",
+  "burning_hands",
+  "mage_armor",
 ];
 
 function enableWizardLine(): void {

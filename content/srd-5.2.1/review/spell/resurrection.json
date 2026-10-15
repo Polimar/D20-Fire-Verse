@@ -9,5 +9,9 @@
   "srd": {
     "line": "Level 7 Necromancy (Bard, Cleric)",
     "text": "_Level 7 Necromancy (Bard, Cleric)_\n\n**Casting Time:** 1 hour\n**Range:** Touch\n**Components:** V, S, M (a diamond worth 1,000+ GP, which the spell consumes)\n**Duration:** Instantaneous\nWith a touch, you revive a dead creature that has been dead for no more than a century, didn't die of old age, and wasn't Undead when it died.\n\nThe creature returns to life with all its Hit Points. This spell also neutralizes any poisons that affected the creature at the time of death. This spell closes all mortal wounds and restores any missing body parts.\n\nComing back from the dead is an ordeal. The target takes a −4 penalty to D20 Tests. Every time the target finishes a Long Rest, the penalty is reduced by 1 until it becomes 0.\n\nCasting this spell to revive a creature that has been dead for 365 days or longer taxes you. Until you finish a Long Rest, you can't cast spells again, and you have Disadvantage on D20 Tests."
-  }
+  },
+  "notModeled": [
+    "Long casting time is resolved as a single combat action.",
+    "No battlefield effect is run for this spell yet."
+  ]
 }

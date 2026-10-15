@@ -9,5 +9,8 @@
   "srd": {
     "line": "Level 4 Illusion (Bard, Sorcerer, Wizard)",
     "text": "_Level 4 Illusion (Bard, Sorcerer, Wizard)_\n\n**Casting Time:** Action\n**Range:** Touch\n**Components:** V, S\n**Duration:** Concentration, up to 1 minute\n\nA creature you touch has the Invisible condition until the spell ends."
-  }
+  },
+  "notModeled": [
+    "No battlefield effect is run for this spell yet."
+  ]
 }

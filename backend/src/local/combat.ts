@@ -55,6 +55,12 @@ import {
 import type { SpellDef } from "@d20-fireverse/content-schema";
 import { catalogEntry } from "./content-catalog.js";
 import { durationToPcTurns } from "./spell-duration.js";
+import {
+  delayedOnHitFromEffect,
+  queueStartOfTurnDamage,
+  takeStartOfTurnDamage,
+} from "./acid-arrow.js";
+import { clearCasterSpell, restorePolymorph, type SpellLink, type SpellZone } from "./spell-fields.js";
 import type { ClassKit } from "./class-kit.js";
 import {
   auraSaveBonus,
@@ -252,6 +258,13 @@ export type CombatToken = {
   wildShapeBackup?: { hp: number; maxHp: number; ac: number; speedCells: number };
   /** Spell and effect durations counted in PC-turn ticks (6s each). */
   timedEffects?: Array<{ label: string; pcTurnsLeft: number; spellId?: string }>;
+  /** Damage that fires at the start of this creature's next turn (Acid Arrow). */
+  startOfTurnDamage?: Array<{ dice: string; damageType: string; label: string; sourceSpellId: string }>;
+  spellLinks?: SpellLink[];
+  polymorphBackup?: { hp: number; maxHp: number; ac: number; name: string; actionIds: string[]; bonusActionIds: string[] };
+  polymorphBy?: string;
+  summonOwner?: string;
+  summonSpellId?: string;
   /** Temporary ability scores from drinks (Giant Strength). */
   abilityOverride?: Partial<Record<"str" | "dex" | "con" | "int" | "wis" | "cha", number>>;
   innateSorcery?: boolean;
@@ -413,6 +426,7 @@ export type CombatState = {
   /** Liquids: block movement, not line of fire. */
   hazards: boolean[][];
   tokens: CombatToken[];
+  zones?: SpellZone[];
   auras?: CombatAura[];
   turnOrder: string[];
   turnIndex: number;
@@ -442,6 +456,9 @@ export type CombatState = {
     saveDamage?: number;
     saveHalf?: boolean;
     saveFail?: string;
+    saveSourceSpellId?: string;
+    saveRepeat?: boolean;
+    saveCondition?: string;
   }>;
   /** Initiative is still being thrown; the fight has not taken its first turn. */
   gathering?: boolean;
@@ -1267,6 +1284,12 @@ function beginTurn(combat: CombatState): void {
     combat.reachable = [];
     return;
   }
+  resolveStartOfTurnDamage(combat, t);
+  if (t.dead) {
+    checkEnd(combat);
+    combat.reachable = [];
+    return;
+  }
   t.movementLeft = t.speedCells;
   if (hasCondition(t, "restrained") || hasCondition(t, "paralyzed") || hasCondition(t, "unconscious") || hasCondition(t, "grappled")) t.movementLeft = 0;
   if (hasCondition(t, "slowed")) t.movementLeft = Math.max(0, t.movementLeft - 2);
@@ -1431,6 +1454,23 @@ function previewFromNotation(notation: string, damageType: string, crit: boolean
   if (!p) return [];
   const count = crit ? p.count * 2 : p.count;
   return Array.from({ length: count }, () => ({ sides: p.sides, damageType }));
+}
+
+function resolveStartOfTurnDamage(combat: CombatState, token: CombatToken): void {
+  const pending = takeStartOfTurnDamage(token);
+  for (const row of pending) {
+    const rolls: DiceRoll[] = [];
+    const amount = pushPartDamage(rolls, token.name, row.dice, row.damageType, row.label, false);
+    applyDamage(combat, token, amount, false, row.damageType, true);
+    statusEvent(
+      combat,
+      token,
+      row.label,
+      `${row.label} burns ${token.name} for ${amount} ${row.damageType} at the start of the turn.`,
+      rolls,
+    );
+    if (token.dead) break;
+  }
 }
 
 function sneakDice(token: CombatToken, pregen: Pregen | undefined): number {
@@ -2083,7 +2123,8 @@ function attachSpellDuration(token: CombatToken, castId: string): void {
   token.timedEffects = [...(token.timedEffects ?? []), { label: spell?.name ?? bare, pcTurnsLeft: turns, spellId: castId }];
 }
 
-function setConcentration(token: CombatToken, castId: string, targetId?: string): void {
+function setConcentration(combat: CombatState, token: CombatToken, castId: string, targetId?: string): void {
+  if (token.concentrating && token.concentrating.spellId !== castId) breakConcentration(combat, token);
   token.concentrating = { spellId: castId, targetId };
   attachSpellDuration(token, castId);
 }
@@ -2247,7 +2288,7 @@ function castSpecial(
   if (effect.type === "mage_armor") {
     const dex = abilityMod(abilityScore(t, pregen, "dex"));
     t.ac = 13 + dex;
-    if (effect.concentration) setConcentration(t, castId);
+    if (effect.concentration) setConcentration(combat, t, castId);
     spendEconomy(t, isBonus);
     statusEvent(combat, t, name, `${t.name} is wrapped in mage armor. AC ${t.ac}.`);
     return { rolls: [] };
@@ -2259,7 +2300,7 @@ function castSpecial(
     if (effect.acFloor) who.acFloor = Number(effect.acFloor);
     if (effect.blur) who.blur = true;
     if (effect.invisible) who.invisible = true;
-    if (effect.concentration) setConcentration(t, castId, who.id);
+    if (effect.concentration || effect.duration === "concentration") setConcentration(combat, t, castId, who.id);
     spendEconomy(t, isBonus);
     statusEvent(combat, t, name, `${t.name} casts ${name}.`);
     return { rolls: [] };
@@ -2270,7 +2311,7 @@ function castSpecial(
     if (!foe) throw new Error("BAD_TARGET");
     demandShot(combat, t, foe);
     foe.brand = { by: t.id, dice: String(effect.dice ?? "1d6") };
-    setConcentration(t, castId, foe.id);
+    setConcentration(combat, t, castId, foe.id);
     spendEconomy(t, isBonus);
     statusEvent(combat, t, name, `${t.name} brands ${foe.name}.`);
     return { rolls: [] };
@@ -2466,7 +2507,11 @@ export function performPcAction(
     const grown = scaledDice(effect, slotUsed);
     if (grown && Array.isArray(effect.damage)) {
       const parts = effect.damage as Array<{ dice: string }>;
-      effect.damage = parts.map((part, index) => (index === 0 ? { ...part, dice: grown } : part));
+      if (effect.scalingAll) {
+        effect.damage = parts.map((part) => ({ ...part, dice: grown }));
+      } else {
+        effect.damage = parts.map((part, index) => (index === 0 ? { ...part, dice: grown } : part));
+      }
     }
     if (grown && typeof effect.dice === "string") effect.dice = grown;
   }
@@ -2477,6 +2522,12 @@ export function performPcAction(
     if (isBonus || quicken) t.castBonusSpell = true;
   }
   if (t.sheetDriven && t.characterId) refreshMenus(t, pregen, getAbility);
+
+  if (level > 0 && spellStopped(combat, t, level, castId)) {
+    spendEconomy(t, isBonus || quicken);
+    refreshReachable(combat);
+    return { rolls: [] };
+  }
 
   const special = castSpecial(combat, t, pregen, ability.name, effect, isBonus || quicken, targetId, dest, castId);
   if (special) {
@@ -2700,6 +2751,7 @@ export function performPcAction(
   if (effect.type === "buff") {
     const allies = combat.tokens.filter((a) => a.kind === "pc" && !a.dead);
     for (const a of allies.slice(0, 3)) a.blessed = true;
+    if (effect.concentration || effect.duration === "concentration") setConcentration(combat, t, castId);
     spendEconomy(t, isBonus);
     statusEvent(combat, t, ability.name, `${t.name} casts ${ability.name} — the party adds 1d4 to attack rolls.`);
     refreshReachable(combat);
@@ -2734,9 +2786,17 @@ export function performPcAction(
     const rolled = rollNotation(notation);
     let healed = rolled.total;
     if (t.features?.includes("disciple_of_life") || t.features?.includes("domain_life")) healed += 2 + Math.max(1, slotUsed);
-    const before = patient.hp;
-    patient.hp = Math.min(patient.maxHp, patient.hp + healed);
-    if (healed > 0 && patient.hp > 0) wakeFromDying(patient);
+    const patients = effect.mass
+      ? combat.tokens.filter((a) => isFriend(combat, t, a) && !a.dead && chebyshev(t.x, t.y, a.x, a.y) <= Number(effect.rangeCells ?? 12)).slice(0, Number(effect.mass))
+      : [patient];
+    if (effect.mass && !patients.length) throw new Error("BAD_TARGET");
+    let healedShown = 0;
+    for (const who of patients.length ? patients : [patient]) {
+      const beforeOne = who.hp;
+      who.hp = Math.min(who.maxHp, who.hp + healed);
+      if (healed > 0 && who.hp > 0) wakeFromDying(who);
+      healedShown += who.hp - beforeOne;
+    }
     spendEconomy(t, isBonus);
     const dice = makeDiceRoll({
       roller: t.name,
@@ -2753,16 +2813,21 @@ export function performPcAction(
       tokenId: t.id,
       targetId: patient.id,
       ability: ability.name,
-      amount: patient.hp - before,
+      amount: healedShown,
       hp: patient.hp,
       rolls: [dice],
-      line:
-        patient === t
-          ? `${t.name} uses ${ability.name} and recovers ${patient.hp - before} HP.`
-          : `${t.name} casts ${ability.name} on ${patient.name}: +${patient.hp - before} HP.`,
+      line: effect.mass
+        ? `${t.name} casts ${ability.name}: ${patients.length} allies regain ${healed} HP each.`
+        : patient === t
+          ? `${t.name} uses ${ability.name} and recovers ${healedShown} HP.`
+          : `${t.name} casts ${ability.name} on ${patient.name}: +${healedShown} HP.`,
     });
     refreshReachable(combat);
     return { rolls: [dice] };
+  }
+
+  if (effect.type === "note" || effect.type === "dispel" || effect.type === "polymorph" || effect.type === "summon" || effect.type === "counterspell") {
+    return castFieldSpell(combat, t, pregen, ability.name, effect, isBonus, targetId, castId, level);
   }
 
   if (!targetId) throw new Error("NEED_TARGET");
@@ -2771,10 +2836,13 @@ export function performPcAction(
   if (!isFoe(combat, t, target)) throw new Error("BAD_TARGET");
 
   if (effect.type === "save") {
-    return castSaveArea(combat, t, target, ability.name, effect, pregen, isBonus);
+    return castSaveArea(combat, t, target, ability.name, effect, pregen, isBonus, castId);
   }
 
-  const atkEffect = ability.effects.find((e) => e.type === "attack" || e.type === "auto_hit");
+  const atkEffect =
+    effect.type === "attack" || effect.type === "auto_hit"
+      ? effect
+      : ability.effects.find((e) => e.type === "attack" || e.type === "auto_hit");
   if (!atkEffect) throw new Error("NOT_ATTACK");
 
   const range = Number(atkEffect.rangeCells ?? 1);
@@ -2929,17 +2997,31 @@ export function performPcAction(
       melee: !ranged,
       abilityMod: abilityMod(abilityScore(t, pregen, "str")),
     });
+    let splash = graze.grazeDamage;
+    let splashType = "slashing";
     if (graze.grazeDamage > 0) applyDamage(combat, target, graze.grazeDamage, false, "slashing");
+    if (atkEffect.missHalfInitial) {
+      const dmgParts = (atkEffect.damage as DamagePart[]) ?? [];
+      const part = dmgParts[0];
+      if (part) {
+        const rolled = pushPartDamage(rolls, t.name, weaponNotation(part, t, pregen), part.damageType, `${part.damageType} splash`, false);
+        splash = Math.floor(rolled / 2);
+        splashType = part.damageType;
+        applyDamage(combat, target, splash, false, splashType);
+      }
+    }
     emit(combat, {
       kind: "strike",
       tokenId: t.id,
       ability: ability.name,
       style,
       rolls,
-      hits: [{ targetId: target.id, outcome: attackRoll.outcome ?? "miss", damage: graze.grazeDamage, hp: target.hp }],
+      hits: [{ targetId: target.id, outcome: attackRoll.outcome ?? "miss", damage: splash, hp: target.hp }],
       line: fumble
         ? `${t.name} swings ${ability.name} — a natural 1. ${target.name} looks almost embarrassed for them.`
-        : `${t.name} attacks ${target.name} with ${ability.name}: ${attackRoll.total} vs AC ${target.ac} — miss.`,
+        : splash > 0 && atkEffect.missHalfInitial
+          ? `${t.name} attacks ${target.name} with ${ability.name}: ${attackRoll.total} vs AC ${target.ac} — miss. Acid splashes for ${splash}.`
+          : `${t.name} attacks ${target.name} with ${ability.name}: ${attackRoll.total} vs AC ${target.ac} — miss.`,
     });
     refreshReachable(combat);
     return { rolls };
@@ -3009,8 +3091,11 @@ export function performPcAction(
     dmgTotal += pushPartDamage(rolls, t.name, rider.damage, riderType, `${riderType} damage`, crit);
   }
 
-  const onHit = (atkEffect.onHit as Array<{ condition?: string }> | undefined) ?? [];
-  if (onHit.some((h) => h.condition === "attack_advantage_next")) target.marked = true;
+  const onHit = (atkEffect.onHit as Array<{ type?: string; condition?: string }> | undefined) ?? [];
+  for (const h of onHit) {
+    if (h.condition === "attack_advantage_next") target.marked = true;
+    else if (h.type === "condition" && h.condition) addCondition(target, h.condition);
+  }
 
   if (atkEffect.onHitSave && dmgTotal < target.hp) {
     const save = atkEffect.onHitSave as {
@@ -3101,6 +3186,8 @@ export function performPcAction(
   }
   if (crit && hasFeature(t, "remarkable_athlete")) grantFreeMove(t, Math.floor(t.speedCells / 2));
   const dtype = weaponType;
+  const delayed = delayedOnHitFromEffect(atkEffect);
+  if (delayed?.dice) queueStartOfTurnDamage(target, delayed, ability.name, castId);
   if (
     !ranged &&
     t.playerId &&
@@ -3167,7 +3254,208 @@ export function performPcAction(
 /** A cone is as wide as it is long, so the half-angle from the aim line is atan(0.5) ≈ 26.5°. */
 const CONE_HALF_ANGLE = Math.atan(0.5);
 
+function spellStopped(combat: CombatState, caster: CombatToken, level: number, castId: string): boolean {
+  if (castId === "spell_counterspell" || level <= 0) return false;
+  const reactor = combat.tokens.find(
+    (other) =>
+      isFoe(combat, caster, other) &&
+      other.reactionReady &&
+      (other.actionIds.includes("spell_counterspell") || other.spells?.includes("spell_counterspell")),
+  );
+  if (!reactor) return false;
+  reactor.reactionReady = false;
+  const counterLevel = Number((getAbility("spell_counterspell") as { level?: number } | undefined)?.level ?? 3);
+  if (counterLevel >= level) {
+    statusEvent(combat, reactor, "Counterspell", `${reactor.name} counters ${caster.name}'s spell.`);
+    return true;
+  }
+  const bonus = abilityMod(abilityScore(reactor, reactor.characterId ? getPregen(reactor.characterId) : undefined, reactor.spellAbility ?? "int"));
+  const dc = 10 + level;
+  const roll = rollCheck({ roller: reactor.name, label: "Counterspell", bonus, dc, purpose: "save" });
+  statusEvent(
+    combat,
+    reactor,
+    "Counterspell",
+    roll.outcome === "success"
+      ? `${reactor.name} counters the spell (${roll.total} vs DC ${dc}).`
+      : `${reactor.name} fails to counter (${roll.total} vs DC ${dc}).`,
+    [roll],
+  );
+  return roll.outcome === "success";
+}
+
+function queueRepeatSave(combat: CombatState, token: CombatToken): boolean {
+  const link = (token.spellLinks ?? []).find((row) => row.repeat);
+  if (!link) return false;
+  if (token.kind === "pc" && token.playerId) {
+    const id = `repeat-${token.id}-${link.spellId}`;
+    if ((combat.awaiting ?? []).some((row) => row.id === id)) return true;
+    combat.awaiting = [
+      ...(combat.awaiting ?? []),
+      {
+        id,
+        playerId: token.playerId,
+        label: `${link.saveAbility.toUpperCase()} save`,
+        step: "save",
+        targetId: token.id,
+        saveAbility: link.saveAbility,
+        saveDc: link.saveDc,
+        saveDamage: 0,
+        saveHalf: false,
+        saveRepeat: true,
+        saveCondition: link.condition,
+      },
+    ];
+    statusEvent(combat, token, "Save", `${token.name} repeats the save.`);
+    return true;
+  }
+  const { roll, ok } = creatureSave(token, link.saveAbility, link.saveDc, false);
+  if (ok) {
+    token.conditions = (token.conditions ?? []).filter((c) => c !== link.condition);
+    token.spellLinks = (token.spellLinks ?? []).filter((row) => row !== link);
+    statusEvent(combat, token, "Save", `${token.name} shakes it off (${roll.total} vs DC ${link.saveDc}).`, [roll]);
+  } else {
+    statusEvent(combat, token, "Save", `${token.name} is still held (${roll.total} vs DC ${link.saveDc}).`, [roll]);
+  }
+  return false;
+}
+
+function tickZones(combat: CombatState, token: CombatToken): void {
+  const key = `${combat.round}:${combat.turnIndex}`;
+  for (const zone of combat.zones ?? []) {
+    if (zone.turnKey !== key) {
+      zone.turnKey = key;
+      zone.touched = [];
+    }
+    if (zone.touched.includes(token.id) || token.dead) continue;
+    if (chebyshev(token.x, token.y, zone.x, zone.y) > zone.radius) continue;
+    zone.touched.push(token.id);
+    const rolled = rollNotation(zone.dice);
+    const { roll, ok } = creatureSave(token, zone.saveAbility, zone.dc, false);
+    const amount = ok ? (zone.half ? Math.floor(rolled.total / 2) : 0) : rolled.total;
+    if (amount > 0) applyDamage(combat, token, amount, false, zone.damageType);
+    statusEvent(combat, token, zone.name, `${token.name} ${ok ? "saves against" : "is caught in"} ${zone.name} for ${amount}.`, [roll]);
+  }
+}
+
+function castFieldSpell(
+  combat: CombatState,
+  t: CombatToken,
+  pregen: Pregen | undefined,
+  name: string,
+  effect: Record<string, unknown>,
+  isBonus: boolean,
+  targetId: string | undefined,
+  castId: string,
+  level: number,
+): { rolls: DiceRoll[] } {
+  const target = targetId ? combat.tokens.find((x) => x.id === targetId && !x.dead) : t;
+  if (effect.type === "note") {
+    if (effect.concentration) setConcentration(combat, t, castId);
+    spendEconomy(t, isBonus);
+    statusEvent(combat, t, name, `${t.name} casts ${name}. It does nothing else in this fight.`);
+    refreshReachable(combat);
+    return { rolls: [] };
+  }
+  if (!target) throw new Error("NEED_TARGET");
+  if (chebyshev(t.x, t.y, target.x, target.y) > Number(effect.rangeCells ?? 12)) throw new Error("OUT_OF_RANGE");
+  if (effect.type === "dispel") {
+    const focus = target.concentrating?.spellId;
+    const spellLevel = Number((focus ? (getAbility(focus) as { level?: number } | undefined) : undefined)?.level ?? 0);
+    const auto = level >= spellLevel;
+    const bonus = abilityMod(abilityScore(t, pregen, t.spellAbility ?? "int"));
+    const dc = 10 + spellLevel;
+    const roll = auto ? undefined : rollCheck({ roller: t.name, label: "Dispel", bonus, dc, purpose: "save" });
+    const ok = auto || roll?.outcome === "success";
+    if (ok && target.concentrating) breakConcentration(combat, target);
+    spendEconomy(t, isBonus);
+    statusEvent(
+      combat,
+      t,
+      name,
+      ok ? `${t.name} dispels the magic on ${target.name}.` : `${t.name} fails to dispel (${roll?.total} vs DC ${dc}).`,
+      roll ? [roll] : [],
+    );
+    refreshReachable(combat);
+    return { rolls: roll ? [roll] : [] };
+  }
+  if (effect.type === "polymorph") {
+    if (target.polymorphBackup) throw new Error("BAD_TARGET");
+    target.polymorphBackup = {
+      hp: target.hp,
+      maxHp: target.maxHp,
+      ac: target.ac,
+      name: target.name,
+      actionIds: [...target.actionIds],
+      bonusActionIds: [...target.bonusActionIds],
+    };
+    const beast = getMonster("wolf");
+    target.name = beast?.name ?? "Wolf";
+    target.maxHp = beast?.hp ?? 11;
+    target.hp = target.maxHp;
+    target.ac = beast?.ac ?? 13;
+    target.actionIds = ["ws_wolf_bite"];
+    target.bonusActionIds = [];
+    target.polymorphBy = t.id;
+    if (effect.concentration) setConcentration(combat, t, castId, target.id);
+    spendEconomy(t, isBonus);
+    statusEvent(combat, t, name, `${target.polymorphBackup.name} is polymorphed into ${target.name}.`);
+    refreshReachable(combat);
+    return { rolls: [] };
+  }
+  if (effect.type === "summon") {
+    const summon: CombatToken = {
+      id: `summon-${t.id}-${combat.seq}`,
+      kind: "pc",
+      name,
+      x: target.x,
+      y: target.y,
+      hp: 10 + level * 5,
+      maxHp: 10 + level * 5,
+      ac: 12,
+      speedCells: 6,
+      movementLeft: 0,
+      hasAction: false,
+      hasBonusAction: false,
+      initiative: t.initiative,
+      actionIds: ["ws_wolf_bite"],
+      bonusActionIds: [],
+      inventory: [],
+      dead: false,
+      dodging: false,
+      disengaging: false,
+      hidden: false,
+      secondWindUsed: false,
+      summonOwner: t.id,
+      summonSpellId: castId,
+    };
+    combat.tokens.push(summon);
+    if (effect.concentration) setConcentration(combat, t, castId);
+    spendEconomy(t, isBonus);
+    statusEvent(combat, t, name, `${t.name} summons ${name}.`);
+    refreshReachable(combat);
+    return { rolls: [] };
+  }
+  if (target.concentrating) breakConcentration(combat, target);
+  spendEconomy(t, isBonus);
+  statusEvent(combat, t, name, `${t.name} counters the magic on ${target.name}.`);
+  refreshReachable(combat);
+  return { rolls: [] };
+}
+
 /** Cone spells: every foe inside the cone makes the save. The aimed foe is always included. */
+function queueDelayedSaveDamage(
+  target: CombatToken,
+  saved: boolean,
+  effect: Record<string, unknown>,
+  spellName: string,
+  castId: string,
+): void {
+  if (saved) return;
+  const delayed = delayedOnHitFromEffect(effect);
+  if (delayed?.dice) queueStartOfTurnDamage(target, delayed, spellName, castId);
+}
+
 function castSaveArea(
   combat: CombatState,
   t: CombatToken,
@@ -3176,6 +3464,7 @@ function castSaveArea(
   effect: Record<string, unknown>,
   pregen: Pregen | undefined,
   isBonus: boolean,
+  castId: string,
 ): { rolls: DiceRoll[] } {
   const shape = String(effect.shape ?? "cone");
   const length = Number(effect.lengthCells ?? effect.rangeCells ?? 3);
@@ -3192,6 +3481,16 @@ function castSaveArea(
     if (shape === "one") return e.id === aim.id;
     if (shape === "sphere") return chebyshev(aim.x, aim.y, e.x, e.y) <= radius;
     if (shape === "cube") return chebyshev(t.x, t.y, e.x, e.y) <= length && e.id !== t.id;
+    if (shape === "line") {
+      const ux = dirX / dirLen;
+      const uy = dirY / dirLen;
+      const ex = e.x - t.x;
+      const ey = e.y - t.y;
+      const along = ex * ux + ey * uy;
+      if (along < 0 || along > length) return false;
+      const perp = Math.abs(ex * uy - ey * ux);
+      return perp <= 0.75;
+    }
     if (e.id === aim.id) return true;
     const d = chebyshev(t.x, t.y, e.x, e.y);
     if (d < 1 || d > length) return false;
@@ -3200,23 +3499,29 @@ function castSaveArea(
     const cos = (ex * dirX + ey * dirY) / ((Math.hypot(ex, ey) || 1) * dirLen);
     return cos >= Math.cos(CONE_HALF_ANGLE);
   });
-  const dmgSpec = (effect.damage as Array<{ dice: string; damageType: string }>)[0];
-  const rolled = rollNotation(dmgSpec.dice);
+  const dmgParts = (effect.damage as Array<{ dice: string; damageType: string }>) ?? [];
   const dc = pcSpellDc(t, pregen, spellKey(t, pregen, String(effect.dcFrom ?? "int")));
   const saveKey = String(effect.ability ?? "dex");
-  const rolls: DiceRoll[] = [
-    makeDiceRoll({
-      roller: t.name,
-      notation: dmgSpec.dice,
-      values: rolled.values,
-      sides: rolled.sides,
-      modifier: rolled.modifier,
-      total: rolled.total,
-      purpose: "damage",
-      label: `${name} · ${dmgSpec.damageType}`,
-      damageType: dmgSpec.damageType,
-    }),
-  ];
+  const rolls: DiceRoll[] = [];
+  let rolledTotal = 0;
+  for (const part of dmgParts) {
+    if (!part.dice || part.dice === "0") continue;
+    const rolled = rollNotation(part.dice);
+    rolledTotal += rolled.total;
+    rolls.push(
+      makeDiceRoll({
+        roller: t.name,
+        notation: part.dice,
+        values: rolled.values,
+        sides: rolled.sides,
+        modifier: rolled.modifier,
+        total: rolled.total,
+        purpose: "damage",
+        label: `${name} · ${part.damageType}`,
+        damageType: part.damageType,
+      }),
+    );
+  }
   const hits: StrikeHit[] = [];
   for (const e of caught) {
     if (e.kind === "pc" && e.playerId && combat.phoneIds?.includes(e.playerId)) {
@@ -3230,9 +3535,10 @@ function castSaveArea(
           targetId: e.id,
           saveAbility: saveKey,
           saveDc: dc,
-          saveDamage: rolled.total,
+          saveDamage: rolledTotal,
           saveHalf: Boolean(effect.halfOnSuccess),
           saveFail: effect.onFail ? String(effect.onFail) : undefined,
+          saveSourceSpellId: castId,
         },
       ];
       continue;
@@ -3240,11 +3546,23 @@ function castSaveArea(
     const { roll: save, ok: saved } = creatureSave(e, saveKey, dc, true);
     rolls.push(save);
     const cantrip = Number(effect.slot ?? effect.level ?? 1) === 0;
-    let dmg = saved ? (effect.halfOnSuccess || potentCantripHalf(t, cantrip, true) ? Math.floor(rolled.total / 2) : 0) : rolled.total;
+    let dmg = saved
+      ? effect.halfOnSuccess || potentCantripHalf(t, cantrip, true)
+        ? Math.floor(rolledTotal / 2)
+        : 0
+      : rolledTotal;
     if (sculptSucceeds(t, isFriend(combat, t, e))) dmg = 0;
-    const evaded = evasionDamage(e, saveKey, saved, rolled.total, Boolean(effect.halfOnSuccess));
+    const evaded = evasionDamage(e, saveKey, saved, rolledTotal, Boolean(effect.halfOnSuccess));
     if (evaded != null) dmg = evaded;
-    if (!saved && effect.onFail) addCondition(e, String(effect.onFail));
+    if (!saved && effect.onFail) {
+      addCondition(e, String(effect.onFail));
+      if (effect.repeatSave) {
+        e.spellLinks = [
+          ...(e.spellLinks ?? []),
+          { condition: String(effect.onFail), spellId: castId, by: t.id, saveAbility: saveKey, saveDc: dc, repeat: true },
+        ];
+      }
+    }
     hits.push({
       targetId: e.id,
       outcome: saved ? "success" : "fail",
@@ -3254,7 +3572,28 @@ function castSaveArea(
   }
   t.hidden = false;
   spendEconomy(t, isBonus);
-  if (effect.concentration) setConcentration(t, name);
+  if (effect.concentration) setConcentration(combat, t, castId);
+  if (effect.persistentZone) {
+    const part = dmgParts[0];
+    combat.zones = [
+      ...(combat.zones ?? []),
+      {
+        id: `zone-${combat.seq}-${t.id}`,
+        by: t.id,
+        spellId: castId,
+        name,
+        x: aim.x,
+        y: aim.y,
+        radius: Number(effect.radius ?? effect.lengthCells ?? 2),
+        saveAbility: saveKey,
+        dc,
+        dice: part?.dice && part.dice !== "0" ? part.dice : "1d4",
+        damageType: part?.damageType && part.damageType !== "none" ? part.damageType : "fire",
+        half: Boolean(effect.halfOnSuccess),
+        touched: caught.map((e) => e.id),
+      },
+    ];
+  }
   const blow = hits
     .map((h) => {
       const foe = combat.tokens.find((x) => x.id === h.targetId);
@@ -3275,6 +3614,7 @@ function castSaveArea(
   for (const h of hits) {
     const e = combat.tokens.find((x) => x.id === h.targetId)!;
     if (h.damage > 0) applyDamage(combat, e, h.damage);
+    if (h.outcome === "fail") queueDelayedSaveDamage(e, false, effect, name, castId);
   }
   if (!(combat.awaiting ?? []).some((a) => a.step === "save")) checkEnd(combat);
   refreshReachable(combat);
@@ -3290,6 +3630,10 @@ export function commitAreaSave(combat: CombatState, playerId: string): void {
   const { roll, ok } = creatureSave(token, mine.saveAbility ?? "dex", mine.saveDc, true);
   const damage = ok ? (mine.saveHalf ? Math.floor(mine.saveDamage / 2) : 0) : mine.saveDamage;
   if (!ok && mine.saveFail) addCondition(token, mine.saveFail);
+  if (ok && mine.saveRepeat && mine.saveCondition) {
+    token.conditions = (token.conditions ?? []).filter((c) => c !== mine.saveCondition);
+    token.spellLinks = (token.spellLinks ?? []).filter((link) => link.condition !== mine.saveCondition);
+  }
   statusEvent(
     combat,
     token,
@@ -3298,6 +3642,11 @@ export function commitAreaSave(combat: CombatState, playerId: string): void {
     [roll],
   );
   if (damage > 0) applyDamage(combat, token, damage);
+  if (!ok && mine.saveSourceSpellId) {
+    const ability = getAbility(mine.saveSourceSpellId);
+    const eff = ability?.effects[0] as Record<string, unknown> | undefined;
+    if (eff) queueDelayedSaveDamage(token, false, eff, ability?.name ?? mine.label, mine.saveSourceSpellId);
+  }
   if (!(combat.awaiting ?? []).some((a) => a.step === "save")) checkEnd(combat);
 }
 
@@ -3546,6 +3895,18 @@ function breakConcentration(combat: CombatState, token: CombatToken): void {
       marked.acBonus = 0;
     }
   }
+  clearCasterSpell(combat.tokens, token.id, focus.spellId);
+  for (const other of combat.tokens) {
+    if (other.polymorphBy === token.id) {
+      restorePolymorph(other);
+      other.polymorphBy = undefined;
+    }
+  }
+  combat.zones = (combat.zones ?? []).filter((zone) => zone.by !== token.id);
+  combat.tokens = combat.tokens.filter((other) => other.summonOwner !== token.id);
+  if (combat.tokens.every((other) => other.summonOwner !== token.id)) {
+    combat.turnOrder = combat.turnOrder.filter((id) => combat.tokens.some((other) => other.id === id));
+  }
   token.blur = false;
   token.invisible = false;
 }
@@ -3768,6 +4129,7 @@ function finishMove(combat: CombatState, mover: CombatToken, path: Cell[], cost:
   });
   refreshAuras(combat);
   tickAuraEnter(combat, mover);
+  tickZones(combat, mover);
 }
 
 function commitMove(combat: CombatState, mover: CombatToken, path: Cell[], cost: number): void {
@@ -3938,6 +4300,8 @@ export function endTurn(combat: CombatState, playerId: string): void {
   const t = currentToken(combat);
   if (!t || t.kind !== "pc" || t.playerId !== playerId) throw new Error("NOT_YOUR_TURN");
   if ((combat.awaiting ?? []).some((a) => a.step === "death" && a.playerId === playerId)) throw new Error("NO_ROLL");
+  if (queueRepeatSave(combat, t)) return;
+  tickZones(combat, t);
   expireRage(combat, t);
   tickGlobalTimedEffects(combat);
   runLegendaryWindow(combat, t);

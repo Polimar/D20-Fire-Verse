@@ -300,7 +300,7 @@ function toRow(row: Stored, on: Set<string>, saved: Map<string, Resolution>): Ca
     usage: row.review?.usage ?? "",
     source: row.source,
     edited: row.edited,
-    inPlay: enabled && row.valid && reviewAllowsPlay(fileStatus),
+    inPlay: enabled && row.valid && reviewAllowsPlay(fileStatus) && !missingMechanic,
     summary: summarize(row.kind, row.raw),
     notModeled: row.review?.notModeled?.length ?? 0,
   };

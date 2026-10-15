@@ -30,7 +30,7 @@ test("ensureForgeContentDefaults enables valid reviewed monsters and leaves the 
   const playable = monsters.filter((row) => row.valid && fileClear(row));
   const held = monsters.filter((row) => row.fileReviewStatus === "needs_review" || !row.valid);
   assert.ok(playable.length > 2, `expected the reviewed monster set, got ${playable.length}`);
-  assert.ok(playable.every((row) => row.enabled && row.inPlay));
+  assert.ok(playable.every((row) => row.enabled && row.inPlay === !row.missingMechanic));
   assert.ok(held.length > 0, "needs_review monsters should stay out of the seed");
   assert.ok(held.every((row) => !row.enabled));
   setContentEnabled("monster", "goblin_warrior", false);

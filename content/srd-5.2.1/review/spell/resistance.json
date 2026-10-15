@@ -9,5 +9,8 @@
   "srd": {
     "line": "Abjuration Cantrip (Cleric, Druid)",
     "text": "_Abjuration Cantrip (Cleric, Druid)_\n\n**Casting Time:** Action\n**Range:** Touch\n**Component:** V, S\n**Duration:** Concentration, up to 1 minute\n\nYou touch a willing creature and choose a damage type: Acid, Bludgeoning, Cold, Fire, Lightning, Necrotic, Piercing, Poison, Radiant, Slashing, or Thunder. When the creature takes damage of the chosen type before the spell ends, the creature reduces the total damage taken by 1d4. A creature can benefit from this spell only once per turn."
-  }
+  },
+  "notModeled": [
+    "No battlefield effect is run for this spell yet."
+  ]
 }

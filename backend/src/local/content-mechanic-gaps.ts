@@ -102,7 +102,7 @@ function classEngineReasons(id: string, game: { name?: string; levels?: Array<{ 
   return reasons;
 }
 
-const REVIEW_HINT_KINDS = new Set(["item", "spell", "monster"]);
+const REVIEW_HINT_KINDS = new Set(["item", "spell", "monster", "class", "subclass", "background", "feat"]);
 
 /** Human-readable causes shown in the admin detail drawer. */
 export function mechanicGapReasons(kind: string, id: string, game: unknown, review?: ContentReviewHints): string[] {
@@ -113,7 +113,13 @@ export function mechanicGapReasons(kind: string, id: string, game: unknown, revi
   switch (kind) {
     case "item": {
       const item = game as ItemDef;
-      reasons.push(...itemEngineReasons(item), ...itemDrinkReasons(item, review));
+      const stale = (reason: string) =>
+        (/stealth/i.test(reason) && Boolean(item.armor?.stealthDisadvantage)) ||
+        (/charge/i.test(reason) && (Boolean(item.charges) || item.effects.some((effect) => effect.kind === "grant_spell"))) ||
+        (/Strength without the belt/i.test(reason) && item.effects.some((effect) => effect.kind === "stat_set" || effect.kind === "stat_drink"));
+      const kept = reasons.filter((reason) => !stale(reason));
+      reasons.length = 0;
+      reasons.push(...kept, ...itemEngineReasons(item), ...itemDrinkReasons(item, review));
       break;
     }
     case "spell":
@@ -125,8 +131,12 @@ export function mechanicGapReasons(kind: string, id: string, game: unknown, revi
     case "class":
       reasons.push(...classEngineReasons(id, game as { name?: string; levels?: Array<{ level: number; features: string[] }> }));
       break;
-    case "subclass":
     case "species":
+      for (const rule of review?.notModeled ?? []) {
+        reasons.push(`SRD rule not applied in combat: ${rule}`);
+      }
+      break;
+    case "subclass":
     case "background":
     case "feat":
       break;

@@ -59,7 +59,10 @@ test("the engine panel reports what combat really runs", () => {
   assert.deepEqual(drift, [], "combat dice, saves, and levels match SRD 5.2.1");
 
   const fireball = engineView("spell", "fireball", readPack<SpellDef>("spells.json").find((s) => s.id === "fireball"));
-  assert.equal(fireball?.state, "sheet");
+  assert.equal(fireball?.state, "runs");
+
+  const wall = engineView("spell", "wall_of_fire", readPack<SpellDef>("spells.json").find((s) => s.id === "wall_of_fire"));
+  assert.equal(wall?.state, "runs");
 
   const aboleth = engineView("monster", "aboleth", readPack<CatalogMonster>("monsters.json").find((m) => m.id === "aboleth"));
   assert.equal(aboleth?.state, "runs");

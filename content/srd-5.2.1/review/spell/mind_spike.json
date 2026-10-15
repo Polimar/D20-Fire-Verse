@@ -1,6 +1,7 @@
 {
   "ambiguities": [],
   "unparsedFields": [],
+  "notModeled": ["Concentration tracking and always-know-location / anti-invisibility rider are not run."],
   "kind": "spell",
   "id": "mind_spike",
   "status": "auto_ok",

@@ -9,5 +9,8 @@
   "srd": {
     "line": "Level 6 Divination (Bard, Cleric, Sorcerer, Warlock, Wizard)",
     "text": "_Level 6 Divination (Bard, Cleric, Sorcerer, Warlock, Wizard)_\n\n**Casting Time:** Action\n**Range:** Touch\n**Components:** V, S, M (mushroom powder worth 25+ GP, which the spell consumes)\n**Duration:** 1 hour\n\nFor the duration, the willing creature you touch has Truesight with a range of 120 feet."
-  }
+  },
+  "notModeled": [
+    "No battlefield effect is run for this spell yet."
+  ]
 }

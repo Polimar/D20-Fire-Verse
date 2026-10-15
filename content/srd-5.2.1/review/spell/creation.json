@@ -9,5 +9,8 @@
   "srd": {
     "line": "Level 5 Illusion (Sorcerer, Wizard)",
     "text": "_Level 5 Illusion (Sorcerer, Wizard)_\n\n**Casting Time:** 1 minute\n**Range:** 30 feet\n**Components:** V, S, M (a paintbrush)\n**Duration:** Special\n\nYou pull wisps of shadow material from the Shadowfell to create an object within range. It is either an object of vegetable matter (soft goods, rope, wood, and the like) or mineral matter (stone, crystal, metal, and the like). The object must be no larger than a 5-foot Cube, and the object must be of a form and material that you have seen.\n\nThe spell's duration depends on the object's material, as shown in the Materials table. If the object is composed of multiple materials, use the shortest duration. Using any object created by this spell as another spell's Material component causes the other spell to fail.\n\n**Materials**\n\n| Material | Duration |\n| --- | --- |\n| Vegetable matter | 24 hours |\n| Stone or crystal | 12 hours |\n| Precious metals | 1 hour |\n| Gems | 10 minutes |\n| Adamantine or mithral | 1 minute |\n\n_Using a Higher-Level Spell Slot._ The Cube increases by 5 feet for each spell slot level above 5."
-  }
+  },
+  "notModeled": [
+    "No battlefield effect is run for this spell yet."
+  ]
 }

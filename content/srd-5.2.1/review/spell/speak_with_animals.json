@@ -9,5 +9,8 @@
   "srd": {
     "line": "Level 1 Divination (Bard, Druid, Ranger, Warlock)",
     "text": "_Level 1 Divination (Bard, Druid, Ranger, Warlock)_\n\n**Casting Time:** Action or Ritual\n**Range:** Self\n**Components:** V, S\n**Duration:** 10 minutes\n\nFor the duration, you can comprehend and verbally communicate with Beasts, and you can use any of the Influence action's skill options with them.\n\nMost Beasts have little to say about topics that don't pertain to survival or companionship, but at minimum, a Beast can give you information about nearby locations and monsters, including whatever it has perceived within the past day."
-  }
+  },
+  "notModeled": [
+    "No battlefield effect is run for this spell yet."
+  ]
 }

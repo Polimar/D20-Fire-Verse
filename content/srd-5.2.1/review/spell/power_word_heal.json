@@ -9,5 +9,8 @@
   "srd": {
     "line": "Level 9 Enchantment (Bard, Cleric)",
     "text": "_Level 9 Enchantment (Bard, Cleric)_\n\n**Casting Time:** Action\n**Range:** 60 feet\n**Component:** V\n**Duration:** Instantaneous\n\nA wave of healing energy washes over one creature you can see within range. The target regains all its Hit Points. If the creature has the Charmed, Frightened, Paralyzed, Poisoned, or Stunned condition, the condition ends. If the creature has the Prone condition, it can use its Reaction to stand up."
-  }
+  },
+  "notModeled": [
+    "No battlefield effect is run for this spell yet."
+  ]
 }

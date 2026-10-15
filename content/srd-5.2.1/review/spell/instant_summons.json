@@ -9,5 +9,8 @@
   "srd": {
     "line": "Level 6 Conjuration (Wizard)",
     "text": "_Level 6 Conjuration (Wizard)_\n\n**Casting Time:** 1 minute or Ritual\n**Range:** Touch\n**Components:** V, S, M (a sapphire worth 1,000+ GP)\n**Duration:** Until dispelled\n\nYou touch the sapphire used in the casting and an object weighing 10 pounds or less whose longest dimension is 6 feet or less. The spell leaves an Invisible mark on that object and invisibly inscribes the object's name on the sapphire. Each time you cast this spell, you must use a different sapphire.\n\nThereafter, you can take a Magic action to speak the object's name and crush the sapphire. The object instantly appears in your hand regardless of physical or planar distances, and the spell ends.\n\nIf another creature is holding or carrying the object, crushing the sapphire doesn't transport it, but instead you learn who that creature is and where that creature is currently located."
-  }
+  },
+  "notModeled": [
+    "No battlefield effect is run for this spell yet."
+  ]
 }

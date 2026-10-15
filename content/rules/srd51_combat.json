@@ -79,6 +79,26 @@
     "combat": true,
     "effects": [{ "type": "attack", "spellAttack": true, "ability": "spell", "rangeCells": 18, "damage": [{ "dice": "3d8", "damageType": "fire" }], "slot": 1, "scaling": { "2": "4d8" } }]
   },
+  "spell_acid_arrow": {
+    "id": "spell_acid_arrow",
+    "name": "Acid Arrow",
+    "actionType": "action",
+    "level": 2,
+    "combat": true,
+    "effects": [
+      {
+        "type": "attack",
+        "spellAttack": true,
+        "ability": "spell",
+        "rangeCells": 18,
+        "damage": [{ "dice": "4d4", "damageType": "acid" }],
+        "slot": 2,
+        "missHalfInitial": true,
+        "delayedOnHit": { "dice": "2d4", "damageType": "acid", "timing": "target_turn_start_after_hit" },
+        "scaling": { "3": "5d4", "4": "6d4", "5": "7d4", "6": "8d4", "7": "9d4", "8": "10d4", "9": "11d4" }
+      }
+    ]
+  },
   "spell_healing_word": {
     "id": "spell_healing_word",
     "name": "Healing Word",
@@ -166,7 +186,163 @@
     "actionType": "action",
     "level": 2,
     "combat": true,
-    "effects": [{ "type": "save", "shape": "sphere", "ability": "con", "dcFrom": "spell", "lengthCells": 12, "radius": 2, "damage": [{ "dice": "3d8", "damageType": "thunder" }], "halfOnSuccess": true, "slot": 2 }]
+    "effects": [{ "type": "save", "shape": "sphere", "ability": "con", "dcFrom": "spell", "lengthCells": 12, "radius": 2, "damage": [{ "dice": "3d8", "damageType": "thunder" }], "halfOnSuccess": true, "slot": 2, "scaling": { "3": "4d8", "4": "5d8", "5": "6d8", "6": "7d8", "7": "8d8", "8": "9d8", "9": "10d8" } }]
+  },
+  "spell_burning_hands": {
+    "id": "spell_burning_hands",
+    "name": "Burning Hands",
+    "actionType": "action",
+    "level": 1,
+    "combat": true,
+    "effects": [{ "type": "save", "shape": "cone", "ability": "dex", "dcFrom": "spell", "lengthCells": 3, "damage": [{ "dice": "3d6", "damageType": "fire" }], "halfOnSuccess": true, "slot": 1, "scaling": { "2": "4d6", "3": "5d6", "4": "6d6", "5": "7d6", "6": "8d6", "7": "9d6", "8": "10d6", "9": "11d6" } }]
+  },
+  "spell_cure_wounds": {
+    "id": "spell_cure_wounds",
+    "name": "Cure Wounds",
+    "actionType": "action",
+    "level": 1,
+    "combat": true,
+    "effects": [{ "type": "heal", "dice": "2d8", "ability": "spell", "rangeCells": 1, "slot": 1, "scaling": { "2": "4d8", "3": "6d8", "4": "8d8", "5": "10d8", "6": "12d8", "7": "14d8", "8": "16d8", "9": "18d8" } }]
+  },
+  "spell_guiding_bolt": {
+    "id": "spell_guiding_bolt",
+    "name": "Guiding Bolt",
+    "actionType": "action",
+    "level": 1,
+    "combat": true,
+    "effects": [{ "type": "attack", "spellAttack": true, "ability": "spell", "rangeCells": 24, "damage": [{ "dice": "4d6", "damageType": "radiant" }], "slot": 1, "onHit": [{ "type": "condition", "condition": "attack_advantage_next" }], "scaling": { "2": "5d6", "3": "6d6", "4": "7d6", "5": "8d6", "6": "9d6", "7": "10d6", "8": "11d6", "9": "12d6" } }]
+  },
+  "spell_ray_of_sickness": {
+    "id": "spell_ray_of_sickness",
+    "name": "Ray of Sickness",
+    "actionType": "action",
+    "level": 1,
+    "combat": true,
+    "effects": [{ "type": "attack", "spellAttack": true, "ability": "spell", "rangeCells": 12, "damage": [{ "dice": "2d8", "damageType": "poison" }], "slot": 1, "onHit": [{ "type": "condition", "condition": "poisoned" }], "scaling": { "2": "3d8", "3": "4d8", "4": "5d8", "5": "6d8", "6": "7d8", "7": "8d8", "8": "9d8", "9": "10d8" } }]
+  },
+  "spell_hellish_rebuke": {
+    "id": "spell_hellish_rebuke",
+    "name": "Hellish Rebuke",
+    "actionType": "reaction",
+    "level": 1,
+    "combat": true,
+    "effects": [{ "type": "save", "shape": "one", "ability": "dex", "dcFrom": "spell", "rangeCells": 12, "damage": [{ "dice": "2d10", "damageType": "fire" }], "halfOnSuccess": true, "slot": 1, "scaling": { "2": "3d10", "3": "4d10", "4": "5d10", "5": "6d10", "6": "7d10", "7": "8d10", "8": "9d10", "9": "10d10" } }]
+  },
+  "spell_mind_spike": {
+    "id": "spell_mind_spike",
+    "name": "Mind Spike",
+    "actionType": "action",
+    "level": 2,
+    "combat": true,
+    "effects": [{ "type": "save", "shape": "one", "ability": "wis", "dcFrom": "spell", "rangeCells": 24, "damage": [{ "dice": "3d8", "damageType": "psychic" }], "halfOnSuccess": true, "concentration": true, "slot": 2, "scaling": { "3": "4d8", "4": "5d8", "5": "6d8", "6": "7d8", "7": "8d8", "8": "9d8", "9": "10d8" } }]
+  },
+  "spell_fireball": {
+    "id": "spell_fireball",
+    "name": "Fireball",
+    "actionType": "action",
+    "level": 3,
+    "combat": true,
+    "effects": [{ "type": "save", "shape": "sphere", "ability": "dex", "dcFrom": "spell", "lengthCells": 30, "radius": 4, "damage": [{ "dice": "8d6", "damageType": "fire" }], "halfOnSuccess": true, "slot": 3, "scaling": { "4": "9d6", "5": "10d6", "6": "11d6", "7": "12d6", "8": "13d6", "9": "14d6" } }]
+  },
+  "spell_lightning_bolt": {
+    "id": "spell_lightning_bolt",
+    "name": "Lightning Bolt",
+    "actionType": "action",
+    "level": 3,
+    "combat": true,
+    "effects": [{ "type": "save", "shape": "line", "ability": "dex", "dcFrom": "spell", "lengthCells": 20, "damage": [{ "dice": "8d6", "damageType": "lightning" }], "halfOnSuccess": true, "slot": 3, "scaling": { "4": "9d6", "5": "10d6", "6": "11d6", "7": "12d6", "8": "13d6", "9": "14d6" } }]
+  },
+  "spell_mass_healing_word": {
+    "id": "spell_mass_healing_word",
+    "name": "Mass Healing Word",
+    "actionType": "bonus_action",
+    "level": 3,
+    "combat": true,
+    "effects": [{ "type": "heal", "dice": "2d4", "ability": "spell", "rangeCells": 12, "mass": 6, "slot": 3, "scaling": { "4": "3d4", "5": "4d4", "6": "5d4", "7": "6d4", "8": "7d4", "9": "8d4" } }]
+  },
+  "spell_blight": {
+    "id": "spell_blight",
+    "name": "Blight",
+    "actionType": "action",
+    "level": 4,
+    "combat": true,
+    "effects": [{ "type": "save", "shape": "one", "ability": "con", "dcFrom": "spell", "rangeCells": 6, "damage": [{ "dice": "8d8", "damageType": "necrotic" }], "halfOnSuccess": true, "slot": 4, "scaling": { "5": "9d8", "6": "10d8", "7": "11d8", "8": "12d8", "9": "13d8" } }]
+  },
+  "spell_ice_storm": {
+    "id": "spell_ice_storm",
+    "name": "Ice Storm",
+    "actionType": "action",
+    "level": 4,
+    "combat": true,
+    "effects": [{ "type": "save", "shape": "sphere", "ability": "dex", "dcFrom": "spell", "lengthCells": 60, "radius": 4, "damage": [{ "dice": "2d10", "damageType": "bludgeoning" }, { "dice": "4d6", "damageType": "cold" }], "halfOnSuccess": true, "slot": 4, "scaling": { "5": "3d10", "6": "4d10", "7": "5d10", "8": "6d10", "9": "7d10" } }]
+  },
+  "spell_vitriolic_sphere": {
+    "id": "spell_vitriolic_sphere",
+    "name": "Vitriolic Sphere",
+    "actionType": "action",
+    "level": 4,
+    "combat": true,
+    "effects": [{
+      "type": "save",
+      "shape": "sphere",
+      "ability": "dex",
+      "dcFrom": "spell",
+      "lengthCells": 30,
+      "radius": 4,
+      "damage": [{ "dice": "10d4", "damageType": "acid" }],
+      "halfOnSuccess": true,
+      "slot": 4,
+      "delayedOnHit": { "dice": "5d4", "damageType": "acid", "timing": "target_turn_start_after_hit" },
+      "scaling": { "5": "12d4", "6": "14d4", "7": "16d4", "8": "18d4", "9": "20d4" }
+    }]
+  },
+  "spell_wall_of_fire": {
+    "id": "spell_wall_of_fire",
+    "name": "Wall of Fire",
+    "actionType": "action",
+    "level": 4,
+    "combat": true,
+    "effects": [{ "type": "save", "shape": "sphere", "ability": "dex", "dcFrom": "spell", "lengthCells": 24, "radius": 4, "damage": [{ "dice": "5d8", "damageType": "fire" }], "halfOnSuccess": true, "concentration": true, "persistentZone": true, "slot": 4, "scaling": { "5": "6d8", "6": "7d8", "7": "8d8", "8": "9d8", "9": "10d8" } }]
+  },
+  "spell_flame_strike": {
+    "id": "spell_flame_strike",
+    "name": "Flame Strike",
+    "actionType": "action",
+    "level": 5,
+    "combat": true,
+    "effects": [{ "type": "save", "shape": "sphere", "ability": "dex", "dcFrom": "spell", "lengthCells": 12, "radius": 2, "damage": [{ "dice": "5d6", "damageType": "fire" }, { "dice": "5d6", "damageType": "radiant" }], "halfOnSuccess": true, "slot": 5, "scaling": { "6": "6d6", "7": "7d6", "8": "8d6", "9": "9d6" }, "scalingAll": true }]
+  },
+  "spell_cone_of_cold": {
+    "id": "spell_cone_of_cold",
+    "name": "Cone of Cold",
+    "actionType": "action",
+    "level": 5,
+    "combat": true,
+    "effects": [{ "type": "save", "shape": "cone", "ability": "con", "dcFrom": "spell", "lengthCells": 12, "damage": [{ "dice": "8d8", "damageType": "cold" }], "halfOnSuccess": true, "slot": 5, "scaling": { "6": "9d8", "7": "10d8", "8": "11d8", "9": "12d8" } }]
+  },
+  "spell_mass_cure_wounds": {
+    "id": "spell_mass_cure_wounds",
+    "name": "Mass Cure Wounds",
+    "actionType": "action",
+    "level": 5,
+    "combat": true,
+    "effects": [{ "type": "heal", "dice": "5d8", "ability": "spell", "rangeCells": 12, "mass": 6, "slot": 5, "scaling": { "6": "6d8", "7": "7d8", "8": "8d8", "9": "9d8" } }]
+  },
+  "spell_circle_of_death": {
+    "id": "spell_circle_of_death",
+    "name": "Circle of Death",
+    "actionType": "action",
+    "level": 6,
+    "combat": true,
+    "effects": [{ "type": "save", "shape": "sphere", "ability": "con", "dcFrom": "spell", "lengthCells": 30, "radius": 12, "damage": [{ "dice": "8d8", "damageType": "necrotic" }], "halfOnSuccess": true, "slot": 6, "scaling": { "7": "10d8", "8": "12d8", "9": "14d8" } }]
+  },
+  "spell_disintegrate": {
+    "id": "spell_disintegrate",
+    "name": "Disintegrate",
+    "actionType": "action",
+    "level": 6,
+    "combat": true,
+    "effects": [{ "type": "save", "shape": "one", "ability": "dex", "dcFrom": "spell", "rangeCells": 12, "damage": [{ "dice": "10d6+40", "damageType": "force" }], "halfOnSuccess": false, "slot": 6, "scaling": { "7": "13d6+40", "8": "16d6+40", "9": "19d6+40" } }]
   },
   "spell_hold_person": {
     "id": "spell_hold_person",
@@ -174,7 +350,7 @@
     "actionType": "action",
     "level": 2,
     "combat": true,
-    "effects": [{ "type": "save", "shape": "one", "ability": "wis", "dcFrom": "spell", "rangeCells": 12, "onFail": "paralyzed", "concentration": true, "slot": 2, "damage": [{ "dice": "0", "damageType": "none" }] }]
+    "effects": [{ "type": "save", "shape": "one", "ability": "wis", "dcFrom": "spell", "rangeCells": 12, "onFail": "paralyzed", "concentration": true, "repeatSave": true, "slot": 2, "damage": [{ "dice": "0", "damageType": "none" }] }]
   },
   "spell_spiritual_weapon": {
     "id": "spell_spiritual_weapon",

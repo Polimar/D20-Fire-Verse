@@ -9,5 +9,8 @@
   "srd": {
     "line": "Level 9 Divination (Bard, Druid, Warlock, Wizard)",
     "text": "_Level 9 Divination (Bard, Druid, Warlock, Wizard)_\n\n**Casting Time:** 1 minute\n**Range:** Touch\n**Components:** V, S, M (a hummingbird feather)\n**Duration:** 8 hours\n\nYou touch a willing creature and bestow a limited ability to see into the immediate future. For the duration, the target has Advantage on D20 Tests, and other creatures have Disadvantage on attack rolls against it. The spell ends early if you cast it again."
-  }
+  },
+  "notModeled": [
+    "No battlefield effect is run for this spell yet."
+  ]
 }

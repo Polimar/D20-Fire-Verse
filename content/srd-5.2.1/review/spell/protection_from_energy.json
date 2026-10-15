@@ -9,5 +9,8 @@
   "srd": {
     "line": "Level 3 Abjuration (Cleric, Druid, Ranger, Sorcerer, Wizard)",
     "text": "_Level 3 Abjuration (Cleric, Druid, Ranger, Sorcerer, Wizard)_\n\n**Casting Time:** Action\n**Range:** Touch\n**Components:** V, S\n**Duration:** Concentration, up to 1 hour\n\nFor the duration, the willing creature you touch has Resistance to one damage type of your choice: Acid, Cold, Fire, Lightning, or Thunder."
-  }
+  },
+  "notModeled": [
+    "No battlefield effect is run for this spell yet."
+  ]
 }

@@ -9,5 +9,8 @@
   "srd": {
     "line": "Level 1 Divination (Cleric, Paladin)",
     "text": "_Level 1 Divination (Cleric, Paladin)_\n\n**Casting Time:** Action\n**Range:** Self\n**Components:** V, S\n**Duration:** Concentration, up to 10 minutes\n\nFor the duration, you sense the location of any Aberration, Celestial, Elemental, Fey, Fiend, or Undead within 30 feet of yourself. You also sense whether the _Hallow_ spell is active there and, if so, where.\n\nThe spell is blocked by 1 foot of stone, dirt, or wood; 1 inch of metal; or a thin sheet of lead."
-  }
+  },
+  "notModeled": [
+    "No battlefield effect is run for this spell yet."
+  ]
 }

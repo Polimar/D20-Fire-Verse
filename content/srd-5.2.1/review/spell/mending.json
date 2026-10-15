@@ -9,5 +9,8 @@
   "srd": {
     "line": "Transmutation Cantrip (Bard, Cleric, Druid, Sorcerer, Wizard)",
     "text": "_Transmutation Cantrip (Bard, Cleric, Druid, Sorcerer, Wizard)_\n\n**Casting Time:** 1 minute\n**Range:** Touch\n**Components:** V, S, M (two lodestones)\n**Duration:** Instantaneous\n\nThis spell repairs a single break or tear in an object you touch, such as a broken chain link, two halves of a broken key, a torn cloak, or a leaking wineskin. As long as the break or tear is no larger than 1 foot in any dimension, you mend it, leaving no trace of the former damage.\n\nThis spell can physically repair a magic item, but it can't restore magic to such an object."
-  }
+  },
+  "notModeled": [
+    "No battlefield effect is run for this spell yet."
+  ]
 }

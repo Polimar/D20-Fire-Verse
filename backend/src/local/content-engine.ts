@@ -66,6 +66,9 @@ export function describeEffect(effect: Record<string, unknown>): string {
   if (range) bits.push(range === "5 ft" ? "reach 5 ft" : `range ${range}`);
   if (effect.shape && effect.shape !== "one") bits.push(`${String(effect.shape)}${effect.radius ? ` r${feet(effect.radius)}` : effect.lengthCells ? ` ${feet(effect.lengthCells)}` : ""}`);
   if (effect.halfOnSuccess) bits.push("half on a save");
+  if (effect.missHalfInitial) bits.push("half initial damage on a miss");
+  const delayed = effect.delayedOnHit as { dice?: string; damageType?: string } | undefined;
+  if (delayed?.dice) bits.push(`${delayed.dice}${delayed.damageType ? ` ${delayed.damageType}` : ""} at start of target's next turn`);
   if (effect.condition || effect.onFail) bits.push(`on a fail: ${String(effect.condition ?? effect.onFail)}`);
   if (effect.concentration) bits.push("concentration");
   const recharge = effect.recharge as { min?: number; max?: number } | undefined;
@@ -187,9 +190,24 @@ function spellView(id: string, game: SpellDef): EngineView {
   }
   const mismatches: string[] = [];
   const effect = ability.effects[0] ?? {};
-  const engineDice = (effect.damage as Array<{ dice: string }> | undefined)?.filter((d) => d.dice !== "0").map((d) => d.dice).join(" + ") ?? "";
-  const srdDice = game.mechanics?.damage?.map((d) => d.dice).join(" + ") ?? "";
-  if (srdDice && engineDice && srdDice !== engineDice) mismatches.push(`Damage: the SRD rolls ${srdDice}, the engine rolls ${engineDice}.`);
+  const engineParts = (effect.damage as Array<{ dice: string }> | undefined)?.filter((d) => d.dice && d.dice !== "0") ?? [];
+  const engineDice = engineParts.map((d) => d.dice).join(" + ") ?? "";
+  const srdDamageLines = game.mechanics?.damage ?? [];
+  const srdDice = srdDamageLines.map((d) => d.dice).join(" + ") ?? "";
+  const delayed = effect.delayedOnHit as { dice?: string } | undefined;
+  const zoneExtra = effect.persistentZone ? 1 : 0;
+  const modeledDamageLines = engineParts.length + (delayed?.dice ? 1 : 0) + zoneExtra;
+  if (srdDamageLines.length > modeledDamageLines) {
+    const primary = srdDamageLines[0]?.dice;
+    const wired = engineParts[0]?.dice;
+    if (primary && wired && primary !== wired) {
+      mismatches.push(`Damage: the SRD rolls ${primary} on the wired portion, the engine rolls ${wired}.`);
+    }
+  } else if (srdDice && engineDice && srdDice !== engineDice) {
+    const zoneDice = zoneExtra && engineParts[0]?.dice ? engineParts[0].dice : "";
+    const combined = [engineDice, delayed?.dice, zoneDice].filter(Boolean).join(" + ");
+    if (srdDice !== combined) mismatches.push(`Damage: the SRD rolls ${srdDice}, the engine rolls ${combined}.`);
+  }
   if (game.mechanics?.heal && typeof effect.dice === "string" && effect.type === "heal" && effect.dice !== game.mechanics.heal) {
     mismatches.push(`Healing: the SRD heals ${game.mechanics.heal}, the engine heals ${effect.dice}.`);
   }
@@ -197,11 +215,23 @@ function spellView(id: string, game: SpellDef): EngineView {
   if (save && effect.type === "save" && effect.ability !== save) mismatches.push(`Save: the SRD calls for ${ABILITY_NAMES[save]}, the engine rolls ${ABILITY_NAMES[String(effect.ability)] ?? String(effect.ability)}.`);
   const level = Number((ability as AbilityDef & { level?: number }).level ?? game.level);
   if (level !== game.level) mismatches.push(`Level: the SRD says ${game.level}, the engine spends a level ${level} slot.`);
+  const lines: EngineLine[] = [{ label: ability.name, detail: describeAbility(ability), ok: true }];
+  if (srdDamageLines.length > modeledDamageLines) {
+    const missing = srdDamageLines.slice(modeledDamageLines).map((d) => `${d.dice} ${d.damageType}`).join("; ");
+    lines.push({
+      label: "Secondary damage",
+      detail: `SRD also rolls ${missing}, but combat only runs the wired blast/heal portion.`,
+      ok: false,
+    });
+  }
+  const state: EngineView["state"] = lines.some((line) => !line.ok) ? "partial" : "runs";
   return {
-    state: "runs",
-    headline: `Castable in combat as ${engineId}.`,
+    state,
+    headline: state === "partial"
+      ? `Castable in combat as ${engineId}, but some SRD damage or duration rules are still missing.`
+      : `Castable in combat as ${engineId}.`,
     source: "content/rules/srd51_combat.json or content/abilities/oneshot_v1.json; dice roll in backend/src/local/dice.ts",
-    lines: [{ label: ability.name, detail: describeAbility(ability), ok: true }],
+    lines,
     mismatches,
     notes: [],
   };

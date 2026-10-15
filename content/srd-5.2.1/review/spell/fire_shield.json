@@ -9,5 +9,8 @@
   "srd": {
     "line": "Level 4 Evocation (Druid, Sorcerer, Wizard)",
     "text": "_Level 4 Evocation (Druid, Sorcerer, Wizard)_\n\n**Casting Time:** Action\n**Range:** Self\n**Components:** V, S, M (a bit of phosphorus or a firefly)\n**Duration:** 10 minutes\n\nWispy flames wreathe your body for the duration, shedding Bright Light in a 10-foot radius and Dim Light for an additional 10 feet.\n\nThe flames provide you with a warm shield or a chill shield, as you choose. The warm shield grants you Resistance to Cold damage, and the chill shield grants you Resistance to Fire damage.\n\nIn addition, whenever a creature within 5 feet of you hits you with a melee attack roll, the shield erupts with flame. The attacker takes 2d8 Fire damage from a warm shield or 2d8 Cold damage from a chill shield."
-  }
+  },
+  "notModeled": [
+    "No battlefield effect is run for this spell yet."
+  ]
 }
