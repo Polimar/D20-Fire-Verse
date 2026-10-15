@@ -2,7 +2,20 @@
 
 Documento di riferimento per implementazione e **brief Cursor**.  
 Organizzato in **CHECKPOINT** (fette verticali giocabili).  
-**Ultimo aggiornamento:** 2026-10-15 (checkpoint verticali).
+**Ultimo aggiornamento:** 2026-10-15 (CK-2…CK-9 chiusi su branch `cursor/pg-builder-v2-plan-e574`).
+
+### Stato CK-2…CK-9 (agent)
+
+| CK | Stato | Note test / verifica |
+|----|--------|----------------------|
+| CK-2 | ☑ | `hero-sheet.test.ts` — API sheet + equip → attacchi |
+| CK-3 | ☑ | `wizard-forge.test.ts` — derive + cast arena + slot |
+| CK-4 | ☑ | `packages/protocol/forge-app.ts` + `tv/src/forge-v2.ts` (array/PB/roll, ASI, Human, spell, About, lingue) |
+| CK-5 | ☑ | Companion `mountForgeApp` parità; QR nascosto se loggato (già presente) |
+| CK-6 | ☑ | Exhaustion 2024 tier + long rest −1; short-rest HD in `rest-exhaustion.test.ts` |
+| CK-7 | ☑ | `rules-conditions.test.ts` (15 condizioni) + `standard-actions.test.ts` (6 std_*) |
+| CK-8 | ☑ | Split cantrips/prepared in `hero.ts`; `hero-level-up.test.ts` |
+| CK-9 | ☑ | `class-smoke-pack-a.test.ts` L1–20; `npm run coverage:report:pack-a` verde |
 
 ---
 
@@ -116,16 +129,16 @@ Aggiornare ☐ → ☑ nel PR che chiude il checkpoint indicato.
 | Area | CK |
 |------|-----|
 | Derive + sheet (skill mod, passive, attacks) | CK-1 ☑, CK-2 ☑ |
-| D20 / skill / expertise / tool / passive | CK-6 |
+| D20 / skill / expertise / tool / passive | CK-6 ☑ |
 | Heroic Inspiration | CK-6, CK-9 |
-| 12 azioni standard | CK-7 |
-| PF temp, death, exhaustion, rests | CK-6 |
-| 15 condizioni + concentration | CK-7 |
-| Spellbook / prepared | CK-3 |
+| 12 azioni standard | CK-7 ☑ (6 std_* in combattimento + test) |
+| PF temp, death, exhaustion, rests | CK-6 ☑ |
+| 15 condizioni + concentration | CK-7 ☑ (concentration: combattimento esistente) |
+| Spellbook / prepared | CK-3 ☑ |
 | Ritual / upcast / pact (spell system 100%) | CK-11 |
-| Multiclass + progressione L1–20 | CK-8, CK-9–10 |
+| Multiclass + progressione L1–20 | CK-8 ☑ (motore); CK-9–10 (resto classi) |
 | Weapon mastery storage + swap | CK-11 |
-| Coverage report CI (`coverage:report`) | CK-0 |
+| Coverage report CI (`coverage:report`) | CK-0 ☑; pack A: `coverage:report:pack-a` ☑ |
 
 ---
 
@@ -538,7 +551,7 @@ Panel scheda: output `DerivedSheet` sempre da preview server.
 |------|----------|
 | Derive | `packages/rules/src/derive-hero.ts`, `progression.ts`, `conditions.ts` |
 | Builder API | `backend/src/local/builder-http.ts`, `hero.ts` |
-| UI forge | `tv/src/forge-v2.ts`, `companion/src/` |
+| UI forge | `packages/protocol/src/forge-app.ts`, `tv/src/forge-v2.ts`, `companion/src/pocket.ts` |
 | Combat / sheet | `combat.ts`, `hero-pregen.ts`, `protocol/sheet.ts` |
 | Content | `content/srd-5.2.1/`, `content-catalog.ts` |
 | Legacy (rimosso CK-11) | `chargen.ts`, `chargen-ui.ts`, `srd51.json` |
