@@ -11,6 +11,9 @@ export type ForgeAppOptions = {
   onDone: () => void;
   backLabel?: string;
   onBack?: () => void;
+  /** When catalog returns AUTH_REQUIRED; default is inline sign-in prompt. */
+  onAuthRequired?: () => void;
+  loginHref?: string;
 };
 
 const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]!);
@@ -30,8 +33,44 @@ function sheetHtml(sheet: DerivedSheet): string {
     ${sheet.errors.length ? `<p class="meta">${sheet.errors.map(esc).join(", ")}</p>` : ""}`;
 }
 
+function showForgeFailure(host: HTMLElement, opts: ForgeAppOptions, title: string, detail: string, auth = false): void {
+  const loginHref = opts.loginHref ?? `/?return=${encodeURIComponent("/forge")}`;
+  host.innerHTML = `
+    <main class="forge-v2 forge-app forge-error">
+      <header class="forge-head">
+        <button type="button" class="ghost" id="forgeErrBack">${esc(opts.backLabel ?? "← Back")}</button>
+        <h1>Hero builder</h1>
+      </header>
+      <div class="forge-panel">
+        <p class="forge-error-title">${esc(title)}</p>
+        <p class="meta">${esc(detail)}</p>
+        ${auth ? `<a class="primary" id="forgeErrLogin" href="${esc(loginHref)}">Sign in</a>` : ""}
+      </div>
+    </main>`;
+  host.querySelector("#forgeErrBack")!.addEventListener("click", () => (opts.onBack ? opts.onBack() : opts.onDone()));
+}
+
 export async function mountForgeApp(host: HTMLElement, opts: ForgeAppOptions): Promise<void> {
-  const catalog = await opts.api<BuilderCatalog>("/api/builder/catalog");
+  let catalog: BuilderCatalog;
+  try {
+    catalog = await opts.api<BuilderCatalog>("/api/builder/catalog");
+  } catch (e) {
+    const code = e instanceof Error ? e.message : "ERROR";
+    if (code === "AUTH_REQUIRED") {
+      if (opts.onAuthRequired) {
+        opts.onAuthRequired();
+        return;
+      }
+      showForgeFailure(host, opts, "Sign in required", "Create an account or sign in on the home page, then return here.", true);
+      return;
+    }
+    showForgeFailure(host, opts, "Could not load the builder", code === "ERROR" ? "The catalog did not load. Try again in a moment." : code, false);
+    return;
+  }
+  if (!catalog.classes.length || !catalog.backgrounds.length) {
+    showForgeFailure(host, opts, "Builder unavailable", "No playable classes or backgrounds are enabled yet.", false);
+    return;
+  }
   const draft: BuilderDraft = {
     classId: catalog.classes.find((c) => c.id === "fighter")?.id ?? catalog.classes[0]?.id ?? "fighter",
     speciesId: catalog.species.find((s) => s.id === "human")?.id ?? catalog.species[0]?.id ?? "human",

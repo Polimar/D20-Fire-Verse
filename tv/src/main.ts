@@ -627,7 +627,7 @@ function renderHome() {
   const welcome = $("homeWelcome");
   if (account?.username) {
     welcome.hidden = false;
-    welcome.innerHTML = `Welcome, ${esc(account.username)}. <button type="button" class="ghost" id="btnLogout">Log out</button>`;
+    welcome.innerHTML = `Welcome, ${esc(account.username)}. <a class="ghost home-forge-link" href="/forge">Hero builder</a> <button type="button" class="ghost" id="btnLogout">Log out</button>`;
     $("btnLogout").addEventListener("click", () => void logOut());
   } else {
     welcome.hidden = true;
@@ -1752,6 +1752,23 @@ async function logOut(): Promise<void> {
   ws?.close();
 }
 
+function consumeReturnPath(): string | null {
+  const params = new URLSearchParams(location.search);
+  const ret = params.get("return");
+  if (!ret || !ret.startsWith("/") || ret.startsWith("//") || ret.includes("\\")) return null;
+  params.delete("return");
+  const rest = params.toString();
+  history.replaceState(null, "", `${location.pathname}${rest ? `?${rest}` : ""}${location.hash}`);
+  return ret.slice(0, 200);
+}
+
+function followReturnPath(): boolean {
+  const ret = consumeReturnPath();
+  if (!ret) return false;
+  location.href = ret;
+  return true;
+}
+
 /** A session cookie was just set: open a socket that carries it, replacing any anonymous one. */
 async function signedIn(res: Response): Promise<void> {
   account = await readAccount(res);
@@ -1760,6 +1777,7 @@ async function signedIn(res: Response): Promise<void> {
     return;
   }
   $("loginGate").hidden = true;
+  if (followReturnPath()) return;
   renderHome();
   const stale = ws;
   ws = null;
@@ -1851,7 +1869,12 @@ $("btnAmazon").addEventListener("click", () => {
     amazonOnStick(true);
     return;
   }
-  location.href = "/api/login/amazon/start";
+  const ret = new URLSearchParams(location.search).get("return");
+  const next =
+    ret && ret.startsWith("/") && !ret.startsWith("//") && !ret.includes("\\")
+      ? `?next=${encodeURIComponent(ret.slice(0, 200))}`
+      : "";
+  location.href = `/api/login/amazon/start${next}`;
 });
 
 function showLoginGate(): void {
@@ -1892,8 +1915,14 @@ async function ensureLogin(): Promise<void> {
       body: JSON.stringify({ surface: onFireTv() ? "tv" : "web" }),
     });
     $("loginGate").hidden = true;
+    if (followReturnPath()) return;
     renderHome();
     return;
+  }
+  const pendingReturn = new URLSearchParams(location.search).get("return");
+  if (pendingReturn) {
+    showLoginGate();
+    $("loginError").textContent = "Sign in to continue to the hero builder.";
   }
   showLoginGate();
   takeLoginError();

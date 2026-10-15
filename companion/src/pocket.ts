@@ -65,6 +65,7 @@ export function mountPocket(host: HTMLElement, adopt: (key: string) => void, sca
       }</div>
       <div class="row2">
         <button type="button" class="primary" id="pocketForge">Forge a hero</button>
+        <a class="ghost pocket-forge-web" href="/forge">Hero builder (web)</a>
         <button type="button" id="pocketArmory">Armory</button>
         <button type="button" id="pocketSocial">Friends & board</button>
       </div>`;
