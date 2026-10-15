@@ -29,6 +29,7 @@ import {
 import { listPublished } from "./catalog.js";
 import { WebSocketServer, type WebSocket } from "ws";
 import { loadCampaign, listPregens, getManifest, portraitForCharacter, PORTRAITS, portraitUrl } from "./campaign.js";
+import { listHeroes } from "./hero.js";
 import {
   createCustomCharacter,
   deleteCustomCharacter,
@@ -203,6 +204,12 @@ app.get(["/admin", "/admin/"], (_req, res) => {
   if (fs.existsSync(page)) res.sendFile(page);
   else res.status(503).type("text").send("The admin portal is not built. Run npm run build:tv.");
 });
+app.get(["/forge", "/forge/"], (_req, res) => {
+  const page = path.join(tvDist, "forge.html");
+  res.setHeader("Cache-Control", "no-store");
+  if (fs.existsSync(page)) res.sendFile(page);
+  else res.status(503).type("text").send("The hero forge is not built. Run npm run build:tv.");
+});
 if (fs.existsSync(path.join(tvDist, "index.html"))) {
   app.use(express.static(tvDist, {
     setHeaders: (res, filePath) => {
@@ -343,12 +350,16 @@ app.get("/api/me/characters/:id", (req, res) => {
     res.status(401).json({ error: "AUTH_REQUIRED" });
     return;
   }
-  const sheet = librarySheet(req.params.id);
-  if (!sheet || !String(req.params.id).startsWith("custom_")) {
+  const id = req.params.id;
+  const sheet = librarySheet(id);
+  if (!sheet) {
     res.status(404).json({ error: "BAD_CHARACTER" });
     return;
   }
-  const owned = pregenList(user.id).some((p) => p.id === req.params.id);
+  const owned =
+    id.startsWith("hero_")
+      ? listHeroes(user.id).some((h) => h.id === id)
+      : pregenList(user.id).some((p) => p.id === id);
   if (!owned) {
     res.status(404).json({ error: "BAD_CHARACTER" });
     return;

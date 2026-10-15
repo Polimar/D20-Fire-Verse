@@ -19,6 +19,7 @@ export default defineConfig({
       input: {
         main: fileURLToPath(new URL("./index.html", import.meta.url)),
         admin: fileURLToPath(new URL("./admin.html", import.meta.url)),
+        forge: fileURLToPath(new URL("./forge.html", import.meta.url)),
       },
       output: {
         manualChunks(id) {

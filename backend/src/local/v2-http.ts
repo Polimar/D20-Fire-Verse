@@ -37,6 +37,7 @@ import { buyPremium, closeSeasonNow, currentSeason, skipPassTier } from "./seaso
 import { createCampaignHero, listCampaignHeroes } from "./campaign-hero.js";
 import { addGold } from "./stash-mut.js";
 import { recordEvent } from "./events.js";
+import { mountBuilderRoutes } from "./builder-http.js";
 
 function user(req: Request): SessionUser {
   const found = requestUser(req);
@@ -68,6 +69,7 @@ const IAP: Record<string, { gold?: number; premium?: boolean; skip?: boolean }> 
 };
 
 export function mountV2Routes(app: Express): void {
+  mountBuilderRoutes(app);
   app.post("/api/session/surface", (req, res) => {
     try {
       const token = (req as Request & { cookies?: Record<string, string> }).cookies?.fv_session

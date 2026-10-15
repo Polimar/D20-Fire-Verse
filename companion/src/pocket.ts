@@ -141,7 +141,60 @@ export function mountPocket(host: HTMLElement, adopt: (key: string) => void, sca
     );
   };
 
+  const openForgeV2 = async () => {
+    const cat = await api<{
+      classes: Array<{ id: string; name: string; skillChoices: number; skillList: string[]; fightingStyleRequired?: boolean; fightingStyleFeatIds: string[] }>;
+      species: Array<{ id: string; name: string }>;
+      backgrounds: Array<{ id: string; name: string; skills: string[]; abilityOptions: string[] }>;
+      standardArray: number[];
+      feats: Array<{ id: string; name: string }>;
+      skills: Record<string, { label: string }>;
+    }>("/api/builder/catalog");
+    const assigned: Record<string, number> = { str: 15, dex: 14, con: 13, int: 12, wis: 10, cha: 8 };
+    card().innerHTML = `
+      <button type="button" class="ghost" id="pocketBack">← Heroes</button>
+      <h2>Forge a hero (V2)</h2>
+      <form id="forgeForm" class="forge">
+        <label>Name <input id="fgName" maxlength="32" required /></label>
+        <label>Class <select id="fgClass">${cat.classes.map((c) => `<option value="${esc(c.id)}">${esc(c.name)}</option>`).join("")}</select></label>
+        <label>Species <select id="fgSpecies">${cat.species.map((s) => `<option value="${esc(s.id)}">${esc(s.name)}</option>`).join("")}</select></label>
+        <label>Background <select id="fgBg">${cat.backgrounds.map((b) => `<option value="${esc(b.id)}">${esc(b.name)}</option>`).join("")}</select></label>
+        <button type="submit" class="primary">Create</button>
+        <p class="meta" id="fgError"></p>
+      </form>`;
+    card().querySelector("#pocketBack")!.addEventListener("click", paintHome);
+    card().querySelector("#forgeForm")!.addEventListener("submit", async (ev) => {
+      ev.preventDefault();
+      const cls = cat.classes.find((c) => c.id === (card().querySelector("#fgClass") as HTMLSelectElement).value)!;
+      const bg = cat.backgrounds.find((b) => b.id === (card().querySelector("#fgBg") as HTMLSelectElement).value)!;
+      const skills = cls.skillList.filter((id) => !bg.skills.includes(id)).slice(0, cls.skillChoices);
+      const draft = {
+        name: (card().querySelector("#fgName") as HTMLInputElement).value,
+        classId: cls.id,
+        speciesId: (card().querySelector("#fgSpecies") as HTMLSelectElement).value,
+        backgroundId: bg.id,
+        method: "standard_array",
+        baseAbilities: assigned,
+        classSkills: skills,
+        backgroundAsi: { mode: "plus2plus1", plus2: bg.abilityOptions[0], plus1: bg.abilityOptions[1] },
+        equipChoice: "A",
+        fightingStyleFeatId: cls.fightingStyleFeatIds[0],
+      };
+      try {
+        await api("/api/builder/commit", { method: "POST", body: JSON.stringify(draft) });
+        await refresh();
+      } catch (err) {
+        const note = card().querySelector("#fgError");
+        if (note) note.textContent = err instanceof Error ? err.message : "Could not save.";
+      }
+    });
+  };
+
   const openForge = async (reforgeId?: string) => {
+    if (!reforgeId?.startsWith("custom_")) {
+      await openForgeV2();
+      return;
+    }
     catalog = catalog ?? (await api<Catalog>("/api/chargen"));
     const cat = catalog;
     const abilities = ["str", "dex", "con", "int", "wis", "cha"] as const;
@@ -260,7 +313,22 @@ export function mountPocket(host: HTMLElement, adopt: (key: string) => void, sca
       const me = await api<{ user: { username: string } }>("/api/me");
       user = me.user.username;
       void api("/api/session/surface", { method: "POST", body: JSON.stringify({ surface: "companion" }) });
-      heroes = (await api<Pregen[]>("/api/pregens")).filter((p) => p.custom || String(p.id).startsWith("custom_"));
+      const legacy = (await api<Pregen[]>("/api/pregens")).filter((p) => p.custom || String(p.id).startsWith("custom_"));
+      const v2 = await api<{ heroes: Array<{ id: string; name: string; level: number; classes: Array<{ id: string }> }> }>("/api/heroes");
+      heroes = [
+        ...v2.heroes.map((h) => ({
+          id: h.id,
+          name: h.name,
+          summary: `Level ${h.level} ${h.classes[0]?.id ?? "hero"}`,
+          portrait: "/art/portraits/human_fighter.png",
+          level: h.level,
+        })),
+        ...legacy,
+      ];
+      const scanFrame = document.getElementById("scanFrame");
+      const scanHint = document.getElementById("scanHint");
+      if (scanFrame) scanFrame.hidden = true;
+      if (scanHint) scanHint.textContent = "Signed in — forge heroes below. Scan a TV code from Home when you sit at a table.";
       paintHome();
     } catch {
       user = null;

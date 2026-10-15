@@ -53,6 +53,8 @@ export type CombatToken = {
   y: number;
   hp: number;
   maxHp: number;
+  /** Damage absorbs here before real HP (5e temp HP). */
+  tempHp?: number;
   ac: number;
   speedCells: number;
   movementLeft: number;
@@ -2820,6 +2822,12 @@ export function applyDamage(combat: CombatState, target: CombatToken, amount: nu
     }
     return;
   }
+  if (harm > 0 && (target.tempHp ?? 0) > 0) {
+    const soak = Math.min(target.tempHp ?? 0, harm);
+    target.tempHp = (target.tempHp ?? 0) - soak;
+    harm -= soak;
+  }
+  if (harm <= 0) return;
   const over = harm - target.hp;
   target.hp = Math.max(0, target.hp - harm);
   if (target.concentrating && harm > 0) concentrationCheck(combat, target, harm);
@@ -3306,6 +3314,10 @@ export function buildPcSheet(
 ) {
   const pregen = token.characterId ? getPregen(token.characterId) : undefined;
   const abs = pregen?.abilities ?? { str: 10, dex: 10, con: 10, int: 10, wis: 10, cha: 10 };
+  const prof = pregen?.proficiencyBonus ?? 2;
+  const skilled = (pregen as { skills?: string[] }).skills ?? [];
+  const wisMod = abilityMod(abs.wis ?? 10);
+  const passivePerception = 10 + wisMod + (skilled.includes("perception") ? prof : 0);
   return {
     characterId: token.characterId,
     portrait: portraitForCharacter(token.characterId),
@@ -3317,9 +3329,11 @@ export function buildPcSheet(
     background: (pregen as { background?: string } | undefined)?.background ?? "",
     hp: token.hp,
     maxHp: token.maxHp,
+    tempHp: token.tempHp ?? 0,
     ac: token.ac,
     speedCells: token.speedCells,
-    proficiencyBonus: pregen?.proficiencyBonus ?? 2,
+    proficiencyBonus: prof,
+    passivePerception,
     abilities: Object.fromEntries(
       Object.entries(abs).map(([k, v]) => [
         k,

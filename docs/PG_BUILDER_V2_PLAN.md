@@ -115,7 +115,7 @@ Aggiornare ☐ → ☑ nel PR che chiude il checkpoint indicato.
 
 | Area | CK |
 |------|-----|
-| Derive + sheet (skill mod, passive, attacks) | CK-1, CK-2 |
+| Derive + sheet (skill mod, passive, attacks) | CK-1 ☑, CK-2 ☑ |
 | D20 / skill / expertise / tool / passive | CK-6 |
 | Heroic Inspiration | CK-6, CK-9 |
 | 12 azioni standard | CK-7 |

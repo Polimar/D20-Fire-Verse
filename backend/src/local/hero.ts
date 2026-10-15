@@ -506,7 +506,7 @@ export function canLevelUp(heroId: string): boolean {
   return levelForXp(hero.xp, xpThresholds()) > hero.level;
 }
 
-function progressionCatalog(): CatalogSlice {
+export function progressionCatalog(): CatalogSlice {
   const inPlay = new Set(listCatalog().filter((row) => row.inPlay).map((row) => `${row.kind}:${row.id}`));
   const take = <T extends { id: string }>(kind: string, rows: T[]) => rows.filter((row) => inPlay.has(`${kind}:${row.id}`));
   return {

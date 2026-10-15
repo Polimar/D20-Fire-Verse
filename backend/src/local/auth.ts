@@ -337,6 +337,10 @@ function ensureProgressTables(databaseHandle: DatabaseSync): void {
   if (!heroCols.has("sheet_json")) databaseHandle.exec("ALTER TABLE heroes ADD COLUMN sheet_json TEXT");
   if (!heroCols.has("pending_choices_json")) databaseHandle.exec("ALTER TABLE heroes ADD COLUMN pending_choices_json TEXT NOT NULL DEFAULT '[]'");
   if (!heroCols.has("hp_current")) databaseHandle.exec("ALTER TABLE heroes ADD COLUMN hp_current INTEGER");
+  if (!heroCols.has("cantrips_json")) databaseHandle.exec("ALTER TABLE heroes ADD COLUMN cantrips_json TEXT NOT NULL DEFAULT '[]'");
+  if (!heroCols.has("spells_prepared_json")) databaseHandle.exec("ALTER TABLE heroes ADD COLUMN spells_prepared_json TEXT NOT NULL DEFAULT '[]'");
+  if (!heroCols.has("spellbook_json")) databaseHandle.exec("ALTER TABLE heroes ADD COLUMN spellbook_json TEXT NOT NULL DEFAULT '[]'");
+  if (!heroCols.has("builder_meta_json")) databaseHandle.exec("ALTER TABLE heroes ADD COLUMN builder_meta_json TEXT NOT NULL DEFAULT '{}'");
 }
 
 export type LoginResult =

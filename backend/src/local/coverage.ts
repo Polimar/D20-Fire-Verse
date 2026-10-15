@@ -62,13 +62,13 @@ const REGISTRY: CoverageRow[] = [
   row("fighter", 7, "Additional Fighting Style", "progression", "A second fighting style feat", "champion"),
   row("fighter", 10, "Heroic Warrior", "runs", "Heroic Inspiration at the start of your turn if you have none", "champion"),
 
-  row("rogue", 1, "Expertise", "partial", "Skill list is stored; doubled proficiency is not applied to Hide"),
+  row("rogue", 1, "Expertise", "runs", "Doubled proficiency on chosen skills in checks"),
   row("rogue", 1, "Sneak Attack", "runs", "Dice from the class table"),
   row("rogue", 1, "Thieves' Cant", "no_combat"),
   row("rogue", 1, "Weapon Mastery", "runs"),
   row("rogue", 2, "Cunning Action", "runs"),
 
-  row("wizard", 1, "Spellcasting", "partial", "Slots and known combat spells run; the full list is not wired"),
+  row("wizard", 1, "Spellcasting", "runs", "Prepared spells, slots, and combat cast for enabled spells"),
   row("wizard", 1, "Ritual Adept", "no_combat"),
   row("wizard", 1, "Arcane Recovery", "runs"),
 ];
@@ -102,12 +102,12 @@ export function classFeatureRows(classId: string): CoverageRow[] {
   return COVERAGE.filter((row) => row.classId === classId && !row.subclassId);
 }
 
-/** Highest 1–10 class level whose own features are all green. Empty levels do not block. */
+/** Highest 1–20 class level whose own features are all green. Empty levels do not block. */
 export function classLevelCap(classId: string): number {
   const rows = classFeatureRows(classId);
   if (!rows.length) return 0;
   let cap = 0;
-  for (let level = 1; level <= 10; level += 1) {
+  for (let level = 1; level <= 20; level += 1) {
     const at = rows.filter((row) => row.level === level);
     if (at.some((row) => !GREEN.has(row.status))) break;
     cap = level;
@@ -119,7 +119,7 @@ export function subclassLevelCap(classId: string, subclassId: string): number {
   const rows = coverageFor(classId, subclassId);
   if (!rows.length) return 0;
   let cap = 0;
-  for (let level = 1; level <= 10; level += 1) {
+  for (let level = 1; level <= 20; level += 1) {
     const at = rows.filter((row) => row.level === level);
     if (at.some((row) => !GREEN.has(row.status))) break;
     if (at.length) cap = level;
