@@ -65,12 +65,13 @@ type Detail = Row & {
   adminNote: string;
   reviewedAt: string | null;
   fileStatus: Status;
+  missingMechanicReasons: string[];
 };
 type QueryOut = {
   rows: Row[];
   total: number;
   facets: { kinds: Record<string, number>; statuses: Record<string, number> };
-  totals: { all: number; inPlay: number; needsReview: number; invalid: number; edited: number };
+  totals: { all: number; inPlay: number; needsReview: number; missingMechanic: number; invalid: number; edited: number };
 };
 type BulkAction = "approve" | "approve_enable" | "enable" | "disable" | "reject" | "reopen";
 
@@ -212,6 +213,7 @@ async function listView(host: HTMLElement, ctx: PageCtx): Promise<void> {
       </div>
       <div class="toolbar" id="cKinds"></div>
       <div class="toolbar" id="cStatuses"></div>
+      <div class="toolbar" id="cCombat"></div>
       <div class="bulkbar" id="cBulk" hidden></div>
       <div id="cTable"><div class="loading">Loading the catalog…</div></div>
     </div>
@@ -226,6 +228,7 @@ async function listView(host: HTMLElement, ctx: PageCtx): Promise<void> {
     host.querySelector("#cStats")!.innerHTML = [
       card(t.all, "Entries in the catalog", {}),
       card(t.needsReview, "Waiting for review", { status: "needs_review" }, true),
+      card(t.missingMechanic, "Missing combat mechanic", { gaps: "mechanic" }, true),
       card(t.inPlay, "In play", { enabled: "in_play" }),
       card(t.invalid, "Fail the game schema", { valid: "no" }, true),
       card(t.edited, "Edited by an admin", { source: "edited" }),
@@ -258,6 +261,14 @@ async function listView(host: HTMLElement, ctx: PageCtx): Promise<void> {
       "status",
       [{ value: "", label: "All", count: Object.values(out.facets.statuses).reduce((a, b) => a + b, 0) }, ...STATUSES.map(([v, l]) => ({ value: v, label: l, count: out.facets.statuses[v] ?? 0 }))],
       filters.status,
+    )}`;
+    host.querySelector("#cCombat")!.innerHTML = `<span class="faint" style="width:56px">Combat</span>${chips(
+      "gaps",
+      [
+        { value: "", label: "Any", count: out.totals.all },
+        { value: "mechanic", label: "Missing mechanic", count: out.totals.missingMechanic },
+      ],
+      filters.gaps,
     )}`;
     renderTable(host.querySelector<HTMLElement>("#cTable")!, {
       columns,
@@ -409,10 +420,14 @@ async function listView(host: HTMLElement, ctx: PageCtx): Promise<void> {
   for (const [sel, k] of [
     ["#cKinds", "kind"],
     ["#cStatuses", "status"],
+    ["#cCombat", "gaps"],
   ] as const) {
     host.querySelector(sel)!.addEventListener("click", (ev) => {
       const b = (ev.target as HTMLElement).closest<HTMLButtonElement>("button[data-value]");
-      if (b) setFilter({ [k]: b.dataset.value ?? "" });
+      if (!b) return;
+      const value = b.dataset.value ?? "";
+      if (k === "gaps" && value === "mechanic") setFilter({ gaps: "mechanic" });
+      else setFilter({ [k]: value });
     });
   }
   host.querySelector("#cEnabled")!.addEventListener("change", (ev) => setFilter({ enabled: (ev.target as HTMLSelectElement).value }));
@@ -748,11 +763,28 @@ async function openDetail(row: { kind: string; id: string; name?: string }, onCh
     dirty = false;
     drawer.setTitle(d.name || d.id, `${kindLabel(d.kind)} · ${d.id}`);
     const unparsed = d.unparsedFields.length ? d.unparsedFields : d.parsedUnparsedFields;
-    const playBlock = d.reviewStatus === "needs_review" ? "Approve it first" : d.reviewStatus === "rejected" ? "Reopen it first" : !d.valid ? "Fix the schema errors first" : "";
+    const playBlock =
+      d.fileReviewStatus === "needs_review"
+        ? "Approve it first"
+        : d.fileReviewStatus === "rejected"
+          ? "Reopen it first"
+          : !d.valid
+            ? "Fix the schema errors first"
+            : "";
     drawer.body.innerHTML = `
       <section>
         <div class="row">${statusBadge(d.reviewStatus, d.confidence)} ${d.missingMechanic ? badge("Missing mechanic", "warn") : ""} ${d.enabled ? badge("Enabled for players", "ok") : badge("Off for players")} ${d.valid ? badge("Schema valid", "ok") : badge("Schema invalid", "bad")} ${sourceBadges(d)} ${d.inPlay ? badge("In play", "info") : ""}</div>
-        ${d.missingMechanic && d.fileReviewStatus === "auto_ok" ? `<div class="notice warn"><b>Missing mechanic</b> The import file says Parser OK, but combat cannot run every rule on this entry yet. It stays in <em>Needs review</em> until you implement it or approve without effects.</div>` : ""}
+        ${
+          d.missingMechanic && d.missingMechanicReasons.length
+            ? `<div class="notice warn"><b>Why Missing mechanic (combat)</b><p class="faint" style="margin:6px 0 8px">This entry stays in <em>Needs review</em> until every cause below is fixed in code/content or you approve knowing the gap. Use this list when you send corrections.</p><ul class="rules" style="margin:0;padding-left:18px">${d.missingMechanicReasons.map((r) => `<li>${inlineMd(r)}</li>`).join("")}</ul>${
+                d.engine?.state === "runs" && d.notModeledRules.length
+                  ? `<p class="faint" style="margin:8px 0 0">The combat engine panel below is green for typed effects; causes above may be leftover SRD sentences (update review/import) or rules not modeled yet (e.g. consumed on hit).</p>`
+                  : ""
+              }</div>`
+            : d.missingMechanic
+              ? `<div class="notice warn"><b>Missing mechanic</b> Flagged for combat gaps, but no detailed reasons were recorded. Check the engine panel and SRD rules below.</div>`
+              : ""
+        }
         <dl class="kv">
           <dt>Used for</dt><dd>${esc(d.usage || "—")}</dd>
           <dt>Last decision</dt><dd>${d.reviewedAt ? `${fmtDate(d.reviewedAt)}${d.adminNote ? ` · “${esc(d.adminNote)}”` : ""}` : `<span class="faint">None. Parser said ${esc(STATUSES.find(([s]) => s === d.fileStatus)?.[1] ?? d.fileStatus)}.</span>`}</dd>

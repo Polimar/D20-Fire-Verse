@@ -35,6 +35,7 @@ export const overviewPage: Page = {
         ${card(o.campaigns, "Campaigns", "#/campaigns")}
         ${card(o.content.all, "Catalog entries", "#/content")}
         ${card(o.content.needsReview, "Waiting for review", "#/content?status=needs_review", true)}
+        ${card(o.content.missingMechanic, "Missing combat mechanic", "#/content?gaps=mechanic", true)}
         ${card(o.content.invalid, "Fail the game schema", "#/content?valid=no", true)}
         ${card(o.content.inPlay, "Used by the campaign", "#/content?enabled=in_play")}
         ${card(o.content.edited, "Edited by an admin", "#/content?source=edited")}

@@ -2,7 +2,14 @@ export type Overview = {
   users: { total: number; admins: number; active: number; disabled: number; pending: number; amazon: number };
   rooms: number;
   saves: { total: number; auto: number; archived: number };
-  content: { all: number; inPlay: number; needsReview: number; invalid: number; edited: number };
+  content: {
+    all: number;
+    inPlay: number;
+    needsReview: number;
+    missingMechanic: number;
+    invalid: number;
+    edited: number;
+  };
   campaigns: number;
 };
 

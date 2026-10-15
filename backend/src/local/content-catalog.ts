@@ -24,7 +24,7 @@ import {
 import type { ZodTypeAny } from "zod";
 import { accountDb } from "./auth.js";
 import { ARENA_MAGIC_PRIORITY_IDS } from "./arena-magic-items.js";
-import { itemMechanicGap } from "./content-mechanic-gaps.js";
+import { mechanicGap, mechanicGapReasons } from "./content-mechanic-gaps.js";
 import { CONTENT_ROOT } from "./paths.js";
 
 const ROOT = path.join(CONTENT_ROOT, "srd-5.2.1");
@@ -274,8 +274,8 @@ function enabledSet(): Set<string> {
 }
 
 function effectiveReviewStatus(row: Stored, fileStatus: ReviewStatus): ReviewStatus {
-  if (fileStatus === "resolved" || fileStatus === "rejected") return fileStatus;
-  if (row.kind === "item" && row.valid && itemMechanicGap(row.parsed as ItemDef, row.review)) return "needs_review";
+  if (fileStatus === "rejected") return fileStatus;
+  if (row.valid && mechanicGap(row.kind, row.id, row.parsed, row.review)) return "needs_review";
   return fileStatus;
 }
 
@@ -284,8 +284,7 @@ function toRow(row: Stored, on: Set<string>, saved: Map<string, Resolution>): Ca
   const enabled = on.has(key);
   const fileStatus = (saved.get(key)?.status as ReviewStatus | undefined) || row.review?.status || "none";
   const status = effectiveReviewStatus(row, fileStatus);
-  const missingMechanic =
-    row.kind === "item" && row.valid && itemMechanicGap(row.parsed as ItemDef, row.review);
+  const missingMechanic = row.valid && mechanicGap(row.kind, row.id, row.parsed, row.review);
   return {
     kind: row.kind,
     id: row.id,
@@ -301,7 +300,7 @@ function toRow(row: Stored, on: Set<string>, saved: Map<string, Resolution>): Ca
     usage: row.review?.usage ?? "",
     source: row.source,
     edited: row.edited,
-    inPlay: enabled && row.valid && reviewAllowsPlay(status),
+    inPlay: enabled && row.valid && reviewAllowsPlay(fileStatus),
     summary: summarize(row.kind, row.raw),
     notModeled: row.review?.notModeled?.length ?? 0,
   };
@@ -567,7 +566,7 @@ export function enableArenaMagicItems(): number {
 
 export function setContentEnabled(kind: string, id: string, enabled: boolean): CatalogRow {
   const current = rowFor(kind, id);
-  if (enabled && !reviewAllowsPlay(current.reviewStatus)) throw new Error("REVIEW_OPEN");
+  if (enabled && !reviewAllowsPlay(current.fileReviewStatus)) throw new Error("REVIEW_OPEN");
   if (enabled && !current.valid) throw new Error("CONTENT_INVALID");
   accountDb()
     .prepare(
@@ -626,11 +625,13 @@ export function contentDetail(kind: string, id: string): Record<string, unknown>
   const entry = stored(kind, id)!;
   const saved = resolutions().get(`${kind}:${id}`);
   const original = entry.edited && entry.source === "srd" ? srdOriginal(kind, id) : null;
+  const missingMechanicReasons = entry.valid ? mechanicGapReasons(entry.kind, entry.id, entry.parsed, entry.review) : [];
   return {
     ...row,
     game: entry.raw ?? null,
     original,
     srd: entry.review?.srd ?? {},
+    missingMechanicReasons,
     notModeledRules: entry.review?.notModeled ?? [],
     ambiguities: entry.review?.ambiguities ?? [],
     parsedUnparsedFields: entry.review?.unparsedFields ?? [],
@@ -683,7 +684,7 @@ export function reopenContent(kind: string, id: string): CatalogRow {
   rowFor(kind, id);
   accountDb().prepare("DELETE FROM content_resolutions WHERE kind = ? AND entry_id = ?").run(kind, id);
   const row = rowFor(kind, id);
-  if (row.enabled && !reviewAllowsPlay(row.reviewStatus)) return setContentEnabled(kind, id, false);
+  if (row.enabled && !reviewAllowsPlay(row.fileReviewStatus)) return setContentEnabled(kind, id, false);
   return row;
 }
 
