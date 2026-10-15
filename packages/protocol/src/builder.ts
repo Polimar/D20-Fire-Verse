@@ -31,6 +31,8 @@ export type BuilderDraft = {
   /** Wizard spellbook picks (must include prepared). */
   spellbook?: string[];
   equipChoice?: "A" | "B" | "C";
+  /** Background starting equipment: gear package (A) or 50 GP (B). */
+  backgroundEquipChoice?: "A" | "B";
   about?: string;
   languages?: string[];
   portraitId?: string;
@@ -103,6 +105,7 @@ export type BuilderCatalog = {
     skills: string[];
     featId?: string;
     abilityOptions: AbilityKey[];
+    equipChoices: Array<{ id: "A" | "B"; label: string }>;
   }>;
   classes: BuilderCatalogClass[];
   feats: Array<{ id: string; name: string; category: string }>;

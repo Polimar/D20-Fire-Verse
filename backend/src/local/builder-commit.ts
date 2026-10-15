@@ -7,14 +7,12 @@ import { builderCatalog, classDefForBuilder } from "./builder-catalog.js";
 import { assertHeroName, getHero, type HeroRow } from "./hero.js";
 import { firstLevel, blankProgress } from "@d20-fireverse/rules";
 import { progressionCatalogFromHero } from "./builder-hero-bridge.js";
-
-const STARTER_ITEMS: Record<string, Record<string, string[]>> = {
-  fighter: {
-    A: ["chain_mail", "greatsword", "flail", "javelin"],
-    B: ["studded_leather_armor", "scimitar", "shortsword", "longbow"],
-    C: [],
-  },
-};
+import { creditGold } from "./hero.js";
+import {
+  filterGrantableItems,
+  resolveBackgroundStarter,
+  resolveClassStarter,
+} from "./starter-equipment.js";
 
 function id(prefix: string): string {
   return `${prefix}_${randomBytes(8).toString("hex")}`;
@@ -54,6 +52,7 @@ export function commitBuilderDraft(user: SessionUser, draft: BuilderDraft): Hero
     method: draft.method,
     backgroundAsi: draft.backgroundAsi,
     equipChoice: draft.equipChoice,
+    backgroundEquipChoice: draft.backgroundEquipChoice ?? "A",
     about: draft.about ?? "",
   });
 
@@ -87,8 +86,16 @@ export function commitBuilderDraft(user: SessionUser, draft: BuilderDraft): Hero
     accountDb().prepare("UPDATE heroes SET languages_json = ? WHERE id = ?").run(JSON.stringify(draft.languages), heroId);
   }
 
-  const pack = STARTER_ITEMS[draft.classId]?.[draft.equipChoice ?? "A"] ?? [`${draft.classId === "wizard" ? "quarterstaff" : "longsword"}`];
-  for (const itemId of pack) giveStash(user.id, itemId);
+  const classPick = resolveClassStarter(draft.classId, draft.equipChoice ?? "A");
+  if (classPick) {
+    for (const itemId of filterGrantableItems(classPick.items)) giveStash(user.id, itemId);
+    if (classPick.gold > 0) creditGold(user.id, classPick.gold);
+  }
+  const bgPick = resolveBackgroundStarter(draft.backgroundId, draft.backgroundEquipChoice ?? "A");
+  if (bgPick) {
+    for (const itemId of filterGrantableItems(bgPick.items)) giveStash(user.id, itemId);
+    if (bgPick.gold > 0) creditGold(user.id, bgPick.gold);
+  }
 
   const hero = getHero(heroId);
   if (!hero) throw new Error("BAD_CHARACTER");

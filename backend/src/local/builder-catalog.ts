@@ -7,6 +7,7 @@ import type { BuilderCatalog, AbilityKey } from "@d20-fireverse/protocol/builder
 import { featCategory, wizardSpellbookSize } from "@d20-fireverse/rules";
 import { enabledById, enabledClasses, enabledSpells, listCatalog } from "./content-catalog.js";
 import { PORTRAITS, portraitUrl } from "./portraits.js";
+import { backgroundStarters, classStarters } from "./starter-equipment.js";
 
 /** Mechanical reference: background ability score options (PHB 2024). */
 const BACKGROUND_ABILITIES: Record<string, AbilityKey[]> = {
@@ -37,13 +38,17 @@ const SKILL_ABILITY: Record<string, AbilityKey> = {
   survival: "wis",
 };
 
-const FIGHTER_STARTER = [
-  { id: "A" as const, label: "Chain mail, greatsword, flail, javelins, pack" },
-  { id: "B" as const, label: "Studded leather, scimitar, shortsword, longbow" },
-  { id: "C" as const, label: "155 gp (items skipped)" },
-];
+function classEquipChoices(classId: string): Array<{ id: "A" | "B" | "C"; label: string }> {
+  const row = classStarters().find((c) => c.classId === classId);
+  if (!row?.options.length) return [{ id: "A", label: "Class starter gear" }];
+  return row.options.map((o) => ({ id: o.id, label: o.label.slice(0, 96) }));
+}
 
-const GENERIC_STARTER = [{ id: "A" as const, label: "Class pack weapon in stash" }];
+function backgroundEquipChoices(backgroundId: string): Array<{ id: "A" | "B"; label: string }> {
+  const row = backgroundStarters().find((b) => b.backgroundId === backgroundId);
+  if (!row?.options.length) return [{ id: "A", label: "Background kit" }, { id: "B", label: "50 GP" }];
+  return row.options.map((o) => ({ id: o.id as "A" | "B", label: o.label.slice(0, 96) }));
+}
 
 function fightingStyles(): string[] {
   return listCatalog()
@@ -71,6 +76,7 @@ export function builderCatalog(): BuilderCatalog {
       skills: b.skills,
       featId: b.feat,
       abilityOptions: BACKGROUND_ABILITIES[b.id] ?? ["str", "dex", "con", "int", "wis", "cha"],
+      equipChoices: backgroundEquipChoices(b.id),
     }));
 
   const styleIds = fightingStyles();
@@ -92,7 +98,7 @@ export function builderCatalog(): BuilderCatalog {
       },
       fightingStyleRequired: needsStyle,
       fightingStyleFeatIds: needsStyle ? styleIds : [],
-      equipChoices: c.id === "fighter" ? FIGHTER_STARTER : GENERIC_STARTER,
+      equipChoices: classEquipChoices(c.id),
     };
   });
 

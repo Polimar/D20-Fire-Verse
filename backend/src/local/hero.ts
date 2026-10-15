@@ -221,6 +221,12 @@ function ensureWallet(userId: string): void {
   accountDb().prepare("INSERT OR IGNORE INTO account_wallet (user_id, gold_balance, hard_currency_balance) VALUES (?, 0, 0)").run(userId);
 }
 
+export function creditGold(userId: string, amount: number): void {
+  if (!Number.isInteger(amount) || amount <= 0) return;
+  ensureWallet(userId);
+  accountDb().prepare("UPDATE account_wallet SET gold_balance = gold_balance + ? WHERE user_id = ?").run(amount, userId);
+}
+
 export function wallet(userId: string): { gold: number; hard: number } {
   ensureWallet(userId);
   const row = accountDb().prepare("SELECT gold_balance, hard_currency_balance FROM account_wallet WHERE user_id = ?").get(userId) as {

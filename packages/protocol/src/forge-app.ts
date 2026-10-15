@@ -40,6 +40,7 @@ export async function mountForgeApp(host: HTMLElement, opts: ForgeAppOptions): P
     baseAbilities: { str: 15, dex: 14, con: 13, int: 12, wis: 10, cha: 8 },
     classSkills: [],
     equipChoice: "A",
+    backgroundEquipChoice: "A",
     backgroundAsi: { mode: "plus2plus1", plus2: "str", plus1: "con" },
     languages: [],
   };
@@ -96,7 +97,8 @@ export async function mountForgeApp(host: HTMLElement, opts: ForgeAppOptions): P
             <p class="meta">Pick ${cls.skillChoices} class skills.</p>
             <div class="skill-picks">${cls.skillList.map((id) => `<label><input type="checkbox" data-skill="${esc(id)}" /> ${esc(catalog.skills[id]?.label ?? id)}</label>`).join("")}</div>
             ${cls.fightingStyleRequired ? `<label>Fighting style <select id="fgStyle">${cls.fightingStyleFeatIds.map((id) => `<option value="${esc(id)}">${esc(catalog.feats.find((f) => f.id === id)?.name ?? id)}</option>`).join("")}</select></label>` : ""}
-            ${cls.equipChoices.length ? `<label>Equipment <select id="fgEquip">${cls.equipChoices.map((e) => `<option value="${e.id}">${esc(e.label)}</option>`).join("")}</select></label>` : ""}
+            ${cls.equipChoices.length ? `<label>Class equipment <select id="fgEquip">${cls.equipChoices.map((e) => `<option value="${e.id}">${esc(e.label)}</option>`).join("")}</select></label>` : ""}
+            ${bg.equipChoices.length ? `<label>Background equipment <select id="fgBgEquip">${bg.equipChoices.map((e) => `<option value="${e.id}">${esc(e.label)}</option>`).join("")}</select></label>` : ""}
             <div id="spellHost"></div>
             <label>About (optional) <textarea id="fgAbout" maxlength="240" rows="2"></textarea></label>
             <label>Languages (optional, comma-separated) <input id="fgLang" placeholder="Common, Dwarvish" /></label>
@@ -162,6 +164,7 @@ export async function mountForgeApp(host: HTMLElement, opts: ForgeAppOptions): P
       draft.classSkills = [...host.querySelectorAll<HTMLInputElement>("input[data-skill]:checked")].map((i) => i.dataset.skill!);
       draft.fightingStyleFeatId = (host.querySelector("#fgStyle") as HTMLSelectElement | null)?.value;
       draft.equipChoice = ((host.querySelector("#fgEquip") as HTMLSelectElement | null)?.value ?? "A") as "A" | "B" | "C";
+      draft.backgroundEquipChoice = ((host.querySelector("#fgBgEquip") as HTMLSelectElement | null)?.value ?? "A") as "A" | "B";
       draft.speciesSkill = (host.querySelector("#fgSpeciesSkill") as HTMLSelectElement | null)?.value || undefined;
       draft.originFeatId = (host.querySelector("#fgOriginFeat") as HTMLSelectElement | null)?.value || undefined;
       draft.cantrips = [...host.querySelectorAll<HTMLInputElement>("input[data-cantrip]:checked")].map((i) => i.dataset.cantrip!);
