@@ -1,7 +1,8 @@
 # Piano prodotto: PG Builder V2 + motore SRD 5.2.1 completo (L1–20)
 
-Documento di riferimento per implementazione e **brief Cursor**, fase per fase.  
-**Ultimo aggiornamento:** 2026-10-15 (re-scope completezza AAA).
+Documento di riferimento per implementazione e **brief Cursor**.  
+Organizzato in **CHECKPOINT** (fette verticali giocabili).  
+**Ultimo aggiornamento:** 2026-10-15 (checkpoint verticali).
 
 ---
 
@@ -11,474 +12,568 @@ Documento di riferimento per implementazione e **brief Cursor**, fase per fase.
 
 | Ambito | Target |
 |--------|--------|
-| Contenuto SRD 5.2.1 abilitato in admin | **100%** delle righe catalogo **eseguibili** (non solo elencate in scheda) |
-| Classi + sottoclassi SRD | **12 + 12**, livelli **1–20**, ogni feature in tabella con stato `runs` in `coverage.ts` |
-| Specie, background, feat, incantesimi, oggetti, mostri SRD | **Tutti** gli id nel catalogo con comportamento definito o errore esplicito se disabilitati |
-| Regole core 2024 (checklist PHB 2024) | **Implementate** nel motore; dove il PDF SRD è silente, **riferimento meccanico PHB 2024** → implementazione come **riassunto meccanico in parole nostre** (inglese in codice/UI), **mai** testo PHB nel repo |
-| PG Builder V2 | Creazione **L1** per i player (regola prodotto), scheda derivata **ricalcolata da zero** a ogni scelta; **non** limita il motore a L1 |
+| Contenuto SRD 5.2.1 abilitato in admin | **100%** delle righe catalogo **eseguibili** |
+| Classi + sottoclassi SRD | **12 + 12**, livelli **1–20**, `coverage.ts` = `runs` dove applicabile |
+| Regole core 2024 (checklist PHB) | Implementate; gap SRD → **PHB 2024** solo come riferimento meccanico → `mechanicalSummary` nostro (**mai** testo PHB in repo) |
+| PG Builder V2 | Creazione **L1** per i player; derive **ricalcolata da zero**; il motore **non** è limitato a L1 |
 
-Il builder è il **primo touchpoint** del giocatore; il motore è il **vincolo di qualità** per tutto il resto del prodotto (level-up, armory, arena PvE con mostri SRD, loot, narrativa con prove).
+**Riferimenti di lavoro (allegati):** `phb2024-mechanics.md`, `roll20-builder-notes.md`.
 
-**Riferimenti di lavoro (allegati team, non in repo):** `phb2024-mechanics.md`, `roll20-builder-notes.md` (UX e checklist; **no** dati derivati stale).
-
-**Release unica (decisione owner):** builder V2 + rimozione Forge 5.1 + migrazione `custom_*` → `hero_*` nello **stesso deploy**.
+**Flusso di merge:** ogni checkpoint termina con PR → **il owner decide il merge su `main`** → verifica su **produzione** → si apre il checkpoint successivo. Il gioco resta **sempre in uno stato funzionante e rilasciabile** dopo ogni checkpoint.
 
 ---
 
 ## Decisioni owner (vincolanti)
 
-| # | Decisione | Nota scope motore |
-|---|-----------|-------------------|
-| 1 | `custom_*` → `hero_*` **conversione automatica** | — |
-| 2 | Builder su **sito** (`/forge`) **e** **companion** PWA ridisegnata; loggato = **solo dati utente**, **no QR** | — |
-| 3 | **Player:** creazione solo **L1**; **admin:** qualsiasi livello / eccezioni | Il motore supporta **L1–20** per tutti |
-| 4 | Builder mostra solo contenuto **enabled** in admin | Stesso catalogo alimenta combattimento e progressione |
-| 5 | Punteggi: **standard array**, **point buy**, **roll** nel builder al rilascio | Validazione server identica per qualsiasi livello (admin) |
-| 6 | Background ASI: **+2/+1** o **+1/+1/+1** con validazione | — |
-| 7 | Se SRD non specifica un numero/regola, **PHB 2024** come riferimento meccanico; in repo solo SRD verbatim + `mechanicalSummary` nostro | Applica a spellbook, conteggi, riposi, ecc. |
-| 8 | Incantesimi **preparati**: scelta **obbligatoria** del giocatore | Spellbook vs prepared enforced anche a L20 |
-| 9 | Equip iniziale → **stash** istanze al commit | — |
-| 10 | Step Lingue / About **opzionali** | — |
-| 11 | **No multiclass** alla **creazione** L1 (player); admin libero | Multiclass **L2–20** nel motore |
-| 12 | **Parità D-pad Fire TV** al rilascio builder | — |
-| 13 | Testi UI: testo **SRD 5.2.1** dove esiste; altrimenti riassunto meccanico nostro | — |
-| 14 | Rimozione Forge 5.1 **stesso release** del builder V2 | — |
+| # | Decisione | Nota |
+|---|-----------|------|
+| 1 | `custom_*` → `hero_*` conversione automatica | Checkpoint **CK-12** |
+| 2 | Builder su sito (`/forge`) **e** companion PWA; loggato = solo dati utente, **no QR** | CK-1 sito; CK-5 companion |
+| 3 | Player: creazione **L1**; admin: qualsiasi livello | Motore L1–20 |
+| 4 | Builder solo contenuto **enabled** in admin | Tutti i CK |
+| 5 | Standard array + point buy + roll nel builder al rilascio finale | CK-4 |
+| 6 | Background ASI +2/+1 o +1/+1/+1 | CK-4 |
+| 7 | Numeri/regole: SRD; se insufficiente → PHB meccanico in codice/summary | Trasversale |
+| 8 | Preparati: scelta **obbligatoria** | CK-3+ |
+| 9 | Equip iniziale → **stash** al commit | CK-1+ |
+| 10 | Lingue / About opzionali | CK-4+ |
+| 11 | No multiclass a creazione L1 (player) | CK-1+ |
+| 12 | Parità D-pad Fire TV al rilascio builder | CK-11 |
+| 13 | Testi: SRD verbatim dove c’è; altrimenti summary nostro | Trasversale |
+| 14 | Rimozione Forge 5.1 **stesso release** del builder a parità | **CK-11** (non prima) |
 
 ---
 
 ## Principi tecnici
 
-1. **Server authoritative:** preview/commit/level-up/combat usano le stesse funzioni in `packages/rules` (+ adapter backend).
-2. **Ricalcolo totale:** ogni `POST /api/builder/preview` deriva la scheda **solo** dal draft (anti-Roll20 stale).
-3. **English** UI/codice; questo doc in italiano.
-4. **Legal:** `content/srd-5.2.1/` = testo SRD CC-BY; gap PHB = `mechanicalSummary` + logica in codice, **zero** paste PHB.
-5. **Nessun cap artificiale al motore:** `classLevelCap` in `coverage.ts` oggi è un **debito** da portare a **20** per ogni classe/sottoclasse SRD, non una feature.
+1. **Server authoritative** — preview/commit/combat/level-up condividono `packages/rules`.
+2. **Ricalcolo totale** del draft a ogni preview (anti-Roll20 stale).
+3. **English** UI/codice; doc in italiano.
+4. **Checkpoint = fetta verticale:** UI + API + derive + (se serve) combattimento/scheda **per quel perimetro**, verificabile dal owner senza checkpoint futuri.
 
 ---
 
-## Matrice di coverage (target 100%)
+## Deploy e verifica produzione (solo owner)
 
-Aggiornare questa tabella a ogni merge che chiude una fase. **Executable** = con test automatico o `coverage.ts` = `runs` / `progression` / `no_combat` documentato.
+> **Gli agenti non eseguono deploy in produzione.** Il deploy avviene **solo** quando il owner lo chiede esplicitamente.
 
-### Contenuto catalogo (`content/srd-5.2.1`)
+### Accesso
 
-| Kind | Id SRD (import) | Executable target | Checklist |
-|------|-----------------|-------------------|-----------|
-| species | 9 | 9/9 | ☐ |
-| background | 4 | 4/4 | ☐ |
-| class | 12 | 12/12 L1–20 | ☐ |
-| subclass | 12 | 12/12 L1–20 | ☐ |
-| feat | 17 | 17/17 | ☐ |
-| spell | 339 | 339/339 (cast, ritual, upcast dove applicabile) | ☐ |
-| item (gear) | 51+ | tutti con slot/effects | ☐ |
-| item (magic) | 276+ | tutti con effects/attunement/charges | ☐ |
-| monster | 235 | 235/235 in `srd-monsters` combat | ☐ |
-| weapon-mastery | 8 proprietà | 8/8 in `mastery.ts` + UI pick | ☐ |
+- Da PowerShell: `ssh fireverse` (host configurato dal owner).
 
-### Motore regole (checklist PHB 2024 → codice)
+### Prima di ogni deploy con migrazione DB o cambio formato dati
 
-| Area | Componenti | Target | Checklist |
-|------|------------|--------|-----------|
-| D20 tests | adv/dis, group checks, passive scores, contests | 100% | ☐ |
-| Skills | 18 skill, proficiency, **expertise**, tool + advantage 2024 | 100% | ☐ |
-| Saves | tutte le abilità, prof, condizioni | 100% | ☐ |
-| Heroic Inspiration | grant/spend/gift, Human Resourceful, Champion, ecc. | 100% | ☐ |
-| Azioni standard (12) | Attack, Dash, Disengage, Dodge, Help, Hide, Influence, Magic, Ready, Search, Study, Utilize | 100% | ☐ |
-| Economia turno | action/bonus/move/reaction, object interaction | 100% | ☐ |
-| Unarmed 2024 | PB, grapple, shove | 100% | ☐ |
-| Combattimento | init, surprise, OA, cover, ranged rules, crit, resist/vuln/immune order | 100% | ☐ |
-| Danno / guarigione | temp HP, bloodied, knock-out, instant death | 100% | ☐ |
-| Death saves | full 2024 + damage at 0 | 100% | ☐ |
-| Exhaustion | 6 livelli 2024 | 100% | ☐ |
-| Short / long rest | HD spend, slot/feature reset, exhaustion −1 | 100% | ☐ |
-| Condizioni | tutte **15** + non-stack + exhaustion levels | 100% | ☐ |
-| Concentration | break DC, drop on incapacitate | 100% | ☐ |
-| Incantesimi | prepared, spellbook, known, pact, ritual, upcast, cantrip scale, summon/conjure | 100% | ☐ |
-| Multiclass | prereq, slots, prepared per classe, prof package | 100% | ☐ |
-| Weapon mastery | pick, swap long rest, tutte le mastery | 100% | ☐ |
-| Progressione | XP, ASI, epic boon 19, level-up choices L2–20 | 100% | ☐ |
+1. **Backup `accounts.sqlite`:** copia da `FIREVERSE_DATA_DIR` (default sul server: directory dati del processo Node, tipicamente `backend/data/` o path in `.env`) → file datato es. `accounts-YYYYMMDD-HHMM.sqlite.bak`.
+2. **Backup `DATA_DIR` intero** (opzionale ma consigliato): `tar czf fireverse-data-YYYYMMDD.tar.gz <DATA_DIR>` (include `custom-characters/`, saves stanze, narration cache se presente).
+3. Annotare **commit SHA** e **checkpoint** nel messaggio di deploy.
 
-**Gate CI (obiettivo):** script `npm run coverage:report` (da introdurre) fallisce se qualsiasi riga **enabled** in admin è sotto 100% executable o se `coverage.ts` ha feature SRD ancora `partial`/`missing`.
+### Deploy applicazione (schema tipico — adattare allo script reale del server)
+
+1. `git fetch && git checkout main && git pull` nella directory del repo sul server.
+2. `npm ci && npm run typecheck && NARRATION=off npm test && npm run build`.
+3. Se il checkpoint introduce migrazione: eseguire flag/script documentato nel checkpoint (es. `FIREVERSE_MIGRATE_CUSTOM=1` una tantum) **dopo** backup.
+4. **Riavvio processo Node** che serve `https://d20fireverse.it/` (systemd/pm2/screen — usare il comando già in uso sul server).
+5. **Health check:**
+   - `curl -sS -o /dev/null -w "%{http_code}" https://www.d20fireverse.it/` → `200`
+   - `curl -sS https://www.d20fireverse.it/api/table-info` → JSON con `publicUrl`
+   - Login test account → `GET /api/me` → 200
+
+### Rollback applicazione
+
+1. Ripristinare commit precedente (`git checkout <sha>` + rebuild) **oppure** redeploy artefatto precedente.
+2. Se migrazione DB ha corrotto dati: ripristinare `accounts.sqlite` dal backup e riavviare Node.
+3. Verificare di nuovo health check + script manuale del checkpoint precedente.
+
+Ogni checkpoint sotto include **Rollback** specifico oltre a questa procedura generale.
+
+### Template sezioni (ogni CK)
+
+Ogni checkpoint usa le stesse etichette: **Obiettivo** · **Cosa vede/fa il owner** · **Scope** · **Dati/migrazione** · **Test automatici** · **Script manuale — produzione** · **Script manuale — locale** (se diverso) · **Risultato atteso** · **Rollback** · **Definition of Done**. Dopo merge su `main`, il owner esegue lo script su prod prima del CK successivo.
 
 ---
 
-## Parte A — Audit baseline (stato repo oggi → da chiudere a 100%)
+## Matrice di coverage → checkpoint
 
-Legenda audit: **Fatto** | **In corso** | **Da fare** (sostituisce “parziale/assente” come accettazione finale).
+Aggiornare ☐ → ☑ nel PR che chiude il checkpoint indicato.
 
-### A.1 Core, condizioni, creazione, classi, contenuto
+### Contenuto catalogo
 
-| Meccanica | Audit oggi | File attuali | Stato target |
-|-----------|------------|--------------|--------------|
-| Modificatore, PB, attacchi, crit | Fatto | `packages/rules`, `combat.ts` | Mantieni |
-| Adv/dis su tutti i tiri | Da fare | `combat.ts`, `coop.ts` | Fase 4 |
-| Skill + expertise + passive + tool | Da fare | `derive-hero`, `coop.ts`, `sheet.ts` | Fase 4 |
-| Heroic Inspiration | Da fare | `combat.ts`, species grants | Fase 4 |
-| 12 azioni standard | Da fare | `combat.ts`, menu azioni | Fase 5 |
-| PF temp, exhaustion, death completo | Da fare | `combat.ts` | Fase 4 |
-| Rests completi | Da fare | `srd-sheet.ts`, `room.ts` | Fase 4 |
-| 15 condizioni | Da fare | nuovo `conditions.ts` o modulo rules | Fase 5 |
-| Builder derive + preview | Da fare | nuovo `derive-hero.ts` | Fase 7 |
-| createHero / progression L1–20 | In corso | `hero.ts`, `progression.ts` | Fase 8–10 |
-| Classi L1–20 esecuzione | Da fare | `coverage.ts` solo 4 classi dettagliate | Fase 9 |
-| Sottoclassi L1–20 | Da fare | `class-kit`, `progression.ts` | Fase 10 |
-| Tutti i feat | Da fare | feat → effects/features | Fase 11 |
-| Spellbook / prepared / ritual / upcast | Da fare | `hero.ts`, `combat.ts` | Fase 6 |
-| Multiclass + pact | Da fare | `progression.ts` | Fase 8 |
-| Weapon mastery storage + swap | Da fare | hero row + UI | Fase 12 |
-| Mostri SRD in combattimento | In corso | `srd-monsters.ts` | Fase 13 |
-| Import `needs_review` / `notModeled` | Da fare | `tools/srd-parser`, catalog | Fase 2 |
+| Kind | Target | CK |
+|------|--------|-----|
+| species (9) | 9/9 grants + builder | CK-4, CK-9 |
+| background (4) | 4/4 | CK-4, CK-9 |
+| class (12) L1–20 | 12/12 | CK-7, CK-8, CK-9 |
+| subclass (12) L1–20 | 12/12 | CK-10 |
+| feat (17) | 17/17 | CK-10 |
+| spell (339) | 339/339 | CK-3, CK-6, CK-9 |
+| item gear | starter + equip | CK-2, CK-9 |
+| item magic | tutti enabled | CK-11 |
+| monster (235) | 235/235 | CK-13 |
+| weapon-mastery (8) | 8/8 + pick/swap | CK-11 |
 
----
+### Motore regole
 
-## Parte B — Fasi di implementazione (brief Cursor)
-
-Ogni fase chiude con: test, aggiornamento **checklist** sopra, PR reviewabile.  
-Prima del merge: `npm run typecheck && NARRATION=off npm test && npm run build`.
-
-**Ordine consigliato:** 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 → 9 → 10 → 11 → 12 → 13 → 14 → 15 → 16 → 17.  
-Fasi 4–6 e 9–11 possono procedere in parallelo **dopo** Fase 3 solo se le interfacce in `packages/rules` sono stabili.
+| Area | CK |
+|------|-----|
+| Derive + sheet (skill mod, passive, attacks) | CK-1, CK-2 |
+| D20 / skill / expertise / tool / passive | CK-6 |
+| Heroic Inspiration | CK-6, CK-9 |
+| 12 azioni standard | CK-7 |
+| PF temp, death, exhaustion, rests | CK-6 |
+| 15 condizioni + concentration | CK-7 |
+| Spellbook / prepared | CK-3 |
+| Ritual / upcast / pact (spell system 100%) | CK-11 |
+| Multiclass + progressione L1–20 | CK-8, CK-9–10 |
+| Weapon mastery storage + swap | CK-11 |
+| Coverage report CI (`coverage:report`) | CK-0 |
 
 ---
 
-### Fase 1 — Infrastruttura coverage e reporting
+## CK-0 — Strumenti di misura (opzionale ma consigliato prima di CK-1)
 
-**Obiettivo:** misurare il **100%** in modo oggettivo.
+**Obiettivo:** report oggettivo del gap; **non** cambia il gioco per il player.
 
-**Task:**
-- Estendere `backend/src/local/coverage.ts` a **tutte** le 12 classi e 12 sottoclassi SRD, livelli 1–20 (non fermarsi a L10).
-- Aggiungere `docs/COVERAGE_PROGRESS.md` generato o mantenuto a mano con sync alla matrice sopra.
-- Script `tools/coverage-report.ts` + `npm run coverage:report`: elenca feature `missing`/`partial`, contenuto enabled non executable.
-- Regola merge: nessuna nuova riga `partial` senza issue linkata e data target.
+**Cosa vede/fa il owner:** nulla in UI; opzionalmente esegue in locale `npm run coverage:report` e legge elenco gap.
 
-**Criteri accettazione:**
-- Report elenca ogni classe/sottoclasse con % feature `runs` su 20 livelli.
-- Checklist matrice versionata nel PR che chiude la fase.
+**Scope:** `tools/coverage-report.ts`, estensione `coverage.ts` a 12 classi × 20 livelli (solo report), `docs/COVERAGE_PROGRESS.md`.
 
----
+**Dati/migrazione:** nessuna.
 
-### Fase 2 — Pipeline contenuto SRD 5.2.1 al 100% strutturato
+**Test automatici:** script esce 0 se baseline invariata; snapshot report in CI opzionale.
 
-**Obiettivo:** ogni entry SRD ha campi machine-readable; `notModeled` → implementazione o `mechanicalSummary` + effect typed.
+**Script manuale (locale):** `npm run coverage:report` → file/lista feature `missing`.
 
-**Task:**
-- Schema `content-schema`: specie (scelte, grants, effects), background (ASI modes, feat, tools, equip A/50gp), class (starting equipment, spellbook sizes L1–20), feat (prereq, grants, executable hooks), spell (ritual, concentration, upcast, summon), item, monster.
-- Parser `import-catalog.ts`: popolare campi; dove SRD insufficiente, numeri/regole da **PHB 2024** in `mechanicalSummary` (inglese, parole nostre).
-- Chiudere review queue per le 9 specie, 4 background, 12 classi prima di espandere optional content.
-- Admin Content: stato `executable` vs `data_only` per riga.
+**Risultato atteso:** report leggibile; gioco identico a prima.
 
-**Criteri accettazione:**
-- `content:validate` verde su tutti i file toccati.
-- Checklist contenuto: species 9/9, backgrounds 4/4 con grants strutturati.
+**Rollback:** revert commit.
+
+**Definition of Done:** comando documentato in README dev; nessuna regressione CI.
+
+**Merge:** owner può saltare CK-0 e fondere strumenti in CK-1 se preferisce una sola PR iniziale.
 
 ---
 
-### Fase 3 — Modulo condizioni + helper tiri (foundation rules)
+## CK-1 — Fetta verticale: “Primo eroe” (Fighter L1 end-to-end)
 
-**Obiettivo:** unico posto per applicare condizioni a AC, attacchi, save, skill, init.
+**Obiettivo:** un giocatore crea un **Fighter L1** con il **nuovo flusso** (`/forge`), ottiene `hero_*`, vede lo eroe in lista, equipaggiamento nello **stash**; il **Forge 5.1 resta** (stato shippable doppio percorso).
 
-**Task:**
-- `packages/rules/src/conditions.ts`: tutte le 15 condizioni + exhaustion 6 livelli (effetti su test, CA, movimento, vantaggio).
-- Integrare in `combat.ts` e `coop.ts`; test per ogni condizione (tabella casi).
+**Cosa vede/fa il owner (prod):**
 
-**Criteri accettazione:**
-- Checklist condizioni 15/15 + exhaustion.
-- Test: Prone + ranged, Frightened disadvantage, Grappled speed 0, ecc.
+- Login su https://www.d20fireverse.it/
+- Apre `/forge` (o entry point documentato in PR)
+- Sceglie **Fighter**, **Human**, **Soldier**, standard array, 2 skill classe, fighting style, equip opzione A
+- Review: scheda live con HP/CA coerenti
+- Crea → nuovo eroe in elenco PG
+- In admin: verifica riga in DB / stash con oggetti classe+background
 
----
+**Scope (indicativo):**
 
-### Fase 4 — Core engine: danni, guarigione, riposi, inspiration, skill system
+- `packages/rules/src/derive-hero.ts` (perimetro: 1 classe, 1 specie, 1 background)
+- `packages/protocol/src/builder.ts`
+- `backend/src/local/builder-http.ts` — `GET /api/builder/catalog`, `POST /api/builder/preview`, `POST /api/builder/commit`
+- `tv/src/forge-v2.ts` + route `/forge` + **D-pad base** per questo perimetro
+- `hero.ts` — commit draft L1 player; stash istanze
+- Admin: abilitare in Content `fighter`, `human`, `soldier`, item starter necessari
 
-**Obiettivo:** Ch. 1 PHB checklist eseguibile in combattimento e story.
+**Dati/migrazione:** nuove colonne JSON hero se necessarie; migrazione SQLite **additiva** (nuove colonne nullable); backup prima deploy.
 
-**Task:**
-- PF temporanei (non stack, assorbimento prima).
-- Death saves completi + danno a 0 HP + instant death + stable/stabilize.
-- Exhaustion su test e speed; long rest −1 exhaustion.
-- Short rest: spend HD con formula 2024; long rest: HP, HD restore, slot/feature reset documentati per classe.
-- Heroic Inspiration: spend su qualsiasi dado; grant paths (Human, Champion, DM hook API se serve).
-- Expertise, passive scores (10 + mod), tool proficiency e regola advantage 2024 su skill checks.
-- Adv/dis su save/check/attack in modo uniforme.
+**Test automatici:**
 
-**File:** `packages/rules`, `combat.ts`, `coop.ts`, `srd-sheet.ts`, `derive-hero.ts` (quando esiste).
+- Unit derive: Fighter L1 HP/CA/skill mods not empty
+- API: preview → commit → `hero_*` exists; stash length ≥ 1
+- CI esistente verde
 
-**Criteri accettazione:**
-- Checklist righe “D20 tests”, “Danno/guarigione”, “Rests”, “Heroic Inspiration”, “Skills” = ☑.
-- Test integrazione per Fighter e Wizard livello 5 e 20 (snapshot numerici).
+**Script manuale — produzione (`https://www.d20fireverse.it/`):**
 
----
+1. Login (Amazon o test).
+2. Vai a `/forge`.
+3. Completa wizard Fighter/Human/Soldier; osserva che cambiando una skill la scheda laterale **cambia** (no trait fantasma).
+4. Submit → messaggio successo.
+5. Lobby/titolo o `/api/heroes` (se esposto in UI): compare nuovo eroe `hero_…`.
+6. **Non** usare ancora “Forge a new hero” 5.1 sulla TV se ancora presente — opzionale confronto.
 
-### Fase 5 — Azioni standard e combattimento avanzato
+**Script manuale — locale:**
 
-**Obiettivo:** menu azioni e regole posizione/copertura coerenti con griglia.
+1. `npm run build && npm run dev:backend` (+ `dev:tv` se serve).
+2. Stessi passi su `http://127.0.0.1:3100/forge` o porta TV.
 
-**Task:**
-- Implementare Influence, Study, Utilize, Ready (con trigger), Search; estendere Help/Hide/Dodge.
-- Unarmed Strike 2024 (PB, grapple, shove).
-- Copertura mezza/tre quarti/totale su AC e Dex save.
-- Opportunity attack, disengage, two-weapon (Light + Nick + TWF feat), mounted base se in scope SRD mostri/cavalieri.
-- Bloodied flag per feature che lo richiedono.
+**Risultato atteso:** `hero_*` creato; stash popolato; preview = scheda review; player non può scegliere livello ≠ 1.
 
-**Criteri accettazione:**
-- Checklist “Azioni standard” e “Combattimento” = ☑.
-- `coverage.ts` aggiornato per feature che dipendono da queste regole.
+**Rollback:** revert deploy; restore DB se commit ha scritto colonne incompatibili; Forge 5.1 ancora funzionante.
 
----
-
-### Fase 6 — Sistema incantesimi completo
-
-**Obiettivo:** ogni spell SRD enabled è lanciabile o ritualizzabile con regole corrette.
-
-**Task:**
-- Modello hero: `spellbook`, `prepared`, `cantrips`, slot per classe; warlock **pact** separato.
-- Ritual casting (Ritual Adept, tempo ritual, no slot).
-- Upcast da `SpellMechanics`; cantrip scaling L5/11/17.
-- Concentrazione già presente — allineare a condizioni Incapacitated.
-- Generazione/aggiornamento `spell_*` abilities per **tutti** gli incantesimi enabled (pipeline da `SpellDef`).
-- Summon/conjure: almeno comportamento token o placeholder server-authoritative documentato per ogni spell taggato summon in catalogo.
-
-**Criteri accettazione:**
-- Checklist spell 339/339 executable per id enabled in fixture test.
-- Wizard L20: prepared count da tabella, spellbook growth PHB/SRD rules.
+**Definition of Done:** test automatici verdi; owner firma script manuale prod; checklist derive/sheet CK-1 ☑; **nessuna** rimozione Forge 5.1.
 
 ---
 
-### Fase 7 — Derive hero L1–20 + API builder
+## CK-2 — Scheda library `hero_*` + equip + righe attacco
 
-**Obiettivo:** `derive-hero` per **qualsiasi** livello e draft; builder usa L1 player.
+**Obiettivo:** dopo CK-1, il owner **apre la scheda** del PG V2 (sito/companion/TV) e vede **modificatori skill**, **passive**, **attacchi** derivati dall’arma in stash dopo equip.
 
-**Task:**
-- `packages/rules/src/derive-hero.ts`: input `HeroDraft` / `HeroState`; output `DerivedSheet` completa (skill mod, passive, attacks, slots, resources, pending L2–20).
-- `GET /api/builder/catalog`, `POST /api/builder/preview`, `POST /api/builder/roll`.
-- Admin: `level` e multiclass nel draft; player: `level` = 1 enforced.
-- PHB fill-in per conteggi documentati in Fase 2.
+**Cosa vede/fa il owner:**
 
-**Criteri accettazione:**
-- Preview identico per admin a livello 20 con multiclass noto (fixture).
-- Player L1: stessi criteri owner (preparati obbligatori, ASI background, tre metodi punteggi).
+- Seleziona `hero_*` creato in CK-1
+- Equip arma dallo stash (UI armory o API se UI non pronta — PR deve indicare dove)
+- Scheda mostra longsword (o pack fighter) con bonus attacco/danno coerenti
 
----
+**Scope:** `hero-pregen.ts` delega a derive; `librarySheet` / `GET /api/heroes/:id/sheet`; `protocol/sheet.ts` (skill mod, passive, attacks); equip `hero.ts`.
 
-### Fase 8 — Progressione, multiclass, pact magic L1–20
+**Dati/migrazione:** nessuna breaking.
 
-**Obiettivo:** `progression.ts` + `applyPick` coprono ogni livello e ogni `PendingAsk`.
+**Test automatici:** integration equip → sheet attacks change; parity derive vs sheet.
 
-**Task:**
-- Multiclass: prereq, prof package, slot table completa, prepared per classe.
-- Pact slots warlock + multiclass con caster levels.
-- ASI, feat (general, origin, fighting style, epic), skill grants, subclass levels, spell picks ogni livello.
-- `toProgress` fix: cantrips vs spells separati su hero row.
-- Level-up API/UI hooks (TV + companion) oltre al builder.
+**Script manuale — produzione (`https://www.d20fireverse.it/`):**
 
-**Criteri accettazione:**
-- Test: per ogni classe, simulazione level 1→20 con scelte default non crasha e `maxHp`/slots coerenti.
-- Checklist “Multiclass” e “Progressione” = ☑.
+1. Eroe CK-1 → armory → equip item stash.
+2. Apri scheda → verifica AC se armatura equip; attacco non “vuoto”.
+3. Dis-equip → attacco torna unarmed o ridotto.
 
----
+**Script manuale — locale:** stessi passi su dev TV/sito con eroe creato in CK-1.
 
-### Fase 9 — Esecuzione feature classi base (12 classi, L1–20)
+**Risultato atteso:** scheda allineata a `derive-hero`; attacchi coerenti con equip; nessun `custom_*` richiesto.
 
-**Obiettivo:** ogni riga tabella classe in `coverage.ts` = `runs` | `progression` | `no_combat` giustificato.
+**Rollback:** revert deploy; hero row invariata se solo lettura rotta.
 
-**Task:**
-- Per ciascuna delle 12 classi: implementare risorse (Rage, Ki, Channel, Bardic, Sorcery points, ecc.) da colonne `classes.json`.
-- Rimuovere il blocco “other 8 classes partial” in `coverage.ts`.
-- `classLevelCap` = 20 per tutte le classi SRD abilitate.
-
-**Criteri accettazione:**
-- Report Fase 1: 12/12 classi al 100% feature verdi su 20 livelli.
-- Almeno un test combattimento per classe a L1 e L5.
+**Definition of Done:** test automatici verdi; owner firma script prod; matrice item gear (starter) ☑.
 
 ---
 
-### Fase 10 — Sottoclassi SRD (12, L1–20)
+## CK-3 — Fetta verticale: Wizard L1 (spellbook + preparati obbligatori)
 
-**Obiettivo:** ogni sottoclasse enabled esegue le feature per livello.
+**Obiettivo:** percorso **caster** completo a creazione: 6 spellbook / 4 prepared / 3 cantrip (numeri PHB 2024 se SRD silente); **almeno un incantesimo** lanciabile in combattimento arena con quell’eroe.
 
-**Task:**
-- `subclassFeaturesAt` / `class-kit` per tutte le 12 sottoclassi importate.
-- Coverage matrix per `subclass` id.
+**Cosa vede/fa il owner:**
 
-**Criteri accettazione:**
-- 12/12 sottoclassi in checklist; nessun `missing` su feature di livello ≤ cap classe.
+- `/forge` → Wizard + Sage (o combo abilitata)
+- Step spell: sceglie esattamente 4 prepared da spellbook; submit bloccato se count errato
+- Porta eroe in **arena** (o combattimento test), lancia un cantrip o spell L1, slot decrementa su scheda
 
----
+**Scope:** derive spell; builder step spells; `combat.ts` + abilities per spell wizard enabled; content admin enable wizard + spell subset poi espanso.
 
-### Fase 11 — Feat SRD (tutti) eseguibili
+**Dati:** `spellbook_json`, `spells_prepared_json`, `cantrips_json` su hero.
 
-**Obiettivo:** ogni feat enabled applica effetti in derive e/o combattimento.
+**Test automatici:** wizard L1 derive counts; combat spend slot; builder validation NEED_SPELLS.
 
-**Task:**
-- Mappa feat id → `grant_spell`, `grant_feature`, modificatori attacco/save/skill, Magic Initiate branches, Alert (init), Savage Attacker, ecc.
-- Origin feat a L1 da background/specie nel builder; general/epic a level-up.
+**Script manuale — produzione:**
 
-**Criteri accettazione:**
-- Checklist feat 17/17; test per ogni feat enabled in fixture catalog.
+1. Abilita in admin wizard + ≥6 spell L1 + cantrip.
+2. Crea Wizard via `/forge`; conferma 4 prepared.
+3. Arena con quell’eroe; cast; verifica slot su TV/companion.
 
----
+**Script manuale — locale:** stessi passi con admin locale + arena dev.
 
-### Fase 12 — Specie, background, equipaggiamento, weapon mastery
+**Risultato atteso:** 4 prepared obbligatori; slot/cantrip su scheda; almeno un cast in combattimento con log server coerente.
 
-**Obiettivo:** grants origine + item completi; mastery pick e swap long rest.
+**Rollback:** revert deploy; eliminare eroi wizard test da admin se dati spell invalidi.
 
-**Task:**
-- Applicare specie (speed, size, darkvision, resist, lineage, Human skill/feat/inspiration, Dwarf HP, …).
-- Background: skill, tool, feat, ASI, equip → stash.
-- Tutti gli item gear/magic: effects typed, attunement, charges, weapon lines su scheda.
-- Weapon mastery: N pick da tabella classe; swap dopo long rest; `masteries` su hero.
-
-**Criteri accettazione:**
-- Checklist species/background/item/weapon-mastery = ☑.
-- Derive mostra attacchi per ogni arma equipaggiata (requisito Roll20 fix).
+**Definition of Done:** owner firma cast in prod; matrice spell (percorso wizard L1) ☑.
 
 ---
 
-### Fase 13 — Mostri SRD (235) in combattimento
+## CK-4 — Builder L1 completo (tutti i metodi punteggi + tutte le origini enabled)
 
-**Obiettivo:** ogni mostro enabled compilato in `srd-monsters` e usabile in arena/PvE.
+**Obiettivo:** allargare `/forge` a **tutto il catalogo abilitato** in admin: 9 specie, 4 background, 12 classi (creazione L1), standard array **+ point buy + roll**, ASI background +2/+1 e +1/+1/+1, step feat (origin + fighting style), About opzionale.
 
-**Task:**
-- Chiudere gap `srd-monsters.ts` / `parse-monsters` per azioni, recharge, legendary, spellcasting mostro.
-- Legare admin enable a roster arena.
+**Cosa vede/fa il owner:** crea un PG per ogni classe abilitata; roll server-side; PB 27; validazione ASI; Forge 5.1 ancora presente.
 
-**Criteri accettazione:**
-- Checklist monsters 235/235 executable; test compile per campione A–Z.
+**Scope:** builder UI tutti step; `POST /api/builder/roll`; content schema grants specie/background (CK-4 può includere Fase dati minima per tutte le origini); derive allargato.
 
----
+**Dati:** `builder_meta_json` (method, asi mode).
 
-### Fase 14 — Persistenza hero + commit builder + stash
+**Test:** matrix parametrizzata per ogni species×class enabled (smoke); point buy over budget fails.
 
-**Obiettivo:** `commitBuilderDraft` = preview + istanze stash; hero row completa per Fasi 6–12.
+**Script manuale — produzione:** per 2 classi (martial + caster): PB, roll, ASI +1/+1/+1 con stessa ability → errore; crea un PG per ogni specie/background enabled.
 
-**Task:**
-- Colonne JSON/SQL per tutti i campi spell, feat, mastery, tools, meta builder.
-- Player L1 only; admin bypass.
+**Script manuale — locale:** stesso campione su `/forge` locale.
 
-**Criteri accettazione:**
-- Parity preview/commit; stash contiene equip A/B + background.
+**Risultato atteso:** solo contenuto enabled; tre metodi punteggi; About skippabile; Forge 5.1 ancora disponibile.
+
+**Rollback:** revert; disabilitare in admin classi non ancora coperte da CK-9–10.
+
+**Definition of Done:** decisioni owner #5–6–10; species 9/9 e background 4/4 in builder ☑; owner firma prod.
 
 ---
 
-### Fase 15 — Migrazione `custom_*` → `hero_*`
+## CK-5 — Companion PWA (loggato senza QR) + forge
 
-**Obiettivo:** decisione owner #1.
+**Obiettivo:** stesso builder su **https://www.d20fireverse.it/companion/**; utente loggato **non vede** scanner QR; vede eroi + forge + armory.
 
-**Task:**
-- `migrate-legacy-chargen.ts`, mapping 5.1→5.2.1, report lossy fields.
-- Flag `FIREVERSE_MIGRATE_CUSTOM=1`; rimuovere `custom_*` da API pubbliche post-migrazione.
+**Cosa vede/fa il owner:** login companion → nessuna UI camera; forge crea `hero_*`; pairing QR solo quando flusso “a tavolo” attivo (documentare comportamento esatto in PR).
 
-**Criteri accettazione:**
-- 100% account con custom mappati o elencati in report falliti.
+**Scope:** `companion/src/` redesign; modulo forge condiviso con TV; `pocket.ts` senza QR in home loggata.
 
----
+**Dati:** nessuna.
 
-### Fase 16 — UI builder `/forge` + D-pad (TV/sito)
+**Test:** smoke companion build; test login mock senza QR element.
 
-**Obiettivo:** wizard completo; rimuovere Forge 5.1 **nello stesso release** (Fase 17).
+**Script manuale — produzione:** telefono → `https://www.d20fireverse.it/companion/` → login → conferma assenza QR in home loggata; crea eroe via forge; apri scheda.
 
-**Task:**
-- Modulo condiviso: step Roll20-like; preview debounced; unfinishedSteps.
-- Tre metodi punteggi; ASI background; feat step; prepared obbligatori; equip; About opzionale.
-- Parità D-pad.
+**Script manuale — locale:** companion dev con stesso account.
 
-**Criteri accettazione:**
-- E2E: Fighter + Wizard L1 player; scheda con attacchi e preparati.
+**Risultato atteso:** parità funzionale con `/forge` sito per perimetro CK-4; QR solo in flusso pairing documentato.
+
+**Rollback:** revert bundle companion; sito TV `/forge` invariato.
+
+**Definition of Done:** decisione #2 companion ☑; owner firma su device reale in prod.
 
 ---
 
-### Fase 17 — Companion PWA + level-up armory L1–20
+## CK-6 — Regole core giocabili (morte, PF temp, exhaustion, riposi, passive, expertise)
 
-**Obiettivo:** companion senza QR da loggato; gestione PG e scelte pendenti a qualsiasi livello.
+**Obiettivo:** in **combattimento o story** con `hero_*`, il owner verifica meccaniche Ch.1 senza aspettare tutte le classi.
 
-**Task:**
-- Ridisegno PWA; forge + armory + level-up (`pending` da Fase 8).
-- Lista `hero_*`; sheet da derive.
+**Cosa vede/fa il owner:** arena; riduce PG a 0 → death saves; PF temp da item/spell se presente; exhaustion da effetto test (o item); short rest recupera HD; passive Perception su scheda = 10 + mod.
 
-**Criteri accettazione:**
-- Loggato: zero UI QR; level-up risolve tutti i `PendingAsk` con stesso motore server.
+**Scope:** `combat.ts` temp HP, death saves completo, exhaustion; `srd-sheet.ts` rests; `coop.ts` expertise/passive; derive aggiornato (condizioni complete in **CK-7**).
 
----
+**Dati:** nessuna breaking.
 
-### Fase 18 — Scheda library + combattimento allineati a derive
+**Test automatici:** unit death/exhaustion/temp HP; integration short rest HD.
 
-**Obiettivo:** `heroPregen`, `buildPcSheet`, `librarySheet` per `hero_*` usano **solo** derive + stato combattimento.
+**Script manuale — produzione:** combattimento (arena); checklist “Danno/guarigione”, “Rests”, “D20 passive”.
 
-**Task:**
-- API sheet `hero_*`; estendere `pcSheetHtml` con mod skill, passive, attacks, resources L1–20.
+**Script manuale — locale:** stessi scenari su arena dev.
 
-**Criteri accettazione:**
-- Sheet in tavolo = derive a parità di HP/slot spesi.
+**Risultato atteso:** death saves a 0 HP; temp HP non cura “vero”; exhaustion modifica roll dove previsto; passive Perception = 10 + mod su scheda.
 
----
+**Rollback:** revert; combattimento torna a comportamento CK-5.
 
-### Fase 19 — Release: rimozione Forge 5.1
-
-**Obiettivo:** decisione owner #14.
-
-**Task:**
-- Rimuovere `/api/chargen`, `chargen-ui.ts`, `srd51.json` runtime, pocket forge, test legacy.
-- README/docs aggiornati; friction log.
-
-**Criteri accettazione:**
-- CI verde; nessun riferimento runtime a 5.1; migrazione eseguita.
+**Definition of Done:** owner firma 3 scenari in prod; matrice righe core Ch.1 ☑ (escluso elenco 15 condizioni → CK-7).
 
 ---
 
-### Fase 20 — Gate finale completezza
+## CK-7 — Condizioni complete + azioni standard mancanti
 
-**Obiettivo:** verifica **100%** prima di dichiarare il motore “SRD complete”.
+**Obiettivo:** 15 condizioni applicate; azioni Influence/Study/Utilize/Ready dove previsto; unarmed 2024 base; copertura OA/TWF migliorata.
 
-**Task:**
-- `npm run coverage:report` = 0 gap su contenuto enabled in ambiente staging.
-- Passata manuale checklist matrice (tutte ☑).
-- Aggiornare `docs/PRODUCT_V2.md` con stato completezza.
+**Cosa vede/fa il owner:** in combattimento, applica prone/frightened e vede advantage; usa Dash/Dodge; prova unarmed.
 
-**Criteri accettazione:**
-- Tutte le righe checklist ☑; report allegato al tag release.
+**Scope:** `combat.ts`, menu azioni, `coverage.ts` aggiornato.
+
+**Test automatici:** tabella condizioni; test OA; concentration break on damage.
+
+**Script manuale — produzione:** prone + ranged; Help → advantage ally; frightened disadvantage.
+
+**Script manuale — locale:** arena dev, stessi scenari.
+
+**Risultato atteso:** 15 condizioni con effetti meccanici visibili in combattimento/scheda.
+
+**Rollback:** revert; CK-6 core ancora valido.
+
+**Definition of Done:** matrice condizioni 15/15 ☑; owner firma prod.
 
 ---
 
-## Parte C — PG Builder (flusso UX)
+## CK-8 — Progressione L2–20 + multiclass (motore) + level-up UI
 
-**Regola player:** solo **L1** alla creazione. **Regola motore:** supporto **L1–20** ovunque altrove.
+**Obiettivo:** XP/level-up fino a 20; multiclass da L2; **UI** level-up su TV/companion; admin crea PG alto livello; player resta L1 solo a **creazione**.
+
+**Cosa vede/fa il owner:** vince arena o admin grant XP → level-up → sceglie ASI/spell/subclass; multiclass opzionale L2+; scheda e combattimento riflettono livello.
+
+**Scope:** `progression.ts`, `applyPick`, `hero.ts` fix cantrips/spells split; UI level-up; arena XP.
+
+**Dati:** migrazione hero row se serve; backup DB.
+
+**Test automatici:** simulazione 1→20 fighter; multiclass prereq fail/success.
+
+**Script manuale — produzione:** admin grant XP; level-up wizard a L3 subclass se enabled; verifica slot; multiclass L2+ su eroe test.
+
+**Script manuale — locale:** progression dev tools se esposti.
+
+**Risultato atteso:** player non può creare L>1; level-up persiste su `hero_*`; combattimento usa livello aggiornato.
+
+**Rollback:** restore DB da backup se migrazione hero fallisce; revert altrimenti.
+
+**Definition of Done:** checklist Multiclass + Progressione ☑; owner L3+ su eroe test in prod.
+
+---
+
+## CK-9 — Pack classi A (Barbarian, Fighter, Rogue, Wizard) L1–20 eseguibili
+
+**Obiettivo:** **quattro classi** complete in combattimento + level-up + derive; builder già le supporta da CK-4.
+
+**Cosa vede/fa il owner:** per ciascuna classe, eroe L1→5 (minimo) in arena; usa Rage, Sneak, Second Wind, slot wizard; `coverage:report` 4/12 verde.
+
+**Scope:** `coverage.ts`, `class-kit.ts`, `combat.ts` per feature mancanti; content enabled.
+
+**Test automatici:** per-class combat test L1 e L5; `coverage.ts` `runs` per feature pack A.
+
+**Script manuale — produzione:** 4 smoke (Barb/Fighter/Rogue/Wizard) documentati in PR — creazione L1, fight, level-up a ≥5.
+
+**Risultato atteso:** `npm run coverage:report` segnala 4/12 classi complete; nessuna feature “placeholder” per queste 4.
+
+**Rollback:** revert; disabilitare classi pack A in admin se necessario.
+
+**Definition of Done:** 4 classi ☑ in matrice; cap 20 in code; owner firma 4 smoke prod.
+
+---
+
+## CK-10 — Pack classi B + C (8 classi rimanenti) + 12 sottoclassi + 17 feat
+
+**Obiettivo:** restanti 8 classi L1–20; ogni sottoclasse SRD; ogni feat enabled eseguibile in derive/combat.
+
+**Cosa vede/fa il owner:** level-up subclass; feat Alert/Magic Initiate ecc. cambiano scheda/comportamento; report 12/12 classi.
+
+**Scope:** combat + feat engine + subclass features.
+
+**Test automatici:** feat matrix; subclass level 3 pick; coverage 12/12 classi.
+
+**Script manuale — produzione:** campione: un eroe per sottoclasse abilitata + 2 feat rappresentativi.
+
+**Risultato atteso:** report 12/12 classi; ogni feat enabled modifica derive o combattimento.
+
+**Rollback:** revert; ridurre enable set in admin.
+
+**Definition of Done:** class 12/12, subclass 12/12, feat 17/17 ☑; owner firma campione prod.
+
+---
+
+## CK-11 — Item/magic/mastery + spell system 100% + D-pad builder completo
+
+**Obiettivo:** tutti gli item enabled con effects; weapon mastery pick + swap long rest; ritual/upcast/pact completi; **parità D-pad** su tutti gli step `/forge`; **rimozione Forge 5.1** nello **stesso deploy** di questo checkpoint (decisione #14).
+
+**Cosa vede/fa il owner:**
+
+- Builder D-pad-only su Fire TV per intero flusso
+- **Non** esiste più “Forge 5.1” / `/api/chargen`
+- Mastery swap dopo long rest
+- Ritual cast fuori combattimento (o stub UI documentato)
+
+**Scope:** rimuovere `chargen-ui.ts`, `/api/chargen`, `srd51.json` runtime, pocket forge 5.1; `mastery` storage; spell ritual pipeline.
+
+**Dati:** nessuna migrazione player se CK-12 non ancora eseguito.
+
+**Test:** grep repo no `/api/chargen`; CI senza chargen.test; full spell enabled smoke.
+
+**Script manuale prod:**
+
+1. TV: titolo → solo entry “Create hero” V2 (no 5.1).
+2. D-pad: crea PG completo.
+3. `curl` `/api/chargen` → 404.
+4. Ritual: [passi definiti in PR].
+
+**Rollback:** **critico** — redeploy commit precedente **e** ripristino bundle TV; riabilitare endpoint chargen solo in emergenza (branch hotfix).
+
+**DoD:** decisioni #12 e #14 ☑; owner firma TV + web; checklist spell/item/mastery ☑.
+
+---
+
+## CK-12 — Migrazione `custom_*` → `hero_*`
+
+**Obiettivo:** conversione automatica; nessun `custom_*` in API pubbliche.
+
+**Cosa vede/fa il owner:** dopo deploy one-shot migrazione, account con vecchi PG vedono `hero_*` equivalenti; report admin migrati/falliti.
+
+**Scope:** `migrate-legacy-chargen.ts`, flag avvio, rimozione file `custom-characters` dal path attivo.
+
+**Dati:** **backup obbligatorio** `accounts.sqlite` + `custom-characters/` prima migrazione.
+
+**Test:** fixture custom JSON → hero row.
+
+**Script manuale prod:**
+
+1. Backup (owner).
+2. Deploy con `FIREVERSE_MIGRATE_CUSTOM=1` (o comando documentato).
+3. Login account test con custom → lista solo `hero_*`.
+4. Leggi report migrazione.
+
+**Rollback:** restore DB + directory custom da backup; redeploy versione pre-migrazione.
+
+**DoD:** decisione #1 ☑; zero `custom_*` in `/api/pregens`.
+
+---
+
+## CK-13 — Mostri SRD (235) in arena/PvE
+
+**Obiettivo:** ogni mostro enabled compilato e selezionabile/roster.
+
+**Cosa vede/fa il owner:** admin enable mostro → arena PvE con quel mostro; azioni e save funzionano.
+
+**Scope:** `srd-monsters.ts`, parser, admin enable.
+
+**Test automatici:** compile sample per lettera A–M, N–Z; stat block → combat entity.
+
+**Script manuale — produzione:** admin enable 3 mostri → 3 fight arena/PvE.
+
+**Script manuale — locale:** stesso con catalogo dev.
+
+**Risultato atteso:** azioni mostro, save e HP coerenti con SRD enabled.
+
+**Rollback:** revert; disabilitare mostri nuovi in admin.
+
+**Definition of Done:** monster 235/235 ☑ per id enabled; owner firma 3 fight prod.
+
+---
+
+## CK-14 — Gate finale 100% + documentazione release
+
+**Obiettivo:** `coverage:report` zero gap su contenuto enabled in staging; tutte ☑ matrice; `PRODUCT_V2` aggiornato.
+
+**Cosa vede/fa il owner:** esegue report + script regressione completa CK-1→CK-13; tag release.
+
+**Scope:** docs, friction log, eventuali fix gap residui **solo** se report non zero.
+
+**Test automatici:** CI + `coverage:report` gate zero gap su enabled set.
+
+**Script manuale — produzione:** regressione campione CK-1, CK-3, CK-5, CK-11, CK-12 su prod; checklist allegata al tag.
+
+**Risultato atteso:** north star L1–20 + builder + migrazione verificata; `PRODUCT_V2` allineato.
+
+**Rollback:** non applicabile (tag); hotfix su branch dedicato.
+
+**Definition of Done:** owner sign-off esplicito; tutte le ☑ matrice per contenuto enabled.
+
+---
+
+## Flusso PG Builder (UX)
 
 Step: `Classe → Specie → Background → Abilità → Feat → Skill → Incantesimi → Equipaggiamento → About (opz.) → Review`
 
-Panel scheda live: tutti i campi `DerivedSheet` (inclusi attacchi arma e preparati/spells known).
+Panel scheda: output `DerivedSheet` sempre da preview server.
 
 ---
 
-## Parte D — Mappa file
+## Mappa file (riferimento)
 
 | Area | Percorso |
 |------|----------|
-| Derive / rules | `packages/rules/src/` (`derive-hero.ts`, `progression.ts`, `conditions.ts`, `mastery.ts`) |
-| Hero / builder API | `backend/src/local/hero.ts`, `builder-http.ts`, `v2-http.ts` |
-| Combat | `backend/src/local/combat.ts`, `srd-sheet.ts`, `srd-monsters.ts` |
-| Content | `content/srd-5.2.1/`, `content-catalog.ts`, `tools/srd-parser/` |
-| Coverage | `backend/src/local/coverage.ts`, `tools/coverage-report.ts` |
-| Sheet UI | `packages/protocol/src/sheet.ts`, `builder.ts` |
-| Builder UI | `tv/src/forge-v2.ts`, `companion/src/` |
-| Legacy (remove Fase 19) | `chargen.ts`, `chargen-ui.ts`, `srd51.json` |
+| Derive | `packages/rules/src/derive-hero.ts`, `progression.ts`, `conditions.ts` |
+| Builder API | `backend/src/local/builder-http.ts`, `hero.ts` |
+| UI forge | `tv/src/forge-v2.ts`, `companion/src/` |
+| Combat / sheet | `combat.ts`, `hero-pregen.ts`, `protocol/sheet.ts` |
+| Content | `content/srd-5.2.1/`, `content-catalog.ts` |
+| Legacy (rimosso CK-11) | `chargen.ts`, `chargen-ui.ts`, `srd51.json` |
 
 ---
 
-## Parte E — Brief Cursor
+## Brief Cursor
 
 ```text
-Implementa la Fase N di docs/PG_BUILDER_V2_PLAN.md.
-Obiettivo: completezza SRD 5.2.1 L1–20 (100% checklist). Nessun defer.
-Rispetta le decisioni owner in tabella. English per UI e codice.
-Aggiorna la checklist in questo file nel PR.
+Implementa il checkpoint CK-N di docs/PG_BUILDER_V2_PLAN.md.
+Fetta verticale: deve essere verificabile dal owner con lo script manuale del checkpoint,
+senza dipendere da checkpoint futuri. Aggiorna la matrice coverage nel PR.
+English per UI e codice. Non fare deploy in produzione.
 ```
+
+**Ordine:** CK-0 (opz.) → **CK-1** → CK-2 → … → CK-14. Non saltare: ogni CK assume i precedenti merged e verificati dal owner su prod.
 
 ---
 
-## Parte F — Rischi e mitigazioni (non sono tagli di scope)
+## Riepilogo checkpoint (lista)
 
-| Rischio | Mitigazione |
-|---------|-------------|
-| Volume 339 spell / 235 mostri | Pipeline generazione abilities + test a campione per lettera; abilitazione graduale in admin **senza** abbassare il target 100% per ciò che è enabled |
-| `notModeled` storico | Fase 2: ogni voce diventa typed effect o mechanicalSummary + issue |
-| Migrazione 5.1→5.2.1 lossy | Report utente + mapping documentato |
-| Legal PHB | Solo mechanicalSummary; review PR se tocca testo player-facing |
+| ID | Nome breve |
+|----|------------|
+| CK-0 | Strumenti coverage report (opz.) |
+| CK-1 | Primo eroe Fighter L1 E2E `/forge` + stash (Forge 5.1 resta) |
+| CK-2 | Scheda `hero_*` + equip + attacchi |
+| CK-3 | Wizard L1 spellbook/preparati + cast in arena |
+| CK-4 | Builder L1 completo (tutte origini + 3 metodi punteggi + ASI) |
+| CK-5 | Companion PWA senza QR + forge |
+| CK-6 | Regole core combattimento (death, temp HP, exhaustion, rests, passive) |
+| CK-7 | 15 condizioni + azioni standard |
+| CK-8 | Progressione L2–20 + multiclass + UI level-up |
+| CK-9 | 4 classi L1–20 complete (Barbarian, Fighter, Rogue, Wizard) |
+| CK-10 | 8 classi restanti + 12 sottoclassi + 17 feat |
+| CK-11 | Item/magic/mastery + spell 100% + D-pad pieno + **rimozione Forge 5.1** |
+| CK-12 | Migrazione `custom_*` → `hero_*` |
+| CK-13 | Mostri SRD arena |
+| CK-14 | Gate finale 100% |
