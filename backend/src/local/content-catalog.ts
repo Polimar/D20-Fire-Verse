@@ -307,12 +307,22 @@ function effectShort(e: Loose): string {
   switch (e.kind) {
     case "ac_bonus":
       return `+${String(e.amount)} AC`;
+    case "save_bonus":
+      return `+${String(e.amount)} saves`;
+    case "grant_aura":
+      return `aura ${String(e.radiusCells)} cells`;
+    case "plant_aura":
+      return `plant aura ${String(e.radiusCells)} cells`;
     case "attack_bonus":
       return `+${String(e.amount)} attack`;
     case "damage_bonus":
       return `+${String(e.amount)} damage`;
     case "on_hit_rider":
-      return `+${String(e.damage)} ${String(e.damageType)} on hit`;
+      return e.damageType
+        ? `+${String(e.damage)} ${String(e.damageType)} on hit`
+        : `+${String(e.damage)} on hit (weapon type)`;
+    case "heal_drink":
+      return `drink ${String(e.dice)} HP`;
     case "resistance":
       return `resist ${String(e.damageType)}`;
     case "immunity":
@@ -323,6 +333,8 @@ function effectShort(e: Loose): string {
       return `feature ${String(e.featureId)}`;
     case "stat_set":
       return `${String(e.ability).toUpperCase()} ${String(e.score)}`;
+    case "stat_drink":
+      return `drink ${String(e.ability).toUpperCase()} ${String(e.score)}`;
     case "stat_increase_cap":
       return `${String(e.ability).toUpperCase()} cap ${String(e.cap)}`;
     default:

@@ -48,6 +48,9 @@ const KNOWN_EFFECTS = new Set([
   "save",
   "attack",
   "auto_hit",
+  "aura",
+  "plant_aura",
+  "pull_aura",
 ]);
 
 const snapshots = new Map<string, Snapshot>();

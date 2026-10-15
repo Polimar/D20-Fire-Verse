@@ -93,6 +93,6 @@ for (const action of ALL_STANDARD) {
     if (action === "std_hide") assert.equal(hero.hidden, true);
     if (action === "std_attack") assert.ok((hero.attacksLeft ?? 0) >= 1);
     if (action === "std_magic") assert.equal(hero.magicActionReady, true);
-    if (action === "std_utilize") assert.ok(!hero.inventory.includes("potion_healing"));
+    if (action === "std_utilize") assert.ok(hero.inventory.includes("potion_healing"));
   });
 }

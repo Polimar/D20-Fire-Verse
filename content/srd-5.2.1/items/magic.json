@@ -706,6 +706,10 @@
         {
           "kind": "ac_bonus",
           "amount": 1
+        },
+        {
+          "kind": "save_bonus",
+          "amount": 1
         }
       ]
     },
@@ -1597,6 +1601,14 @@
         {
           "kind": "grant_spell",
           "spellId": "wall_of_fire"
+        },
+        {
+          "kind": "grant_aura",
+          "radiusCells": 6,
+          "filter": "all",
+          "creatureTypes": ["undead"],
+          "excludeSource": true,
+          "onStartTurn": { "dice": "1d6", "damageType": "radiant" }
         }
       ]
     },
@@ -1706,6 +1718,12 @@
         {
           "kind": "damage_bonus",
           "amount": 3
+        },
+        {
+          "kind": "grant_aura",
+          "radiusCells": 2,
+          "filter": "ally",
+          "saveAdv": "vs_magic"
         }
       ]
     },
@@ -1829,6 +1847,10 @@
         {
           "kind": "grant_spell",
           "spellId": "wish"
+        },
+        {
+          "kind": "save_bonus",
+          "amount": 1
         }
       ]
     },
@@ -2271,9 +2293,10 @@
       "slot": "consumable",
       "effects": [
         {
-          "kind": "stat_set",
+          "kind": "stat_drink",
           "ability": "str",
-          "score": 21
+          "score": 21,
+          "durationPcTurns": 60
         }
       ]
     },
@@ -2284,9 +2307,10 @@
       "slot": "consumable",
       "effects": [
         {
-          "kind": "stat_set",
+          "kind": "stat_drink",
           "ability": "str",
-          "score": 23
+          "score": 23,
+          "durationPcTurns": 60
         }
       ]
     },
@@ -2297,9 +2321,10 @@
       "slot": "consumable",
       "effects": [
         {
-          "kind": "stat_set",
+          "kind": "stat_drink",
           "ability": "str",
-          "score": 25
+          "score": 25,
+          "durationPcTurns": 60
         }
       ]
     },
@@ -2310,9 +2335,10 @@
       "slot": "consumable",
       "effects": [
         {
-          "kind": "stat_set",
+          "kind": "stat_drink",
           "ability": "str",
-          "score": 27
+          "score": 27,
+          "durationPcTurns": 60
         }
       ]
     },
@@ -2323,9 +2349,10 @@
       "slot": "consumable",
       "effects": [
         {
-          "kind": "stat_set",
+          "kind": "stat_drink",
           "ability": "str",
-          "score": 29
+          "score": 29,
+          "durationPcTurns": 60
         }
       ]
     },
@@ -2337,11 +2364,32 @@
       "effects": []
     },
     {
-      "id": "potions_of_healing",
-      "name": "Potions of Healing",
+      "id": "potion_of_healing",
+      "name": "Potion of Healing",
       "rarity": "common",
       "slot": "consumable",
-      "effects": []
+      "effects": [{ "kind": "heal_drink", "dice": "2d4+2" }]
+    },
+    {
+      "id": "potion_of_healing_greater",
+      "name": "Potion of Healing (Greater)",
+      "rarity": "uncommon",
+      "slot": "consumable",
+      "effects": [{ "kind": "heal_drink", "dice": "4d4+4" }]
+    },
+    {
+      "id": "potion_of_healing_superior",
+      "name": "Potion of Healing (Superior)",
+      "rarity": "rare",
+      "slot": "consumable",
+      "effects": [{ "kind": "heal_drink", "dice": "8d4+8" }]
+    },
+    {
+      "id": "potion_of_healing_supreme",
+      "name": "Potion of Healing (Supreme)",
+      "rarity": "very_rare",
+      "slot": "consumable",
+      "effects": [{ "kind": "heal_drink", "dice": "10d4+20" }]
     },
     {
       "id": "potion_of_heroism",
@@ -2568,6 +2616,10 @@
         {
           "kind": "ac_bonus",
           "amount": 1
+        },
+        {
+          "kind": "save_bonus",
+          "amount": 1
         }
       ]
     },
@@ -2751,6 +2803,10 @@
         {
           "kind": "grant_spell",
           "spellId": "magic_missile"
+        },
+        {
+          "kind": "save_bonus",
+          "amount": 1
         }
       ]
     },
@@ -2812,8 +2868,11 @@
           "spellId": "see_invisibility"
         },
         {
-          "kind": "ac_bonus",
-          "amount": 1
+          "kind": "plant_aura",
+          "radiusCells": 12,
+          "filter": "ally",
+          "ac": 1,
+          "saves": 1
         }
       ]
     },
@@ -3216,6 +3275,10 @@
           "amount": 2
         },
         {
+          "kind": "save_bonus",
+          "amount": 2
+        },
+        {
           "kind": "grant_spell",
           "spellId": "cone_of_cold"
         },
@@ -3520,7 +3583,12 @@
       "requires": {
         "attunement": true
       },
-      "effects": []
+      "effects": [
+        {
+          "kind": "save_bonus",
+          "amount": 1
+        }
+      ]
     },
     {
       "id": "sun_blade",
@@ -3754,7 +3822,12 @@
         "musket",
         "pistol"
       ],
-      "effects": []
+      "effects": [
+        {
+          "kind": "on_hit_rider",
+          "damage": "2d6"
+        }
+      ]
     },
     {
       "id": "vorpal_sword",

@@ -3,14 +3,12 @@
   "unparsedFields": [],
   "kind": "item",
   "id": "cloak_of_protection",
-  "status": "needs_review",
+  "status": "auto_ok",
   "confidence": "medium",
   "usage": "Vendor, loot, and stash. Account heroes carry its typed effects into fights while it is equipped (and attuned, when required).",
   "srd": {
     "line": "Wondrous Item, Uncommon (Requires Attunement)",
     "text": "_Wondrous Item, Uncommon (Requires Attunement)_\n\nYou gain a +1 bonus to Armor Class and saving throws while you wear this cloak."
   },
-  "notModeled": [
-    "+1 bonus to saving throws."
-  ]
+  "notModeled": []
 }

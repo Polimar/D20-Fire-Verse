@@ -57,7 +57,6 @@ import { catalogEntry } from "./content-catalog.js";
 import { durationToPcTurns } from "./spell-duration.js";
 import type { ClassKit } from "./class-kit.js";
 import {
-  auraCells,
   auraSaveBonus,
   castClassFeature,
   checkBonusAdjust,
@@ -87,6 +86,20 @@ import {
 } from "./class-runtime.js";
 import { actionCategory, actionSummary, type ActionCategory } from "./action-menu.js";
 import type { Player } from "./types.js";
+import {
+  auraAppliesTo,
+  plantAura as placeAura,
+  pullAura as removePlantedAura,
+  refreshAuras as syncAuras,
+  type AuraMods,
+  type CombatAura,
+} from "./combat-aura.js";
+import { healingPotionByInventory } from "./healing-potions.js";
+import {
+  GIANT_STRENGTH_DURATION_PC_TURNS,
+  GIANT_STRENGTH_EFFECT_ID,
+  giantStrengthPotionByInventory,
+} from "./giant-strength-potions.js";
 
 export type Cell = { x: number; y: number };
 
@@ -149,7 +162,7 @@ export type CombatToken = {
   gearAttackBonus?: number;
   gearDamageBonus?: number;
   /** Magic weapon bonuses, keyed by the attack they ride on. */
-  weaponGear?: Record<string, { attack: number; damage: number; onHit: Array<{ damage: string; damageType: string }>; mastery?: string }>;
+  weaponGear?: Record<string, { attack: number; damage: number; onHit: Array<{ damage: string; damageType?: string }>; mastery?: string }>;
   masteries?: string[];
   grantedSpells?: string[];
   /** Spell id → the equipped item that casts it. */
@@ -233,10 +246,23 @@ export type CombatToken = {
   wildShapeBackup?: { hp: number; maxHp: number; ac: number; speedCells: number };
   /** Spell and effect durations counted in PC-turn ticks (6s each). */
   timedEffects?: Array<{ label: string; pcTurnsLeft: number; spellId?: string }>;
+  /** Temporary ability scores from drinks (Giant Strength). */
+  abilityOverride?: Partial<Record<"str" | "dex" | "con" | "int" | "wis" | "cha", number>>;
   innateSorcery?: boolean;
   steadyAim?: boolean;
   channelAttack?: number;
   auraBonus?: number;
+  auraAc?: number;
+  auraSaveAdv?: "all" | "vs_magic";
+  auraStealth?: number;
+  auraAttackDisadvAgainst?: boolean;
+  auraResistances?: string[];
+  auraSpeedMult?: number;
+  auraObscured?: boolean;
+  followAuras?: AuraMods[];
+  plantAuras?: AuraMods[];
+  gearSaveBonus?: number;
+  auraEnterTicked?: string[];
   blessedStrikeUsed?: boolean;
   furyUsed?: boolean;
   preyUsed?: boolean;
@@ -337,8 +363,9 @@ function actionIdsFor(pregen: Pregen): string[] {
   for (const id of STANDARD_ACTIONS) {
     if (!base.includes(id)) base.push(id);
   }
-  if (pregen.inventory?.includes("potion_healing")) {
-    base.push("use_potion_healing");
+  for (const token of pregen.inventory ?? []) {
+    const potion = healingPotionByInventory(token) ?? giantStrengthPotionByInventory(token);
+    if (potion && !base.includes(potion.abilityId)) base.push(potion.abilityId);
   }
   return base;
 }
@@ -366,6 +393,7 @@ export type CombatState = {
   /** Liquids: block movement, not line of fire. */
   hazards: boolean[][];
   tokens: CombatToken[];
+  auras?: CombatAura[];
   turnOrder: string[];
   turnIndex: number;
   round: number;
@@ -833,6 +861,20 @@ function stampMonster(token: CombatToken, mon: ReturnType<typeof getMonster>): v
   token.multiattack = mon.multiattack;
   token.actionPool = mon.actionPool ?? mon.actions;
   token.actionIds = token.actionPool ?? mon.actions;
+  if (mon.traits?.includes("magma_aura")) {
+    const effect = getAbility("magma_aura")?.effects[0] as
+      | { type?: string; radiusCells?: number; damage?: Array<{ dice?: string; damageType?: string }> }
+      | undefined;
+    const part = effect?.damage?.[0];
+    token.followAuras = [
+      {
+        radiusCells: Number(effect?.radiusCells ?? 1),
+        filter: "all",
+        excludeSource: true,
+        onStartTurn: part?.dice ? { dice: part.dice, damageType: part.damageType ?? "fire" } : undefined,
+      },
+    ];
+  }
 }
 
 function makeEnemyToken(
@@ -1023,25 +1065,43 @@ function hasCondition(token: CombatToken, id: string): boolean {
   return Boolean(token.conditions?.includes(id));
 }
 
-function refreshAuras(combat: CombatState): void {
-  for (const token of combat.tokens) token.auraBonus = 0;
-  for (const source of combat.tokens) {
-    if (source.dead) continue;
-    const cells = auraCells(source);
-    if (!cells) continue;
-    const abilities = (source.characterId ? getPregen(source.characterId)?.abilities : undefined) ?? {};
-    const bonus = auraSaveBonus(source, abilities);
-    for (const ally of combat.tokens) {
-      if (ally.dead || ally.kind !== source.kind) continue;
-      if (chebyshev(source.x, source.y, ally.x, ally.y) > cells) continue;
-      ally.auraBonus = (ally.auraBonus ?? 0) + bonus;
-      if (source.features?.includes("aura_of_courage") || source.kit?.flags.includes("aura_of_courage")) {
-        ally.conditions = (ally.conditions ?? []).filter((c) => c !== "frightened");
-      }
-      if (source.features?.includes("aura_of_devotion") || source.kit?.flags.includes("aura_of_devotion")) {
-        ally.conditions = (ally.conditions ?? []).filter((c) => c !== "charmed");
-      }
-    }
+export function refreshAuras(combat: CombatState): void {
+  syncAuras(combat, (source) => {
+    const token = combat.tokens.find((t) => t.id === source.id);
+    if (!token) return 0;
+    const pregen = token.characterId ? getPregen(token.characterId) : undefined;
+    return auraSaveBonus(token, liveAbilities(token, pregen));
+  });
+}
+
+function tickAuraPulse(combat: CombatState, token: CombatToken, aura: CombatAura, when: "start" | "enter"): void {
+  const spec = when === "start" ? aura.onStartTurn : aura.onEnterOrEndTurn;
+  if (!spec) return;
+  if (when === "enter") {
+    token.auraEnterTicked = token.auraEnterTicked ?? [];
+    if (token.auraEnterTicked.includes(aura.id)) return;
+    token.auraEnterTicked.push(aura.id);
+  }
+  if (spec.heal && token.hp <= 0 && !token.dead) {
+    token.hp = Math.min(token.maxHp, token.hp + spec.heal);
+  }
+  if (spec.dice && spec.damageType) {
+    applyDamage(combat, token, rollNotation(spec.dice).total, false, spec.damageType, true);
+  }
+}
+
+export function tickAuraStart(combat: CombatState, token: CombatToken): void {
+  for (const aura of combat.auras ?? []) {
+    if (!auraAppliesTo(combat, aura, token)) continue;
+    tickAuraPulse(combat, token, aura, "start");
+  }
+}
+
+function tickAuraEnter(combat: CombatState, token: CombatToken): void {
+  for (const aura of combat.auras ?? []) {
+    if (!aura.onEnterOrEndTurn) continue;
+    if (!auraAppliesTo(combat, aura, token)) continue;
+    tickAuraPulse(combat, token, aura, "enter");
   }
 }
 
@@ -1213,6 +1273,7 @@ function beginTurn(combat: CombatState): void {
   t.cleaveUsed = false;
   t.freeMove = 0;
   t.rageKept = false;
+  t.auraEnterTicked = [];
   if (hasFeature(t, "heroic_warrior") && !t.heroicInspiration) t.heroicInspiration = true;
   if (hasFeature(t, "countercharm")) {
     for (const other of combat.tokens) other.countercharm = false;
@@ -1220,6 +1281,8 @@ function beginTurn(combat: CombatState): void {
   const pregenTurn = t.characterId ? getPregen(t.characterId) : undefined;
   onClassTurn(t, t.level ?? pregenTurn?.level ?? 1, pregenTurn?.abilities ?? {}, combat.round);
   refreshAuras(combat);
+  if ((t.auraSpeedMult ?? 1) < 1) t.movementLeft = Math.floor(t.movementLeft * (t.auraSpeedMult ?? 1));
+  tickAuraStart(combat, t);
   if (t.raging && hasFeature(t, "mindless_rage")) {
     t.conditions = (t.conditions ?? []).filter((c) => c !== "charmed" && c !== "frightened");
   }
@@ -1310,15 +1373,34 @@ type AttackSpec = {
 
 type DamagePart = { dice: string; damageType: string; ability?: string };
 
-/** "finesse" weapons use whichever of Strength or Dexterity is higher. */
-function weaponAbility(pregen: Pregen | undefined, named: string): string {
-  if (named !== "finesse") return named;
-  return (pregen?.abilities.dex ?? 10) > (pregen?.abilities.str ?? 10) ? "dex" : "str";
+function abilityScore(token: CombatToken | undefined, pregen: Pregen | undefined, key: string): number {
+  const k = key as "str" | "dex" | "con" | "int" | "wis" | "cha";
+  const over = token?.abilityOverride?.[k];
+  if (over != null) return over;
+  return pregen?.abilities[key] ?? 10;
 }
 
-function weaponNotation(part: DamagePart, pregen: Pregen | undefined): string {
+function liveAbilities(token: CombatToken | undefined, pregen: Pregen | undefined): Record<string, number> {
+  return {
+    ...(pregen?.abilities ?? {}),
+    str: abilityScore(token, pregen, "str"),
+    dex: abilityScore(token, pregen, "dex"),
+    con: abilityScore(token, pregen, "con"),
+    int: abilityScore(token, pregen, "int"),
+    wis: abilityScore(token, pregen, "wis"),
+    cha: abilityScore(token, pregen, "cha"),
+  };
+}
+
+/** "finesse" weapons use whichever of Strength or Dexterity is higher. */
+function weaponAbility(token: CombatToken | undefined, pregen: Pregen | undefined, named: string): string {
+  if (named !== "finesse") return named;
+  return abilityScore(token, pregen, "dex") > abilityScore(token, pregen, "str") ? "dex" : "str";
+}
+
+function weaponNotation(part: DamagePart, token: CombatToken | undefined, pregen: Pregen | undefined): string {
   if (part.ability && /^\d+d\d+$/i.test(part.dice)) {
-    const mod = abilityMod(pregen?.abilities[weaponAbility(pregen, part.ability)] ?? 10);
+    const mod = abilityMod(abilityScore(token, pregen, weaponAbility(token, pregen, part.ability)));
     return `${part.dice}${mod >= 0 ? "+" : ""}${mod}`;
   }
   return part.dice;
@@ -1400,7 +1482,7 @@ function harmAmount(target: CombatToken, amount: number, damageType: string): nu
   if (target.damageImmunities?.includes(t)) return 0;
   let n = amount;
   if (target.damageVulnerabilities?.includes(t)) n *= 2;
-  if (target.damageResistances?.includes(t)) n = Math.floor(n / 2);
+  if (target.damageResistances?.includes(t) || target.auraResistances?.includes(t)) n = Math.floor(n / 2);
   return n;
 }
 
@@ -1412,6 +1494,7 @@ function creatureSave(
 ): { roll: DiceRoll; ok: boolean } {
   const key = ability.toLowerCase();
   let advantage = Boolean(isMagic && token.traits?.includes("magic_resistance"));
+  if (token.auraSaveAdv === "all" || (token.auraSaveAdv === "vs_magic" && isMagic)) advantage = true;
   let disadvantage = false;
   if (key === "dex" && hasFeature(token, "danger_sense") && !cannotAct(token) && !hasCondition(token, "blinded")) advantage = true;
   if (token.countercharm && (key === "wis" || key === "cha")) advantage = true;
@@ -1749,7 +1832,7 @@ function enemyStrike(combat: CombatState, enemy: CombatToken, target: CombatToke
     }
     if (attack.onHitSave?.damage?.length) {
       const pregen = target.characterId ? getPregen(target.characterId) : undefined;
-      const score = pregen?.abilities[attack.onHitSave.ability] ?? 10;
+      const score = abilityScore(target, pregen, attack.onHitSave.ability);
       const proficient = (pregen as { savingThrows?: string[] } | undefined)?.savingThrows?.includes(
         attack.onHitSave.ability,
       );
@@ -1956,9 +2039,9 @@ export function performAttack(
   return performPcAction(combat, playerId, abilityId, targetId, dest, gate);
 }
 
-function pcSpellDc(pregen: Pregen | undefined, ability: string): number {
+function pcSpellDc(token: CombatToken | undefined, pregen: Pregen | undefined, ability: string): number {
   const prof = pregen?.proficiencyBonus ?? 2;
-  return 8 + prof + abilityMod(pregen?.abilities[ability] ?? 10);
+  return 8 + prof + abilityMod(abilityScore(token, pregen, ability));
 }
 
 function monsterSaveBonus(token: CombatToken, ability: string): number {
@@ -1999,7 +2082,7 @@ function addCondition(token: CombatToken, id: string): void {
 
 function spellKey(token: CombatToken, pregen: Pregen | undefined, named: string): string {
   if (named === "spell") return token.spellAbility ?? (pregen as { spellAbility?: string } | undefined)?.spellAbility ?? "int";
-  return weaponAbility(pregen, named);
+  return weaponAbility(token, pregen, named);
 }
 
 function castSpecial(
@@ -2018,7 +2101,7 @@ function castSpecial(
     foes: combat.tokens.filter((a) => isFoe(combat, t, a) && !a.dead),
     target: targetId ? combat.tokens.find((x) => x.id === targetId) : undefined,
     level: pregen?.level ?? t.level ?? 1,
-    abilities: pregen?.abilities ?? {},
+    abilities: liveAbilities(t, pregen),
     prof: pregen?.proficiencyBonus ?? 2,
     maxSlots: (pregen as { spellSlots?: Record<string, number> } | undefined)?.spellSlots,
   });
@@ -2142,7 +2225,7 @@ function castSpecial(
     return first;
   }
   if (effect.type === "mage_armor") {
-    const dex = abilityMod(pregen?.abilities.dex ?? 10);
+    const dex = abilityMod(abilityScore(t, pregen, "dex"));
     t.ac = 13 + dex;
     if (effect.concentration) setConcentration(t, castId);
     spendEconomy(t, isBonus);
@@ -2431,7 +2514,7 @@ export function performPcAction(
     const key = hide ? "dex" : "wis";
     const skill = hide ? "stealth" : "perception";
     const skilled = Boolean((pregen as { skills?: string[] } | undefined)?.skills?.includes(skill));
-    const bonus = abilityMod(pregen?.abilities[key] ?? 10) + checkBonusAdjust(t, skilled, prof, skill);
+    const bonus = abilityMod(abilityScore(t, pregen, key)) + checkBonusAdjust(t, skilled, prof, skill);
     const dc = hide ? 12 : 10;
     let roll = rollCheck({
       roller: t.name,
@@ -2483,7 +2566,7 @@ export function performPcAction(
     const key = effect.type === "influence" ? "cha" : "int";
     const skill = effect.type === "influence" ? "persuasion" : "investigation";
     const skilled = Boolean((pregen as { skills?: string[] } | undefined)?.skills?.includes(skill));
-    const bonus = abilityMod(pregen?.abilities[key] ?? 10) + checkBonusAdjust(t, skilled, prof, skill);
+    const bonus = abilityMod(abilityScore(t, pregen, key)) + checkBonusAdjust(t, skilled, prof, skill);
     const roll = rollCheck({
       roller: t.name,
       label: ability.name,
@@ -2504,6 +2587,27 @@ export function performPcAction(
     refreshReachable(combat);
     return { rolls: [roll] };
   }
+  if (effect.type === "plant_aura") {
+    const spec = (t.plantAuras ?? [])[0];
+    if (!spec) throw new Error("BAD_ABILITY");
+    if ((t.abilityUses?.rod_plant ?? 1) <= 0) throw new Error("ALREADY_USED");
+    const planted = placeAura(combat, t, spec);
+    if (!planted) throw new Error("ALREADY_USED");
+    t.abilityUses = { ...(t.abilityUses ?? {}), rod_plant: 0 };
+    spendEconomy(t, isBonus);
+    refreshAuras(combat);
+    statusEvent(combat, t, ability.name, `${t.name} plants the rod — allies in 60 feet gain +1 AC and saves.`);
+    refreshReachable(combat);
+    return { rolls: [] };
+  }
+  if (effect.type === "pull_aura") {
+    if (!removePlantedAura(combat, t)) throw new Error("UNREACHABLE");
+    spendEconomy(t, isBonus);
+    refreshAuras(combat);
+    statusEvent(combat, t, ability.name, `${t.name} pulls the rod from the ground. The light fades.`);
+    refreshReachable(combat);
+    return { rolls: [] };
+  }
   if (effect.type === "magic_action") {
     spendEconomy(t, isBonus);
     t.magicActionReady = true;
@@ -2512,18 +2616,38 @@ export function performPcAction(
     return { rolls: [] };
   }
   if (effect.type === "utilize") {
-    const potion = t.inventory.find((id) => id === "potion_healing");
-    if (potion) {
-      const idx = t.inventory.indexOf(potion);
+    spendEconomy(t, isBonus);
+    statusEvent(combat, t, ability.name, `${t.name} utilizes an object.`);
+    refreshReachable(combat);
+    return { rolls: [] };
+  }
+  if (effect.type === "stat_drink") {
+    if (effect.consume) {
+      const item = String(effect.consume);
+      const idx = t.inventory.indexOf(item);
+      if (idx < 0) throw new Error("NO_ITEM");
       t.inventory.splice(idx, 1);
-      const healed = rollNotation("2d4+2").total;
-      t.hp = Math.min(t.maxHp, t.hp + healed);
-      spendEconomy(t, isBonus);
-      statusEvent(combat, t, ability.name, `${t.name} utilizes an object and drinks a potion (+${healed} HP).`);
-    } else {
-      spendEconomy(t, isBonus);
-      statusEvent(combat, t, ability.name, `${t.name} utilizes an object.`);
     }
+    const key = String(effect.ability ?? "str") as "str" | "dex" | "con" | "int" | "wis" | "cha";
+    const score = Number(effect.score);
+    const duration = Number(effect.durationPcTurns ?? GIANT_STRENGTH_DURATION_PC_TURNS);
+    const effective = abilityScore(t, pregen, key);
+    spendEconomy(t, isBonus);
+    if (!Number.isFinite(score) || effective >= score) {
+      statusEvent(combat, t, ability.name, `${t.name} drinks ${ability.name} — it has no effect.`);
+      refreshReachable(combat);
+      return { rolls: [] };
+    }
+    t.abilityOverride = { ...(t.abilityOverride ?? {}), [key]: score };
+    t.timedEffects = [
+      ...(t.timedEffects ?? []).filter((row) => row.spellId !== GIANT_STRENGTH_EFFECT_ID),
+      { label: ability.name, pcTurnsLeft: duration, spellId: GIANT_STRENGTH_EFFECT_ID },
+    ];
+    if (t.saves) {
+      const kitProf = t.kit?.saves.includes(key) ? (pregen?.proficiencyBonus ?? 2) : 0;
+      t.saves[key] = abilityMod(score) + kitProf + (t.gearSaveBonus ?? 0);
+    }
+    statusEvent(combat, t, ability.name, `${t.name} drinks ${ability.name} — ${key.toUpperCase()} becomes ${score}.`);
     refreshReachable(combat);
     return { rolls: [] };
   }
@@ -2564,7 +2688,7 @@ export function performPcAction(
     let notation = String(effect.dice);
     if (castId === "second_wind") notation = `1d10+${t.kit?.fighterLevel ?? pregen?.level ?? 3}`;
     if (effect.ability) {
-      const mod = abilityMod(pregen?.abilities[String(effect.ability)] ?? 10);
+      const mod = abilityMod(abilityScore(t, pregen, String(effect.ability)));
       if (/^\d+d\d+$/i.test(notation)) notation = `${notation}${mod >= 0 ? "+" : ""}${mod}`;
     }
     const rolled = rollNotation(notation);
@@ -2678,11 +2802,11 @@ export function performPcAction(
   let attackBonus = Number(atkEffect.attackBonus ?? 0);
   if (atkEffect.ability) {
     const ab = spellKey(t, pregen, String(atkEffect.ability));
-    attackBonus = abilityMod(pregen?.abilities[ab] ?? 10) + (atkEffect.proficient || atkEffect.spellAttack ? prof : 0);
+    attackBonus = abilityMod(abilityScore(t, pregen, ab)) + (atkEffect.proficient || atkEffect.spellAttack ? prof : 0);
   }
   const ranged = range > 1;
   const weaponSwing = isWeaponAttack(atkEffect);
-  const strongSwing = strengthWeapon(atkEffect, pregen);
+  const strongSwing = strengthWeapon(atkEffect, pregen, t);
   if (styleHas(t, "archery") && ranged && weaponSwing) attackBonus += 2;
   if (styleHas(t, "dueling") && !ranged && weaponSwing) attackBonus += 2;
   if (!atkEffect.spellAttack && t.channelAttack) attackBonus += t.channelAttack;
@@ -2719,6 +2843,9 @@ export function performPcAction(
       )) ||
     Boolean(target.blur) ||
     Boolean(t.sappedBy) ||
+    Boolean(target.auraAttackDisadvAgainst) ||
+    Boolean(t.auraObscured) ||
+    Boolean(target.auraObscured) ||
     (hasCondition(target, "prone") && ranged);
   const mode: D20Mode = d20Mode(advantage, disadvantage);
   let blessBonus = 0;
@@ -2759,7 +2886,7 @@ export function performPcAction(
       granted: Boolean(t.masteries?.includes("graze")),
       hit: false,
       melee: !ranged,
-      abilityMod: abilityMod(pregen?.abilities.str ?? 10),
+      abilityMod: abilityMod(abilityScore(t, pregen, "str")),
     });
     if (graze.grazeDamage > 0) applyDamage(combat, target, graze.grazeDamage, false, "slashing");
     emit(combat, {
@@ -2788,10 +2915,12 @@ export function performPcAction(
     const weaponType = dmgParts[0]?.damageType ?? "slashing";
     const preview: DamageDiePreview[] = [];
     for (const part of dmgParts) {
-      preview.push(...previewFromNotation(weaponNotation(part, pregen), part.damageType, crit));
+      preview.push(...previewFromNotation(weaponNotation(part, t, pregen), part.damageType, crit));
     }
     if (sneakOk) preview.push(...previewFromNotation(sneakNote, weaponType, crit));
-    for (const rider of magicWeapon?.onHit ?? []) preview.push(...previewFromNotation(rider.damage, rider.damageType, crit));
+    for (const rider of magicWeapon?.onHit ?? []) {
+      preview.push(...previewFromNotation(rider.damage, rider.damageType ?? weaponType, crit));
+    }
     if (target.brand?.by === t.id) preview.push(...previewFromNotation(target.brand.dice, weaponType, crit));
     combat.damagePreview = preview;
     emit(combat, {
@@ -2822,7 +2951,7 @@ export function performPcAction(
     dmgTotal += pushPartDamage(
       rolls,
       t.name,
-      weaponNotation(part, pregen),
+      weaponNotation(part, t, pregen),
       part.damageType,
       `${part.damageType} damage`,
       crit,
@@ -2835,7 +2964,8 @@ export function performPcAction(
     dmgTotal += pushPartDamage(rolls, t.name, sneakNote, weaponType, "sneak attack", crit);
   }
   for (const rider of magicWeapon?.onHit ?? []) {
-    dmgTotal += pushPartDamage(rolls, t.name, rider.damage, rider.damageType, `${rider.damageType} damage`, crit);
+    const riderType = rider.damageType ?? weaponType;
+    dmgTotal += pushPartDamage(rolls, t.name, rider.damage, riderType, `${riderType} damage`, crit);
   }
 
   const onHit = (atkEffect.onHit as Array<{ condition?: string }> | undefined) ?? [];
@@ -2863,7 +2993,7 @@ export function performPcAction(
     t.nickNext = false;
     t.nickMod = 0;
   }
-  const riderDie = classDamageRider(t, pregen?.level ?? t.level ?? 1, pregen?.abilities ?? {}, {
+  const riderDie = classDamageRider(t, pregen?.level ?? t.level ?? 1, liveAbilities(t, pregen), {
     weapon: weaponSwing,
     cantrip: Boolean(atkEffect.spellAttack) && level === 0,
     spell: Boolean(atkEffect.spellAttack),
@@ -2873,7 +3003,7 @@ export function performPcAction(
   if (riderDie?.dice) dmgTotal += pushPartDamage(rolls, t.name, riderDie.dice, riderDie.type, riderDie.type, crit);
   if (riderDie?.flat) dmgTotal += riderDie.flat;
   if (stunOnHit(t)) {
-    const dc = 8 + prof + abilityMod(pregen?.abilities.wis ?? 10);
+    const dc = 8 + prof + abilityMod(abilityScore(t, pregen, "wis"));
     const { roll: saveRoll, ok } = creatureSave(target, "con", dc, false);
     rolls.push(saveRoll);
     if (!ok) addCondition(target, "stunned");
@@ -2923,8 +3053,8 @@ export function performPcAction(
       t.nickNext = true;
       t.attacksLeft = (t.attacksLeft ?? 0) + 1;
       if (styleHas(t, "two_weapon_fighting")) {
-        const key = strengthWeapon(atkEffect, pregen) ? "str" : "dex";
-        t.nickMod = abilityMod(pregen?.abilities[key] ?? 10);
+        const key = strengthWeapon(atkEffect, pregen, t) ? "str" : "dex";
+        t.nickMod = abilityMod(abilityScore(t, pregen, key));
       }
     }
   }
@@ -2985,7 +3115,7 @@ export function performPcAction(
       : `${t.name} hits ${target.name} with ${ability.name}: ${attackRoll.total} vs AC ${effectiveAc(target)}, ${dmgTotal} damage.`,
   });
   applyDamage(combat, target, dmgTotal, crit, dtype);
-  if (target.hp <= 0) onKillBlessing(t, pregen?.abilities ?? {}, pregen?.level ?? t.level ?? 1);
+  if (target.hp <= 0) onKillBlessing(t, liveAbilities(t, pregen), pregen?.level ?? t.level ?? 1);
   if (hasFeature(t, "boon_of_dimensional_travel")) grantFreeMove(t, 6);
   if (combat.status === "active") offerRetaliation(combat, t, target);
   checkEnd(combat);
@@ -3031,7 +3161,7 @@ function castSaveArea(
   });
   const dmgSpec = (effect.damage as Array<{ dice: string; damageType: string }>)[0];
   const rolled = rollNotation(dmgSpec.dice);
-  const dc = pcSpellDc(pregen, spellKey(t, pregen, String(effect.dcFrom ?? "int")));
+  const dc = pcSpellDc(t, pregen, spellKey(t, pregen, String(effect.dcFrom ?? "int")));
   const saveKey = String(effect.ability ?? "dex");
   const rolls: DiceRoll[] = [
     makeDiceRoll({
@@ -3165,7 +3295,7 @@ function spendEconomy(t: CombatToken, bonus: boolean, opts: { attack?: boolean }
 }
 
 function effectiveAc(token: CombatToken): number {
-  return Math.max(token.ac, token.acFloor ?? 0) + (token.acBonus ?? 0);
+  return Math.max(token.ac, token.acFloor ?? 0) + (token.acBonus ?? 0) + (token.auraAc ?? 0);
 }
 
 function offerDamageDefense(
@@ -3213,6 +3343,18 @@ function tickGlobalTimedEffects(combat: CombatState): void {
     const ended = token.timedEffects.filter((row) => row.pcTurnsLeft === 1);
     token.timedEffects = next.length ? next : undefined;
     for (const row of ended) {
+      if (row.spellId === GIANT_STRENGTH_EFFECT_ID) {
+        const nextOverride = { ...(token.abilityOverride ?? {}) };
+        delete nextOverride.str;
+        token.abilityOverride = Object.keys(nextOverride).length ? nextOverride : undefined;
+        const pregen = token.characterId ? getPregen(token.characterId) : undefined;
+        if (token.saves && pregen) {
+          const kitProf = token.kit?.saves.includes("str") ? (pregen.proficiencyBonus ?? 2) : 0;
+          token.saves.str = abilityMod(pregen.abilities.str ?? 10) + kitProf + (token.gearSaveBonus ?? 0);
+        }
+        statusEvent(combat, token, row.label, `${row.label} ends on ${token.name}.`);
+        continue;
+      }
       if (row.spellId === "wild_shape" && token.wildShaped) {
         try {
           statusEvent(combat, token, row.label, endWildShape(token));
@@ -3321,9 +3463,7 @@ function concentrationCheck(combat: CombatState, token: CombatToken, damage: num
   const focus = token.concentrating;
   if (!focus) return;
   if (hasFeature(token, "relentless_hunter") && /hunter/.test(focus.spellId)) return;
-  const pregen = token.characterId ? getPregen(token.characterId) : undefined;
-  const proficient = (pregen as { savingThrows?: string[] } | undefined)?.savingThrows?.includes("con");
-  const bonus = abilityMod(pregen?.abilities.con ?? 10) + (proficient ? pregen?.proficiencyBonus ?? 2 : 0);
+  const bonus = saveBonus(token, "con") + (token.auraBonus ?? 0);
   const dc = Math.max(10, Math.floor(damage / 2));
   const roll = rollCheck({
     roller: token.name,
@@ -3420,13 +3560,15 @@ function holdForShield(
 
 function resolveDeathSave(combat: CombatState, token: CombatToken): void {
   const face = rollD20();
+  const extra = (token.gearSaveBonus ?? 0) + (token.auraBonus ?? 0);
+  const total = face + extra;
   const roll = makeDiceRoll({
     roller: token.name,
-    notation: "1d20",
+    notation: extra ? `1d20${extra >= 0 ? "+" : ""}${extra}` : "1d20",
     values: [face],
     sides: [20],
-    modifier: 0,
-    total: face,
+    modifier: extra,
+    total,
     purpose: "save",
     label: "Death save",
   });
@@ -3440,7 +3582,7 @@ function resolveDeathSave(combat: CombatState, token: CombatToken): void {
     return;
   }
   if (face === 1) token.deathFailures = (token.deathFailures ?? 0) + 2;
-  else if (face >= 10) token.deathSuccesses = (token.deathSuccesses ?? 0) + 1;
+  else if (total >= 10) token.deathSuccesses = (token.deathSuccesses ?? 0) + 1;
   else token.deathFailures = (token.deathFailures ?? 0) + 1;
   if ((token.deathFailures ?? 0) >= 3) {
     statusEvent(combat, token, "Death save", `${token.name} fails the last death save.`, [roll]);
@@ -3575,6 +3717,8 @@ function finishMove(combat: CombatState, mover: CombatToken, path: Cell[], cost:
     path,
     line: `${mover.name} moves ${cost * 5} ft.`,
   });
+  refreshAuras(combat);
+  tickAuraEnter(combat, mover);
 }
 
 function commitMove(combat: CombatState, mover: CombatToken, path: Cell[], cost: number): void {
@@ -3669,7 +3813,7 @@ function resolveSpellAttack(
   demandShot(combat, attacker, target);
   const key = spellKey(attacker, pregen, String(effect.ability ?? "str"));
   const prof = pregen?.proficiencyBonus ?? 2;
-  const bonus = abilityMod(pregen?.abilities[key] ?? 10) + (effect.spellAttack || effect.proficient ? prof : 0);
+  const bonus = abilityMod(abilityScore(attacker, pregen, key)) + (effect.spellAttack || effect.proficient ? prof : 0);
   const roll = rollAttack({
     roller: attacker.name,
     label: `${name} vs ${target.name}`,
@@ -3775,7 +3919,7 @@ export function buildPcSheet(
   actionMenu: { actions: MenuAction[]; bonusActions: MenuAction[] } | null,
 ) {
   const pregen = token.characterId ? getPregen(token.characterId) : undefined;
-  const abs = pregen?.abilities ?? { str: 10, dex: 10, con: 10, int: 10, wis: 10, cha: 10 };
+  const abs = liveAbilities(token, pregen);
   const prof = pregen?.proficiencyBonus ?? 2;
   const skilled = (pregen as { skills?: string[] }).skills ?? [];
   const wisMod = abilityMod(abs.wis ?? 10);
@@ -4089,7 +4233,7 @@ export function resolveReaction(combat: CombatState, playerId: string, accept: b
       if (pending.kind === "uncanny_dodge") harm = Math.floor(harm / 2);
       else {
         const pregen = target.characterId ? getPregen(target.characterId) : undefined;
-        const reduce = rollNotation("1d10").total + abilityMod(pregen?.abilities.dex ?? 10) + (target.level ?? pregen?.level ?? 1);
+        const reduce = rollNotation("1d10").total + abilityMod(abilityScore(target, pregen, "dex")) + (target.level ?? pregen?.level ?? 1);
         harm = Math.max(0, harm - reduce);
       }
     }

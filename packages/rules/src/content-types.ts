@@ -39,13 +39,37 @@ export type ItemRules = {
     | { kind: "ac_bonus"; amount: number }
     | { kind: "attack_bonus"; amount: number }
     | { kind: "damage_bonus"; amount: number; damageType?: string }
-    | { kind: "on_hit_rider"; damage: string; damageType: string }
+    | { kind: "on_hit_rider"; damage: string; damageType?: string }
     | { kind: "resistance"; damageType: string }
     | { kind: "immunity"; damageType: string }
     | { kind: "grant_spell"; spellId: string }
     | { kind: "grant_feature"; featureId: string }
     | { kind: "stat_set"; ability: AbilityKey; score: number }
+    | { kind: "stat_drink"; ability: AbilityKey; score: number; durationPcTurns?: number }
     | { kind: "stat_increase_cap"; ability: AbilityKey; cap: number }
+    | { kind: "save_bonus"; amount: number }
+    | { kind: "heal_drink"; dice: string }
+    | {
+        kind: "grant_aura" | "plant_aura";
+        radiusCells: number;
+        filter: "ally" | "enemy" | "all";
+        excludeSource?: boolean;
+        creatureTypes?: string[];
+        ac?: number;
+        saves?: number;
+        stealth?: number;
+        saveAdv?: "all" | "vs_magic";
+        attackDisadvAgainst?: boolean;
+        resistances?: string[];
+        speedMult?: number;
+        strip?: Array<"frightened" | "charmed">;
+        heavilyObscured?: boolean;
+        difficultTerrainFor?: "enemy";
+        onStartTurn?: { dice?: string; damageType?: string; heal?: number; saveAbility?: AbilityKey; saveDc?: number };
+        onEnterOrEndTurn?: { dice?: string; damageType?: string; heal?: number; saveAbility?: AbilityKey; saveDc?: number };
+        blocksMovement?: boolean;
+        blocksSpellsFromOutside?: boolean;
+      }
   >;
 };
 

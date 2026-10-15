@@ -8,6 +8,8 @@ import { buildKit, type ClassKit, type KitClass } from "./class-kit.js";
 import { classMenus, onClassLongRest, onClassShortRest, seedClassResources } from "./class-runtime.js";
 import { wildShapeForm } from "./wild-shape-forms.js";
 import type { GearSheet } from "./hero-pregen.js";
+import { HEALING_POTIONS } from "./healing-potions.js";
+import { GIANT_STRENGTH_POTIONS } from "./giant-strength-potions.js";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const catalog = JSON.parse(
@@ -221,6 +223,15 @@ export function initSheet(token: CombatToken, pregen: Pregen, saved?: Vitals): v
     token.gearSpells = { ...gear.granted };
     token.gearCharges = { ...gear.charges };
     token.grantedSpells = Object.keys(gear.granted);
+    token.gearSaveBonus = gear.saveBonus;
+    if (gear.saveBonus) {
+      for (const key of Object.keys(token.saves ?? {})) {
+        token.saves![key] = (token.saves![key] ?? 0) + gear.saveBonus;
+      }
+    }
+    token.followAuras = [...gear.followAuras];
+    token.plantAuras = [...gear.plantAuras];
+    if (gear.plantAuras.length) token.abilityUses = { ...(token.abilityUses ?? {}), rod_plant: 1 };
   }
   if (token.baseMaxHp == null) token.baseMaxHp = token.maxHp;
   const exhaustTier = clampExhaustion(token.exhaustionLevel ?? 0);
@@ -277,18 +288,24 @@ export function splitVariant(id: string): { variant?: AttackVariant; id: string 
 }
 
 /** Strength drives the swing: Strength weapons, and Finesse weapons when Strength is the higher score. */
-export function strengthWeapon(effect: Record<string, unknown> | undefined, pregen: Pregen | undefined): boolean {
+export function strengthWeapon(
+  effect: Record<string, unknown> | undefined,
+  pregen: Pregen | undefined,
+  token?: CombatToken,
+): boolean {
   if (!effect || effect.type !== "attack" || effect.spellAttack) return false;
   if (Number(effect.rangeCells ?? 1) > 1) return false;
   if (effect.ability === "str") return true;
-  return effect.ability === "finesse" && (pregen?.abilities.str ?? 10) >= (pregen?.abilities.dex ?? 10);
+  const str = token?.abilityOverride?.str ?? pregen?.abilities.str ?? 10;
+  const dex = token?.abilityOverride?.dex ?? pregen?.abilities.dex ?? 10;
+  return effect.ability === "finesse" && str >= dex;
 }
 
 function attackVariants(token: CombatToken, pregen: Pregen | undefined, id: string, lookup: Lookup): string[] {
   const effect = lookup(id)?.effects[0];
   if (!effect || effect.type !== "attack" || effect.spellAttack) return [];
   const has = (flag: string) => Boolean(token.features?.includes(flag));
-  const strong = strengthWeapon(effect, pregen);
+  const strong = strengthWeapon(effect, pregen, token);
   const firstRoll = !token.rolledAttack;
   const out: string[] = [];
   if (has("reckless_attack") && strong && !token.reckless && firstRoll) out.push(`reckless:${id}`);
@@ -350,12 +367,21 @@ export function refreshMenus(token: CombatToken, pregen: Pregen | undefined, loo
     for (const variant of attackVariants(token, pregen, weaponId(name), lookup)) pushUnique(actions, variant);
   }
   for (const id of STANDARD) place(id);
-  if (token.inventory.includes("potion_healing")) place("use_potion_healing");
+  for (const potion of HEALING_POTIONS) {
+    if (token.inventory.includes(potion.inventoryToken)) place(potion.abilityId);
+  }
+  for (const potion of GIANT_STRENGTH_POTIONS) {
+    if (token.inventory.includes(potion.inventoryToken)) place(potion.abilityId);
+  }
   for (const id of token.cantrips ?? []) place(id);
   for (const id of token.spells ?? []) place(id);
   for (const id of token.grantedSpells ?? []) {
     const pool = token.gearSpells?.[id];
     if (pool && (token.gearCharges?.[pool] ?? 0) > 0) place(id, true);
+  }
+  if ((token.plantAuras ?? []).length) {
+    place("rod_plant");
+    place("rod_pull");
   }
 
   const cls = pregen?.class;
