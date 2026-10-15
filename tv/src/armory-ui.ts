@@ -11,6 +11,7 @@ type StashRow = {
   itemDefId: string;
   equippedBy: string | null;
   attunedBy: string | null;
+  boundToHeroId?: string | null;
   inUseBy?: string;
 };
 
@@ -71,6 +72,32 @@ function itemActions(item: StashRow): string {
   return parts.join("");
 }
 
+function visibleForHero(item: StashRow): boolean {
+  if (!item.boundToHeroId) return true;
+  return item.boundToHeroId === heroId;
+}
+
+function renderItemList(items: StashRow[]): string {
+  if (!items.length) return `<li class="meta">Nothing here.</li>`;
+  return items
+    .map((item) => {
+      const status = item.equippedBy === heroId
+        ? "Equipped"
+        : item.inUseBy
+          ? `On ${item.inUseBy}`
+          : item.attunedBy === heroId
+            ? "Attuned"
+            : item.boundToHeroId
+              ? "Personal gear"
+              : "Shared stash";
+      return `<li class="armory-item">
+        <span class="armory-item-name"><strong>${esc(item.name)}</strong><em>${esc(status)}</em></span>
+        <span class="armory-item-actions">${itemActions(item)}</span>
+      </li>`;
+    })
+    .join("");
+}
+
 function paint(): void {
   if (!overlay) return;
   const hero = heroes.find((h) => h.id === heroId);
@@ -85,28 +112,20 @@ function paint(): void {
       : hero
         ? `<p class="meta"><strong>${esc(hero.name)}</strong> · level ${hero.level}</p>`
         : `<p class="meta">Forge a hero to equip gear.</p>`;
-  const rows =
-    stash.length && heroId
-      ? stash
-          .map((item) => {
-            const status = item.equippedBy === heroId
-              ? "Equipped"
-              : item.inUseBy
-                ? `On ${item.inUseBy}`
-                : item.attunedBy === heroId
-                  ? "Attuned"
-                  : "In stash";
-            return `<li class="armory-item">
-              <span class="armory-item-name"><strong>${esc(item.name)}</strong><em>${esc(status)}</em></span>
-              <span class="armory-item-actions">${itemActions(item)}</span>
-            </li>`;
-          })
-          .join("")
-      : `<li class="meta">${heroId ? "Stash is empty." : "No hero selected."}</li>`;
+  const visible = heroId ? stash.filter(visibleForHero) : [];
+  const personal = visible.filter((i) => i.boundToHeroId === heroId);
+  const shared = visible.filter((i) => !i.boundToHeroId);
+  const body =
+    !heroId
+      ? `<li class="meta">No hero selected.</li>`
+      : !visible.length
+        ? `<li class="meta">No gear for this hero yet.</li>`
+        : `${personal.length ? `<h3 class="armory-section">Starting kit</h3><ul class="armory-list">${renderItemList(personal)}</ul>` : ""}
+           ${shared.length ? `<h3 class="armory-section">Shared stash</h3><ul class="armory-list">${renderItemList(shared)}</ul>` : ""}`;
   overlay.querySelector("#armoryBody")!.innerHTML = `
-    <p class="meta">${gold} gold · ${stash.length} item${stash.length === 1 ? "" : "s"}</p>
+    <p class="meta">${gold} gold · ${visible.length} item${visible.length === 1 ? "" : "s"} for this hero</p>
     ${heroPick}
-    <ul class="armory-list">${rows}</ul>
+    ${body}
     ${opts.inCombat ? `<p class="meta">Some changes are blocked during combat.</p>` : ""}`;
   wireBody();
 }
@@ -178,7 +197,7 @@ export async function openArmory(options: ArmoryOptions = {}): Promise<void> {
       <div class="modal-card">
         <p class="modal-kicker">Your account</p>
         <h2>Armory &amp; stash</h2>
-        <p class="meta">Equip starting gear and loot. Changes apply to the hero you pick below.</p>
+        <p class="meta">Starter kits are per hero; loot and shop items are shared. Pick who you are equipping below.</p>
         <div id="armoryBody"></div>
         <div class="row modal-actions">
           <button type="button" class="primary" id="armoryClose" data-autofocus>Back</button>

@@ -7,7 +7,7 @@ import { mountAccountRoutes, mountAdminRoutes } from "../src/local/admin-http.js
 import { mountAdminPortalRoutes } from "../src/local/admin-portal-http.js";
 import { mountV2Routes } from "../src/local/v2-http.js";
 import { setContentEnabled } from "../src/local/content-catalog.js";
-import { createHero, deleteHero, equip, listHeroes, stashView, wallet } from "../src/local/hero.js";
+import { createHero, deleteHero, equip, listHeroes, stashView, unequip, wallet } from "../src/local/hero.js";
 import { rollLoot } from "../src/local/loot.js";
 import { vendorStock } from "../src/local/vendor.js";
 import { STRATEGIES } from "../../tools/srd-parser/src/strategies.ts";
@@ -115,10 +115,13 @@ test("a hero starts with no gold, a locked stash, and a level that waits until t
   const stash = stashView(player.id);
   assert.equal(stash.length, 1);
   const other = createHero(player.id, { ...heroBase, name: "Torin Vale", classId: "fighter" });
-  assert.throws(() => equip(player.id, other.id, stash[0]!.id), /ITEM_IN_USE_BY_HERO/);
+  assert.throws(() => equip(player.id, other.id, stash[0]!.id), /ITEM_BOUND_TO_HERO/);
+  unequip(player.id, hero.id, stash[0]!.id);
+  assert.throws(() => equip(player.id, other.id, stash[0]!.id), /ITEM_BOUND_TO_HERO/);
+  assert.equal(stashView(player.id)[0]?.boundToHeroId, hero.id);
   deleteHero(player.id, hero.id);
   assert.equal(listHeroes(player.id).some((row) => row.id === hero.id), false);
-  assert.equal(stashView(player.id)[0]?.equippedBy, null);
+  assert.equal(stashView(player.id).some((row) => row.id === stash[0]!.id), false);
   const drop = rollLoot({ userId: player.id, mode: "ranked", level: 1, opponentLevel: 1, won: true, rng: () => 0 });
   assert.equal(drop.overTier, true);
 

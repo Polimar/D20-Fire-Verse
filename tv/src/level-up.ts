@@ -37,7 +37,7 @@ export function readLevelChoice(root: ParentNode): LevelChoice {
 export function gearStepHtml(): string {
   return `<section class="admin-block" id="gearStep">
     <h3>Gear</h3>
-    <p class="meta">The class pack starts in your stash. Equip it here or on the phone. Preset slots are free.</p>
+    <p class="meta">This hero's starter gear is personal to them. Shared stash holds loot and purchases. Preset slots are free.</p>
     <button type="button" id="gearPreset">Save preset</button>
   </section>`;
 }

@@ -326,6 +326,10 @@ const ERROR_TEXT: Record<string, string> = {
 /** Player-facing sentence for a server error code. Never shows a raw code. */
 export function describeError(code: string | undefined | null): string {
   if (!code) return "Something went wrong at the table. Try again.";
+  const bound = code.match(/^ITEM_BOUND_TO_HERO:(.+)$/);
+  if (bound) return `That gear belongs to ${bound[1]}. Only they can equip it.`;
+  const inUse = code.match(/^ITEM_IN_USE_BY_HERO:(.+)$/);
+  if (inUse) return `${inUse[1]} already has that item equipped.`;
   const known = ERROR_TEXT[code] ?? ERROR_TEXT[code.split(":")[0]!];
   if (known) return known;
   const need = code.match(/^NEED_(\d+)_(CLASS_SKILLS|CANTRIPS|SPELLS)$/);

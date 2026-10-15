@@ -31,6 +31,7 @@ import { classLevelCap } from "./coverage.js";
 import { recordEvent } from "./events.js";
 import { CONTENT_ROOT, DATA_DIR } from "./paths.js";
 import { resolveHeroId } from "./hero-redirect.js";
+import { insertStashItem } from "./stash-mut.js";
 
 type Ability = "str" | "dex" | "con" | "int" | "wis" | "cha";
 const ABILITIES: Ability[] = ["str", "dex", "con", "int", "wis", "cha"];
@@ -67,6 +68,8 @@ type StashRow = {
   itemDefId: string;
   equippedBy: string | null;
   attunedBy: string | null;
+  /** NULL = shared account stash (loot, vendor). Set = builder / class starter gear for one hero. */
+  boundToHeroId: string | null;
 };
 
 const CLASS_PACK: Record<string, string> = {
@@ -304,7 +307,7 @@ export function createHero(userId: string, input: {
     );
   ensureWallet(userId);
   const packId = CLASS_PACK[cls.id];
-  if (packId) giveItem(userId, packId, heroId);
+  if (packId) giveItem(userId, packId, { equipOn: heroId, boundHeroId: heroId });
   const hero = getHero(heroId);
   if (!hero) throw new Error("BAD_CHARACTER");
   const opened = firstLevel(blankProgress(toRules(hero), progressionCatalog()), progressionCatalog());
@@ -316,13 +319,12 @@ export function createHero(userId: string, input: {
   return getHero(heroId) ?? hero;
 }
 
-function giveItem(userId: string, itemDefId: string, equipOn?: string): string {
-  const instance = id("item");
-  accountDb()
-    .prepare(
-      "INSERT INTO account_stash (id, user_id, item_def_id, item_instance_data_json, acquired_at) VALUES (?, ?, ?, '{}', ?)",
-    )
-    .run(instance, userId, itemDefId, new Date().toISOString());
+function giveItem(userId: string, itemDefId: string, opts?: { equipOn?: string; boundHeroId?: string | null }): string {
+  const instance = insertStashItem(userId, itemDefId, {
+    instanceId: id("item"),
+    boundHeroId: opts?.boundHeroId ?? opts?.equipOn ?? null,
+  });
+  const equipOn = opts?.equipOn;
   if (equipOn) {
     try {
       equip(userId, equipOn, instance);
@@ -335,14 +337,24 @@ function giveItem(userId: string, itemDefId: string, equipOn?: string): string {
 
 export function listStash(userId: string): StashRow[] {
   const rows = accountDb()
-    .prepare("SELECT id, user_id, item_def_id, equipped_by_hero_id, attuned_by_hero_id FROM account_stash WHERE user_id = ?")
-    .all(userId) as Array<{ id: string; user_id: string; item_def_id: string; equipped_by_hero_id: string | null; attuned_by_hero_id: string | null }>;
+    .prepare(
+      "SELECT id, user_id, item_def_id, equipped_by_hero_id, attuned_by_hero_id, bound_hero_id FROM account_stash WHERE user_id = ?",
+    )
+    .all(userId) as Array<{
+    id: string;
+    user_id: string;
+    item_def_id: string;
+    equipped_by_hero_id: string | null;
+    attuned_by_hero_id: string | null;
+    bound_hero_id: string | null;
+  }>;
   return rows.map((row) => ({
     id: row.id,
     userId: row.user_id,
     itemDefId: row.item_def_id,
     equippedBy: row.equipped_by_hero_id,
     attunedBy: row.attuned_by_hero_id,
+    boundToHeroId: row.bound_hero_id,
   }));
 }
 
@@ -351,12 +363,14 @@ export function stashView(userId: string): Array<StashRow & { name: string; inUs
   return (accountDb().prepare("SELECT * FROM account_stash WHERE user_id = ?").all(userId) as Array<Record<string, unknown>>).map((row) => {
     const equippedBy = row.equipped_by_hero_id == null ? null : String(row.equipped_by_hero_id);
     const def = enabledItems().find((item) => item.id === String(row.item_def_id));
+    const boundToHeroId = row.bound_hero_id == null ? null : String(row.bound_hero_id);
     return {
       id: String(row.id),
       userId,
       itemDefId: String(row.item_def_id),
       equippedBy,
       attunedBy: row.attuned_by_hero_id == null ? null : String(row.attuned_by_hero_id),
+      boundToHeroId,
       name: def?.name ?? String(row.item_def_id),
       ...(equippedBy ? { inUseBy: heroes.get(equippedBy) ?? equippedBy } : {}),
     };
@@ -408,6 +422,11 @@ export function equip(userId: string, heroId: string, instanceId: string, inComb
   const hero = ownHero(userId, heroId);
   const row = accountDb().prepare("SELECT * FROM account_stash WHERE id = ? AND user_id = ?").get(instanceId, userId) as Record<string, unknown> | undefined;
   if (!row) throw new Error("NO_ITEM");
+  const bound = row.bound_hero_id == null ? null : String(row.bound_hero_id);
+  if (bound && bound !== heroId) {
+    const owner = getHero(bound);
+    throw new Error(`ITEM_BOUND_TO_HERO:${owner?.name ?? "another hero"}`);
+  }
   if (row.equipped_by_hero_id && String(row.equipped_by_hero_id) !== heroId) {
     const other = getHero(String(row.equipped_by_hero_id));
     throw new Error(`ITEM_IN_USE_BY_HERO:${other?.name ?? "another hero"}`);
@@ -470,6 +489,7 @@ export function toggleAttune(userId: string, heroId: string, instanceId: string,
 
 export function deleteHero(userId: string, heroId: string): void {
   ownHero(userId, heroId);
+  accountDb().prepare("DELETE FROM account_stash WHERE bound_hero_id = ?").run(heroId);
   accountDb().prepare("UPDATE account_stash SET equipped_by_hero_id = NULL, attuned_by_hero_id = NULL WHERE equipped_by_hero_id = ? OR attuned_by_hero_id = ?").run(heroId, heroId);
   accountDb().prepare("DELETE FROM hero_milestones WHERE hero_id = ?").run(heroId);
   accountDb().prepare("UPDATE heroes SET deleted_at = ? WHERE id = ?").run(new Date().toISOString(), heroId);

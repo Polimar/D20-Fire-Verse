@@ -98,6 +98,8 @@ test("builder commit creates hero and stash", async () => {
   const heroes = listHeroes(player.id);
   assert.equal(heroes.length, 1);
   assert.ok(heroes[0]!.id.startsWith("hero_"));
-  assert.ok(stashView(player.id).length >= 1);
+  const bag = stashView(player.id);
+  assert.ok(bag.length >= 1);
+  assert.ok(bag.every((row) => row.boundToHeroId === heroes[0]!.id));
   server.close();
 });

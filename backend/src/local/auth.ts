@@ -9,6 +9,7 @@ import path from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import { confirmationLetter, sendMail } from "./mail.js";
 import { DATA_DIR } from "./paths.js";
+import { backfillStarterItemBindings } from "./stash-backfill.js";
 
 export type Role = "admin" | "player";
 
@@ -221,6 +222,7 @@ function ensureProgressTables(databaseHandle: DatabaseSync): void {
       item_instance_data_json TEXT NOT NULL DEFAULT '{}',
       equipped_by_hero_id TEXT,
       attuned_by_hero_id TEXT,
+      bound_hero_id TEXT,
       acquired_at TEXT NOT NULL
     );
     CREATE TABLE IF NOT EXISTS hero_milestones (
@@ -342,6 +344,11 @@ function ensureProgressTables(databaseHandle: DatabaseSync): void {
   if (!heroCols.has("spellbook_json")) databaseHandle.exec("ALTER TABLE heroes ADD COLUMN spellbook_json TEXT NOT NULL DEFAULT '[]'");
   if (!heroCols.has("builder_meta_json")) databaseHandle.exec("ALTER TABLE heroes ADD COLUMN builder_meta_json TEXT NOT NULL DEFAULT '{}'");
   if (!heroCols.has("languages_json")) databaseHandle.exec("ALTER TABLE heroes ADD COLUMN languages_json TEXT NOT NULL DEFAULT '[]'");
+  const stashCols = new Set(
+    (databaseHandle.prepare("PRAGMA table_info(account_stash)").all() as Array<{ name: string }>).map((column) => column.name),
+  );
+  if (!stashCols.has("bound_hero_id")) databaseHandle.exec("ALTER TABLE account_stash ADD COLUMN bound_hero_id TEXT");
+  backfillStarterItemBindings(databaseHandle);
 }
 
 export type LoginResult =

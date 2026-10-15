@@ -13,17 +13,14 @@ import {
   resolveBackgroundStarter,
   resolveClassStarter,
 } from "./starter-equipment.js";
+import { insertStashItem } from "./stash-mut.js";
 
 function id(prefix: string): string {
   return `${prefix}_${randomBytes(8).toString("hex")}`;
 }
 
-function giveStash(userId: string, itemDefId: string): void {
-  accountDb()
-    .prepare(
-      "INSERT INTO account_stash (id, user_id, item_def_id, item_instance_data_json, acquired_at) VALUES (?, ?, ?, '{}', ?)",
-    )
-    .run(id("item"), userId, itemDefId, new Date().toISOString());
+function giveHeroStarterItem(userId: string, heroId: string, itemDefId: string): void {
+  insertStashItem(userId, itemDefId, { instanceId: id("item"), boundHeroId: heroId });
 }
 
 export function commitBuilderDraft(user: SessionUser, draft: BuilderDraft): HeroRow {
@@ -89,12 +86,12 @@ export function commitBuilderDraft(user: SessionUser, draft: BuilderDraft): Hero
 
   const classPick = resolveClassStarter(draft.classId, draft.equipChoice ?? "A");
   if (classPick) {
-    for (const itemId of filterGrantableItems(classPick.items)) giveStash(user.id, itemId);
+    for (const itemId of filterGrantableItems(classPick.items)) giveHeroStarterItem(user.id, heroId, itemId);
     if (classPick.gold > 0) creditGold(user.id, classPick.gold);
   }
   const bgPick = resolveBackgroundStarter(draft.backgroundId, draft.backgroundEquipChoice ?? "A");
   if (bgPick) {
-    for (const itemId of filterGrantableItems(bgPick.items)) giveStash(user.id, itemId);
+    for (const itemId of filterGrantableItems(bgPick.items)) giveHeroStarterItem(user.id, heroId, itemId);
     if (bgPick.gold > 0) creditGold(user.id, bgPick.gold);
   }
 

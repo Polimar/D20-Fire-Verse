@@ -173,7 +173,16 @@ export function mountPocket(host: HTMLElement, adopt: (key: string) => void, sca
   const openArmory = async () => {
     const [heroesBody, stashBody, shop] = await Promise.all([
       api<{ heroes: Array<{ id: string; name: string; level: number; xp: number; classes: Array<{ id: string; level: number }> }> }>("/api/heroes"),
-      api<{ stash: Array<{ id: string; name: string; inUseBy?: string; itemDefId: string; equippedBy?: string | null }> }>("/api/stash"),
+      api<{
+        stash: Array<{
+          id: string;
+          name: string;
+          inUseBy?: string;
+          itemDefId: string;
+          equippedBy?: string | null;
+          boundToHeroId?: string | null;
+        }>;
+      }>("/api/stash"),
       api<{ payToWin: string; slots: Array<{ itemId: string; name: string; priceGold: number }> }>("/api/vendor"),
     ]);
     if (!armoryHeroId || !heroesBody.heroes.some((h) => h.id === armoryHeroId)) armoryHeroId = heroesBody.heroes[0]?.id ?? "";
@@ -182,19 +191,31 @@ export function mountPocket(host: HTMLElement, adopt: (key: string) => void, sca
       heroesBody.heroes.length > 1
         ? `<label class="meta">Equip for <select id="armHero">${heroesBody.heroes.map((h) => `<option value="${esc(h.id)}" ${h.id === armoryHeroId ? "selected" : ""}>${esc(h.name)}</option>`).join("")}</select></label>`
         : "";
+    const visible = hero
+      ? stashBody.stash.filter((item) => !item.boundToHeroId || item.boundToHeroId === hero.id)
+      : [];
+    const renderRow = (item: (typeof stashBody.stash)[0]) => {
+      const onHero = hero && item.equippedBy === hero.id;
+      const busy = item.inUseBy && !onHero;
+      const tag = item.boundToHeroId ? " · personal" : item.inUseBy ? (onHero ? " · equipped" : ` · on ${item.inUseBy}`) : " · shared";
+      return `<li>${esc(item.name)}${tag}
+          ${hero && !busy && !onHero ? `<button type="button" data-equip="${esc(item.id)}">Equip</button>` : ""}
+          ${onHero ? `<button type="button" data-unequip="${esc(item.id)}">Unequip</button>` : ""}</li>`;
+    };
+    const personal = visible.filter((i) => i.boundToHeroId === hero?.id);
+    const shared = visible.filter((i) => !i.boundToHeroId);
+    const list =
+      visible.length === 0
+        ? "<li class='meta'>No gear for this hero.</li>"
+        : `${personal.length ? `<h3>Starting kit</h3><ul class="sheet-list">${personal.map(renderRow).join("")}</ul>` : ""}
+           ${shared.length ? `<h3>Shared stash</h3><ul class="sheet-list">${shared.map(renderRow).join("")}</ul>` : ""}`;
     card().innerHTML = `
       <h2>Armory</h2>
       <p class="meta">${esc(shop.payToWin)}</p>
       ${heroPick}
       ${hero ? `<p><strong>${esc(hero.name)}</strong> level ${hero.level} · XP ${hero.xp}</p>
         <button type="button" class="primary" id="armLevel">Level up</button>` : `<p class="meta">Forge a V2 hero from the web content list once a class is enabled.</p>`}
-      <ul class="sheet-list">${stashBody.stash.map((item) => {
-        const onHero = hero && item.equippedBy === hero.id;
-        const busy = item.inUseBy && !onHero;
-        return `<li>${esc(item.name)}${item.inUseBy ? ` · ${onHero ? "Equipped" : `On ${esc(item.inUseBy)}`}` : ""}
-          ${hero && !busy && !onHero ? `<button type="button" data-equip="${esc(item.id)}">Equip</button>` : ""}
-          ${onHero ? `<button type="button" data-unequip="${esc(item.id)}">Unequip</button>` : ""}</li>`;
-      }).join("") || "<li class='meta'>Stash is empty</li>"}</ul>
+      ${list}
       <h3>Today's shop</h3>
       <ul class="sheet-list">${shop.slots.map((slot) => `<li>${esc(slot.name)} · ${slot.priceGold} gold <button type="button" data-buy="${esc(slot.itemId)}">Buy</button></li>`).join("") || "<li class='meta'>Nothing enabled for sale</li>"}</ul>
       <button type="button" class="ghost" id="armBack">Back</button>`;

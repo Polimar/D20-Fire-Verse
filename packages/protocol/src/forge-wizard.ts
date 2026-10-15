@@ -428,7 +428,7 @@ export async function mountForgeWizard(host: HTMLElement, opts: ForgeWizardOptio
         <label class="hw-field">About <textarea id="hwAbout" maxlength="240" rows="3">${esc(draft.about ?? "")}</textarea></label>
         <label class="hw-field">Languages <input id="hwLang" value="${esc((draft.languages ?? []).join(", "))}" placeholder="Common, Elvish" /></label>`;
     } else {
-      body = `<p>Create this hero. Gear lands in your stash. You begin at level 1.</p>`;
+      body = `<p>Create this hero. Their starting kit is tied to this character; loot and shop buys go in the shared stash. You begin at level 1.</p>`;
     }
 
     host.innerHTML = `<button type="button" class="hw-scrim${sheetOpen ? " on" : ""}" id="hwScrim" aria-label="Close sheet"></button><div class="hw ${opts.layout === "phone" ? "phone" : ""}">
