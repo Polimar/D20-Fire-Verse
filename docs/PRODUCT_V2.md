@@ -15,7 +15,7 @@ V2 is the L1–L20 table: an account, many heroes, an account stash, SRD 5.2.1 c
 - A campaign party is fixed when they leave the first scene. The level cap is that starting size and does not change if someone drops. A second run of the same campaign hero grants no XP.
 - Seasons last 60 days. Elo soft-resets with `round(rating * 0.6 + 1000 * 0.4)`. Heroes, XP, stash, and cosmetics stay.
 
-Character creation (SRD 5.2.1 builder, migration off legacy Forge): see [`docs/PG_BUILDER_V2_PLAN.md`](PG_BUILDER_V2_PLAN.md) (Italian — Cursor task briefs).
+Character creation and full SRD 5.2.1 rules engine (L1–20, 100% coverage target): see [`docs/PG_BUILDER_V2_PLAN.md`](PG_BUILDER_V2_PLAN.md) (Italian — Cursor task briefs).
 
 ## Phases
 
