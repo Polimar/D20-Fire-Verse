@@ -19,6 +19,7 @@ import {
   userFromToken,
   type SessionUser,
 } from "./auth.js";
+import { ensureForgeContentDefaults } from "./content-catalog.js";
 import { archiveV1Once } from "./hero.js";
 import {
   amazonEnabled,
@@ -268,6 +269,7 @@ function parseLabels(
 
 export function mountAccountRoutes(app: Express): void {
   openAuth();
+  ensureForgeContentDefaults();
   archiveV1Once();
 
   app.post("/api/login", (req, res) => {

@@ -10,20 +10,7 @@ import { createUser, login, openAuth } from "../../src/local/auth.js";
 import { mountAccountRoutes } from "../../src/local/admin-http.js";
 import { mountV2Routes } from "../../src/local/v2-http.js";
 import { REPO_ROOT } from "../../src/local/paths.js";
-import { resolveContent, setContentEnabled } from "../../src/local/content-catalog.js";
 import { boot } from "../helpers.js";
-
-function enableBuilderContent(): void {
-  for (const [kind, id] of [
-    ["class", "fighter"],
-    ["species", "human"],
-    ["background", "soldier"],
-    ["feat", "defense"],
-  ] as const) {
-    if (kind === "feat") resolveContent(kind, id, { adminNote: "forge e2e" });
-    setContentEnabled(kind, id, true);
-  }
-}
 
 const tvDist = path.join(REPO_ROOT, "tv", "dist");
 
@@ -81,7 +68,6 @@ test("forge page is not blank when logged out (auth wall or redirect)", async ()
 });
 
 test("forge page shows builder form when logged in", async () => {
-  enableBuilderContent();
   const name = `forge${randomUUID().replace(/-/g, "").slice(0, 8)}`;
   createUser(name, "password", "player");
   const { token } = login(name, "password")!;
