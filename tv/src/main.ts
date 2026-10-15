@@ -627,7 +627,7 @@ function renderHome() {
   const welcome = $("homeWelcome");
   if (account?.username) {
     welcome.hidden = false;
-    welcome.innerHTML = `Welcome, ${esc(account.username)}. <a class="ghost home-forge-link" href="/forge">Hero builder</a> <button type="button" class="ghost" id="btnLogout">Log out</button>`;
+    welcome.innerHTML = `Welcome, ${esc(account.username)}. <button type="button" class="ghost" id="btnLogout">Log out</button>`;
     $("btnLogout").addEventListener("click", () => void logOut());
   } else {
     welcome.hidden = true;
@@ -645,6 +645,7 @@ function renderHome() {
       <button type="button" class="primary" id="btnModeCampaign" data-autofocus>Campaign</button>
       <button type="button" id="btnModeArena">Arena</button>
       ${account ? `<button type="button" id="btnModeArenaEditor">Arena editor</button>` : ""}
+      ${account ? `<button type="button" id="btnHeroBuilder">Hero builder</button>` : ""}
       <button type="button" class="ghost" id="btnSettings">Settings</button>
       ${account?.role === "admin" ? `<button type="button" class="ghost" id="btnAdmin">Admin portal</button>` : ""}`;
     $("btnModeCampaign").addEventListener("click", () => {
@@ -656,6 +657,9 @@ function renderHome() {
       renderHome();
     });
     $("btnModeArenaEditor")?.addEventListener("click", () => openArenaEditor());
+    $("btnHeroBuilder")?.addEventListener("click", () => {
+      window.location.href = "/forge";
+    });
   } else if (homeView === "campaign") {
     cta.innerHTML = `${campaign ? continueMarkup(campaign) : ""}
     ${camp}

@@ -461,6 +461,29 @@ export function queryCatalog(query: CatalogQuery) {
   };
 }
 
+/** Kinds needed for PG Builder V2 + L1 heroes (CK-1…CK-9). */
+const FORGE_BOOTSTRAP_KINDS: ReadonlySet<Bucket> = new Set(["class", "species", "background", "feat", "spell", "item"]);
+
+/**
+ * On a fresh table, enable valid SRD rows for the forge without touching explicit admin toggles.
+ * Uses INSERT OR IGNORE: a row with enabled=0 (admin off) is left alone.
+ */
+export function ensureForgeContentDefaults(): number {
+  const saved = resolutions();
+  const stmt = accountDb().prepare(
+    `INSERT INTO content_flags (kind, entry_id, enabled) VALUES (?, ?, 1) ON CONFLICT(kind, entry_id) DO NOTHING`,
+  );
+  let inserted = 0;
+  for (const row of load()) {
+    if (!FORGE_BOOTSTRAP_KINDS.has(row.kind)) continue;
+    const status = (saved.get(`${row.kind}:${row.id}`)?.status as ReviewStatus | undefined) || row.review?.status || "none";
+    if (!row.valid || !reviewAllowsPlay(status)) continue;
+    const result = stmt.run(row.kind, row.id);
+    inserted += Number(result.changes);
+  }
+  return inserted;
+}
+
 export function setContentEnabled(kind: string, id: string, enabled: boolean): CatalogRow {
   const current = rowFor(kind, id);
   if (enabled && !reviewAllowsPlay(current.reviewStatus)) throw new Error("REVIEW_OPEN");

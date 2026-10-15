@@ -68,7 +68,13 @@ export async function mountForgeApp(host: HTMLElement, opts: ForgeAppOptions): P
     return;
   }
   if (!catalog.classes.length || !catalog.backgrounds.length) {
-    showForgeFailure(host, opts, "Builder unavailable", "No playable classes or backgrounds are enabled yet.", false);
+    showForgeFailure(
+      host,
+      opts,
+      "The forge is cold",
+      "No class or background is in play. A table keeper must open Admin portal → Content and enable at least one class and one background (species and feats too, for a full hero). On a new server, restart after deploy so the forge stock-in runs once—or toggle entries on manually. Nothing here overwrites a keeper who deliberately switched content off.",
+      false,
+    );
     return;
   }
   const draft: BuilderDraft = {

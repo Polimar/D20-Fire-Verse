@@ -8,7 +8,8 @@
     "start": "tsx src/local/server.ts",
     "typecheck": "tsc --noEmit -p .",
     "test": "node --import tsx --import ./test/setup.ts --test test/*.test.ts",
-    "test:e2e": "node --import tsx --import ./test/setup.ts --test test/e2e/*.test.ts"
+    "test:e2e": "node --import tsx --import ./test/setup.ts --test test/e2e/*.test.ts",
+    "test:e2e:forge": "node --import tsx --import ./test/setup.ts --test test/e2e/forge-e2e.test.ts test/e2e/forge-builder-flow.e2e.test.ts"
   },
   "dependencies": {
     "@d20-fireverse/content-schema": "*",
