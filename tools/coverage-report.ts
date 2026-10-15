@@ -6,7 +6,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { COVERAGE, classLevelCap, type CoverageStatus } from "../backend/src/local/coverage.ts";
+import { COVERAGE, classLevelCap, PACK_A_CLASS_IDS, type CoverageStatus } from "../backend/src/local/coverage.ts";
 
 const ROOT = path.dirname(fileURLToPath(import.meta.url));
 const CLASSES_FILE = path.join(ROOT, "..", "content", "srd-5.2.1", "classes.json");
@@ -30,7 +30,10 @@ function main(): void {
   }
 
   const gaps: string[] = [];
+  const packOnly = process.env.PACK_A === "1";
+  const classFilter = packOnly ? new Set<string>(PACK_A_CLASS_IDS) : null;
   for (const cls of raw.entries) {
+    if (classFilter && !classFilter.has(cls.id)) continue;
     const cap = classLevelCap(cls.id);
     for (const row of cls.levels) {
       if (row.level > 20) continue;
@@ -62,13 +65,13 @@ function main(): void {
   }
   console.log("");
   if (!gaps.length) {
-    console.log("No gaps reported against classes.json feature names.");
+    console.log(packOnly ? "Pack A (barbarian, fighter, rogue, wizard): no gaps." : "No gaps reported against classes.json feature names.");
     process.exit(0);
   }
   console.log(`Gaps (${gaps.length}):`);
   for (const line of gaps.slice(0, 200)) console.log(`  - ${line}`);
   if (gaps.length > 200) console.log(`  … and ${gaps.length - 200} more`);
-  process.exit(0);
+  process.exit(packOnly ? 1 : 0);
 }
 
 main();

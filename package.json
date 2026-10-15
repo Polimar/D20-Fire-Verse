@@ -22,6 +22,7 @@
     "content:validate": "node --import tsx tools/srd-parser/src/validate.ts",
     "content:parse": "node --import tsx tools/srd-parser/src/import-catalog.ts",
     "coverage:report": "node --import tsx tools/coverage-report.ts",
+    "coverage:report:pack-a": "PACK_A=1 node --import tsx tools/coverage-report.ts",
     "build": "npm run build:tv && npm run build:companion",
     "brand": "node brand/export.mjs"
   },

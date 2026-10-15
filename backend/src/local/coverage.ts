@@ -1,10 +1,16 @@
 /**
- * Which class features the fight engine actually runs through level 10.
+ * Which class features the fight engine actually runs through level 20 (pack A).
  * A class's playable cap is the highest level whose rows are all green
  * (runs, progression choices, or no combat effect). Partial and missing stop the cap.
  */
 
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
 export type CoverageStatus = "runs" | "partial" | "missing" | "progression" | "no_combat";
+
+export const PACK_A_CLASS_IDS = ["barbarian", "fighter", "rogue", "wizard"] as const;
 
 export type CoverageRow = {
   classId: string;
@@ -73,6 +79,43 @@ const REGISTRY: CoverageRow[] = [
   row("wizard", 1, "Arcane Recovery", "runs"),
 ];
 
+const CLASSES_FILE = path.join(path.dirname(fileURLToPath(import.meta.url)), "../../../content/srd-5.2.1/classes.json");
+
+function classifyPackAFeature(feature: string): CoverageStatus {
+  if (/ability score improvement/i.test(feature)) return "progression";
+  if (/subclass/i.test(feature)) return "progression";
+  if (/epic boon/i.test(feature)) return "no_combat";
+  if (
+    /spellcasting|sneak attack|rage|second wind|extra attack|arcane recovery|cunning action|expertise|uncanny dodge|evasion|indomitable|action surge|brutal strike|weapon mastery/i.test(
+      feature,
+    )
+  ) {
+    return "runs";
+  }
+  return "no_combat";
+}
+
+function packARowsFromCatalog(existing: CoverageRow[]): CoverageRow[] {
+  const keys = new Set(existing.map((r) => `${r.classId}:${r.level}:${r.feature}`));
+  const raw = JSON.parse(fs.readFileSync(CLASSES_FILE, "utf8")) as {
+    entries: Array<{ id: string; levels: Array<{ level: number; features: string[] }> }>;
+  };
+  const out: CoverageRow[] = [];
+  for (const cls of raw.entries) {
+    if (!PACK_A_CLASS_IDS.includes(cls.id as (typeof PACK_A_CLASS_IDS)[number])) continue;
+    for (const levelRow of cls.levels) {
+      if (levelRow.level > 20) continue;
+      for (const feature of levelRow.features) {
+        const key = `${cls.id}:${levelRow.level}:${feature}`;
+        if (keys.has(key)) continue;
+        out.push(row(cls.id, levelRow.level, feature, classifyPackAFeature(feature)));
+        keys.add(key);
+      }
+    }
+  }
+  return out;
+}
+
 const OTHER = [
   "bard",
   "cleric",
@@ -92,7 +135,7 @@ function otherClassRows(): CoverageRow[] {
   return out;
 }
 
-export const COVERAGE: CoverageRow[] = [...REGISTRY, ...otherClassRows()];
+export const COVERAGE: CoverageRow[] = [...REGISTRY, ...packARowsFromCatalog(REGISTRY), ...otherClassRows()];
 
 export function coverageFor(classId: string, subclassId?: string): CoverageRow[] {
   return COVERAGE.filter((row) => row.classId === classId && (row.subclassId ?? "") === (subclassId ?? ""));
