@@ -341,6 +341,7 @@ function ensureProgressTables(databaseHandle: DatabaseSync): void {
   if (!heroCols.has("spells_prepared_json")) databaseHandle.exec("ALTER TABLE heroes ADD COLUMN spells_prepared_json TEXT NOT NULL DEFAULT '[]'");
   if (!heroCols.has("spellbook_json")) databaseHandle.exec("ALTER TABLE heroes ADD COLUMN spellbook_json TEXT NOT NULL DEFAULT '[]'");
   if (!heroCols.has("builder_meta_json")) databaseHandle.exec("ALTER TABLE heroes ADD COLUMN builder_meta_json TEXT NOT NULL DEFAULT '{}'");
+  if (!heroCols.has("languages_json")) databaseHandle.exec("ALTER TABLE heroes ADD COLUMN languages_json TEXT NOT NULL DEFAULT '[]'");
 }
 
 export type LoginResult =

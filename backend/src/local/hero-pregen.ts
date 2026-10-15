@@ -223,10 +223,15 @@ export function heroPregen(heroId: string, lookup: Lookup): HeroPregen | undefin
 
   const cantrips: string[] = [];
   const spellsKnown: string[] = [];
-  for (const id of hero.spells) {
+  const rawCantrips = hero.cantrips.length ? hero.cantrips : hero.spells;
+  const rawPrepared = hero.spellsPrepared.length ? hero.spellsPrepared : hero.spells;
+  for (const id of rawCantrips) {
     const spell = engineSpell(id, lookup);
-    if (!spell) continue;
-    (spell.cantrip ? cantrips : spellsKnown).push(spell.id);
+    if (spell?.cantrip) cantrips.push(spell.id);
+  }
+  for (const id of rawPrepared) {
+    const spell = engineSpell(id, lookup);
+    if (spell && !spell.cantrip) spellsKnown.push(spell.id);
   }
   const slots = row?.spellSlots ? { ...row.spellSlots } : row?.pactSlots ? { [String(row.pactSlots.slotLevel)]: row.pactSlots.count } : undefined;
   const inventory = live.filter((e) => e.slot === "consumables").map((e) => POTIONS[e.item.id]).filter((id): id is string => Boolean(id));
