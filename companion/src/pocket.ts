@@ -168,23 +168,41 @@ export function mountPocket(host: HTMLElement, adopt: (key: string) => void, sca
     await openForgeV2();
   };
 
+  let armoryHeroId = "";
+
   const openArmory = async () => {
     const [heroesBody, stashBody, shop] = await Promise.all([
       api<{ heroes: Array<{ id: string; name: string; level: number; xp: number; classes: Array<{ id: string; level: number }> }> }>("/api/heroes"),
-      api<{ stash: Array<{ id: string; name: string; inUseBy?: string; itemDefId: string }> }>("/api/stash"),
+      api<{ stash: Array<{ id: string; name: string; inUseBy?: string; itemDefId: string; equippedBy?: string | null }> }>("/api/stash"),
       api<{ payToWin: string; slots: Array<{ itemId: string; name: string; priceGold: number }> }>("/api/vendor"),
     ]);
-    const hero = heroesBody.heroes[0];
+    if (!armoryHeroId || !heroesBody.heroes.some((h) => h.id === armoryHeroId)) armoryHeroId = heroesBody.heroes[0]?.id ?? "";
+    const hero = heroesBody.heroes.find((h) => h.id === armoryHeroId);
+    const heroPick =
+      heroesBody.heroes.length > 1
+        ? `<label class="meta">Equip for <select id="armHero">${heroesBody.heroes.map((h) => `<option value="${esc(h.id)}" ${h.id === armoryHeroId ? "selected" : ""}>${esc(h.name)}</option>`).join("")}</select></label>`
+        : "";
     card().innerHTML = `
       <h2>Armory</h2>
       <p class="meta">${esc(shop.payToWin)}</p>
+      ${heroPick}
       ${hero ? `<p><strong>${esc(hero.name)}</strong> level ${hero.level} · XP ${hero.xp}</p>
         <button type="button" class="primary" id="armLevel">Level up</button>` : `<p class="meta">Forge a V2 hero from the web content list once a class is enabled.</p>`}
-      <ul class="sheet-list">${stashBody.stash.map((item) => `<li>${esc(item.name)}${item.inUseBy ? ` · In use: ${esc(item.inUseBy)}` : ""} <button type="button" data-equip="${esc(item.id)}">Equip</button></li>`).join("") || "<li class='meta'>Stash is empty</li>"}</ul>
+      <ul class="sheet-list">${stashBody.stash.map((item) => {
+        const onHero = hero && item.equippedBy === hero.id;
+        const busy = item.inUseBy && !onHero;
+        return `<li>${esc(item.name)}${item.inUseBy ? ` · ${onHero ? "Equipped" : `On ${esc(item.inUseBy)}`}` : ""}
+          ${hero && !busy && !onHero ? `<button type="button" data-equip="${esc(item.id)}">Equip</button>` : ""}
+          ${onHero ? `<button type="button" data-unequip="${esc(item.id)}">Unequip</button>` : ""}</li>`;
+      }).join("") || "<li class='meta'>Stash is empty</li>"}</ul>
       <h3>Today's shop</h3>
       <ul class="sheet-list">${shop.slots.map((slot) => `<li>${esc(slot.name)} · ${slot.priceGold} gold <button type="button" data-buy="${esc(slot.itemId)}">Buy</button></li>`).join("") || "<li class='meta'>Nothing enabled for sale</li>"}</ul>
       <button type="button" class="ghost" id="armBack">Back</button>`;
     card().querySelector("#armBack")!.addEventListener("click", () => paintHome());
+    card().querySelector<HTMLSelectElement>("#armHero")?.addEventListener("change", (ev) => {
+      armoryHeroId = (ev.target as HTMLSelectElement).value;
+      void openArmory();
+    });
     card().querySelector("#armLevel")?.addEventListener("click", () => {
       if (!hero) return;
       void api(`/api/heroes/${hero.id}/level-up`, { method: "POST", body: "{}" }).then(() => openArmory());
@@ -193,6 +211,12 @@ export function mountPocket(host: HTMLElement, adopt: (key: string) => void, sca
       button.addEventListener("click", () => {
         if (!hero) return;
         void api("/api/stash/equip", { method: "POST", body: JSON.stringify({ heroId: hero.id, itemInstanceId: button.dataset.equip }) }).then(() => openArmory());
+      });
+    });
+    card().querySelectorAll<HTMLButtonElement>("[data-unequip]").forEach((button) => {
+      button.addEventListener("click", () => {
+        if (!hero) return;
+        void api("/api/stash/unequip", { method: "POST", body: JSON.stringify({ heroId: hero.id, itemInstanceId: button.dataset.unequip }) }).then(() => openArmory());
       });
     });
     card().querySelectorAll<HTMLButtonElement>("[data-buy]").forEach((button) => {

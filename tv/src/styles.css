@@ -1273,6 +1273,19 @@ body.wizard-open .pages { visibility: hidden; }
 .defeat-modal .modal-kicker { color: var(--danger); }
 
 .settings-modal .modal-card { width: min(42rem, 100%); }
+
+.armory-modal .modal-card { width: min(46rem, 100%); max-height: 88vh; overflow: auto; }
+.armory-list { list-style: none; margin: 0.75rem 0 0; padding: 0; display: grid; gap: 0.45rem; }
+.armory-item {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.5rem;
+  padding: 0.65rem 0.75rem; border-radius: 12px; border: 1px solid rgba(246, 234, 214, 0.14); background: rgba(0, 0, 0, 0.25);
+}
+.armory-item-name { display: grid; gap: 0.1rem; min-width: 8rem; }
+.armory-item-name em { font-style: normal; color: var(--ink-dim); font-size: 0.85rem; }
+.armory-item-actions { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+.armory-heroes { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0.5rem 0; }
+.armory-heroes .picked { border-color: var(--ember); box-shadow: 0 0 0 2px rgba(240, 160, 90, 0.35); }
+button.sm { min-height: 2.4rem; padding: 0.35rem 0.75rem; font-size: 0.9rem; }
 .settings-rows { display: grid; gap: 0.35rem; }
 .setting-row { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 0.65rem 0.9rem; text-align: left; background: rgba(255, 255, 255, 0.03); border-color: transparent; }
 .setting-row:focus-visible { transform: none; background: rgba(240, 160, 90, 0.12); }

@@ -29,6 +29,7 @@ import { chapterCard, mountScenes, setScene } from "./scenefx";
 import { ART, sceneForNode } from "./scenes";
 import { clearSession, loadSession, saveSession, type Session, type SessionMode } from "./session";
 import { arenaEditorOpen, closeArenaEditor, handleArenaEditorKey, openArenaEditor } from "./arena-editor-ui";
+import { armoryOpen, closeArmory, openArmory } from "./armory-ui";
 import { closeSettings, openSettings, settingsOpen } from "./settings-ui";
 import { onSettings, settings } from "./settings";
 import { sfx } from "./sfx";
@@ -124,6 +125,7 @@ appRoot.innerHTML = `
           <ul class="seats" id="lobbySeats"></ul>
         </div>
         <button type="button" class="primary" id="btnLobbyWatch" hidden>Begin with the party</button>
+        <button type="button" class="ghost" id="btnLobbyArmory" hidden>Armory &amp; stash</button>
         <button type="button" class="ghost" id="btnLobbyBack">↩ Back to the title</button>
       </aside>
       <div id="chargenHost" hidden></div>
@@ -654,7 +656,25 @@ $("btnLeaveConfirm").addEventListener("click", () => leaveToTitle());
 $("btnLeaveStay").addEventListener("click", () => closeLeaveModal());
 
 function openTableSettings() {
-  openSettings(undefined, inPlay() ? { onSave: saveGame, onLeave: openLeaveModal } : undefined);
+  const inPlay = page === "story" || page === "combat";
+  openSettings(undefined, {
+    ...(inPlay ? { onSave: saveGame, onLeave: openLeaveModal } : {}),
+    ...(account
+      ? {
+          onArmory: () => {
+            void openArmory({ inCombat: page === "combat", onMessage: (text, kind) => toast(text, kind ?? "info") });
+          },
+        }
+      : {}),
+  });
+}
+
+function openAccountArmory(): void {
+  if (!account) {
+    showLoginGate();
+    return;
+  }
+  void openArmory({ inCombat: page === "combat", onMessage: (text, kind) => toast(text, kind ?? "info") });
 }
 
 /** The portal is a desktop tool; a TV WebView that blocks new tabs navigates in place. */
@@ -720,6 +740,7 @@ function renderHome() {
       <button type="button" id="btnModeArena">Arena</button>
       ${account ? `<button type="button" id="btnModeArenaEditor">Arena editor</button>` : ""}
       ${account ? `<button type="button" id="btnHeroBuilder">Hero builder</button>` : ""}
+      ${account ? `<button type="button" id="btnArmory">Armory &amp; stash</button>` : ""}
       <button type="button" class="ghost" id="btnSettings">Settings</button>
       ${account?.role === "admin" ? `<button type="button" class="ghost" id="btnAdmin">Admin portal</button>` : ""}`;
     $("btnModeCampaign").addEventListener("click", () => {
@@ -732,6 +753,7 @@ function renderHome() {
     });
     $("btnModeArenaEditor")?.addEventListener("click", () => openArenaEditor());
     $("btnHeroBuilder")?.addEventListener("click", () => openHeroWizard());
+    $("btnArmory")?.addEventListener("click", () => openAccountArmory());
   } else if (homeView === "campaign") {
     cta.innerHTML = `${campaign ? continueMarkup(campaign) : ""}
     ${camp}
@@ -1098,7 +1120,12 @@ function seatHero(id: string): void {
   }
 }
 
-$("btnLobbyWatch").addEventListener("click", () => {
+  const lobbyArmory = $("btnLobbyArmory");
+  if (lobbyArmory) {
+    lobbyArmory.hidden = !account;
+    lobbyArmory.addEventListener("click", () => openAccountArmory());
+  }
+  $("btnLobbyWatch").addEventListener("click", () => {
   if (!state?.players.length) return;
   sfx("uiConfirm");
   if (state.mode === "arena") {
@@ -1681,6 +1708,10 @@ function handleBack(): boolean {
     closeSettings();
     return true;
   }
+  if (armoryOpen()) {
+    closeArmory();
+    return true;
+  }
   if (!$("heroWizard").hidden && heroWizard) {
     heroWizard.back();
     return true;
@@ -1707,7 +1738,7 @@ function handleBack(): boolean {
   return false;
 }
 
-registerNativeBack(() => page === "home" && !settingsOpen() && !document.querySelector(".modal:not([hidden])"));
+registerNativeBack(() => page === "home" && !settingsOpen() && !armoryOpen() && !document.querySelector(".modal:not([hidden])"));
 
 window.addEventListener("keydown", (e) => {
   unlockAudio();

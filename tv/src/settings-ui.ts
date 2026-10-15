@@ -14,6 +14,7 @@ type Row =
 export type SettingsGameActions = {
   onSave?: () => void;
   onLeave?: () => void;
+  onArmory?: () => void;
 };
 
 const ROWS: Row[] = [
@@ -106,6 +107,8 @@ function paint() {
   }
   const play = overlay.querySelector<HTMLElement>("#setPlayOps");
   if (play) play.hidden = !(gameActions.onSave || gameActions.onLeave);
+  const armory = overlay.querySelector<HTMLElement>("#setArmoryRow");
+  if (armory) armory.hidden = !gameActions.onArmory;
 }
 
 export function settingsOpen(): HTMLElement | null {
@@ -138,6 +141,9 @@ export function openSettings(onClose?: (() => void) | null, actions?: SettingsGa
         <div class="row modal-actions" id="setPlayOps" hidden>
           <button type="button" class="ghost" id="setSave">Save progress</button>
           <button type="button" class="ghost" id="setLeave">Back to the title</button>
+        </div>
+        <div class="row modal-actions" id="setArmoryRow" hidden>
+          <button type="button" class="ghost" id="setArmory">Armory &amp; stash</button>
         </div>
         <div class="row modal-actions">
           <button type="button" class="ghost" id="setReplay">Hear the last line again</button>
@@ -182,6 +188,10 @@ export function openSettings(onClose?: (() => void) | null, actions?: SettingsGa
     overlay.querySelector("#setLeave")!.addEventListener("click", () => {
       closeSettings();
       gameActions.onLeave?.();
+    });
+    overlay.querySelector("#setArmory")!.addEventListener("click", () => {
+      closeSettings();
+      gameActions.onArmory?.();
     });
   }
   paint();
