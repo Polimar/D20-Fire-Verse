@@ -125,3 +125,11 @@ export function hpMaxMultiplier(exhaustionLevel: number): number {
 export function longRestExhaustionDelta(current: number): number {
   return clampExhaustion(current) > 0 ? clampExhaustion(current) - 1 : 0;
 }
+
+export function effectiveMaxHp(baseMaxHp: number, exhaustionLevel: number): number {
+  return Math.max(1, Math.floor(baseMaxHp * hpMaxMultiplier(exhaustionLevel)));
+}
+
+export function exhaustionKills(exhaustionLevel: number): boolean {
+  return clampExhaustion(exhaustionLevel) >= 6;
+}
