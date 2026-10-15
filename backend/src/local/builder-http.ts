@@ -7,6 +7,7 @@ import type { SessionUser } from "./auth.js";
 import { builderCatalog, classDefForBuilder } from "./builder-catalog.js";
 import { commitBuilderDraft } from "./builder-commit.js";
 import { heroDerivedSheet } from "./hero-sheet.js";
+import { notifyHeroLibraryChanged } from "./hero-library.js";
 
 function user(req: Request): SessionUser {
   const found = requestUser(req);
@@ -57,6 +58,7 @@ export function mountBuilderRoutes(app: Express): void {
     try {
       const who = user(req);
       const hero = commitBuilderDraft(who, req.body as BuilderDraft);
+      notifyHeroLibraryChanged(who.id);
       res.json({ hero });
     } catch (err) {
       fail(res, err);

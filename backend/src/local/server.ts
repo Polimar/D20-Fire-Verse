@@ -35,6 +35,7 @@ import { announceTable } from "./announce.js";
 import { ARENA_FORMATS, arenaRoster } from "./arena.js";
 import { ARENA_THEMES } from "./arena-maps.js";
 import { migrateCustomCharacters } from "./migrate-custom.js";
+import { setHeroLibraryPush } from "./hero-library.js";
 import { ensureDataDir, REPO_ROOT } from "./paths.js";
 import { audioPath, narrationStatus, prewarmNarration, waitForNarration } from "./narration.js";
 import {
@@ -321,6 +322,7 @@ function pushLibrary(userId: string): void {
     send(s, { eventType: "PREGENS", payload: { pregens: list } });
   }
 }
+setHeroLibraryPush(pushLibrary);
 
 app.get("/api/me/characters/:id", (req, res) => {
   const user = requestUser(req);

@@ -253,8 +253,34 @@ function closeHeroWizard(): void {
   heroWizard = null;
   $("heroWizard").hidden = true;
   document.body.classList.remove("wizard-open");
-  renderHome();
+  if (page === "lobby") renderLobby();
+  else renderHome();
   requestAnimationFrame(() => restoreFocus());
+}
+
+async function refreshPregensFromApi(): Promise<void> {
+  try {
+    const list = await fetch("/api/pregens", { credentials: "same-origin" }).then((r) => (r.ok ? (r.json() as Promise<Pregen[]>) : []));
+    if (list.length) pregens = list;
+  } catch {
+    /* WS PREGENS may arrive next */
+  }
+}
+
+function lobbyAfterForge(hero: { id: string; name: string }): void {
+  selectedHero = hero.id;
+  if (state?.roomCode) seatHero(hero.id);
+  else pendingHeroId = hero.id;
+  renderLobby();
+  requestAnimationFrame(() => {
+    $("heroGrid").querySelector<HTMLElement>(`[data-hero="${CSS.escape(hero.id)}"]`)?.focus();
+  });
+  toast(
+    state?.roomCode
+      ? `${hero.name} is at the table. Press Ready when you are set.`
+      : `${hero.name} is ready. Press OK on the card when the table opens.`,
+    "ok",
+  );
 }
 
 async function openHeroWizard(): Promise<void> {
@@ -263,17 +289,25 @@ async function openHeroWizard(): Promise<void> {
     return;
   }
   const modal = $("heroWizard");
+  const host = $("heroWizardHost");
   modal.hidden = false;
   document.body.classList.add("wizard-open");
-  heroWizard = await mountForgeWizard($("heroWizardHost"), {
-    api: builderApi,
-    layout: window.matchMedia("(max-width: 800px)").matches ? "phone" : "tv",
-    onClose: closeHeroWizard,
-    onDone: () => {
-      toast("Hero forged. They wait in your stash of heroes.", "info");
-      closeHeroWizard();
-    },
-  });
+  host.innerHTML = `<p class="meta" style="padding:2rem;text-align:center">Opening the forge…</p>`;
+  try {
+    heroWizard = await mountForgeWizard(host, {
+      api: builderApi,
+      layout: window.matchMedia("(max-width: 800px)").matches ? "phone" : "tv",
+      onClose: closeHeroWizard,
+      onDone: async (hero) => {
+        await refreshPregensFromApi();
+        closeHeroWizard();
+        if (page === "lobby") lobbyAfterForge(hero);
+        else toast(`${hero.name} is in your hero stash.`, "ok");
+      },
+    });
+  } catch (err) {
+    host.innerHTML = `<p class="meta" style="padding:2rem">${esc(err instanceof Error ? err.message : "Could not open the forge.")}</p>`;
+  }
   requestAnimationFrame(() => restoreFocus());
 }
 let page: PageId = "home";
@@ -1931,18 +1965,19 @@ function showLoginGate(): void {
   requestAnimationFrame(() => restoreFocus());
 }
 
-/** `?login_error=` comes back from the Amazon redirect; show it once and clean the address. */
-function takeLoginError(): void {
+/** `?login_error=` comes back from the Amazon redirect; strip it from the URL and surface once. */
+function consumeLoginError(): string | null {
   const params = new URLSearchParams(location.search);
   const code = params.get("login_error");
-  if (!code) return;
+  if (!code) return null;
   params.delete("login_error");
   const rest = params.toString();
   history.replaceState(null, "", `${location.pathname}${rest ? `?${rest}` : ""}${location.hash}`);
-  $("loginError").textContent = describeError(code);
+  return code;
 }
 
 async function ensureLogin(): Promise<void> {
+  const loginErr = consumeLoginError();
   const [me, options] = await Promise.all([
     fetch("/api/me", { credentials: "same-origin" }),
     fetch("/api/auth/options", { credentials: "same-origin" })
@@ -1959,6 +1994,7 @@ async function ensureLogin(): Promise<void> {
       body: JSON.stringify({ surface: onFireTv() ? "tv" : "web" }),
     });
     $("loginGate").hidden = true;
+    if (loginErr) toast(describeError(loginErr), "info");
     if (new URLSearchParams(location.search).get("builder") === "open") {
       history.replaceState(null, "", "/");
       renderHome();
@@ -1975,7 +2011,7 @@ async function ensureLogin(): Promise<void> {
     $("loginError").textContent = "Sign in to continue to the hero builder.";
   }
   showLoginGate();
-  takeLoginError();
+  if (loginErr) $("loginError").textContent = describeError(loginErr);
   if (amazonOnServer && nativeAmazonReady()) amazonOnStick(false);
 }
 

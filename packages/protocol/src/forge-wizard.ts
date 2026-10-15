@@ -22,10 +22,12 @@ const STEP_TITLE: Record<StepId, string> = {
   review: "Review",
 };
 
+export type ForgedHero = { id: string; name: string };
+
 export type ForgeWizardOptions = {
   api: <T>(url: string, init?: RequestInit) => Promise<T>;
   layout: "tv" | "phone";
-  onDone: () => void;
+  onDone: (hero: ForgedHero) => void;
   onClose: () => void;
 };
 
@@ -552,8 +554,8 @@ export async function mountForgeWizard(host: HTMLElement, opts: ForgeWizardOptio
       if (id === "review") {
         try {
           fillSpellbook();
-          await opts.api("/api/builder/commit", { method: "POST", body: JSON.stringify(draft) });
-          opts.onDone();
+          const out = await opts.api<{ hero: ForgedHero }>("/api/builder/commit", { method: "POST", body: JSON.stringify(draft) });
+          opts.onDone(out.hero);
         } catch (err) {
           localError = err instanceof Error ? err.message : "Could not create.";
           paint();

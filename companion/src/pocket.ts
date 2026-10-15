@@ -152,7 +152,9 @@ export function mountPocket(host: HTMLElement, adopt: (key: string) => void, sca
       api,
       layout: "phone",
       onClose: () => void refresh().then(paintHome),
-      onDone: () => void refresh().then(paintHome),
+      onDone: () => {
+        void refresh().then(paintHome);
+      },
     });
   };
 
