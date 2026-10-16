@@ -9,9 +9,5 @@
   "srd": {
     "line": "Level 3 Transmutation (Sorcerer, Warlock, Wizard)",
     "text": "_Level 3 Transmutation (Sorcerer, Warlock, Wizard)_\n\n**Casting Time:** Action\n**Range:** Touch\n**Components:** V, S, M (a feather)\n**Duration:** Concentration, up to 10 minutes\n\nYou touch a willing creature. For the duration, the target gains a Fly Speed of 60 feet and can hover. When the spell ends, the target falls if it is still aloft unless it can stop the fall.\n\n_Using a Higher-Level Spell Slot._ You can target one additional creature for each spell slot level above 3."
-  },
-  "notModeled": [
-    "Upcast adds extra targets; combat scales dice only.",
-    "No battlefield effect is run for this spell yet."
-  ]
+  }
 }

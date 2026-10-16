@@ -9,8 +9,5 @@
   "srd": {
     "line": "Level 2 Transmutation (Druid, Ranger, Sorcerer, Wizard)",
     "text": "_Level 2 Transmutation (Druid, Ranger, Sorcerer, Wizard)_\n\n**Casting Time:** Action\n**Range:** Touch\n**Components:** V, S, M (a dried carrot)\n**Duration:** 8 hours\n\nFor the duration, a willing creature you touch has Darkvision with a range of 150 feet."
-  },
-  "notModeled": [
-    "No battlefield effect is run for this spell yet."
-  ]
+  }
 }

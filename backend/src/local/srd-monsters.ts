@@ -170,6 +170,12 @@ function parseDamageParts(text: string): Array<{ dice: string; damageType: strin
       parts.push({ dice: cleanDice(hit[2]!), damageType: hit[3]!.toLowerCase() });
     }
   }
+  if (!parts.length) {
+    const flat = text.match(/Hit:_?\s*(\d+)\s+([A-Za-z]+)\s+damage/i);
+    if (flat && DAMAGE_TYPES.includes(flat[2]!.toLowerCase())) {
+      parts.push({ dice: flat[1]!, damageType: flat[2]!.toLowerCase() });
+    }
+  }
   return parts;
 }
 
@@ -315,13 +321,15 @@ export function parseSrdMarkdown(markdown: string, knownSpells: Set<string>): Sr
       if (recharge) meta.recharge = recharge;
       if (usesPerDay) meta.usesPerDay = usesPerDay;
 
+      const sectionType =
+        move.section === "bonus" ? "bonus_action" : move.section === "legendary" ? "legendary" : "action";
       if (isAttackLine(move.body)) {
         const damage = parseDamageParts(move.body);
         if (!damage.length) continue;
         abilities[aid] = {
           id: aid,
           name: label,
-          actionType: move.section === "bonus" ? "bonus_action" : "action",
+          actionType: sectionType,
           needsTarget: true,
           effects: [
             {
@@ -340,7 +348,7 @@ export function parseSrdMarkdown(markdown: string, knownSpells: Set<string>): Sr
         abilities[aid] = {
           id: aid,
           name: label,
-          actionType: move.section === "bonus" ? "bonus_action" : "action",
+          actionType: sectionType,
           needsTarget: true,
           effects: [
             {
@@ -355,38 +363,53 @@ export function parseSrdMarkdown(markdown: string, knownSpells: Set<string>): Sr
             },
           ],
         };
+      } else if (/teleport/i.test(label) || /teleports? (up to|to)/i.test(move.body)) {
+        abilities[aid] = {
+          id: aid,
+          name: label,
+          actionType: sectionType,
+          effects: [{ type: "teleport", rangeCells: parseRangeCells(move.body) || 6, ...meta }],
+        };
       } else if (/Disengage/i.test(move.body)) {
         abilities[aid] = {
           id: aid,
           name: label,
-          actionType: "bonus_action",
+          actionType: sectionType === "action" ? "bonus_action" : sectionType,
           effects: [{ type: "disengage", ...meta }],
         };
       } else if (/Hide action/i.test(move.body) && /Disengage/i.test(move.body) === false) {
         abilities[aid] = {
           id: aid,
           name: label,
-          actionType: "bonus_action",
+          actionType: sectionType === "action" ? "bonus_action" : sectionType,
           effects: [{ type: "hide", ...meta }],
         };
       } else if (/\bDash\b/i.test(move.body)) {
         abilities[aid] = {
           id: aid,
           name: label,
-          actionType: "bonus_action",
+          actionType: sectionType === "action" ? "bonus_action" : sectionType,
           effects: [{ type: "dash", ...meta }],
         };
       } else {
         const hit = move.body.match(/makes one ([^.]+) attack/i);
-        if (hit) {
-          const ref = stripLimitLabel(hit[1]!.trim());
+        const uses = move.body.match(/\buses\s+([A-Z][A-Za-z'’\- ]+?)(?:\s+and\b|\.|$)/);
+        const refName = hit?.[1]?.trim() ?? uses?.[1]?.trim();
+        if (refName) {
+          const ref = stripLimitLabel(refName);
           const refId = abilityId(id, ref);
           if (abilities[refId]) {
+            const heal = move.body.match(/regains?\s+(\d+\s*\([^)]+\)|\d+d\d+(?:\s*\+\s*\d+)?)/i);
             abilities[aid] = {
               id: aid,
               name: label,
-              actionType: "action",
-              effects: [{ type: "attack", ref: refId, ...meta }],
+              actionType: sectionType,
+              effects: [
+                { type: "attack", ref: refId, ...meta },
+                ...(heal
+                  ? [{ type: "heal", dice: heal[1]!.replace(/^\d+\s*\(([^)]+)\)/, "$1").replace(/\s/g, ""), self: true }]
+                  : []),
+              ],
             };
           } else continue;
         } else continue;
@@ -395,6 +418,37 @@ export function parseSrdMarkdown(markdown: string, knownSpells: Set<string>): Sr
       if (move.section === "bonus") bonusActionIds.push(aid);
       else if (move.section === "legendary") legendaryActionIds.push(aid);
       else actionIds.push(aid);
+    }
+
+    // Second pass: legendary/bonus that only reference earlier moves.
+    for (const move of moves) {
+      const label = stripLimitLabel(move.name);
+      const key = label.toLowerCase();
+      if (key === "spellcasting" || key === "multiattack") continue;
+      const aid = abilityId(id, label);
+      if (abilities[aid]) continue;
+      const hit = move.body.match(/makes one ([^.]+) attack/i);
+      const uses = move.body.match(/\buses\s+([A-Z][A-Za-z'’\- ]+?)(?:\s+and\b|\.|$)/);
+      const refName = hit?.[1]?.trim() ?? uses?.[1]?.trim();
+      if (!refName) continue;
+      const refId = abilityId(id, stripLimitLabel(refName));
+      if (!abilities[refId]) continue;
+      const sectionType =
+        move.section === "bonus" ? "bonus_action" : move.section === "legendary" ? "legendary" : "action";
+      const recharge = parseRecharge(move.name, move.body);
+      const usesPerDay = parseDayUses(move.name, move.body);
+      const meta: Record<string, unknown> = {};
+      if (recharge) meta.recharge = recharge;
+      if (usesPerDay) meta.usesPerDay = usesPerDay;
+      abilities[aid] = {
+        id: aid,
+        name: label,
+        actionType: sectionType,
+        effects: [{ type: "attack", ref: refId, ...meta }],
+      };
+      if (move.section === "bonus" && !bonusActionIds.includes(aid)) bonusActionIds.push(aid);
+      else if (move.section === "legendary" && !legendaryActionIds.includes(aid)) legendaryActionIds.push(aid);
+      else if (move.section === "action" && !actionIds.includes(aid)) actionIds.push(aid);
     }
 
     const multi = moves.find((m) => stripLimitLabel(m.name).toLowerCase() === "multiattack");

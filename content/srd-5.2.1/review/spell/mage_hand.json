@@ -9,8 +9,5 @@
   "srd": {
     "line": "Conjuration Cantrip (Bard, Sorcerer, Warlock, Wizard)",
     "text": "_Conjuration Cantrip (Bard, Sorcerer, Warlock, Wizard)_\n\n**Casting Time:** Action\n**Range:** 30 feet\n**Components:** V, S\n**Duration:** 1 minute\n\nA spectral, floating hand appears at a point you choose within range. The hand lasts for the duration. The hand vanishes if it is ever more than 30 feet away from you or if you cast this spell again.\n\nWhen you cast the spell, you can use the hand to manipulate an object, open an unlocked door or container, stow or retrieve an item from an open container, or pour the contents out of a vial.\n\nAs a Magic action on your later turns, you can control the hand thus again. As part of that action, you can move the hand up to 30 feet.\n\nThe hand can't attack, activate magic items, or carry more than 10 pounds."
-  },
-  "notModeled": [
-    "No battlefield effect is run for this spell yet."
-  ]
+  }
 }

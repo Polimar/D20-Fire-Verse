@@ -9,8 +9,5 @@
   "srd": {
     "line": "Level 8 Conjuration (Wizard)",
     "text": "_Level 8 Conjuration (Wizard)_\n\n**Casting Time:** Action\n**Range:** 60 feet\n**Components:** V, S\n**Duration:** Concentration, up to 10 minutes\n\nYou banish a creature that you can see within range into a labyrinthine demiplane. The target remains there for the duration or until it escapes the maze.\n\nThe target can take a Study action to try to escape. When it does so, it makes a DC 20 Intelligence (Investigation) check. If it succeeds, it escapes, and the spell ends.\n\nWhen the spell ends, the target reappears in the space it left or, if that space is occupied, in the nearest unoccupied space."
-  },
-  "notModeled": [
-    "No battlefield effect is run for this spell yet."
-  ]
+  }
 }

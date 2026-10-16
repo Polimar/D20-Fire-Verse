@@ -9,8 +9,5 @@
   "srd": {
     "line": "Level 8 Enchantment (Bard, Warlock)",
     "text": "_Level 8 Enchantment (Bard, Warlock)_\n\n**Casting Time:** Action\n**Range:** Self\n**Components:** V\n**Duration:** 1 hour\n\nUntil the spell ends, when you make a Charisma check, you can replace the number you roll with a 15. Additionally, no matter what you say, magic that would determine if you are telling the truth indicates that you are being truthful."
-  },
-  "notModeled": [
-    "No battlefield effect is run for this spell yet."
-  ]
+  }
 }

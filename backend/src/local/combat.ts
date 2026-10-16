@@ -94,12 +94,16 @@ import {
 import { actionCategory, actionSummary, type ActionCategory } from "./action-menu.js";
 import type { Player } from "./types.js";
 import {
+  antimagicAt,
   auraAppliesTo,
   clearSpellAurasForOwner,
+  difficultTerrainMult,
+  movementBlockedByAura,
   plantAura as placeAura,
   plantSpellAuraAt,
   pullAura as removePlantedAura,
   refreshAuras as syncAuras,
+  spellImmunityLevelAt,
   verbalCastBlocked,
   type AuraMods,
   type AuraTick,
@@ -284,6 +288,27 @@ export type CombatToken = {
   polymorphBy?: string;
   summonOwner?: string;
   summonSpellId?: string;
+  creatureType?: string;
+  deathWard?: boolean;
+  cloneBackup?: boolean;
+  contingencySpellId?: string;
+  contingencyUsed?: boolean;
+  fireShield?: "warm" | "chill";
+  mirrorImages?: number;
+  enhancedAbility?: "str" | "dex" | "con" | "int" | "wis" | "cha";
+  advantageAttacks?: boolean;
+  advantageSaves?: boolean;
+  nextHitRider?: { dice: string; damageType: string };
+  nextRollBonus?: string;
+  familiarHelp?: boolean;
+  seeInvisible?: boolean;
+  flySpeedCells?: number;
+  phasing?: boolean;
+  blinking?: boolean;
+  immunePoison?: boolean;
+  immuneFrightened?: boolean;
+  greaterInvis?: boolean;
+  spellSourceLevel?: number;
   /** Temporary ability scores from drinks (Giant Strength). */
   abilityOverride?: Partial<Record<"str" | "dex" | "con" | "int" | "wis" | "cha", number>>;
   innateSorcery?: boolean;
@@ -541,8 +566,10 @@ function hazardGrid(map: MapDef): boolean[][] {
   return rectGrid(map.width, map.height, map.hazards);
 }
 
-function blockedMove(combat: CombatState, x: number, y: number): boolean {
-  return Boolean(combat.walls[y]?.[x] || combat.hazards[y]?.[x]);
+function blockedMove(combat: CombatState, x: number, y: number, mover?: CombatToken): boolean {
+  if (combat.walls[y]?.[x] || combat.hazards[y]?.[x]) return true;
+  if (mover && movementBlockedByAura(combat, mover, x, y)) return true;
+  return false;
 }
 
 function isFoe(combat: CombatState, actor: CombatToken, t: CombatToken): boolean {
@@ -601,13 +628,14 @@ function explore(combat: CombatState, token: CombatToken, budget: number): Map<s
     for (const [dx, dy] of STEPS) {
       const nx = cur.x + dx;
       const ny = cur.y + dy;
-      if (!inBounds(combat, nx, ny) || blockedMove(combat, nx, ny)) continue;
+      if (!inBounds(combat, nx, ny) || blockedMove(combat, nx, ny, token)) continue;
       const blocker = tokenAt(combat, nx, ny, token.id);
       if (blocker && isFoe(combat, token, blocker)) continue;
       if (blocker && !combat.pvp && blocker.kind !== token.kind) continue;
       const diagonal = dx !== 0 && dy !== 0;
-      if (diagonal && (blockedMove(combat, nx, cur.y) || blockedMove(combat, cur.x, ny))) continue;
-      const step = diagonal ? (cur.parity === 0 ? 1 : 2) : 1;
+      if (diagonal && (blockedMove(combat, nx, cur.y, token) || blockedMove(combat, cur.x, ny, token))) continue;
+      const terrain = difficultTerrainMult(combat, token, nx, ny);
+      const step = (diagonal ? (cur.parity === 0 ? 1 : 2) : 1) * terrain;
       const cost = cur.cost + step;
       if (cost > budget) continue;
       const parity = diagonal ? 1 - cur.parity : cur.parity;
@@ -2209,6 +2237,7 @@ function castSpecial(
   dest: Cell | undefined,
   castId: string,
 ): { rolls: DiceRoll[] } | null {
+  const level = Number(effect.slot ?? (getAbility(castId) as { level?: number } | undefined)?.level ?? 0);
   const classCast = castClassFeature(t, String(effect.type ?? ""), {
     allies: combat.tokens.filter((a) => isFriend(combat, t, a) && !a.dead),
     foes: combat.tokens.filter((a) => isFoe(combat, t, a) && !a.dead),
@@ -2352,6 +2381,8 @@ function castSpecial(
     if (effect.acFloor) who.acFloor = Number(effect.acFloor);
     if (effect.blur) who.blur = true;
     if (effect.invisible) who.invisible = true;
+    if (effect.greaterInvis) who.greaterInvis = true;
+    if (effect.saveBonus) who.auraBonus = (who.auraBonus ?? 0) + Number(effect.saveBonus);
     if (effect.concentration || effect.duration === "concentration") setConcentration(combat, t, castId, who.id);
     spendEconomy(t, isBonus);
     statusEvent(combat, t, name, `${t.name} casts ${name}.`);
@@ -2441,9 +2472,375 @@ function castSpecial(
   if (effect.type === "restore") {
     const ally = targetId ? combat.tokens.find((x) => x.id === targetId && isFriend(combat, t, x)) : t;
     if (!ally) throw new Error("NEED_TARGET");
-    ally.conditions = (ally.conditions ?? []).filter((c) => !["blinded", "paralyzed", "poisoned"].includes(c));
+    const clear = new Set([
+      "blinded",
+      "paralyzed",
+      "poisoned",
+      ...((effect.clearConditions as string[] | undefined) ?? []),
+    ]);
+    ally.conditions = (ally.conditions ?? []).filter((c) => !clear.has(c));
+    if (effect.clearExhaustion) {
+      ally.exhaustionLevel = Math.max(0, (ally.exhaustionLevel ?? 0) - Number(effect.clearExhaustion));
+    }
+    if (effect.immunePoison) {
+      ally.immunePoison = true;
+      ally.timedEffects = [
+        ...(ally.timedEffects ?? []),
+        { label: name, pcTurnsLeft: Number(effect.durationPcTurns ?? 10), spellId: castId },
+      ];
+    }
+    if (effect.stabilize && (ally.dying || ally.hp <= 0)) {
+      ally.dying = false;
+      ally.stable = true;
+      ally.deathFailures = 0;
+      ally.deathSuccesses = 0;
+      if (ally.hp <= 0) ally.hp = 0;
+    }
     spendEconomy(t, false);
     statusEvent(combat, t, name, `${t.name} restores ${ally.name}.`);
+    return { rolls: [] };
+  }
+  if (effect.type === "revive") {
+    const ally = targetId
+      ? combat.tokens.find((x) => {
+          if (x.id !== targetId || !x.dead) return false;
+          // isFriend excludes dead — revive must target a dead ally body.
+          if (!combat.pvp) return x.kind === "pc" || Boolean(x.summonOwner);
+          if (x.kind !== "pc") return false;
+          if (combat.pvp === "ffa") return x.id === t.id;
+          return Boolean(t.teamId && x.teamId && t.teamId === x.teamId);
+        })
+      : undefined;
+    if (!ally || !ally.dead) throw new Error("NOT_DEAD");
+    if (chebyshev(t.x, t.y, ally.x, ally.y) > Number(effect.rangeCells ?? 1)) throw new Error("OUT_OF_RANGE");
+    ally.dead = false;
+    ally.dying = false;
+    ally.stable = false;
+    ally.deathFailures = 0;
+    ally.deathSuccesses = 0;
+    ally.hp = effect.hpHalf ? Math.max(1, Math.floor(ally.maxHp / 2)) : Number(effect.hp ?? 1);
+    if (effect.prone !== false) {
+      if (!ally.conditions) ally.conditions = [];
+      if (!ally.conditions.includes("prone")) ally.conditions.push("prone");
+    }
+    if (!combat.turnOrder.includes(ally.id)) combat.turnOrder.push(ally.id);
+    spendEconomy(t, false);
+    statusEvent(combat, t, name, `${t.name} returns ${ally.name} to life (${ally.hp} HP).`);
+    refreshReachable(combat);
+    return { rolls: [] };
+  }
+  if (effect.type === "temp_hp") {
+    const ally = effect.self
+      ? t
+      : targetId
+        ? combat.tokens.find((x) => x.id === targetId && isFriend(combat, t, x))
+        : t;
+    if (!ally) throw new Error("NEED_TARGET");
+    if (!effect.self && chebyshev(t.x, t.y, ally.x, ally.y) > Number(effect.rangeCells ?? 1)) {
+      throw new Error("OUT_OF_RANGE");
+    }
+    let amount = Number(effect.amount ?? 0);
+    if (typeof effect.dice === "string") amount = rollNotation(String(effect.dice)).total;
+    if (effect.scalingTemp && level > Number(effect.slot ?? 1)) {
+      amount += Number(effect.scalingTemp) * (level - Number(effect.slot ?? 1));
+    }
+    ally.tempHp = Math.max(ally.tempHp ?? 0, amount);
+    if (effect.concentration) setConcentration(combat, t, castId, ally.id);
+    spendEconomy(t, isBonus);
+    statusEvent(combat, t, name, `${ally.name} gains ${amount} temporary HP.`);
+    refreshReachable(combat);
+    return { rolls: [] };
+  }
+  if (effect.type === "death_ward") {
+    const ally = targetId ? combat.tokens.find((x) => x.id === targetId && isFriend(combat, t, x)) : t;
+    if (!ally) throw new Error("NEED_TARGET");
+    if (chebyshev(t.x, t.y, ally.x, ally.y) > Number(effect.rangeCells ?? 1)) throw new Error("OUT_OF_RANGE");
+    ally.deathWard = true;
+    ally.timedEffects = [
+      ...(ally.timedEffects ?? []).filter((r) => r.spellId !== castId),
+      { label: name, pcTurnsLeft: Number(effect.durationPcTurns ?? 10), spellId: castId },
+    ];
+    spendEconomy(t, false);
+    statusEvent(combat, t, name, `${ally.name} is warded against death.`);
+    return { rolls: [] };
+  }
+  if (effect.type === "power_word") {
+    if (!targetId) throw new Error("NEED_TARGET");
+    const victim = combat.tokens.find((x) => x.id === targetId);
+    if (!victim) throw new Error("BAD_TARGET");
+    if (chebyshev(t.x, t.y, victim.x, victim.y) > Number(effect.rangeCells ?? 12)) throw new Error("OUT_OF_RANGE");
+    if (effect.kind === "heal") {
+      if (!isFriend(combat, t, victim) || victim.dead) throw new Error("BAD_TARGET");
+      const rolled = rollNotation(String(effect.dice ?? "9d8+40"));
+      victim.hp = Math.min(victim.maxHp, victim.hp + rolled.total);
+      if (victim.hp > 0) wakeFromDying(victim);
+      spendEconomy(t, false);
+      statusEvent(combat, t, name, `${t.name} speaks a word of healing — ${victim.name} regains ${rolled.total} HP.`);
+      return { rolls: [] };
+    }
+    if (effect.kind === "kill") {
+      if (!isFoe(combat, t, victim) || victim.dead) throw new Error("BAD_TARGET");
+      if (victim.hp > Number(effect.hpThreshold ?? 100)) throw new Error("BAD_TARGET");
+      const { roll, ok } = creatureSave(victim, "con", pcSpellDc(t, pregen, String(t.spellAbility ?? "cha")), false);
+      spendEconomy(t, false);
+      if (!ok) {
+        markDead(combat, victim);
+        statusEvent(combat, t, name, `${victim.name} dies to Power Word Kill.`, [roll]);
+      } else {
+        statusEvent(combat, t, name, `${victim.name} resists Power Word Kill.`, [roll]);
+      }
+      return { rolls: [roll] };
+    }
+  }
+  if (effect.type === "goodberry") {
+    const n = Number(effect.berries ?? 10);
+    for (let i = 0; i < n; i += 1) t.inventory.push("goodberry");
+    spendEconomy(t, false);
+    statusEvent(combat, t, name, `${t.name} conjures ${n} goodberries.`);
+    if (t.characterId) refreshMenus(t, pregen, getAbility);
+    return { rolls: [] };
+  }
+  if (effect.type === "heroes_feast") {
+    const allies = combat.tokens.filter((a) => isFriend(combat, t, a) && !a.dead);
+    const rolls: DiceRoll[] = [];
+    for (const ally of allies) {
+      const rolled = rollNotation(String(effect.tempDice ?? "2d10"));
+      ally.tempHp = Math.max(ally.tempHp ?? 0, rolled.total);
+      ally.immunePoison = true;
+      ally.immuneFrightened = true;
+      ally.conditions = (ally.conditions ?? []).filter((c) => c !== "frightened" && c !== "poisoned");
+      ally.timedEffects = [
+        ...(ally.timedEffects ?? []),
+        { label: name, pcTurnsLeft: Number(effect.durationPcTurns ?? 10), spellId: castId },
+      ];
+      rolls.push(
+        makeDiceRoll({
+          roller: ally.name,
+          notation: String(effect.tempDice ?? "2d10"),
+          values: rolled.values,
+          sides: rolled.sides,
+          modifier: rolled.modifier,
+          total: rolled.total,
+          purpose: "heal",
+          label: name,
+        }),
+      );
+    }
+    spendEconomy(t, false);
+    statusEvent(combat, t, name, `${t.name} completes a heroes' feast for the party.`, rolls);
+    return { rolls };
+  }
+  if (effect.type === "enhance_ability") {
+    const ally = targetId ? combat.tokens.find((x) => x.id === targetId && isFriend(combat, t, x)) : t;
+    if (!ally) throw new Error("NEED_TARGET");
+    ally.enhancedAbility = (effect.ability as CombatToken["enhancedAbility"]) ?? "str";
+    ally.blessed = true;
+    if (effect.concentration) setConcentration(combat, t, castId, ally.id);
+    spendEconomy(t, false);
+    statusEvent(combat, t, name, `${ally.name} is enhanced (${ally.enhancedAbility}).`);
+    return { rolls: [] };
+  }
+  if (effect.type === "foresight") {
+    const ally = targetId ? combat.tokens.find((x) => x.id === targetId && isFriend(combat, t, x)) : t;
+    if (!ally) throw new Error("NEED_TARGET");
+    if (chebyshev(t.x, t.y, ally.x, ally.y) > Number(effect.rangeCells ?? 12)) throw new Error("OUT_OF_RANGE");
+    ally.advantageAttacks = true;
+    ally.advantageSaves = true;
+    if (effect.concentration) setConcentration(combat, t, castId, ally.id);
+    ally.timedEffects = [
+      ...(ally.timedEffects ?? []).filter((r) => r.spellId !== castId),
+      { label: name, pcTurnsLeft: Number(effect.durationPcTurns ?? 10), spellId: castId },
+    ];
+    spendEconomy(t, false);
+    statusEvent(combat, t, name, `${ally.name} gains foresight.`);
+    return { rolls: [] };
+  }
+  if (effect.type === "heroism") {
+    const ally = targetId ? combat.tokens.find((x) => x.id === targetId && isFriend(combat, t, x)) : t;
+    if (!ally) throw new Error("NEED_TARGET");
+    ally.conditions = (ally.conditions ?? []).filter((c) => c !== "frightened");
+    ally.immuneFrightened = true;
+    ally.tempHp = Math.max(ally.tempHp ?? 0, Number(effect.tempHp ?? 5));
+    if (effect.concentration) setConcentration(combat, t, castId, ally.id);
+    spendEconomy(t, false);
+    statusEvent(combat, t, name, `${ally.name} feels heroic.`);
+    return { rolls: [] };
+  }
+  if (effect.type === "guidance") {
+    const ally = targetId ? combat.tokens.find((x) => x.id === targetId && isFriend(combat, t, x)) : t;
+    if (!ally) throw new Error("NEED_TARGET");
+    ally.nextRollBonus = "1d4";
+    if (effect.concentration) setConcentration(combat, t, castId, ally.id);
+    spendEconomy(t, false);
+    statusEvent(combat, t, name, `${ally.name} is guided (+1d4 once).`);
+    return { rolls: [] };
+  }
+  if (effect.type === "next_hit_rider") {
+    t.nextHitRider = { dice: String(effect.dice ?? "1d4"), damageType: String(effect.damageType ?? "radiant") };
+    if (effect.concentration) setConcentration(combat, t, castId);
+    t.timedEffects = [
+      ...(t.timedEffects ?? []).filter((r) => r.spellId !== castId),
+      { label: name, pcTurnsLeft: Number(effect.durationPcTurns ?? 10), spellId: castId },
+    ];
+    spendEconomy(t, isBonus);
+    statusEvent(combat, t, name, `${t.name}'s weapon gleams with divine favor.`);
+    return { rolls: [] };
+  }
+  if (effect.type === "speed_buff") {
+    const ally = effect.self
+      ? t
+      : targetId
+        ? combat.tokens.find((x) => x.id === targetId && isFriend(combat, t, x))
+        : t;
+    if (!ally) throw new Error("NEED_TARGET");
+    const amount = Number(effect.amount ?? 2);
+    ally.speedCells += amount;
+    ally.movementLeft += amount;
+    ally.timedEffects = [
+      ...(ally.timedEffects ?? []).filter((r) => r.spellId !== castId),
+      { label: name, pcTurnsLeft: Number(effect.durationPcTurns ?? 10), spellId: castId },
+    ];
+    spendEconomy(t, false);
+    statusEvent(combat, t, name, `${ally.name}'s speed increases by ${amount * 5} ft.`);
+    refreshReachable(combat);
+    return { rolls: [] };
+  }
+  if (effect.type === "fly") {
+    const ally = targetId ? combat.tokens.find((x) => x.id === targetId && isFriend(combat, t, x)) : t;
+    if (!ally) throw new Error("NEED_TARGET");
+    ally.flySpeedCells = Number(effect.flySpeedCells ?? 12);
+    ally.speedCells = Math.max(ally.speedCells, ally.flySpeedCells);
+    ally.movementLeft = Math.max(ally.movementLeft, ally.speedCells);
+    if (effect.concentration) setConcentration(combat, t, castId, ally.id);
+    spendEconomy(t, false);
+    statusEvent(combat, t, name, `${ally.name} takes flight.`);
+    refreshReachable(combat);
+    return { rolls: [] };
+  }
+  if (effect.type === "resistance_buff") {
+    const ally = targetId ? combat.tokens.find((x) => x.id === targetId && isFriend(combat, t, x)) : t;
+    if (!ally) throw new Error("NEED_TARGET");
+    const dtype = String(effect.damageType ?? "fire");
+    ally.damageResistances = [...new Set([...(ally.damageResistances ?? []), dtype])];
+    if (effect.concentration) setConcentration(combat, t, castId, ally.id);
+    ally.timedEffects = [
+      ...(ally.timedEffects ?? []).filter((r) => r.spellId !== castId),
+      { label: name, pcTurnsLeft: Number(effect.durationPcTurns ?? 10), spellId: castId },
+    ];
+    spendEconomy(t, false);
+    statusEvent(combat, t, name, `${ally.name} resists ${dtype}.`);
+    return { rolls: [] };
+  }
+  if (effect.type === "flag_buff") {
+    const targets = effect.party
+      ? combat.tokens.filter((a) => isFriend(combat, t, a) && !a.dead)
+      : [
+          effect.self
+            ? t
+            : targetId
+              ? combat.tokens.find((x) => x.id === targetId && isFriend(combat, t, x))
+              : t,
+        ].filter(Boolean) as CombatToken[];
+    const flag = String(effect.flag ?? "buff");
+    for (const ally of targets) {
+      if (flag === "seeInvisible") ally.seeInvisible = true;
+      if (flag === "mindBlank") {
+        ally.damageResistances = [...new Set([...(ally.damageResistances ?? []), "psychic"])];
+        ally.conditions = (ally.conditions ?? []).filter((c) => c !== "charmed");
+      }
+      ally.timedEffects = [
+        ...(ally.timedEffects ?? []).filter((r) => r.spellId !== `${castId}:${flag}`),
+        { label: name, pcTurnsLeft: Number(effect.durationPcTurns ?? 10), spellId: `${castId}:${flag}` },
+      ];
+    }
+    spendEconomy(t, false);
+    statusEvent(combat, t, name, `${t.name} casts ${name}.`);
+    return { rolls: [] };
+  }
+  if (effect.type === "fire_shield") {
+    t.fireShield = effect.mode === "chill" ? "chill" : "warm";
+    t.damageResistances = [
+      ...new Set([...(t.damageResistances ?? []), t.fireShield === "chill" ? "fire" : "cold"]),
+    ];
+    t.timedEffects = [
+      ...(t.timedEffects ?? []).filter((r) => r.spellId !== castId),
+      { label: name, pcTurnsLeft: Number(effect.durationPcTurns ?? 10), spellId: castId },
+    ];
+    spendEconomy(t, false);
+    statusEvent(combat, t, name, `${t.name} wreaths in a fire shield.`);
+    return { rolls: [] };
+  }
+  if (effect.type === "mirror_image") {
+    t.mirrorImages = Number(effect.images ?? 3);
+    t.timedEffects = [
+      ...(t.timedEffects ?? []).filter((r) => r.spellId !== castId),
+      { label: name, pcTurnsLeft: Number(effect.durationPcTurns ?? 10), spellId: castId },
+    ];
+    spendEconomy(t, false);
+    statusEvent(combat, t, name, `${t.name} splits into ${t.mirrorImages} images.`);
+    return { rolls: [] };
+  }
+  if (effect.type === "blink") {
+    t.blinking = true;
+    if (effect.concentration) setConcentration(combat, t, castId);
+    spendEconomy(t, false);
+    statusEvent(combat, t, name, `${t.name} begins to blink.`);
+    return { rolls: [] };
+  }
+  if (effect.type === "daylight") {
+    if (!dest) throw new Error("NEED_TARGET");
+    plantSpellAuraAt(combat, t, dest.x, dest.y, {
+      radiusCells: Number(effect.radiusCells ?? 12),
+      filter: "all",
+      dispelsObscured: true,
+      spellAuraId: castId,
+    });
+    t.timedEffects = [
+      ...(t.timedEffects ?? []).filter((r) => r.spellId !== castId),
+      { label: name, pcTurnsLeft: Number(effect.durationPcTurns ?? 10), spellId: castId },
+    ];
+    spendEconomy(t, false);
+    refreshAuras(combat);
+    statusEvent(combat, t, name, `${t.name} creates daylight.`);
+    refreshReachable(combat);
+    return { rolls: [] };
+  }
+  if (effect.type === "illusion" || effect.type === "programmed_illusion" || effect.type === "project_image" || effect.type === "cantrip_util" || effect.type === "augury" || effect.type === "create_or_destroy_water" || effect.type === "grant_inventory" || effect.type === "familiar" || effect.type === "alter_self" || effect.type === "clone" || effect.type === "contingency" || effect.type === "divine_smite") {
+    if (effect.type === "grant_inventory") {
+      const item = String(effect.itemId ?? "ration");
+      const count = Number(effect.count ?? 1);
+      for (let i = 0; i < count; i += 1) t.inventory.push(item);
+    }
+    if (effect.type === "familiar") t.familiarHelp = true;
+    if (effect.type === "alter_self") {
+      t.timedEffects = [...(t.timedEffects ?? []), { label: name, pcTurnsLeft: 10, spellId: castId }];
+      if (effect.concentration) setConcentration(combat, t, castId);
+    }
+    if (effect.type === "clone") t.cloneBackup = true;
+    if (effect.type === "contingency") {
+      t.contingencySpellId = String(effect.storedSpellId ?? "spell_cure_wounds");
+      t.contingencyUsed = false;
+    }
+    if (effect.type === "augury") {
+      for (const ally of combat.tokens.filter((a) => isFriend(combat, t, a))) {
+        ally.nextRollBonus = "1d4";
+      }
+    }
+    if (effect.type === "create_or_destroy_water") {
+      for (const ally of combat.tokens) {
+        ally.conditions = (ally.conditions ?? []).filter((c) => c !== "burning");
+      }
+    }
+    if (effect.type === "divine_smite" && targetId) {
+      const foe = combat.tokens.find((x) => x.id === targetId && isFoe(combat, t, x));
+      if (foe) {
+        const extra = rollNotation(String(effect.dice ?? "2d8")).total;
+        applyDamage(combat, foe, extra, false, String(effect.damageType ?? "radiant"), true, t.id, level);
+      }
+    }
+    spendEconomy(t, isBonus);
+    statusEvent(combat, t, name, `${t.name} casts ${name}.`);
+    refreshReachable(combat);
     return { rolls: [] };
   }
   if (effect.type === "aid") {
@@ -2668,6 +3065,12 @@ export function performPcAction(
 
   if (level > 0 && verbalCastBlocked(combat, t.x, t.y) && castUsesVerbal(castId)) {
     throw new Error("SILENCED");
+  }
+  if (level > 0 && antimagicAt(combat, t.x, t.y)) {
+    throw new Error("ANTIMAGIC");
+  }
+  if (fromItem && antimagicAt(combat, t.x, t.y)) {
+    throw new Error("ANTIMAGIC");
   }
   if (level > 0) {
     const counter = offerCounterspell(combat, t, level, castId, {
@@ -2988,24 +3391,27 @@ export function performPcAction(
       if (idx < 0) throw new Error("NO_ITEM");
       t.inventory.splice(idx, 1);
     }
-    let notation = String(effect.dice);
+    let notation = String(effect.dice ?? "0");
     if (castId === "second_wind") notation = `1d10+${t.kit?.fighterLevel ?? pregen?.level ?? 3}`;
     if (effect.ability) {
       const mod = abilityMod(abilityScore(t, pregen, String(effect.ability)));
       if (/^\d+d\d+$/i.test(notation)) notation = `${notation}${mod >= 0 ? "+" : ""}${mod}`;
     }
-    const rolled = rollNotation(notation);
-    let healed = rolled.total;
-    if (t.features?.includes("disciple_of_life") || t.features?.includes("domain_life")) healed += 2 + Math.max(1, slotUsed);
     const patients = effect.mass
       ? combat.tokens.filter((a) => isFriend(combat, t, a) && !a.dead && chebyshev(t.x, t.y, a.x, a.y) <= Number(effect.rangeCells ?? 12)).slice(0, Number(effect.mass))
       : [patient];
     if (effect.mass && !patients.length) throw new Error("BAD_TARGET");
+    const pool = effect.pool != null ? Number(effect.pool) : undefined;
+    const rolled = pool != null ? { total: pool, values: [pool], sides: [0], modifier: 0 } : rollNotation(notation);
+    let healed = rolled.total;
+    if (t.features?.includes("disciple_of_life") || t.features?.includes("domain_life")) healed += 2 + Math.max(1, slotUsed);
+    const perTarget = pool != null ? Math.floor(pool / Math.max(1, patients.length)) : healed;
     let healedShown = 0;
     for (const who of patients.length ? patients : [patient]) {
       const beforeOne = who.hp;
-      who.hp = Math.min(who.maxHp, who.hp + healed);
-      if (healed > 0 && who.hp > 0) wakeFromDying(who);
+      const gain = pool != null ? perTarget : healed;
+      who.hp = Math.min(who.maxHp, who.hp + gain);
+      if (gain > 0 && who.hp > 0) wakeFromDying(who);
       healedShown += who.hp - beforeOne;
     }
     spendEconomy(t, isBonus);
@@ -3633,46 +4039,67 @@ function castFieldSpell(
     return { rolls: roll ? [roll] : [] };
   }
   if (effect.type === "polymorph") {
-    if (target.polymorphBackup) throw new Error("BAD_TARGET");
-    target.polymorphBackup = {
-      hp: target.hp,
-      maxHp: target.maxHp,
-      ac: target.ac,
-      name: target.name,
-      actionIds: [...target.actionIds],
-      bonusActionIds: [...target.bonusActionIds],
+    const formId = String(effect.formId ?? "wolf");
+    const applyForm = (who: CombatToken) => {
+      if (who.polymorphBackup) throw new Error("BAD_TARGET");
+      who.polymorphBackup = {
+        hp: who.hp,
+        maxHp: who.maxHp,
+        ac: who.ac,
+        name: who.name,
+        actionIds: [...who.actionIds],
+        bonusActionIds: [...who.bonusActionIds],
+      };
+      const beast = getMonster(formId);
+      who.name = beast?.name ?? "Wolf";
+      who.maxHp = beast?.hp ?? 11;
+      who.hp = who.maxHp;
+      who.ac = beast?.ac ?? 13;
+      who.actionIds = beast?.actions?.length ? [...beast.actions] : ["ws_wolf_bite"];
+      who.bonusActionIds = [];
+      who.polymorphBy = t.id;
+      who.creatureType = "beast";
     };
-    const beast = getMonster("wolf");
-    target.name = beast?.name ?? "Wolf";
-    target.maxHp = beast?.hp ?? 11;
-    target.hp = target.maxHp;
-    target.ac = beast?.ac ?? 13;
-    target.actionIds = ["ws_wolf_bite"];
-    target.bonusActionIds = [];
-    target.polymorphBy = t.id;
+    if (effect.massWilling) {
+      const allies = combat.tokens.filter(
+        (a) => isFriend(combat, t, a) && !a.dead && chebyshev(t.x, t.y, a.x, a.y) <= Number(effect.rangeCells ?? 6),
+      );
+      for (const ally of allies) applyForm(ally);
+      if (effect.concentration) setConcentration(combat, t, castId);
+      spendEconomy(t, isBonus);
+      statusEvent(combat, t, name, `${t.name} shapes allies into ${formId.replace(/_/g, " ")}s.`);
+      refreshReachable(combat);
+      return { rolls: [] };
+    }
+    applyForm(target);
     if (effect.concentration) setConcentration(combat, t, castId, target.id);
     spendEconomy(t, isBonus);
-    statusEvent(combat, t, name, `${target.polymorphBackup.name} is polymorphed into ${target.name}.`);
+    statusEvent(combat, t, name, `${target.polymorphBackup!.name} is polymorphed into ${target.name}.`);
     refreshReachable(combat);
     return { rolls: [] };
   }
   if (effect.type === "summon") {
+    const monsterId = String(effect.monsterId ?? "");
+    const mon = monsterId ? getMonster(monsterId) : undefined;
+    const spawnX = target.x;
+    const spawnY = target.y;
+    const initRoll = rollNotation("1d20").total + (mon ? 0 : 0);
     const summon: CombatToken = {
       id: `summon-${t.id}-${combat.seq}`,
       kind: "pc",
-      name,
-      x: target.x,
-      y: target.y,
-      hp: 10 + level * 5,
-      maxHp: 10 + level * 5,
-      ac: 12,
-      speedCells: 6,
+      name: mon?.name ?? name,
+      x: spawnX,
+      y: spawnY,
+      hp: mon?.hp ?? 10 + level * 5,
+      maxHp: mon?.hp ?? 10 + level * 5,
+      ac: mon?.ac ?? 12,
+      speedCells: mon?.speedCells ?? 6,
       movementLeft: 0,
       hasAction: false,
       hasBonusAction: false,
-      initiative: t.initiative,
-      actionIds: ["ws_wolf_bite"],
-      bonusActionIds: [],
+      initiative: initRoll || t.initiative - 1,
+      actionIds: mon?.actions?.length ? [...mon.actions] : ["ws_wolf_bite"],
+      bonusActionIds: mon?.bonusActions ? [...mon.bonusActions] : [],
       inventory: [],
       dead: false,
       dodging: false,
@@ -3681,11 +4108,21 @@ function castFieldSpell(
       secondWindUsed: false,
       summonOwner: t.id,
       summonSpellId: castId,
+      monsterId: monsterId || undefined,
+      creatureType: monsterId === "skeleton" ? "undead" : "celestial",
     };
     combat.tokens.push(summon);
+    if (!combat.turnOrder.includes(summon.id)) {
+      combat.turnOrder.push(summon.id);
+      combat.turnOrder.sort(
+        (a, b) =>
+          (combat.tokens.find((x) => x.id === b)?.initiative ?? 0) -
+          (combat.tokens.find((x) => x.id === a)?.initiative ?? 0),
+      );
+    }
     if (effect.concentration) setConcentration(combat, t, castId);
     spendEconomy(t, isBonus);
-    statusEvent(combat, t, name, `${t.name} summons ${name}.`);
+    statusEvent(combat, t, name, `${t.name} summons ${summon.name}.`);
     refreshReachable(combat);
     return { rolls: [] };
   }
@@ -4039,8 +4476,28 @@ export function applyDamage(
   damageType = "untyped",
   skipDefensePrompt = false,
   sourceId?: string,
+  spellLevel?: number,
 ): void {
+  if (spellLevel != null && spellLevel > 0 && spellImmunityLevelAt(combat, target) >= spellLevel) {
+    statusEvent(combat, target, "Globe of Invulnerability", `${target.name} is shielded from a level ${spellLevel} spell.`);
+    return;
+  }
   let harm = harmAmount(target, amount, damageType);
+  if (target.fireShield && sourceId && harm > 0) {
+    const attacker = combat.tokens.find((x) => x.id === sourceId);
+    if (attacker && chebyshev(attacker.x, attacker.y, target.x, target.y) <= 1) {
+      const retal = rollNotation("2d8").total;
+      attacker.hp = Math.max(0, attacker.hp - retal);
+      statusEvent(combat, target, "Fire Shield", `${attacker.name} takes ${retal} from ${target.name}'s fire shield.`);
+    }
+  }
+  if (target.mirrorImages && target.mirrorImages > 0 && harm > 0) {
+    if (Math.random() < 0.5) {
+      target.mirrorImages -= 1;
+      statusEvent(combat, target, "Mirror Image", `A decoy absorbs the hit (${target.mirrorImages} left).`);
+      return;
+    }
+  }
   if (ignorePhysicalResistance(target, damageType)) {
     harm = amount;
     if (target.damageVulnerabilities?.includes(damageType)) harm *= 2;
@@ -4098,6 +4555,30 @@ export function applyDamage(
   target.hp = Math.max(0, target.hp - harm);
   if (target.concentrating && harm > 0) concentrationCheck(combat, target, harm);
   if (target.hp === 0 && !target.dead) {
+    if (target.deathWard) {
+      target.deathWard = false;
+      target.hp = 1;
+      target.dying = false;
+      target.stable = false;
+      statusEvent(combat, target, "Death Ward", `${target.name}'s death ward sparks — they cling to 1 HP.`);
+      return;
+    }
+    if (target.cloneBackup) {
+      target.cloneBackup = false;
+      target.hp = 1;
+      target.dying = false;
+      target.stable = false;
+      target.dead = false;
+      statusEvent(combat, target, "Clone", `${target.name}'s clone absorbs the death — they return at 1 HP.`);
+      return;
+    }
+    if (
+      target.contingencySpellId &&
+      !target.contingencyUsed &&
+      target.hp < Math.floor(target.maxHp / 2)
+    ) {
+      // Handled after mark; contingency triggers on HP < 50% below.
+    }
     if (combat.pvp === "ffa" || combat.pve) {
       markDead(combat, target);
     } else if (target.kind === "pc" && over < target.maxHp) {
@@ -4110,6 +4591,23 @@ export function applyDamage(
       if (currentToken(combat)?.id === target.id) advanceTurn(combat);
     } else {
       markDead(combat, target);
+    }
+  } else if (
+    target.contingencySpellId &&
+    !target.contingencyUsed &&
+    target.hp > 0 &&
+    target.hp < Math.floor(target.maxHp / 2)
+  ) {
+    const stored = target.contingencySpellId;
+    target.contingencyUsed = true;
+    target.contingencySpellId = undefined;
+    const ab = getAbility(stored);
+    if (ab?.effects[0]?.type === "heal") {
+      const rolled = rollNotation(String(ab.effects[0].dice ?? "1d8"));
+      target.hp = Math.min(target.maxHp, target.hp + rolled.total);
+      statusEvent(combat, target, "Contingency", `Contingency casts ${ab.name} — ${target.name} regains ${rolled.total} HP.`);
+    } else {
+      statusEvent(combat, target, "Contingency", `Contingency triggers ${stored}.`);
     }
   }
 }
@@ -4153,6 +4651,16 @@ function auraModsFromEffect(effect: Record<string, unknown>, castId: string, tic
     blocksVerbal: Boolean(effect.blocksVerbal),
     deafenedInside: Boolean(effect.deafenedInside),
     thunderImmuneInside: Boolean(effect.thunderImmuneInside),
+    blocksMovement: Boolean(effect.blocksMovement),
+    blocksSpellsFromOutside: Boolean(effect.blocksSpellsFromOutside),
+    antimagicInside: Boolean(effect.antimagicInside),
+    spellImmunityMaxLevel: effect.spellImmunityMaxLevel != null ? Number(effect.spellImmunityMaxLevel) : undefined,
+    dispelsObscured: Boolean(effect.dispelsObscured),
+    difficultTerrainFor: effect.difficultTerrainFor === "enemy" ? "enemy" : undefined,
+    passCreatureTypes: Array.isArray(effect.passCreatureTypes)
+      ? (effect.passCreatureTypes as string[])
+      : undefined,
+    resistances: Array.isArray(effect.resistances) ? (effect.resistances as string[]) : undefined,
     speedMult: effect.speedMult != null ? Number(effect.speedMult) : undefined,
     spellAuraId: castId,
     onEnterOrEndTurn: tick,
@@ -4425,6 +4933,9 @@ function markDead(combat: CombatState, target: CombatToken): void {
   target.dead = true;
   target.dying = false;
   target.hp = 0;
+  const ownedIds = new Set(combat.tokens.filter((other) => other.summonOwner === target.id).map((o) => o.id));
+  combat.tokens = combat.tokens.filter((other) => other.summonOwner !== target.id);
+  if (ownedIds.size) combat.turnOrder = combat.turnOrder.filter((id) => !ownedIds.has(id));
   recordElimination(combat, target);
   emit(combat, {
     kind: "down",

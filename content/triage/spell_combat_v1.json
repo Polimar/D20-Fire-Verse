@@ -1,0 +1,648 @@
+{
+  "version": 1,
+  "updated": "2026-10-16",
+  "description": "Plan triage batches 1–5 plus mega-5 remaining note spells.",
+  "counts": {
+    "need_mechanic": 84,
+    "need_mechanic_no_combat": 75,
+    "total": 159
+  },
+  "spells": [
+    {
+      "spell_id": "alarm",
+      "verdict": "need_mechanic_no_combat"
+    },
+    {
+      "spell_id": "alter_self",
+      "verdict": "need_mechanic"
+    },
+    {
+      "spell_id": "animal_shapes",
+      "verdict": "need_mechanic"
+    },
+    {
+      "spell_id": "animate_dead",
+      "verdict": "need_mechanic_no_combat"
+    },
+    {
+      "spell_id": "animate_objects",
+      "verdict": "need_mechanic"
+    },
+    {
+      "spell_id": "antilife_shell",
+      "verdict": "need_mechanic"
+    },
+    {
+      "spell_id": "antimagic_field",
+      "verdict": "need_mechanic"
+    },
+    {
+      "spell_id": "arcane_eye",
+      "verdict": "need_mechanic_no_combat"
+    },
+    {
+      "spell_id": "arcane_lock",
+      "verdict": "need_mechanic_no_combat"
+    },
+    {
+      "spell_id": "arcanists_magic_aura",
+      "verdict": "need_mechanic"
+    },
+    {
+      "spell_id": "astral_projection",
+      "verdict": "need_mechanic_no_combat"
+    },
+    {
+      "spell_id": "augury",
+      "verdict": "need_mechanic"
+    },
+    {
+      "spell_id": "aura_of_life",
+      "verdict": "need_mechanic"
+    },
+    {
+      "spell_id": "awaken",
+      "verdict": "need_mechanic"
+    },
+    {
+      "spell_id": "blink",
+      "verdict": "need_mechanic"
+    },
+    {
+      "spell_id": "clairvoyance",
+      "verdict": "need_mechanic_no_combat"
+    },
+    {
+      "spell_id": "clone",
+      "verdict": "need_mechanic"
+    },
+    {
+      "spell_id": "commune",
+      "verdict": "need_mechanic_no_combat"
+    },
+    {
+      "spell_id": "commune_with_nature",
+      "verdict": "need_mechanic_no_combat"
+    },
+    {
+      "spell_id": "comprehend_languages",
+      "verdict": "need_mechanic_no_combat"
+    },
+    {
+      "spell_id": "contingency",
+      "verdict": "need_mechanic"
+    },
+    {
+      "spell_id": "continual_flame",
+      "verdict": "need_mechanic"
+    },
+    {
+      "spell_id": "control_weather",
+      "verdict": "need_mechanic"
+    },
+    {
+      "spell_id": "create_food_and_water",
+      "verdict": "need_mechanic"
+    },
+    {
+      "spell_id": "create_or_destroy_water",
+      "verdict": "need_mechanic"
+    },
+    {
+      "spell_id": "create_undead",
+      "verdict": "need_mechanic"
+    },
+    {
+      "spell_id": "creation",
+      "verdict": "need_mechanic"
+    },
+    {
+      "spell_id": "dancing_lights",
+      "verdict": "need_mechanic_no_combat"
+    },
+    {
+      "spell_id": "darkvision",
+      "verdict": "need_mechanic"
+    },
+    {
+      "spell_id": "daylight",
+      "verdict": "need_mechanic"
+    },
+    {
+      "spell_id": "death_ward",
+      "verdict": "need_mechanic"
+    },
+    {
+      "spell_id": "demiplane",
+      "verdict": "need_mechanic_no_combat"
+    },
+    {
+      "spell_id": "detect_evil_and_good",
+      "verdict": "need_mechanic_no_combat"
+    },
+    {
+      "spell_id": "detect_magic",
+      "verdict": "need_mechanic_no_combat"
+    },
+    {
+      "spell_id": "detect_poison_and_disease",
+      "verdict": "need_mechanic_no_combat"
+    },
+    {
+      "spell_id": "disguise_self",
+      "verdict": "need_mechanic_no_combat"
+    },
+    {
+      "spell_id": "divination",
+      "verdict": "need_mechanic_no_combat"
+    },
+    {
+      "spell_id": "divine_favor",
+      "verdict": "need_mechanic"
+    },
+    {
+      "spell_id": "divine_smite",
+      "verdict": "need_mechanic"
+    },
+    {
+      "spell_id": "druidcraft",
+      "verdict": "need_mechanic"
+    },
+    {
+      "spell_id": "elementalism",
+      "verdict": "need_mechanic"
+    },
+    {
+      "spell_id": "enhance_ability",
+      "verdict": "need_mechanic"
+    },
+    {
+      "spell_id": "etherealness",
+      "verdict": "need_mechanic_no_combat"
+    },
+    {
+      "spell_id": "expeditious_retreat",
+      "verdict": "need_mechanic_no_combat"
+    },
+    {
+      "spell_id": "fabricate",
+      "verdict": "need_mechanic_no_combat"
+    },
+    {
+      "spell_id": "false_life",
+      "verdict": "need_mechanic"
+    },
+    {
+      "spell_id": "feather_fall",
+      "verdict": "need_mechanic_no_combat"
+    },
+    {
+      "spell_id": "find_familiar",
+      "verdict": "need_mechanic"
+    },
+    {
+      "spell_id": "find_the_path",
+      "verdict": "need_mechanic"
+    },
+    {
+      "spell_id": "find_traps",
+      "verdict": "need_mechanic_no_combat"
+    },
+    {
+      "spell_id": "fire_shield",
+      "verdict": "need_mechanic"
+    },
+    {
+      "spell_id": "flame_blade",
+      "verdict": "need_mechanic"
+    },
+    {
+      "spell_id": "floating_disk",
+      "verdict": "need_mechanic"
+    },
+    {
+      "spell_id": "fly",
+      "verdict": "need_mechanic"
+    },
+    {
+      "spell_id": "fog_cloud",
+      "verdict": "need_mechanic"
+    },
+    {
+      "spell_id": "forbiddance",
+      "verdict": "need_mechanic_no_combat"
+    },
+    {
+      "spell_id": "foresight",
+      "verdict": "need_mechanic"
+    },
+    {
+      "spell_id": "freedom_of_movement",
+      "verdict": "need_mechanic_no_combat"
+    },
+    {
+      "spell_id": "gate",
+      "verdict": "need_mechanic_no_combat"
+    },
+    {
+      "spell_id": "gentle_repose",
+      "verdict": "need_mechanic_no_combat"
+    },
+    {
+      "spell_id": "glibness",
+      "verdict": "need_mechanic"
+    },
+    {
+      "spell_id": "globe_of_invulnerability",
+      "verdict": "need_mechanic"
+    },
+    {
+      "spell_id": "goodberry",
+      "verdict": "need_mechanic"
+    },
+    {
+      "spell_id": "greater_invisibility",
+      "verdict": "need_mechanic"
+    },
+    {
+      "spell_id": "greater_restoration",
+      "verdict": "need_mechanic"
+    },
+    {
+      "spell_id": "guards_and_wards",
+      "verdict": "need_mechanic"
+    },
+    {
+      "spell_id": "guidance",
+      "verdict": "need_mechanic"
+    },
+    {
+      "spell_id": "hallow",
+      "verdict": "need_mechanic"
+    },
+    {
+      "spell_id": "hallucinatory_terrain",
+      "verdict": "need_mechanic_no_combat"
+    },
+    {
+      "spell_id": "heal",
+      "verdict": "need_mechanic"
+    },
+    {
+      "spell_id": "heroes_feast",
+      "verdict": "need_mechanic"
+    },
+    {
+      "spell_id": "heroism",
+      "verdict": "need_mechanic"
+    },
+    {
+      "spell_id": "identify",
+      "verdict": "need_mechanic_no_combat"
+    },
+    {
+      "spell_id": "illusory_script",
+      "verdict": "need_mechanic"
+    },
+    {
+      "spell_id": "instant_summons",
+      "verdict": "need_mechanic_no_combat"
+    },
+    {
+      "spell_id": "jump",
+      "verdict": "need_mechanic_no_combat"
+    },
+    {
+      "spell_id": "knock",
+      "verdict": "need_mechanic_no_combat"
+    },
+    {
+      "spell_id": "legend_lore",
+      "verdict": "need_mechanic_no_combat"
+    },
+    {
+      "spell_id": "light",
+      "verdict": "need_mechanic_no_combat"
+    },
+    {
+      "spell_id": "locate_animals_or_plants",
+      "verdict": "need_mechanic_no_combat"
+    },
+    {
+      "spell_id": "locate_creature",
+      "verdict": "need_mechanic_no_combat"
+    },
+    {
+      "spell_id": "locate_object",
+      "verdict": "need_mechanic_no_combat"
+    },
+    {
+      "spell_id": "longstrider",
+      "verdict": "need_mechanic"
+    },
+    {
+      "spell_id": "mage_hand",
+      "verdict": "need_mechanic_no_combat"
+    },
+    {
+      "spell_id": "magic_mouth",
+      "verdict": "need_mechanic_no_combat"
+    },
+    {
+      "spell_id": "magnificent_mansion",
+      "verdict": "need_mechanic_no_combat"
+    },
+    {
+      "spell_id": "major_image",
+      "verdict": "need_mechanic_no_combat"
+    },
+    {
+      "spell_id": "mass_heal",
+      "verdict": "need_mechanic"
+    },
+    {
+      "spell_id": "maze",
+      "verdict": "need_mechanic_no_combat"
+    },
+    {
+      "spell_id": "meld_into_stone",
+      "verdict": "need_mechanic_no_combat"
+    },
+    {
+      "spell_id": "mending",
+      "verdict": "need_mechanic_no_combat"
+    },
+    {
+      "spell_id": "message",
+      "verdict": "need_mechanic_no_combat"
+    },
+    {
+      "spell_id": "mind_blank",
+      "verdict": "need_mechanic"
+    },
+    {
+      "spell_id": "minor_illusion",
+      "verdict": "need_mechanic"
+    },
+    {
+      "spell_id": "mirage_arcane",
+      "verdict": "need_mechanic"
+    },
+    {
+      "spell_id": "mirror_image",
+      "verdict": "need_mechanic"
+    },
+    {
+      "spell_id": "mislead",
+      "verdict": "need_mechanic_no_combat"
+    },
+    {
+      "spell_id": "move_earth",
+      "verdict": "need_mechanic_no_combat"
+    },
+    {
+      "spell_id": "nondetection",
+      "verdict": "need_mechanic_no_combat"
+    },
+    {
+      "spell_id": "pass_without_trace",
+      "verdict": "need_mechanic_no_combat"
+    },
+    {
+      "spell_id": "passwall",
+      "verdict": "need_mechanic"
+    },
+    {
+      "spell_id": "phantom_steed",
+      "verdict": "need_mechanic"
+    },
+    {
+      "spell_id": "planar_ally",
+      "verdict": "need_mechanic"
+    },
+    {
+      "spell_id": "plane_shift",
+      "verdict": "need_mechanic_no_combat"
+    },
+    {
+      "spell_id": "plant_growth",
+      "verdict": "need_mechanic_no_combat"
+    },
+    {
+      "spell_id": "power_word_heal",
+      "verdict": "need_mechanic"
+    },
+    {
+      "spell_id": "power_word_kill",
+      "verdict": "need_mechanic"
+    },
+    {
+      "spell_id": "prestidigitation",
+      "verdict": "need_mechanic"
+    },
+    {
+      "spell_id": "private_sanctum",
+      "verdict": "need_mechanic_no_combat"
+    },
+    {
+      "spell_id": "programmed_illusion",
+      "verdict": "need_mechanic"
+    },
+    {
+      "spell_id": "project_image",
+      "verdict": "need_mechanic"
+    },
+    {
+      "spell_id": "protection_from_energy",
+      "verdict": "need_mechanic"
+    },
+    {
+      "spell_id": "protection_from_evil_and_good",
+      "verdict": "need_mechanic"
+    },
+    {
+      "spell_id": "protection_from_poison",
+      "verdict": "need_mechanic"
+    },
+    {
+      "spell_id": "purify_food_and_drink",
+      "verdict": "need_mechanic_no_combat"
+    },
+    {
+      "spell_id": "raise_dead",
+      "verdict": "need_mechanic"
+    },
+    {
+      "spell_id": "reincarnate",
+      "verdict": "need_mechanic_no_combat"
+    },
+    {
+      "spell_id": "remove_curse",
+      "verdict": "need_mechanic"
+    },
+    {
+      "spell_id": "resistance",
+      "verdict": "need_mechanic"
+    },
+    {
+      "spell_id": "resurrection",
+      "verdict": "need_mechanic"
+    },
+    {
+      "spell_id": "revivify",
+      "verdict": "need_mechanic"
+    },
+    {
+      "spell_id": "rope_trick",
+      "verdict": "need_mechanic_no_combat"
+    },
+    {
+      "spell_id": "secret_chest",
+      "verdict": "need_mechanic_no_combat"
+    },
+    {
+      "spell_id": "see_invisibility",
+      "verdict": "need_mechanic"
+    },
+    {
+      "spell_id": "sending",
+      "verdict": "need_mechanic_no_combat"
+    },
+    {
+      "spell_id": "sequester",
+      "verdict": "need_mechanic_no_combat"
+    },
+    {
+      "spell_id": "shapechange",
+      "verdict": "need_mechanic"
+    },
+    {
+      "spell_id": "shillelagh",
+      "verdict": "need_mechanic"
+    },
+    {
+      "spell_id": "shining_smite",
+      "verdict": "need_mechanic"
+    },
+    {
+      "spell_id": "silent_image",
+      "verdict": "need_mechanic"
+    },
+    {
+      "spell_id": "simulacrum",
+      "verdict": "need_mechanic_no_combat"
+    },
+    {
+      "spell_id": "sorcerous_burst",
+      "verdict": "need_mechanic"
+    },
+    {
+      "spell_id": "spare_the_dying",
+      "verdict": "need_mechanic"
+    },
+    {
+      "spell_id": "speak_with_animals",
+      "verdict": "need_mechanic_no_combat"
+    },
+    {
+      "spell_id": "speak_with_dead",
+      "verdict": "need_mechanic_no_combat"
+    },
+    {
+      "spell_id": "speak_with_plants",
+      "verdict": "need_mechanic_no_combat"
+    },
+    {
+      "spell_id": "spider_climb",
+      "verdict": "need_mechanic"
+    },
+    {
+      "spell_id": "spike_growth",
+      "verdict": "need_mechanic"
+    },
+    {
+      "spell_id": "stone_shape",
+      "verdict": "need_mechanic_no_combat"
+    },
+    {
+      "spell_id": "stoneskin",
+      "verdict": "need_mechanic"
+    },
+    {
+      "spell_id": "telepathic_bond",
+      "verdict": "need_mechanic_no_combat"
+    },
+    {
+      "spell_id": "teleport",
+      "verdict": "need_mechanic_no_combat"
+    },
+    {
+      "spell_id": "teleportation_circle",
+      "verdict": "need_mechanic_no_combat"
+    },
+    {
+      "spell_id": "thaumaturgy",
+      "verdict": "need_mechanic_no_combat"
+    },
+    {
+      "spell_id": "time_stop",
+      "verdict": "need_mechanic"
+    },
+    {
+      "spell_id": "tiny_hut",
+      "verdict": "need_mechanic_no_combat"
+    },
+    {
+      "spell_id": "tongues",
+      "verdict": "need_mechanic_no_combat"
+    },
+    {
+      "spell_id": "transport_via_plants",
+      "verdict": "need_mechanic_no_combat"
+    },
+    {
+      "spell_id": "tree_stride",
+      "verdict": "need_mechanic_no_combat"
+    },
+    {
+      "spell_id": "true_resurrection",
+      "verdict": "need_mechanic"
+    },
+    {
+      "spell_id": "true_seeing",
+      "verdict": "need_mechanic_no_combat"
+    },
+    {
+      "spell_id": "true_strike",
+      "verdict": "need_mechanic"
+    },
+    {
+      "spell_id": "wall_of_force",
+      "verdict": "need_mechanic"
+    },
+    {
+      "spell_id": "warding_bond",
+      "verdict": "need_mechanic"
+    },
+    {
+      "spell_id": "water_breathing",
+      "verdict": "need_mechanic_no_combat"
+    },
+    {
+      "spell_id": "water_walk",
+      "verdict": "need_mechanic_no_combat"
+    },
+    {
+      "spell_id": "wind_walk",
+      "verdict": "need_mechanic_no_combat"
+    },
+    {
+      "spell_id": "wish",
+      "verdict": "need_mechanic_no_combat"
+    },
+    {
+      "spell_id": "word_of_recall",
+      "verdict": "need_mechanic_no_combat"
+    }
+  ]
+}

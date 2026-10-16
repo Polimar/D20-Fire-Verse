@@ -22,20 +22,22 @@ test("normalizeGapBucket maps common admin reasons", () => {
 test("buildGapReport matches admin-scale missing mechanic queue", () => {
   const report = buildGapReport();
   assert.ok(report.catalogTotal > 500);
-  assert.ok(report.missingTotal > 200);
-  assert.ok((report.missingByKind.spell ?? 0) > 100);
+  // Post mega-4–8: spell/monster queues cleared; items still dominate Missing.
+  assert.ok(report.missingTotal >= 150);
+  assert.equal(report.missingByKind.spell ?? 0, 0);
+  assert.ok((report.missingByKind.item ?? 0) >= 150);
   assert.ok(report.spellsWithoutGap > 100);
-  assert.ok(Object.keys(report.bucketCounts).length >= 3);
+  assert.ok(Object.keys(report.bucketCounts).length >= 1);
   const sumKinds = Object.values(report.missingByKind).reduce((a, b) => a + b, 0);
   assert.equal(sumKinds, report.missingTotal);
   assert.equal(typeof report.deltaFromBaseline, "number");
   assert.equal(GAP_REPORT_BASELINE.missingTotal, 556);
   const familySum = Object.values(report.workFamilyCounts).reduce((a, b) => a + b, 0);
   assert.equal(familySum, report.missingTotal);
-  assert.ok(report.workFamilyCounts.spell_batch_note_or_wire > 50);
+  assert.ok((report.workFamilyCounts.item_batch_unparsed_other ?? 0) + (report.workFamilyCounts.item_batch_unparsed_magic_gear ?? 0) > 50);
   const text = formatGapReport(report);
   assert.match(text, /Work families/);
-  assert.match(text, /spell families:/i);
+  assert.match(text, /item families:/i);
 });
 
 test("spellWorkFamily routes exploration vs note stub", () => {

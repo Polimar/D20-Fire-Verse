@@ -9,8 +9,5 @@
   "srd": {
     "line": "Level 1 Transmutation (Sorcerer, Warlock, Wizard)",
     "text": "_Level 1 Transmutation (Sorcerer, Warlock, Wizard)_\n\n**Casting Time:** Bonus Action\n**Range:** Self\n**Components:** V, S\n**Duration:** Concentration, up to 10 minutes\n\nYou take the Dash action, and until the spell ends, you can take that action again as a Bonus Action."
-  },
-  "notModeled": [
-    "No battlefield effect is run for this spell yet."
-  ]
+  }
 }

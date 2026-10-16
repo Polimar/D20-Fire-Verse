@@ -4,13 +4,30 @@
  */
 
 import type { ItemDef, MonsterDef, SpellDef } from "@d20-fireverse/content-schema";
+import { getAbility } from "./campaign.js";
 import { engineView } from "./content-engine.js";
+import { srdAbility } from "./srd-sheet.js";
+import { srdMonsterId } from "./srd-monsters.js";
 
 export type ContentReviewHints = {
   notModeled?: string[];
   unparsedFields?: string[];
   srd?: { text?: string };
 };
+
+/** Accepted v1 approximations once a spell has a non-note / sheet ability. */
+function isAcceptedTriageApproximation(reason: string): boolean {
+  return (
+    /No battlefield effect/i.test(reason) ||
+    /Long casting time/i.test(reason) ||
+    /Upcast adds extra targets/i.test(reason) ||
+    /Area shape (emanation|cylinder)/i.test(reason) ||
+    /Reaction casting is not offered/i.test(reason) ||
+    /Secondary damage/i.test(reason) ||
+    /Combat vs SRD mismatch: Damage/i.test(reason) ||
+    /Concentration tracking and always-know-location/i.test(reason)
+  );
+}
 
 function reviewReasons(review?: ContentReviewHints): string[] {
   const reasons: string[] = [];
@@ -64,8 +81,19 @@ function itemDrinkReasons(game: ItemDef, review?: ContentReviewHints): string[] 
   return [];
 }
 
+function spellAbilityMeta(spellId: string): { sheetOnly?: boolean; effectType?: string } {
+  const ability = srdAbility(`spell_${spellId}`) ?? srdAbility(spellId);
+  const effect = ability?.effects?.[0] as { type?: string } | undefined;
+  return {
+    sheetOnly: Boolean(ability?.sheetOnly) || effect?.type === "sheet_spell",
+    effectType: effect?.type,
+  };
+}
+
 function spellEngineReasons(spell: SpellDef): string[] {
   const reasons: string[] = [];
+  const meta = spellAbilityMeta(spell.id);
+  if (meta.sheetOnly) return reasons;
   const view = engineView("spell", spell.id, spell, false);
   if (view?.state === "sheet") {
     reasons.push(
@@ -89,10 +117,46 @@ function monsterEngineReasons(id: string, monster: MonsterDef): string[] {
     reasons.push(view.headline);
     return reasons;
   }
+  for (const line of view.lines ?? []) {
+    if (line.ok) continue;
+    // v1: monsters never take reactions; skip those lines as gaps.
+    if (/^Reaction:/i.test(line.label)) continue;
+    reasons.push(`Combat engine (${line.label}): ${line.detail}`);
+  }
   for (const mismatch of view.mismatches) {
     reasons.push(`Stat block vs engine: ${mismatch}`);
   }
   return reasons;
+}
+
+/** Narrative traits / reactions / partial spell lists are out of v1 once the block compiles. */
+function monsterReviewStale(reason: string, compiled: boolean, monsterId: string): boolean {
+  if (!compiled) return false;
+  if (
+    /Trait “/i.test(reason) ||
+    /Trait "/i.test(reason) ||
+    /monsters take no reactions/i.test(reason) ||
+    /Reaction “/i.test(reason) ||
+    /Action “Spellcasting”: only spells wired/i.test(reason) ||
+    /Parser could not map field: abilities\./i.test(reason) ||
+    /Parser could not map field: actions/i.test(reason) ||
+    /combat engine skips this stat block/i.test(reason)
+  ) {
+    return true;
+  }
+  // Drop review lines for moves that now compile into abilities.
+  const move = reason.match(/(?:Action|Bonus action|Legendary action)\s+[“"]([^”"]+)[”"]/i)?.[1];
+  if (move) {
+    const slug = move
+      .toLowerCase()
+      .replace(/['’]/g, "")
+      .replace(/[^a-z0-9]+/g, "_")
+      .replace(/^_|_$/g, "");
+    const mid = monsterId.startsWith("srd_") ? monsterId : srdMonsterId(monsterId.replace(/_/g, " "));
+    const candidates = [`${mid}:${slug}`, `srd_${monsterId}:${slug}`];
+    if (candidates.some((aid) => Boolean(srdAbility(aid) || getAbility(aid)))) return true;
+  }
+  return false;
 }
 
 function classEngineReasons(id: string, game: { name?: string; levels?: Array<{ level: number; features: string[] }> }): string[] {
@@ -146,7 +210,7 @@ export function mechanicGapReasons(kind: string, id: string, game: unknown, revi
         reasons.length = 0;
         reasons.push(...kept);
       }
-      if (id === "spirit_guardians") {
+      if (id === "spirit_guardians" || id === "antilife_shell" || id === "aura_of_life") {
         const kept = reasons.filter((reason) => !/Area shape emanation is approximated/i.test(reason));
         reasons.length = 0;
         reasons.push(...kept);
@@ -158,17 +222,39 @@ export function mechanicGapReasons(kind: string, id: string, game: unknown, revi
         reasons.length = 0;
         reasons.push(...kept);
       }
+      {
+        const meta = spellAbilityMeta(id);
+        if (meta.sheetOnly || (meta.effectType && meta.effectType !== "note")) {
+          const kept = reasons.filter((reason) => !/No battlefield effect/i.test(reason));
+          reasons.length = 0;
+          reasons.push(...kept);
+        }
+      }
       reasons.push(...spellEngineReasons(game as SpellDef));
       if (id === "dimension_door") {
         const kept = reasons.filter((reason) => !/Secondary damage/i.test(reason) && !/4d6 force/i.test(reason));
         reasons.length = 0;
         reasons.push(...kept);
       }
+      {
+        const meta = spellAbilityMeta(id);
+        if (meta.effectType && meta.effectType !== "note") {
+          const kept = reasons.filter((reason) => !isAcceptedTriageApproximation(reason));
+          reasons.length = 0;
+          reasons.push(...kept);
+        }
+      }
       break;
     }
-    case "monster":
-      reasons.push(...monsterEngineReasons(id, game as MonsterDef));
+    case "monster": {
+      const mon = game as MonsterDef;
+      const view = engineView("monster", id, mon, false);
+      const compiled = Boolean(view && view.state !== "unused");
+      const kept = reasons.filter((reason) => !monsterReviewStale(reason, compiled, id));
+      reasons.length = 0;
+      reasons.push(...kept, ...monsterEngineReasons(id, mon));
       break;
+    }
     case "class":
       reasons.push(...classEngineReasons(id, game as { name?: string; levels?: Array<{ level: number; features: string[] }> }));
       break;

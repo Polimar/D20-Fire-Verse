@@ -23,7 +23,11 @@ const generatedPath = path.resolve(here, "../../../content/rules/srd51_combat_ge
 const generatedCatalog = fs.existsSync(generatedPath)
   ? (JSON.parse(fs.readFileSync(generatedPath, "utf8")) as Record<string, SrdAbility>)
   : {};
-const catalog: Record<string, SrdAbility> = { ...generatedCatalog, ...curatedCatalog };
+const mega4Path = path.resolve(here, "../../../content/rules/srd51_combat_mega4.json");
+const mega4Catalog = fs.existsSync(mega4Path)
+  ? (JSON.parse(fs.readFileSync(mega4Path, "utf8")) as Record<string, SrdAbility>)
+  : {};
+const catalog: Record<string, SrdAbility> = { ...generatedCatalog, ...curatedCatalog, ...mega4Catalog };
 
 export type SrdAbility = {
   id: string;
@@ -32,6 +36,8 @@ export type SrdAbility = {
   level?: number;
   aim?: string;
   combat?: boolean;
+  /** Out-of-combat / sheet tracking only — never offered in fight menus. */
+  sheetOnly?: boolean;
   effects: Array<Record<string, unknown>>;
 };
 
@@ -91,8 +97,10 @@ export function srdAbility(id: string): SrdAbility | undefined {
 
 export function isCombatSpell(id: string, lookup: (id: string) => { effects?: unknown[] } | undefined): boolean {
   const srd = catalog[id];
+  if (srd?.sheetOnly || srd?.combat === false) return false;
   if (srd?.combat) return true;
-  const known = lookup(id);
+  const known = lookup(id) as SrdAbility | undefined;
+  if (known?.sheetOnly || known?.combat === false) return false;
   return Boolean(known?.effects?.length) && id.startsWith("spell_");
 }
 
@@ -379,8 +387,10 @@ export function refreshMenus(token: CombatToken, pregen: Pregen | undefined, loo
   }
   const place = (id: string, charged = false) => {
     if (!spellListed(id)) return;
-    const ability = lookup(id);
+    const ability = lookup(id) as SrdAbility | undefined;
     if (!ability || ability.actionType === "reaction") return;
+    if (ability.sheetOnly || ability.combat === false) return;
+    if (ability.effects?.[0]?.type === "sheet_spell") return;
     const level = spellLevel(ability);
     if (level > 0 && !charged && !slotReady(token, level)) return;
     if (token.raging && (id.startsWith("spell_") || token.cantrips?.includes(id) || token.spells?.includes(id))) return;

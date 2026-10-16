@@ -56,6 +56,8 @@ export function describeEffect(effect: Record<string, unknown>): string {
     bits.push(`${ABILITY_NAMES[String(effect.ability)] ?? String(effect.ability ?? "?")} save DC ${effect.dc ?? (effect.dcFrom === "spell" ? "spell DC" : "?")}`);
   } else if (type === "heal") {
     bits.push(`heals ${String(effect.dice ?? "?")}${effect.ability ? " + mod" : ""}`);
+  } else if (type === "sheet_spell") {
+    bits.push(String(effect.summary ?? "sheet tracking only"));
   } else {
     bits.push(type.replace(/_/g, " "));
   }
@@ -184,6 +186,21 @@ function spellView(id: string, game: SpellDef): EngineView {
       headline: `Heroes can learn it at level-up, but it does nothing in a fight: no combat ability spell_${id} exists.`,
       source: "Wire it in content/rules/srd51_combat.json to make it castable",
       lines: [],
+      mismatches: [],
+      notes: [],
+    };
+  }
+  const sheetOnly =
+    Boolean((ability as AbilityDef & { sheetOnly?: boolean }).sheetOnly) ||
+    ability.effects[0]?.type === "sheet_spell" ||
+    (ability as AbilityDef & { combat?: boolean }).combat === false;
+  if (sheetOnly) {
+    const summary = String((ability.effects[0] as { summary?: string } | undefined)?.summary ?? "Tracked on the character sheet; no grid effect in v1.");
+    return {
+      state: "sheet",
+      headline: "Tracked on the character sheet; no grid effect in v1.",
+      source: "content/rules/srd51_combat_mega4.json (sheetOnly)",
+      lines: [{ label: ability.name, detail: summary, ok: true }],
       mismatches: [],
       notes: [],
     };

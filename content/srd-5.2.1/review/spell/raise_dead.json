@@ -9,9 +9,5 @@
   "srd": {
     "line": "Level 5 Necromancy (Bard, Cleric, Paladin)",
     "text": "_Level 5 Necromancy (Bard, Cleric, Paladin)_\n\n**Casting Time:** 1 hour\n**Range:** Touch\n**Components:** V, S, M (a diamond worth 500+ GP, which the spell consumes)\n**Duration:** Instantaneous\n\nWith a touch, you revive a dead creature if it has been dead no longer than 10 days and it wasn't Undead when it died.\n\nThe creature returns to life with 1 Hit Point. This spell also neutralizes any poisons that affected the creature at the time of death.\n\nThis spell closes all mortal wounds, but it doesn't restore missing body parts. If the creature is lacking body parts or organs integral for its survival—its head, for instance—the spell automatically fails.\n\nComing back from the dead is an ordeal. The target takes a −4 penalty to D20 Tests. Every time the target finishes a Long Rest, the penalty is reduced by 1 until it becomes 0."
-  },
-  "notModeled": [
-    "Long casting time is resolved as a single combat action.",
-    "No battlefield effect is run for this spell yet."
-  ]
+  }
 }
