@@ -9,6 +9,7 @@ export type AuraTick = {
   heal?: number;
   saveAbility?: string;
   saveDc?: number;
+  halfOnSuccess?: boolean;
 };
 
 export type AuraMods = {
@@ -30,6 +31,11 @@ export type AuraMods = {
   onEnterOrEndTurn?: AuraTick;
   blocksMovement?: boolean;
   blocksSpellsFromOutside?: boolean;
+  blocksVerbal?: boolean;
+  deafenedInside?: boolean;
+  thunderImmuneInside?: boolean;
+  /** Ties aura to a concentrating spell for cleanup. */
+  spellAuraId?: string;
 };
 
 export type CombatAura = AuraMods & {
@@ -49,6 +55,7 @@ export type AuraToken = {
   features?: string[];
   kit?: { flags: string[] };
   followAuras?: AuraMods[];
+  spellAuras?: AuraMods[];
   auraBonus?: number;
   auraAc?: number;
   auraSaveAdv?: AuraSaveAdv;
@@ -57,6 +64,7 @@ export type AuraToken = {
   auraResistances?: string[];
   auraSpeedMult?: number;
   auraObscured?: boolean;
+  auraThunderImmune?: boolean;
   conditions?: string[];
 };
 
@@ -146,6 +154,14 @@ function followFromToken(source: AuraToken): CombatAura[] {
       origin: { kind: "token", tokenId: source.id },
     });
   }
+  for (const [i, spec] of (source.spellAuras ?? []).entries()) {
+    out.push({
+      ...spec,
+      id: `spell:${source.id}:${spec.spellAuraId ?? i}`,
+      ownerId: source.id,
+      origin: { kind: "token", tokenId: source.id },
+    });
+  }
   return out;
 }
 
@@ -162,6 +178,8 @@ export function refreshAuras(combat: AuraCombat, paladinSaveBonus: (source: Aura
     token.auraResistances = [];
     token.auraSpeedMult = 1;
     token.auraObscured = false;
+    token.auraThunderImmune = false;
+    token.conditions = (token.conditions ?? []).filter((c) => c !== "deafened");
   }
   for (const aura of combat.auras) {
     const owner = combat.tokens.find((t) => t.id === aura.ownerId);
@@ -180,7 +198,12 @@ export function refreshAuras(combat: AuraCombat, paladinSaveBonus: (source: Aura
         token.auraResistances = [...new Set([...(token.auraResistances ?? []), ...aura.resistances])];
       }
       if (aura.speedMult != null) token.auraSpeedMult = Math.min(token.auraSpeedMult ?? 1, aura.speedMult);
-      if (aura.heavilyObscured && token.id !== aura.ownerId) token.auraObscured = true;
+      if (aura.heavilyObscured) token.auraObscured = true;
+      if (aura.thunderImmuneInside) token.auraThunderImmune = true;
+      if (aura.deafenedInside) {
+        if (!token.conditions) token.conditions = [];
+        if (!token.conditions.includes("deafened")) token.conditions.push("deafened");
+      }
       if (aura.strip?.length) {
         token.conditions = (token.conditions ?? []).filter((c) => !aura.strip!.includes(c as "frightened" | "charmed"));
       }
@@ -216,4 +239,42 @@ export function pullAura(combat: AuraCombat, actor: AuraToken): boolean {
 
 export function aurasCovering(combat: AuraCombat, x: number, y: number): CombatAura[] {
   return (combat.auras ?? []).filter((a) => inAuraRadius(combat, a, x, y));
+}
+
+export function verbalCastBlocked(combat: AuraCombat, x: number, y: number): boolean {
+  return aurasCovering(combat, x, y).some((a) => a.blocksVerbal);
+}
+
+export function plantSpellAuraAt(
+  combat: AuraCombat,
+  owner: AuraToken,
+  x: number,
+  y: number,
+  spec: AuraMods,
+): void {
+  const spellAuraId = spec.spellAuraId ?? "aura";
+  combat.auras ??= [];
+  combat.auras = combat.auras.filter((a) => !(a.ownerId === owner.id && a.spellAuraId === spellAuraId));
+  combat.auras.push({
+    ...spec,
+    spellAuraId,
+    id: `spellcell:${owner.id}:${spellAuraId}`,
+    ownerId: owner.id,
+    origin: { kind: "cell", x, y },
+  });
+}
+
+export function clearSpellAurasForOwner(combat: AuraCombat, ownerId: string, spellId?: string): void {
+  const owner = combat.tokens.find((t) => t.id === ownerId);
+  if (owner?.spellAuras) {
+    owner.spellAuras = spellId
+      ? owner.spellAuras.filter((a) => a.spellAuraId !== spellId)
+      : undefined;
+    if (owner.spellAuras?.length === 0) owner.spellAuras = undefined;
+  }
+  combat.auras = (combat.auras ?? []).filter((a) => {
+    if (a.ownerId !== ownerId) return true;
+    if (!spellId) return !a.spellAuraId;
+    return a.spellAuraId !== spellId;
+  });
 }

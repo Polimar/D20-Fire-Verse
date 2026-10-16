@@ -94,10 +94,14 @@ import { actionCategory, actionSummary, type ActionCategory } from "./action-men
 import type { Player } from "./types.js";
 import {
   auraAppliesTo,
+  clearSpellAurasForOwner,
   plantAura as placeAura,
+  plantSpellAuraAt,
   pullAura as removePlantedAura,
   refreshAuras as syncAuras,
+  verbalCastBlocked,
   type AuraMods,
+  type AuraTick,
   type CombatAura,
 } from "./combat-aura.js";
 import { healingPotionByInventory } from "./healing-potions.js";
@@ -293,7 +297,13 @@ export type CombatToken = {
   auraSpeedMult?: number;
   auraObscured?: boolean;
   followAuras?: AuraMods[];
+  spellAuras?: AuraMods[];
   plantAuras?: AuraMods[];
+  charmedBy?: string;
+  banished?: boolean;
+  banishedBy?: string;
+  magicWeaponBonus?: number;
+  auraThunderImmune?: boolean;
   gearSaveBonus?: number;
   auraEnterTicked?: string[];
   blessedStrikeUsed?: boolean;
@@ -352,7 +362,7 @@ const STANDARD_ACTIONS = [
 ] as const;
 
 export type PendingReaction = {
-  kind: "shield" | "opportunity" | "smite" | "retaliation" | "uncanny_dodge" | "deflect_attacks";
+  kind: "shield" | "opportunity" | "smite" | "retaliation" | "uncanny_dodge" | "deflect_attacks" | "counterspell";
   playerId: string;
   tokenId: string;
   prompt: string;
@@ -379,6 +389,7 @@ export type PendingReaction = {
 
 const EVENT_WINDOW = 80;
 const REACTION_WAIT_MS = 30_000;
+const COUNTER_SPELL_WAIT_MS = 5_000;
 
 function bonusActionsFor(pregen: Pregen): string[] {
   const out: string[] = [];
@@ -477,6 +488,18 @@ export type CombatState = {
   /** Initiative is still being thrown; the fight has not taken its first turn. */
   gathering?: boolean;
   strikeHold?: StrikeHold;
+  deferredCast?: {
+    casterId: string;
+    castId: string;
+    abilityName: string;
+    effect: Record<string, unknown>;
+    isBonus: boolean;
+    targetId?: string;
+    dest?: Cell;
+    hexAbilityPick?: string;
+  };
+  skipCounterspell?: boolean;
+  skipSlotSpend?: boolean;
   /** Physical damage dice waiting for the Damage swipe (no faces yet). */
   damagePreview?: DamageDiePreview[];
   pvp?: "ffa" | "teams";
@@ -1137,7 +1160,15 @@ function tickAuraPulse(combat: CombatState, token: CombatToken, aura: CombatAura
     token.hp = Math.min(token.maxHp, token.hp + spec.heal);
   }
   if (spec.dice && spec.damageType) {
-    applyDamage(combat, token, rollNotation(spec.dice).total, false, spec.damageType, true);
+    let amount = rollNotation(spec.dice).total;
+    if (spec.saveAbility && spec.saveDc != null) {
+      const { ok } = creatureSave(token, spec.saveAbility, spec.saveDc, true);
+      amount = ok ? (spec.halfOnSuccess ? Math.floor(amount / 2) : 0) : amount;
+    }
+    if (amount > 0) {
+      const owner = combat.tokens.find((x) => x.id === aura.ownerId);
+      applyDamage(combat, token, amount, false, spec.damageType, true, owner?.id);
+    }
   }
 }
 
@@ -1553,6 +1584,7 @@ function spendMonsterAbility(token: CombatToken, id: string): void {
 
 function harmAmount(target: CombatToken, amount: number, damageType: string): number {
   const t = damageType.toLowerCase();
+  if (t === "thunder" && target.auraThunderImmune) return 0;
   if (target.damageImmunities?.includes(t)) return 0;
   let n = amount;
   if (target.damageVulnerabilities?.includes(t)) n *= 2;
@@ -2529,6 +2561,7 @@ export function performPcAction(
   if (fromItem) {
     t.gearCharges![pool!] = charges - 1;
   } else if (
+    !combat.skipSlotSpend &&
     t.sheetDriven &&
     level > 0 &&
     castId !== "spell_spiritual_weapon_strike" &&
@@ -2558,10 +2591,29 @@ export function performPcAction(
   }
   if (t.sheetDriven && t.characterId) refreshMenus(t, pregen, getAbility);
 
-  if (level > 0 && spellStopped(combat, t, level, castId)) {
-    spendEconomy(t, isBonus || quicken);
-    refreshReachable(combat);
-    return { rolls: [] };
+  if (level > 0 && verbalCastBlocked(combat, t.x, t.y) && castUsesVerbal(castId)) {
+    throw new Error("SILENCED");
+  }
+  if (level > 0) {
+    const counter = offerCounterspell(combat, t, level, castId, {
+      casterId: t.id,
+      castId,
+      abilityName: ability.name,
+      effect: { ...effect },
+      isBonus: isBonus || quicken,
+      targetId,
+      dest,
+      hexAbilityPick,
+    });
+    if (counter === "stopped") {
+      spendEconomy(t, isBonus || quicken);
+      refreshReachable(combat);
+      return { rolls: [] };
+    }
+    if (counter === "pending") {
+      refreshReachable(combat);
+      return { rolls: [] };
+    }
   }
 
   const special = castSpecial(combat, t, pregen, ability.name, effect, isBonus || quicken, targetId, dest, castId);
@@ -2778,6 +2830,18 @@ export function performPcAction(
   if (effect.type === "bane") {
     return castBaneSpell(combat, t, pregen, ability.name, effect, isBonus, castId, targetId, slotUsed || level);
   }
+  if (effect.type === "concentration_aura") {
+    return castConcentrationAura(combat, t, pregen, ability.name, effect, isBonus, castId, dest, slotUsed || level);
+  }
+  if (effect.type === "charm") {
+    return castCharmSpell(combat, t, pregen, ability.name, effect, isBonus, castId, targetId, slotUsed || level);
+  }
+  if (effect.type === "banishment") {
+    return castBanishmentSpell(combat, t, pregen, ability.name, effect, isBonus, castId, targetId);
+  }
+  if (effect.type === "magic_weapon") {
+    return castMagicWeaponSpell(combat, t, pregen, ability.name, effect, isBonus, castId, targetId, slotUsed || level);
+  }
   if (effect.type === "invisibility_drink") {
     if (effect.consume) {
       const item = String(effect.consume);
@@ -2973,7 +3037,7 @@ export function performPcAction(
   if (styleHas(t, "dueling") && !ranged && weaponSwing) attackBonus += 2;
   if (!atkEffect.spellAttack && t.channelAttack) attackBonus += t.channelAttack;
   const magicWeapon = t.weaponGear?.[castId];
-  attackBonus += (t.gearAttackBonus ?? 0) + (magicWeapon?.attack ?? 0);
+  attackBonus += (t.gearAttackBonus ?? 0) + (magicWeapon?.attack ?? 0) + (t.magicWeaponBonus ?? 0);
   const foeAdjacent = combat.tokens.some(
     (e) => isFoe(combat, t, e) && chebyshev(e.x, e.y, t.x, t.y) <= 1,
   );
@@ -3008,7 +3072,8 @@ export function performPcAction(
     Boolean(target.auraAttackDisadvAgainst) ||
     Boolean(t.auraObscured) ||
     Boolean(target.auraObscured) ||
-    (hasCondition(target, "prone") && ranged);
+    (hasCondition(target, "prone") && ranged) ||
+    (Boolean(t.charmedBy) && t.charmedBy === target.id);
   const mode: D20Mode = d20Mode(advantage, disadvantage);
   let blessBonus = 0;
   if (gate?.phase !== "damage" && t.blessed) blessBonus = rollNotation("1d4").total;
@@ -3229,7 +3294,7 @@ export function performPcAction(
       target.slowedBy = { by: t.id, cells: 3 };
     }
   }
-  dmgTotal += (t.gearDamageBonus ?? 0) + (magicWeapon?.damage ?? 0);
+  dmgTotal += (t.gearDamageBonus ?? 0) + (magicWeapon?.damage ?? 0) + (t.magicWeaponBonus ?? 0);
   const knownMastery = new Set<MasteryId>(["cleave", "graze", "nick", "push", "sap", "slow", "topple", "vex"]);
   const beside = combat.tokens.find((other) => other.id !== target.id && !other.dead && chebyshev(other.x, other.y, target.x, target.y) <= 1)?.id;
   const masteryOverride: MasteryId | undefined =
@@ -3329,34 +3394,54 @@ export function performPcAction(
 /** A cone is as wide as it is long, so the half-angle from the aim line is atan(0.5) ≈ 26.5°. */
 const CONE_HALF_ANGLE = Math.atan(0.5);
 
-function spellStopped(combat: CombatState, caster: CombatToken, level: number, castId: string): boolean {
-  if (castId === "spell_counterspell" || level <= 0) return false;
+function offerCounterspell(
+  combat: CombatState,
+  caster: CombatToken,
+  level: number,
+  castId: string,
+  deferred: NonNullable<CombatState["deferredCast"]>,
+): "none" | "stopped" | "pending" {
+  if (castId === "spell_counterspell" || level <= 0 || combat.pending || combat.skipCounterspell) return "none";
   const reactor = combat.tokens.find(
     (other) =>
+      !other.dead &&
       isFoe(combat, caster, other) &&
       other.reactionReady &&
       (other.actionIds.includes("spell_counterspell") || other.spells?.includes("spell_counterspell")),
   );
-  if (!reactor) return false;
-  reactor.reactionReady = false;
-  const counterLevel = Number((getAbility("spell_counterspell") as { level?: number } | undefined)?.level ?? 3);
-  if (counterLevel >= level) {
-    statusEvent(combat, reactor, "Counterspell", `${reactor.name} counters ${caster.name}'s spell.`);
-    return true;
+  if (!reactor) return "none";
+  if (reactor.playerId) {
+    combat.deferredCast = deferred;
+    combat.pending = {
+      kind: "counterspell",
+      playerId: reactor.playerId,
+      tokenId: reactor.id,
+      prompt: `${reactor.name} can counter ${caster.name}'s spell.`,
+      acceptLabel: "Counterspell",
+      declineLabel: "Let it through",
+      damage: 0,
+      rolls: [],
+      abilityName: "Counterspell",
+      style: "spell",
+      attackerId: caster.id,
+      targetId: caster.id,
+    };
+    combat.reactionExpiresAt = Date.now() + COUNTER_SPELL_WAIT_MS;
+    return "pending";
   }
-  const bonus = abilityMod(abilityScore(reactor, reactor.characterId ? getPregen(reactor.characterId) : undefined, reactor.spellAbility ?? "int"));
-  const dc = 10 + level;
-  const roll = rollCheck({ roller: reactor.name, label: "Counterspell", bonus, dc, purpose: "save" });
+  reactor.reactionReady = false;
+  spendSlot(reactor, 3);
+  const { stopped, rolls } = counterspellStops(reactor, reactor.characterId ? getPregen(reactor.characterId) : undefined, level);
   statusEvent(
     combat,
     reactor,
     "Counterspell",
-    roll.outcome === "success"
-      ? `${reactor.name} counters the spell (${roll.total} vs DC ${dc}).`
-      : `${reactor.name} fails to counter (${roll.total} vs DC ${dc}).`,
-    [roll],
+    stopped
+      ? `${reactor.name} counters ${caster.name}'s spell.`
+      : `${reactor.name} fails to counter${rolls[0] ? ` (${rolls[0].total})` : ""}.`,
+    rolls,
   );
-  return roll.outcome === "success";
+  return stopped ? "stopped" : "none";
 }
 
 function queueRepeatSave(combat: CombatState, token: CombatToken): boolean {
@@ -3836,6 +3921,7 @@ function tickGlobalTimedEffects(combat: CombatState): void {
         }
         continue;
       }
+      if (row.spellId === "spell_magic_weapon") token.magicWeaponBonus = undefined;
       if (token.concentrating?.spellId === row.spellId) breakConcentration(combat, token);
       statusEvent(combat, token, row.label, `${row.label} ends on ${token.name}.`);
     }
@@ -3849,6 +3935,7 @@ export function applyDamage(
   crit = false,
   damageType = "untyped",
   skipDefensePrompt = false,
+  sourceId?: string,
 ): void {
   let harm = harmAmount(target, amount, damageType);
   if (ignorePhysicalResistance(target, damageType)) {
@@ -3900,6 +3987,10 @@ export function applyDamage(
     harm -= soak;
   }
   if (harm <= 0) return;
+  if (sourceId && target.charmedBy === sourceId && harm > 0) {
+    target.charmedBy = undefined;
+    target.conditions = (target.conditions ?? []).filter((c) => c !== "charmed");
+  }
   const over = harm - target.hp;
   target.hp = Math.max(0, target.hp - harm);
   if (target.concentrating && harm > 0) concentrationCheck(combat, target, harm);
@@ -3933,6 +4024,240 @@ function applyHaste(token: CombatToken, skipLethargy: boolean): void {
 function staffStrikingChargePool(token: CombatToken): string | undefined {
   if (!token.gearCharges) return undefined;
   return Object.keys(token.gearCharges).find((key) => key.includes("staff_of_striking") || key.includes("striking"));
+}
+
+function castUsesVerbal(castId: string): boolean {
+  const bare = castId.replace(/^spell_/, "");
+  const spell = catalogEntry<SpellDef>("spell", bare);
+  return Boolean(spell?.components?.verbal);
+}
+
+function restoreBanishedFrom(combat: CombatState, casterId: string): void {
+  for (const t of combat.tokens) {
+    if (!t.banished || t.banishedBy !== casterId) continue;
+    t.banished = false;
+    t.banishedBy = undefined;
+    if (!combat.turnOrder.includes(t.id)) combat.turnOrder.push(t.id);
+  }
+}
+
+function auraModsFromEffect(effect: Record<string, unknown>, castId: string, tick?: AuraTick): AuraMods {
+  return {
+    radiusCells: Number(effect.radiusCells ?? 2),
+    filter: (effect.filter as AuraMods["filter"]) ?? "all",
+    excludeSource: Boolean(effect.excludeSource),
+    heavilyObscured: Boolean(effect.heavilyObscured),
+    blocksVerbal: Boolean(effect.blocksVerbal),
+    deafenedInside: Boolean(effect.deafenedInside),
+    thunderImmuneInside: Boolean(effect.thunderImmuneInside),
+    speedMult: effect.speedMult != null ? Number(effect.speedMult) : undefined,
+    spellAuraId: castId,
+    onEnterOrEndTurn: tick,
+  };
+}
+
+function castConcentrationAura(
+  combat: CombatState,
+  caster: CombatToken,
+  pregen: Pregen | undefined,
+  name: string,
+  effect: Record<string, unknown>,
+  isBonus: boolean,
+  castId: string,
+  dest: Cell | undefined,
+  slotLevel: number,
+): { rolls: DiceRoll[] } {
+  const origin = String(effect.origin ?? "cell");
+  let tick: AuraTick | undefined;
+  const tickSrc = effect.onEnterOrEndTurn as Record<string, unknown> | undefined;
+  if (tickSrc) {
+    const ab = String(tickSrc.saveAbility ?? effect.ability ?? "wis");
+    const dc =
+      tickSrc.saveDc != null
+        ? Number(tickSrc.saveDc)
+        : pcSpellDc(caster, pregen, String(caster.spellAbility ?? ab));
+    let dice = String(tickSrc.dice ?? effect.dice ?? "1d4");
+    const scaled = scaledDice(effect, slotLevel);
+    if (scaled) dice = scaled;
+    const damageType = effect.evilDamage
+      ? "necrotic"
+      : String(tickSrc.damageType ?? effect.damageType ?? "radiant");
+    tick = {
+      dice,
+      damageType,
+      saveAbility: ab,
+      saveDc: dc,
+      halfOnSuccess: Boolean(tickSrc.halfOnSuccess ?? effect.halfOnSuccess),
+    };
+  }
+  const mods = auraModsFromEffect(effect, castId, tick);
+  if (origin === "self") {
+    caster.spellAuras = [...(caster.spellAuras ?? []).filter((a) => a.spellAuraId !== castId), mods];
+  } else {
+    if (!dest) throw new Error("NEED_TARGET");
+    const range = Number(effect.rangeCells ?? 24);
+    if (chebyshev(caster.x, caster.y, dest.x, dest.y) > range) throw new Error("OUT_OF_RANGE");
+    plantSpellAuraAt(combat, caster, dest.x, dest.y, mods);
+  }
+  if (effect.concentration) setConcentration(combat, caster, castId);
+  spendEconomy(caster, isBonus);
+  refreshAuras(combat);
+  statusEvent(combat, caster, name, `${caster.name} casts ${name}.`);
+  refreshReachable(combat);
+  return { rolls: [] };
+}
+
+function castCharmSpell(
+  combat: CombatState,
+  caster: CombatToken,
+  pregen: Pregen | undefined,
+  name: string,
+  effect: Record<string, unknown>,
+  isBonus: boolean,
+  castId: string,
+  targetId: string | undefined,
+  slotLevel: number,
+): { rolls: DiceRoll[] } {
+  if (!targetId) throw new Error("NEED_TARGET");
+  const range = Number(effect.rangeCells ?? 6);
+  const baseCap = Number(effect.maxTargets ?? 1);
+  const baseSlot = Number(effect.baseSlot ?? 1);
+  const cap = baseCap + Math.max(0, slotLevel - baseSlot);
+  const origin = combat.tokens.find((x) => x.id === targetId);
+  if (!origin || origin.banished || !isFoe(combat, caster, origin)) throw new Error("BAD_TARGET");
+  const picked: CombatToken[] = [origin];
+  for (const foe of combat.tokens) {
+    if (picked.length >= cap) break;
+    if (foe.dead || foe.banished || !isFoe(combat, caster, foe) || picked.includes(foe)) continue;
+    if (chebyshev(foe.x, foe.y, caster.x, caster.y) > range) continue;
+    if (!clearShot(combat, caster.x, caster.y, foe.x, foe.y)) continue;
+    picked.push(foe);
+  }
+  const dc = pcSpellDc(caster, pregen, String(caster.spellAbility ?? "wis"));
+  const rolls: DiceRoll[] = [];
+  const names: string[] = [];
+  for (const foe of picked) {
+    const fighting = combat.tokens.some((a) => a.id !== caster.id && !a.dead && isFriend(combat, caster, a) && isFoe(combat, a, foe));
+    let advantage = false;
+    if (fighting) advantage = true;
+    const { roll, ok } = creatureSave(foe, "wis", dc, true);
+    rolls.push(roll);
+    if (!ok) {
+      addCondition(foe, "charmed");
+      foe.charmedBy = caster.id;
+      names.push(foe.name);
+    }
+  }
+  spendEconomy(caster, isBonus);
+  statusEvent(
+    combat,
+    caster,
+    name,
+    names.length ? `${caster.name} charms ${names.join(", ")}.` : `${caster.name} casts ${name}, but everyone resists.`,
+    rolls,
+  );
+  refreshReachable(combat);
+  return { rolls };
+}
+
+function castBanishmentSpell(
+  combat: CombatState,
+  caster: CombatToken,
+  pregen: Pregen | undefined,
+  name: string,
+  effect: Record<string, unknown>,
+  isBonus: boolean,
+  castId: string,
+  targetId: string | undefined,
+): { rolls: DiceRoll[] } {
+  if (!targetId) throw new Error("NEED_TARGET");
+  const foe = combat.tokens.find((x) => x.id === targetId && isFoe(combat, caster, x) && !x.banished);
+  if (!foe) throw new Error("BAD_TARGET");
+  const range = Number(effect.rangeCells ?? 6);
+  if (chebyshev(foe.x, foe.y, caster.x, caster.y) > range) throw new Error("OUT_OF_RANGE");
+  const dc = pcSpellDc(caster, pregen, String(caster.spellAbility ?? "cha"));
+  const { roll, ok } = creatureSave(foe, "cha", dc, true);
+  if (!ok) {
+    foe.banished = true;
+    foe.banishedBy = caster.id;
+    combat.turnOrder = combat.turnOrder.filter((id) => id !== foe.id);
+  }
+  if (effect.concentration) setConcentration(combat, caster, castId);
+  spendEconomy(caster, isBonus);
+  statusEvent(
+    combat,
+    caster,
+    name,
+    ok ? `${foe.name} resists ${name}.` : `${foe.name} vanishes into another plane.`,
+    [roll],
+  );
+  refreshReachable(combat);
+  return { rolls: [roll] };
+}
+
+function castMagicWeaponSpell(
+  combat: CombatState,
+  caster: CombatToken,
+  pregen: Pregen | undefined,
+  name: string,
+  effect: Record<string, unknown>,
+  isBonus: boolean,
+  castId: string,
+  targetId: string | undefined,
+  slotLevel: number,
+): { rolls: DiceRoll[] } {
+  const ally = targetId
+    ? combat.tokens.find((x) => x.id === targetId && isFriend(combat, caster, x))
+    : caster;
+  if (!ally) throw new Error("BAD_TARGET");
+  const range = Number(effect.rangeCells ?? 1);
+  if (chebyshev(ally.x, ally.y, caster.x, caster.y) > range) throw new Error("OUT_OF_RANGE");
+  const bonus = slotLevel >= 6 ? 3 : slotLevel >= 3 ? 2 : Number(effect.bonus ?? 1);
+  for (const t of combat.tokens) {
+    if (t.magicWeaponBonus && t.timedEffects?.some((r) => r.spellId === castId)) {
+      t.magicWeaponBonus = undefined;
+      t.timedEffects = t.timedEffects.filter((r) => r.spellId !== castId);
+    }
+  }
+  ally.magicWeaponBonus = bonus;
+  const bare = castId.replace(/^spell_/, "");
+  const spell = catalogEntry<SpellDef>("spell", bare);
+  const turns = durationToPcTurns(spell?.duration) ?? 100;
+  ally.timedEffects = [
+    ...(ally.timedEffects ?? []).filter((r) => r.spellId !== castId),
+    { label: name, pcTurnsLeft: turns, spellId: castId },
+  ];
+  spendEconomy(caster, isBonus);
+  statusEvent(combat, caster, name, `${ally.name}'s weapon shines with a +${bonus} edge.`);
+  refreshReachable(combat);
+  return { rolls: [] };
+}
+
+function counterspellStops(reactor: CombatToken, pregen: Pregen | undefined, spellLevel: number): { stopped: boolean; rolls: DiceRoll[] } {
+  const counterLevel = Number((getAbility("spell_counterspell") as { level?: number } | undefined)?.level ?? 3);
+  if (counterLevel >= spellLevel) return { stopped: true, rolls: [] };
+  const bonus = abilityMod(
+    abilityScore(reactor, reactor.characterId ? getPregen(reactor.characterId) : undefined, reactor.spellAbility ?? "int"),
+  );
+  const dc = 10 + spellLevel;
+  const roll = rollCheck({ roller: reactor.name, label: "Counterspell", bonus, dc, purpose: "save" });
+  return { stopped: roll.outcome === "success", rolls: [roll] };
+}
+
+function resumeDeferredCast(combat: CombatState): void {
+  const deferred = combat.deferredCast;
+  if (!deferred) return;
+  const playerId = combat.tokens.find((t) => t.id === deferred.casterId)?.playerId;
+  if (!playerId) {
+    combat.deferredCast = undefined;
+    return;
+  }
+  combat.deferredCast = undefined;
+  combat.skipCounterspell = true;
+  combat.skipSlotSpend = true;
+  performPcAction(combat, playerId, deferred.castId, deferred.targetId, deferred.dest);
+  combat.skipCounterspell = false;
+  combat.skipSlotSpend = false;
 }
 
 function castBaneSpell(
@@ -4030,6 +4355,8 @@ function breakConcentration(combat: CombatState, token: CombatToken): void {
   const focus = token.concentrating;
   token.concentrating = undefined;
   if (!focus) return;
+  restoreBanishedFrom(combat, token.id);
+  clearSpellAurasForOwner(combat, token.id, focus.spellId);
   if (focus.spellId === "spell_bless") {
     for (const ally of combat.tokens) ally.blessed = false;
   }
@@ -4785,6 +5112,42 @@ export function resolveReaction(combat: CombatState, playerId: string, accept: b
   if (!pending || pending.playerId !== playerId) throw new Error("NO_REACTION");
   combat.pending = undefined;
   combat.reactionExpiresAt = undefined;
+  if (pending.kind === "counterspell") {
+    const reactor = combat.tokens.find((token) => token.id === pending.tokenId);
+    const deferred = combat.deferredCast;
+    const spellLevel = deferred
+      ? Number((getAbility(deferred.castId) as { level?: number } | undefined)?.level ?? deferred.effect.slot ?? 1)
+      : 1;
+    if (accept && reactor && deferred) {
+      reactor.reactionReady = false;
+      spendSlot(reactor, 3);
+      const { stopped, rolls } = counterspellStops(
+        reactor,
+        reactor.characterId ? getPregen(reactor.characterId) : undefined,
+        spellLevel,
+      );
+      const caster = combat.tokens.find((token) => token.id === deferred.casterId);
+      statusEvent(
+        combat,
+        reactor,
+        "Counterspell",
+        stopped
+          ? `${reactor.name} counters ${caster?.name ?? "the caster"}'s spell.`
+          : `${reactor.name} fails to counter${rolls[0] ? ` (${rolls[0].total})` : ""}.`,
+        rolls,
+      );
+      if (stopped) {
+        combat.deferredCast = undefined;
+        if (caster) spendEconomy(caster, deferred.isBonus);
+      } else {
+        resumeDeferredCast(combat);
+      }
+    } else {
+      resumeDeferredCast(combat);
+    }
+    continueAfterReaction(combat);
+    return;
+  }
   if (pending.kind === "uncanny_dodge" || pending.kind === "deflect_attacks") {
     const target = combat.tokens.find((token) => token.id === pending.tokenId);
     if (!target) {

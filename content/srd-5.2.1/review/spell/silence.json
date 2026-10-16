@@ -10,7 +10,5 @@
     "line": "Level 2 Illusion (Bard, Cleric, Ranger)",
     "text": "_Level 2 Illusion (Bard, Cleric, Ranger)_\n\n**Casting Time:** Action or Ritual\n**Range:** 120 feet\n**Components:** V, S\n**Duration:** Concentration, up to 10 minutes\n\nFor the duration, no sound can be created within or pass through a 20-foot-radius Sphere centered on a point you choose within range. Any creature or object entirely inside the Sphere has Immunity to Thunder damage, and creatures have the Deafened condition while entirely inside it. Casting a spell that includes a Verbal component is impossible there."
   },
-  "notModeled": [
-    "No battlefield effect is run for this spell yet."
-  ]
+  "notModeled": []
 }

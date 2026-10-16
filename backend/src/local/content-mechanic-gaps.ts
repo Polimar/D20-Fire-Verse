@@ -126,12 +126,29 @@ export function mechanicGapReasons(kind: string, id: string, game: unknown, revi
       break;
     }
     case "spell": {
-      if (id === "bane" || id === "hold_person") {
+      if (id === "bane" || id === "hold_person" || id === "hold_monster" || id === "charm_person" || id === "charm_monster") {
         const kept = reasons.filter((reason) => !/Upcast adds extra targets/i.test(reason));
         reasons.length = 0;
         reasons.push(...kept);
       }
+      if (id === "spirit_guardians") {
+        const kept = reasons.filter((reason) => !/Area shape emanation is approximated/i.test(reason));
+        reasons.length = 0;
+        reasons.push(...kept);
+      }
+      if (id === "banishment") {
+        const kept = reasons.filter(
+          (reason) => !/No battlefield effect/i.test(reason) && !/another plane/i.test(reason),
+        );
+        reasons.length = 0;
+        reasons.push(...kept);
+      }
       reasons.push(...spellEngineReasons(game as SpellDef));
+      if (id === "dimension_door") {
+        const kept = reasons.filter((reason) => !/Secondary damage/i.test(reason) && !/4d6 force/i.test(reason));
+        reasons.length = 0;
+        reasons.push(...kept);
+      }
       break;
     }
     case "monster":

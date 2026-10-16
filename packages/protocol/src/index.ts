@@ -244,6 +244,7 @@ const ERROR_TEXT: Record<string, string> = {
   ALREADY_USED: "You've already used that this fight.",
   NO_ITEM: "You don't have that item anymore.",
   NO_CHARGES: "That item has no charges left this fight.",
+  SILENCED: "Verbal spells can't be cast inside Silence.",
   NOT_ATTACK: "That ability isn't an attack.",
   NO_TARGET: "There's no enemy left to target.",
   NO_ABILITY: "Your hero has no attack ready.",

@@ -196,8 +196,19 @@ function spellView(id: string, game: SpellDef): EngineView {
   const srdDice = srdDamageLines.map((d) => d.dice).join(" + ") ?? "";
   const delayed = effect.delayedOnHit as { dice?: string } | undefined;
   const zoneExtra = effect.persistentZone ? 1 : 0;
+  const auraTick =
+    effect.type === "concentration_aura" &&
+    (effect.onEnterOrEndTurn as { dice?: string } | undefined)?.dice
+      ? 1
+      : 0;
   const brandRider = effect.type === "brand" && typeof effect.dice === "string" ? 1 : 0;
-  const modeledDamageLines = engineParts.length + (delayed?.dice ? 1 : 0) + zoneExtra + brandRider;
+  const dualPick =
+    srdDamageLines.length > 1 &&
+    srdDamageLines.every((d) => d.dice === srdDamageLines[0]?.dice) &&
+    (effect.type === "concentration_aura" || effect.type === "save")
+      ? 1
+      : 0;
+  const modeledDamageLines = engineParts.length + (delayed?.dice ? 1 : 0) + zoneExtra + brandRider + auraTick + dualPick;
   if (srdDamageLines.length > modeledDamageLines) {
     const primary = srdDamageLines[0]?.dice;
     const wired = engineParts[0]?.dice;
