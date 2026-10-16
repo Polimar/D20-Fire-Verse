@@ -550,7 +550,7 @@ Aggiornare ☐ → ☑ nel PR che chiude il checkpoint indicato.
 
 Step della modal (Hero builder dal menu home; `/forge` apre la stessa modal):
 
-`Class → Origin → Species → Ability scores → Training (skills / fighting style / expertise) → Equipment → Spells (se lanciatore) → Details → Review`
+`Class → Species → Origin → Ability scores → Training (skills / fighting style / expertise) → Equipment → Spells (se lanciatore) → Details → Review`
 
 Panel scheda: output `DerivedSheet` sempre da preview server. D-pad: frecce per il focus, OK per scegliere, Back chiude o torna, Rewind/Forward cambiano passo.
 

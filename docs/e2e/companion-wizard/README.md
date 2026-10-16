@@ -9,7 +9,7 @@ The page is the built companion PWA at `/companion/`, not the TV modal. A logged
 - `01-class.png` — class list. The last row starts under the fold; the list scrolls.
 - `01-class-bottom.png` — scrolled to Warlock and Wizard, still above Back / Next.
 - `01-sheet.png` — bottom sheet. Counted sentences, no raw `NEED_` codes. Wizard kit A is unarmored: AC 12.
-- `02-origin.png` through `08-details.png` — one shot per step.
+- `02-species.png`, `03-origin.png` through `08-details.png` — one shot per step (class → species → origin → …).
 - `09-review.png` — sheet open on the review step. HP 7, AC 12, L1 ×2, 3 cantrips, 4 prepared.
 - `10-saved.png` — Pocket Zephyr back on the library at level 1.
 

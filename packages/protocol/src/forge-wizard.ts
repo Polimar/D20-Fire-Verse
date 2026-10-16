@@ -7,7 +7,7 @@ import type { AbilityKey, BuilderCatalog, BuilderDraft, DerivedSheet } from "./b
 import { describeError } from "./index.js";
 
 const ABILITIES: AbilityKey[] = ["str", "dex", "con", "int", "wis", "cha"];
-const STEPS = ["class", "origin", "species", "scores", "training", "gear", "spells", "details", "review"] as const;
+const STEPS = ["class", "species", "origin", "scores", "training", "gear", "spells", "details", "review"] as const;
 type StepId = (typeof STEPS)[number];
 
 const STEP_TITLE: Record<StepId, string> = {
@@ -194,6 +194,17 @@ function guidance(codes: string[], draft: BuilderDraft, catalog: BuilderCatalog)
         return `Pick ${n} spells.`;
       }
       if (code === "NEED_2_EXPERTISE") return `Pick 2 skills for Expertise (${draft.expertiseSkills?.length ?? 0}/2).`;
+      if (code === "NEED_2_MI_CANTRIPS") {
+        return `Magic Initiate: pick 2 cantrips (${draft.magicInitiateCantrips?.length ?? 0}/2).`;
+      }
+      if (code === "NEED_MI_SPELL") return "Magic Initiate: pick a 1st-level spell.";
+      if (code === "NEED_MI_ABILITY") return "Magic Initiate: pick a spellcasting ability.";
+      if (code === "NEED_3_SKILLED") return `Skilled: pick 3 skills or tools (${draft.skilledPicks?.length ?? 0}/3).`;
+      if (code === "NEED_2_CUSTOM_SKILLS") return `Custom origin: pick 2 skills (${draft.customSkills?.length ?? 0}/2).`;
+      if (code === "NEED_CUSTOM_FEAT") return "Custom origin: pick an origin feat.";
+      if (code === "NEED_CUSTOM_TOOL") return "Custom origin: pick a tool.";
+      if (code === "BAD_CUSTOM_FEAT") return "Custom origin: that feat is not an origin feat.";
+      if (code === "NEED_FIGHTING_STYLE") return "Pick a fighting style.";
       return describeError(code);
     })
     .join(" ");
@@ -411,9 +422,28 @@ export async function mountForgeWizard(host: HTMLElement, opts: ForgeWizardOptio
                   .join("");
           return `<div class="hw-score"><strong>${a.toUpperCase()}</strong><div class="hw-row">${optsHtml}</div><span>${draft.baseAbilities[a]}</span></div>`;
         }).join("")}
-        <p class="hw-meta">Background ASI</p>
+        <p class="hw-meta">Background ASI — tap one ability for +2, another for +1</p>
         <div class="hw-row"><button type="button" class="hw-chip ${draft.backgroundAsi?.mode === "plus2plus1" ? "picked" : ""}" data-asi="plus2plus1">+2 and +1</button><button type="button" class="hw-chip ${draft.backgroundAsi?.mode === "plus1x3" ? "picked" : ""}" data-asi="plus1x3">+1 / +1 / +1</button></div>
-        <div class="hw-row">${origin.abilityOptions.map((a) => `<button type="button" class="hw-chip" data-asi-ab="${a}">${a}</button>`).join("")}</div>`;
+        <div class="hw-row">${origin.abilityOptions
+          .map((a) => {
+            const asi = draft.backgroundAsi;
+            let mark = "";
+            let label = a.toUpperCase();
+            if (asi?.mode === "plus2plus1") {
+              if (asi.plus2 === a) {
+                mark = "picked";
+                label = `${a.toUpperCase()} +2`;
+              } else if (asi.plus1 === a) {
+                mark = "picked";
+                label = `${a.toUpperCase()} +1`;
+              }
+            } else if (asi?.mode === "plus1x3" && asi.abilities.includes(a)) {
+              mark = "picked";
+              label = `${a.toUpperCase()} +1`;
+            }
+            return `<button type="button" class="hw-chip ${mark}" data-asi-ab="${a}">${label}</button>`;
+          })
+          .join("")}</div>`;
     } else if (id === "training") {
       const originSkillsList = origin.custom ? (draft.customSkills ?? []) : (origin.skills ?? []);
       const bgSkills = new Set(originSkillsList);

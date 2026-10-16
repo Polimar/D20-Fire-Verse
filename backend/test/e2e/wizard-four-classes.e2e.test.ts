@@ -79,11 +79,11 @@ async function forgeOne(page: Page, base: string, token: string, classId: string
   await shot(page, `${label}-01-class`);
   await page.locator(`[data-class="${classId}"]`).click();
   await page.locator("#hwNext").click();
-  await shot(page, `${label}-02-origin`);
-  await page.locator(`[data-bg="${bg.id}"]`).click();
-  await page.locator("#hwNext").click();
-  await shot(page, `${label}-03-species`);
+  await shot(page, `${label}-02-species`);
   await page.locator(`[data-species="${species.id}"]`).click();
+  await page.locator("#hwNext").click();
+  await shot(page, `${label}-03-origin`);
+  await page.locator(`[data-bg="${bg.id}"]`).click();
   await page.locator("#hwNext").click();
   await shot(page, `${label}-04-scores`);
   await page.locator("#hwNext").click();
@@ -274,7 +274,7 @@ test("TV D-pad moves the wizard with arrows and track skip", async () => {
     assert.match(focused, /hw-/);
     await page.evaluate(() => window.dispatchEvent(new KeyboardEvent("keydown", { key: "MediaTrackNext", bubbles: true })));
     await page.waitForTimeout(200);
-    assert.match(await title(), /origin/i);
+    assert.match(await title(), /species/i);
     await page.evaluate(() => window.dispatchEvent(new KeyboardEvent("keydown", { key: "MediaTrackPrevious", bubbles: true })));
     await page.waitForTimeout(200);
     assert.match(await title(), /class/i);

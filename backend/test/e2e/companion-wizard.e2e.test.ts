@@ -165,13 +165,13 @@ test("iPhone 13 companion PWA forges a wizard with touch", async () => {
 
     await page.locator('[data-class="wizard"]').tap();
     await page.locator("#hwNext").tap();
-    await page.waitForFunction(() => /origin/i.test(document.querySelector(".hw h2")?.textContent ?? ""));
-    await shot(page, "02-origin");
-    await page.locator(`[data-bg="${bg.id}"]`).tap();
-    await page.locator("#hwNext").tap();
     await page.waitForFunction(() => /species/i.test(document.querySelector(".hw h2")?.textContent ?? ""));
-    await shot(page, "03-species");
+    await shot(page, "02-species");
     await page.locator(`[data-species="${species.id}"]`).tap();
+    await page.locator("#hwNext").tap();
+    await page.waitForFunction(() => /origin/i.test(document.querySelector(".hw h2")?.textContent ?? ""));
+    await shot(page, "03-origin");
+    await page.locator(`[data-bg="${bg.id}"]`).tap();
     await page.locator("#hwNext").tap();
     await page.waitForFunction(() => /ability/i.test(document.querySelector(".hw h2")?.textContent ?? ""));
     await shot(page, "04-scores");
