@@ -97,7 +97,10 @@ function maxHp(hero: HeroRow, conMod: number, species: SpeciesDef | undefined): 
     const levels = Math.max(1, entry.level);
     hp += index === 0 ? die + conMod + (levels - 1) * (averageHitDie(die) + conMod) : levels * (averageHitDie(die) + conMod);
   });
-  return Math.max(1, hp + (species?.hpPerLevel ?? 0) * hero.level);
+  hp += (species?.hpPerLevel ?? 0) * hero.level;
+  if (hero.features.includes("tough")) hp += 2 * hero.level;
+  if (hero.features.includes("boon_of_fortitude")) hp += 40;
+  return Math.max(1, hp);
 }
 
 function engineSpell(id: string, lookup: Lookup): { id: string; cantrip: boolean } | undefined {

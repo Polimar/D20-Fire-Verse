@@ -185,6 +185,11 @@ export function classStarters(): ClassStarter[] {
   return classCache;
 }
 
+export function clearStarterCaches(): void {
+  backgroundCache = null;
+  classCache = null;
+}
+
 export function backgroundStarters(): BackgroundStarter[] {
   if (backgroundCache) return backgroundCache;
   const dir = path.join(ROOT, "background");

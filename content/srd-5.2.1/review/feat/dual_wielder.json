@@ -1,0 +1,12 @@
+{
+  "ambiguities": [],
+  "unparsedFields": [],
+  "kind": "feat",
+  "id": "dual_wielder",
+  "status": "auto_ok",
+  "confidence": "high",
+  "usage": "Feat choice for chargen or level-up.",
+  "srd": {
+    "text": "_General Feat (Prerequisite: Level 4+)_ Increase Strength or Dexterity by 1. You can Two-Weapon Fight with weapons that lack the Light property (but not Two-Handed). After the Attack action with a Light weapon, you can make one Bonus Action attack with another weapon."
+  }
+}

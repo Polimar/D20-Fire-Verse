@@ -1,0 +1,12 @@
+{
+  "ambiguities": [],
+  "unparsedFields": [],
+  "kind": "feat",
+  "id": "sharpshooter",
+  "status": "auto_ok",
+  "confidence": "high",
+  "usage": "Feat choice for chargen or level-up.",
+  "srd": {
+    "text": "_General Feat (Prerequisite: Level 4+)_ Increase Dexterity by 1. Attacking at long range does not impose Disadvantage. Your ranged weapon attacks ignore Half and Three-Quarters cover. Being within 5 feet of an enemy does not impose Disadvantage on your ranged attacks."
+  }
+}

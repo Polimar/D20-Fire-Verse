@@ -1,0 +1,12 @@
+{
+  "ambiguities": [],
+  "unparsedFields": [],
+  "kind": "feat",
+  "id": "athlete",
+  "status": "auto_ok",
+  "confidence": "high",
+  "usage": "Feat choice for chargen or level-up.",
+  "srd": {
+    "text": "_General Feat (Prerequisite: Level 4+)_ Increase Strength or Dexterity by 1. Climbing speed equals your Speed. Standing from Prone costs only 5 feet. You need only 5 feet of run-up to jump."
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "ambiguities": [],
+  "unparsedFields": [],
+  "kind": "feat",
+  "id": "boon_of_fortitude",
+  "status": "auto_ok",
+  "confidence": "high",
+  "usage": "Feat choice for chargen or level-up.",
+  "srd": {
+    "text": "_Epic Boon Feat (Prerequisite: Level 19+)_ Increase one ability score by 1, to a maximum of 30. Your hit point maximum increases by 40. When you regain hit points, you regain additional hit points equal to your Constitution modifier (minimum 1)."
+  }
+}

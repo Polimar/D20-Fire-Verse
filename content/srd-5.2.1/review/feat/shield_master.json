@@ -1,0 +1,12 @@
+{
+  "ambiguities": [],
+  "unparsedFields": [],
+  "kind": "feat",
+  "id": "shield_master",
+  "status": "auto_ok",
+  "confidence": "high",
+  "usage": "Feat choice for chargen or level-up.",
+  "srd": {
+    "text": "_General Feat (Prerequisite: Level 4+)_ Increase Strength by 1. If you hit with a melee attack while wielding a Shield, you can Bonus Action shove (push or prone; target Strength save). If you succeed on a Dexterity save that would halve damage, you can take a Reaction to take no damage instead."
+  }
+}

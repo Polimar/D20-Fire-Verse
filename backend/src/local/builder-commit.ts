@@ -70,13 +70,28 @@ export function commitBuilderDraft(user: SessionUser, draft: BuilderDraft): Hero
       draft.alignment ?? "neutral_good",
       playerLevel,
       JSON.stringify(abilities),
-      JSON.stringify([...new Set([...(catalog.backgrounds.find((b) => b.id === draft.backgroundId)?.skills ?? []), ...draft.classSkills, ...(draft.speciesSkill ? [draft.speciesSkill] : [])])]),
+      JSON.stringify([
+        ...new Set([
+          ...(catalog.backgrounds.find((b) => b.id === draft.backgroundId)?.custom
+            ? (draft.customSkills ?? [])
+            : (catalog.backgrounds.find((b) => b.id === draft.backgroundId)?.skills ?? [])),
+          ...draft.classSkills,
+          ...(draft.skilledPicks ?? []),
+          ...(draft.speciesSkill ? [draft.speciesSkill] : []),
+        ]),
+      ]),
       draft.portraitId ?? null,
       JSON.stringify((draft.expertiseSkills ?? []).map((id) => `expertise:${id}`)),
       JSON.stringify(spells),
       new Date().toISOString(),
-      JSON.stringify(draft.cantrips ?? []),
-      JSON.stringify(draft.spellsPrepared ?? []),
+      JSON.stringify([
+        ...(draft.cantrips ?? []),
+        ...(draft.magicInitiateCantrips ?? []),
+      ]),
+      JSON.stringify([
+        ...(draft.spellsPrepared ?? []),
+        ...(draft.magicInitiateSpell ? [draft.magicInitiateSpell] : []),
+      ]),
       JSON.stringify(draft.spellbook ?? []),
       meta,
     );
@@ -105,10 +120,57 @@ export function commitBuilderDraft(user: SessionUser, draft: BuilderDraft): Hero
   hero.features = opened.features;
   hero.pending = opened.pending;
   hero.maxHp = opened.maxHp;
-  if (draft.fightingStyleFeatId) hero.features = [...hero.features, draft.fightingStyleFeatId];
+  const bg = catalog.backgrounds.find((b) => b.id === draft.backgroundId);
+  const originFeat = bg?.custom ? draft.customFeatId : bg?.featId;
+  const extras = [
+    draft.fightingStyleFeatId,
+    originFeat,
+    draft.originFeatId,
+  ].filter((id): id is string => Boolean(id));
+  hero.features = [...new Set([...hero.features, ...extras])];
+  if (originFeat === "tough" || draft.originFeatId === "tough") {
+    hero.maxHp += 2 * playerLevel;
+  }
+  if (originFeat === "boon_of_fortitude" || draft.originFeatId === "boon_of_fortitude") {
+    hero.maxHp += 40;
+  }
+  const allSpells = [
+    ...new Set([
+      ...spells,
+      ...(draft.magicInitiateCantrips ?? []),
+      ...(draft.magicInitiateSpell ? [draft.magicInitiateSpell] : []),
+    ]),
+  ];
+  const metaExtra = {
+    ...JSON.parse(meta) as Record<string, unknown>,
+    skilledPicks: draft.skilledPicks,
+    magicInitiate: originFeat === "magic_initiate"
+      ? {
+          cantrips: draft.magicInitiateCantrips,
+          spell: draft.magicInitiateSpell,
+          ability: draft.magicInitiateAbility,
+          list: bg?.featChoice,
+        }
+      : undefined,
+    customTool: draft.customTool,
+  };
   accountDb()
-    .prepare("UPDATE heroes SET features_json=?, pending_choices_json=?, hp_current=?, spells_json=? WHERE id=?")
-    .run(JSON.stringify(hero.features), JSON.stringify(hero.pending), hero.maxHp, JSON.stringify(spells), heroId);
+    .prepare(
+      "UPDATE heroes SET features_json=?, pending_choices_json=?, hp_current=?, spells_json=?, cantrips_json=?, spells_prepared_json=?, builder_meta_json=? WHERE id=?",
+    )
+    .run(
+      JSON.stringify(hero.features),
+      JSON.stringify(hero.pending),
+      hero.maxHp,
+      JSON.stringify(allSpells),
+      JSON.stringify([...(draft.cantrips ?? []), ...(draft.magicInitiateCantrips ?? [])]),
+      JSON.stringify([
+        ...(draft.spellsPrepared ?? []),
+        ...(draft.magicInitiateSpell ? [draft.magicInitiateSpell] : []),
+      ]),
+      JSON.stringify(metaExtra),
+      heroId,
+    );
   return getHero(heroId) ?? hero;
 }
 

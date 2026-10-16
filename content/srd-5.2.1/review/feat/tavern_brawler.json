@@ -1,0 +1,12 @@
+{
+  "ambiguities": [],
+  "unparsedFields": [],
+  "kind": "feat",
+  "id": "tavern_brawler",
+  "status": "auto_ok",
+  "confidence": "high",
+  "usage": "Feat choice for chargen or level-up.",
+  "srd": {
+    "text": "_Origin Feat_ Your Unarmed Strikes deal 1d4 + Strength bludgeoning. Once per turn when you hit with an Unarmed Strike, you may also push the target 5 feet. Reroll any 1 on Unarmed or improvised weapon damage dice."
+  }
+}

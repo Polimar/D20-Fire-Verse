@@ -1,0 +1,12 @@
+{
+  "ambiguities": [],
+  "unparsedFields": [],
+  "kind": "feat",
+  "id": "boon_of_recovery",
+  "status": "auto_ok",
+  "confidence": "high",
+  "usage": "Feat choice for chargen or level-up.",
+  "srd": {
+    "text": "_Epic Boon Feat (Prerequisite: Level 19+)_ Increase one ability score by 1, to a maximum of 30. When you are reduced to 0 hit points, you can take a Reaction to regain hit points equal to half your hit point maximum (once per Long Rest)."
+  }
+}

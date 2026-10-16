@@ -1,0 +1,12 @@
+{
+  "ambiguities": [],
+  "unparsedFields": [],
+  "kind": "feat",
+  "id": "fey_touched",
+  "status": "auto_ok",
+  "confidence": "high",
+  "usage": "Feat choice for chargen or level-up.",
+  "srd": {
+    "text": "_General Feat (Prerequisite: Level 4+)_ Increase Intelligence, Wisdom, or Charisma by 1. You learn Misty Step and one 1st-level Enchantment or Illusion spell. You can cast each once without a slot per Long Rest."
+  }
+}

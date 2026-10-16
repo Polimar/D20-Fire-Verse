@@ -32,6 +32,16 @@ export type BuilderDraft = {
   spellsKnown?: string[];
   /** Wizard spellbook picks (must include prepared). */
   spellbook?: string[];
+  /** Skilled feat: three skill or tool ids. */
+  skilledPicks?: string[];
+  /** Magic Initiate cantrips (2) and one 1st-level spell. */
+  magicInitiateCantrips?: string[];
+  magicInitiateSpell?: string;
+  magicInitiateAbility?: AbilityKey;
+  /** Custom origin picks. */
+  customSkills?: string[];
+  customFeatId?: string;
+  customTool?: string;
   equipChoice?: "A" | "B" | "C";
   /** Background starting equipment: gear package (A) or 50 GP (B). */
   backgroundEquipChoice?: "A" | "B";
@@ -108,11 +118,14 @@ export type BuilderCatalog = {
     name: string;
     skills: string[];
     featId?: string;
+    featChoice?: string;
+    tools?: string[];
+    custom?: boolean;
     abilityOptions: AbilityKey[];
     equipChoices: Array<{ id: "A" | "B"; label: string }>;
   }>;
   classes: BuilderCatalogClass[];
-  feats: Array<{ id: string; name: string; category: string }>;
+  feats: Array<{ id: string; name: string; category: string; asiChoices?: AbilityKey[]; repeatable?: boolean }>;
   spells: Array<{ id: string; name: string; level: number; classes: string[] }>;
   skills: Record<string, { label: string; ability: AbilityKey }>;
   portraits: Array<{ id: string; url: string }>;

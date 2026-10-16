@@ -1,0 +1,12 @@
+{
+  "ambiguities": [],
+  "unparsedFields": [],
+  "kind": "feat",
+  "id": "telepathic",
+  "status": "auto_ok",
+  "confidence": "high",
+  "usage": "Feat choice for chargen or level-up.",
+  "srd": {
+    "text": "_General Feat (Prerequisite: Level 4+)_ Increase Intelligence, Wisdom, or Charisma by 1. You can communicate telepathically within 60 feet. You can cast Detect Thoughts once without a slot per Long Rest."
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "ambiguities": [],
+  "unparsedFields": [],
+  "kind": "feat",
+  "id": "spell_sniper",
+  "status": "auto_ok",
+  "confidence": "high",
+  "usage": "Feat choice for chargen or level-up.",
+  "srd": {
+    "text": "_General Feat (Prerequisite: Level 4+)_ Increase Intelligence, Wisdom, or Charisma by 1. Double the range of spells that require an attack roll. Your ranged spell attacks ignore Half and Three-Quarters cover. You learn one cantrip that requires an attack roll."
+  }
+}

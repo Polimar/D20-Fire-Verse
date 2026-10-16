@@ -1,0 +1,12 @@
+{
+  "ambiguities": [],
+  "unparsedFields": [],
+  "kind": "feat",
+  "id": "charger",
+  "status": "auto_ok",
+  "confidence": "high",
+  "usage": "Feat choice for chargen or level-up.",
+  "srd": {
+    "text": "_General Feat (Prerequisite: Level 4+)_ Increase Strength or Dexterity by 1. When you Dash, your Speed increases by 10 feet for that move. If you move at least 10 feet straight toward a target and hit it with a melee attack, add 1d8 damage or push it 10 feet."
+  }
+}

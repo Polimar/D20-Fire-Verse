@@ -146,7 +146,28 @@ export function deriveHero(draft: BuilderDraft, catalog: BuilderCatalog, classHi
   const level = Math.max(1, Math.min(20, draft.level ?? 1));
   const prof = 2 + Math.floor((level - 1) / 4);
 
-  const proficient = new Set<string>([...bgMeta?.skills ?? [], ...draft.classSkills]);
+  const bgSkills =
+    bgMeta?.custom ? [...(draft.customSkills ?? [])] : [...(bgMeta?.skills ?? [])];
+  if (bgMeta?.custom) {
+    if (bgSkills.length !== 2) errors.push("NEED_2_CUSTOM_SKILLS");
+    if (!draft.customFeatId) errors.push("NEED_CUSTOM_FEAT");
+    else if (!catalog.feats.some((f) => f.id === draft.customFeatId && f.category === "origin")) {
+      errors.push("BAD_CUSTOM_FEAT");
+    }
+    if (!draft.customTool) errors.push("NEED_CUSTOM_TOOL");
+  }
+
+  const originFeatId = bgMeta?.custom ? draft.customFeatId : bgMeta?.featId;
+  if (originFeatId === "skilled") {
+    if ((draft.skilledPicks?.length ?? 0) !== 3) errors.push("NEED_3_SKILLED");
+  }
+  if (originFeatId === "magic_initiate") {
+    if ((draft.magicInitiateCantrips?.length ?? 0) !== 2) errors.push("NEED_2_MI_CANTRIPS");
+    if (!draft.magicInitiateSpell) errors.push("NEED_MI_SPELL");
+    if (!draft.magicInitiateAbility) errors.push("NEED_MI_ABILITY");
+  }
+
+  const proficient = new Set<string>([...bgSkills, ...draft.classSkills, ...(draft.skilledPicks ?? [])]);
   if (draft.speciesSkill) proficient.add(draft.speciesSkill);
 
   if (clsMeta && draft.classSkills.length !== clsMeta.skillChoices) {
@@ -154,7 +175,7 @@ export function deriveHero(draft: BuilderDraft, catalog: BuilderCatalog, classHi
   }
   for (const sk of draft.classSkills) {
     if (!clsMeta?.skillList.includes(sk)) errors.push("BAD_CLASS_SKILL");
-    if (bgMeta?.skills.includes(sk)) errors.push("SKILL_OVERLAP_BG");
+    if (bgSkills.includes(sk)) errors.push("SKILL_OVERLAP_BG");
   }
 
   if (clsMeta?.fightingStyleRequired && !draft.fightingStyleFeatId) errors.push("NEED_FIGHTING_STYLE");
@@ -177,6 +198,7 @@ export function deriveHero(draft: BuilderDraft, catalog: BuilderCatalog, classHi
 
   const spellCap = clsMeta?.maxSpellLevelAt[level] ?? 0;
   const spellById = new Map(catalog.spells.map((s) => [s.id, s]));
+  const miList = bgMeta?.featChoice ?? "wizard";
   const assertCantrip = (id: string) => {
     const spell = spellById.get(id);
     if (!spell || spell.level !== 0 || !spell.classes.includes(draft.classId)) errors.push("BAD_SPELL");
@@ -187,13 +209,20 @@ export function deriveHero(draft: BuilderDraft, catalog: BuilderCatalog, classHi
       errors.push("BAD_SPELL");
     }
   };
+  const assertMi = (id: string, wantLevel: number) => {
+    const spell = spellById.get(id);
+    if (!spell || spell.level !== wantLevel || !spell.classes.includes(miList)) errors.push("BAD_MI_SPELL");
+  };
   for (const id of draft.cantrips ?? []) assertCantrip(id);
   for (const id of draft.spellsPrepared ?? []) assertLeveled(id);
   for (const id of draft.spellsKnown ?? []) assertLeveled(id);
   for (const id of draft.spellbook ?? []) assertLeveled(id);
+  for (const id of draft.magicInitiateCantrips ?? []) assertMi(id, 0);
+  if (draft.magicInitiateSpell) assertMi(draft.magicInitiateSpell, 1);
 
   const hitDie = classHint?.hitDie ?? 10;
-  const hp = hpAtLevelOne({ id: draft.classId, hitDie, caster: "none", primary: [], multiclass: {}, levels: [] }, scores.con);
+  let hp = hpAtLevelOne({ id: draft.classId, hitDie, caster: "none", primary: [], multiclass: {}, levels: [] }, scores.con);
+  if (originFeatId === "tough") hp += 2 * level;
 
   const kit = starterKit(clsMeta, draft.equipChoice);
   const worn = wornArmor(kit);
@@ -232,14 +261,17 @@ export function deriveHero(draft: BuilderDraft, catalog: BuilderCatalog, classHi
     const feat = catalog.feats.find((f) => f.id === draft.fightingStyleFeatId);
     if (feat) features.push(feat.name);
   }
-  if (bgMeta?.featId) {
-    const feat = catalog.feats.find((f) => f.id === bgMeta.featId);
+  if (originFeatId) {
+    const feat = catalog.feats.find((f) => f.id === originFeatId);
     if (feat) features.push(feat.name);
   }
   if (draft.originFeatId) {
     const feat = catalog.feats.find((f) => f.id === draft.originFeatId);
     if (feat) features.push(feat.name);
   }
+
+  let speedFt = 30;
+  if (originFeatId === "speedy" || draft.originFeatId === "speedy") speedFt += 10;
 
   const spellSlots = classHint?.spellSlotsL1 ?? (clsMeta?.caster === "full" && level === 1 ? { "1": 2 } : undefined);
 
@@ -251,7 +283,7 @@ export function deriveHero(draft: BuilderDraft, catalog: BuilderCatalog, classHi
     backgroundName: bgMeta?.name ?? draft.backgroundId,
     hp,
     ac,
-    speedFt: 30,
+    speedFt,
     proficiencyBonus: prof,
     abilities: Object.fromEntries(ABILITIES.map((a) => [a, { score: scores[a], mod: abilityMod(scores[a]) }])) as DerivedSheet["abilities"],
     savingThrows: saves,

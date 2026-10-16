@@ -1,0 +1,12 @@
+{
+  "ambiguities": [],
+  "unparsedFields": [],
+  "kind": "feat",
+  "id": "great_weapon_master",
+  "status": "auto_ok",
+  "confidence": "high",
+  "usage": "Feat choice for chargen or level-up.",
+  "srd": {
+    "text": "_General Feat (Prerequisite: Level 4+)_ Increase Strength by 1. When you hit with a Heavy weapon, add your Proficiency Bonus to the damage. When you score a Critical Hit or reduce a creature to 0 HP with a melee weapon, you can make one melee attack as a Bonus Action."
+  }
+}

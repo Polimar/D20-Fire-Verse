@@ -22,9 +22,9 @@ test("SRD review parses starting equipment for all 12 SRD classes", () => {
   }
 });
 
-test("SRD review parses background equipment A/B for all SRD backgrounds", () => {
+test("SRD review parses background equipment A/B for all origins", () => {
   const starters = backgroundStarters();
-  assert.equal(starters.length, 4);
+  assert.ok(starters.length >= 16, `expected >=16 origins, got ${starters.length}`);
   for (const row of starters) {
     assert.ok(row.options.length >= 2, `${row.backgroundId} needs A and B`);
   }

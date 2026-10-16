@@ -1,0 +1,12 @@
+{
+  "ambiguities": [],
+  "unparsedFields": [],
+  "kind": "feat",
+  "id": "healer",
+  "status": "auto_ok",
+  "confidence": "high",
+  "usage": "Feat choice for chargen or level-up.",
+  "srd": {
+    "text": "_Origin Feat_ As an Action, expend one use of a Healer's Kit to restore 1d4 + 1 + your Proficiency Bonus hit points to a creature. When you heal with a spell or this feat, reroll any heal die that shows a 1."
+  }
+}

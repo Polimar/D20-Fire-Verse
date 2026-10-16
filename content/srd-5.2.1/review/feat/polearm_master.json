@@ -1,0 +1,12 @@
+{
+  "ambiguities": [],
+  "unparsedFields": [],
+  "kind": "feat",
+  "id": "polearm_master",
+  "status": "auto_ok",
+  "confidence": "high",
+  "usage": "Feat choice for chargen or level-up.",
+  "srd": {
+    "text": "_General Feat (Prerequisite: Level 4+)_ Increase Strength or Dexterity by 1. When you take the Attack action with a Quarterstaff, Spear, Glaive, or Halberd, you can make a Bonus Action butt attack (1d4 bludgeoning). Creatures provoke Opportunity Attacks when they enter your reach with those weapons."
+  }
+}

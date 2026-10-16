@@ -1,0 +1,12 @@
+{
+  "ambiguities": [],
+  "unparsedFields": [],
+  "kind": "feat",
+  "id": "speedy",
+  "status": "auto_ok",
+  "confidence": "high",
+  "usage": "Feat choice for chargen or level-up.",
+  "srd": {
+    "text": "_General Feat (Prerequisite: Level 4+)_ Increase Dexterity or Constitution by 1. Your Speed increases by 10 feet. Difficult terrain does not slow you when you Dash. Opportunity Attacks against you have Disadvantage."
+  }
+}

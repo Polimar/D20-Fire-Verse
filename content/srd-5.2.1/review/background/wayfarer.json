@@ -1,0 +1,12 @@
+{
+  "ambiguities": [],
+  "unparsedFields": [],
+  "kind": "background",
+  "id": "wayfarer",
+  "status": "auto_ok",
+  "confidence": "high",
+  "usage": "Chargen background. Grants the listed skills.",
+  "srd": {
+    "text": "**Ability Scores:** Dexterity, Wisdom, Charisma\n**Feat:** Lucky\n**Skill Proficiencies:** insight and stealth\n**Tool Proficiency:** disguise kit\n**Equipment:** _Choose A or B:_ (A) Disguise Kit, 2 Daggers, Traveler's Clothes, 16 GP; or (B) 50 GP"
+  }
+}

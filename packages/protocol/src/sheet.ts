@@ -42,6 +42,10 @@ export type PcSheet = {
   traits: string[];
   inventory: string[];
   weapons: string[];
+  /** Origin/general feat resources shown on the sheet. */
+  luckPoints?: number;
+  luckPointsMax?: number;
+  heroicInspiration?: boolean;
   portrait?: string;
   economy: {
     movementLeft: number;
@@ -147,8 +151,13 @@ function tabBodyHtml(sheet: PcSheet, tab: SheetTab): string {
           <ul class="sheet-list">${[...worn.map((i) => pretty(String(i))), ...sheet.inventory].map((i) => `<li>${esc(pretty(i))}</li>`).join("") || "<li class='meta'>Nothing carried</li>"}</ul>
           ${sheet.attunements?.length ? `<p class="meta">Attuned ${sheet.attunements.map((id) => esc(pretty(id))).join(", ")}</p>` : ""}`;
     }
-    case "features":
-      return `<ul class="sheet-list">${[...(sheet.classes ?? []).map((c) => `${pretty(c.id)} ${c.level}${c.subclass ? ` (${pretty(c.subclass)})` : ""}`), ...sheet.features, ...sheet.traits].map((f) => `<li>${esc(pretty(f))}</li>`).join("") || "<li class='meta'>None listed</li>"}</ul>`;
+    case "features": {
+      const resources = [
+        sheet.luckPointsMax != null ? `Luck ${sheet.luckPoints ?? 0}/${sheet.luckPointsMax}` : "",
+        sheet.heroicInspiration ? "Heroic Inspiration" : "",
+      ].filter(Boolean);
+      return `${resources.length ? `<p class="meta">${resources.map(esc).join(" · ")}</p>` : ""}<ul class="sheet-list">${[...(sheet.classes ?? []).map((c) => `${pretty(c.id)} ${c.level}${c.subclass ? ` (${pretty(c.subclass)})` : ""}`), ...sheet.features, ...sheet.traits].map((f) => `<li>${esc(pretty(f))}</li>`).join("") || "<li class='meta'>None listed</li>"}</ul>`;
+    }
     case "spells": {
       const rows = (sheet.spells ?? []).filter((spell) => spell.level >= 0);
       return `<ul class="sheet-list">${rows.map((spell) => `<li>${esc(spell.name)} <em>L${spell.level} · ${esc(pretty(spell.classId))}</em></li>`).join("") || "<li class='meta'>No spells</li>"}</ul>`;

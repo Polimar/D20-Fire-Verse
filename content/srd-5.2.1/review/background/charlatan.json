@@ -1,0 +1,12 @@
+{
+  "ambiguities": [],
+  "unparsedFields": [],
+  "kind": "background",
+  "id": "charlatan",
+  "status": "auto_ok",
+  "confidence": "high",
+  "usage": "Chargen background. Grants the listed skills.",
+  "srd": {
+    "text": "**Ability Scores:** Dexterity, Constitution, Charisma\n**Feat:** Skilled\n**Skill Proficiencies:** deception and sleight of hand\n**Tool Proficiency:** disguise kit\n**Equipment:** _Choose A or B:_ (A) Disguise Kit, Fine Clothes, 15 GP; or (B) 50 GP"
+  }
+}

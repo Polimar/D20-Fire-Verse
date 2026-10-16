@@ -1,0 +1,12 @@
+{
+  "ambiguities": [],
+  "unparsedFields": [],
+  "kind": "feat",
+  "id": "war_caster",
+  "status": "auto_ok",
+  "confidence": "high",
+  "usage": "Feat choice for chargen or level-up.",
+  "srd": {
+    "text": "_General Feat (Prerequisite: Level 4+)_ Increase Intelligence, Wisdom, or Charisma by 1. You have Advantage on Constitution saves to maintain Concentration. You can perform somatic components with weapons or a shield in hand. When a creature provokes an Opportunity Attack from you, you can cast a single-target spell as the Reaction instead."
+  }
+}

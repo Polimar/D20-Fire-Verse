@@ -154,7 +154,14 @@ type SheetPregen = Pregen & {
 };
 
 const ABILITY_KEYS = ["str", "dex", "con", "int", "wis", "cha"] as const;
-export const FIGHTING_STYLES = ["archery", "defense", "great_weapon_fighting", "dueling", "two_weapon_fighting"] as const;
+export const FIGHTING_STYLES = [
+  "archery",
+  "defense",
+  "great_weapon_fighting",
+  "dueling",
+  "protection",
+  "two_weapon_fighting",
+] as const;
 
 /** The class kit for any seat: account heroes carry their classes, campaign pregens name one class and level. */
 export function kitForPregen(pregen: Pregen, level = pregen.level ?? 1): ClassKit {
@@ -214,6 +221,14 @@ export function initSheet(token: CombatToken, pregen: Pregen, saved?: Vitals): v
   token.sorceryPoints = saved?.sorceryPoints ?? kit.sorceryPoints;
   token.hitDie = HIT_DICE[pregen.class] ?? 8;
   token.hitDice = saved?.hitDice ?? level;
+  if (token.features.includes("lucky")) {
+    const pb = pregen.proficiencyBonus ?? 2;
+    token.luckPointsMax = pb;
+    token.luckPoints = saved && "luckPoints" in (saved as object) ? Number((saved as { luckPoints?: number }).luckPoints ?? pb) : pb;
+  }
+  if (token.features.includes("boon_of_truesight")) token.truesight = true;
+  if (token.features.includes("speedy")) token.speedCells = (token.speedCells ?? 6) + 2;
+  if (token.features.includes("heavily_armored")) token.heavyArmor = true;
   if (token.hp <= 0) {
     token.hp = 0;
     if (token.stable) token.dying = false;
@@ -495,6 +510,10 @@ export function scaledDice(effect: Record<string, unknown>, slot: number): strin
 
 export function shortRestResources(token: CombatToken, pregen: Pregen | undefined): string[] {
   const notes: string[] = [];
+  if (token.features?.includes("musician")) {
+    const pb = pregen?.proficiencyBonus ?? 2;
+    notes.push(`musician inspiration×${pb}`);
+  }
   if ((token.hitDice ?? 0) > 0 && token.hp < token.maxHp && token.hp > 0) {
     token.hitDice = (token.hitDice ?? 0) - 1;
     notes.push("hit die");
@@ -563,6 +582,17 @@ export function longRestResources(token: CombatToken, pregen: Pregen | undefined
     token.bardicLeft = Math.max(1, Math.floor(((pregen.abilities.cha ?? 10) - 10) / 2));
   }
   token.arcaneRecovery = false;
+  if (token.features?.includes("lucky")) {
+    const pb = pregen?.proficiencyBonus ?? 2;
+    token.luckPointsMax = pb;
+    token.luckPoints = pb;
+  }
+  if (token.features?.includes("musician")) {
+    /* allies get inspiration via rest narration; mark self ready */
+    token.heroicInspiration = true;
+  }
+  token.recoveryUsed = false;
+  token.miFreeCastUsed = false;
   onClassLongRest(token, pregen?.level ?? 1, pregen?.abilities ?? {});
   token.exhaustionLevel = longRestExhaustionDelta(token.exhaustionLevel ?? 0);
   if (token.gearCharges) {
