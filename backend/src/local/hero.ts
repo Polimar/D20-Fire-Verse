@@ -592,7 +592,14 @@ export function heroPending(heroId: string): boolean {
   return nextAsk(toProgress(hero), progressionCatalog()) != null;
 }
 
-export function levelOptions(heroId: string): { ask: PendingAsk | null; classes: string[]; subclasses: string[]; feats: string[]; spells: string[] } {
+export function levelOptions(heroId: string): {
+  ask: PendingAsk | null;
+  classes: string[];
+  subclasses: Array<{ id: string; name: string; classId: string }>;
+  feats: string[];
+  spells: string[];
+  featureChoices?: { featureId: string; options: string[] };
+} {
   const hero = getHero(heroId);
   if (!hero) throw new Error("BAD_CHARACTER");
   const catalog = progressionCatalog();
@@ -601,9 +608,15 @@ export function levelOptions(heroId: string): { ask: PendingAsk | null; classes:
   return {
     ask,
     classes: levelableClasses(toProgress(hero), catalog),
-    subclasses: catalog.subclasses.filter((row) => row.classId === classId).map((row) => row.id),
+    subclasses: catalog.subclasses
+      .filter((row) => row.classId === classId)
+      .map((row) => ({ id: row.id, name: row.name, classId: row.classId })),
     feats: catalog.feats.map((row) => row.id),
     spells: catalog.spells.filter((row) => !classId || row.classes.includes(classId)).map((row) => row.id),
+    featureChoices:
+      ask?.kind === "feature_choice"
+        ? { featureId: ask.featureId, options: ask.options }
+        : undefined,
   };
 }
 

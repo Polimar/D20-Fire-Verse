@@ -1,0 +1,12 @@
+{
+  "ambiguities": [],
+  "unparsedFields": [],
+  "kind": "subclass",
+  "id": "oath_of_vengeance",
+  "status": "auto_ok",
+  "confidence": "high",
+  "usage": "FireVerse homebrew subclass. Features grant kit flags and combat actions by slug.",
+  "srd": {
+    "text": "Oath of Vengeance\n\n#### Level 3: Vow of Enmity\n\n#### Level 7: Relentless Avenger\n\n#### Level 15: Soul of Vengeance\n\n#### Level 20: Avenging Angel"
+  }
+}

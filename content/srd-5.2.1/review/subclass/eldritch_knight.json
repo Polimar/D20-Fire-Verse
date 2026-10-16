@@ -1,0 +1,12 @@
+{
+  "ambiguities": [],
+  "unparsedFields": [],
+  "kind": "subclass",
+  "id": "eldritch_knight",
+  "status": "auto_ok",
+  "confidence": "high",
+  "usage": "FireVerse homebrew subclass. Features grant kit flags and combat actions by slug.",
+  "srd": {
+    "text": "Eldritch Knight\n\n#### Level 3: Spellcasting\n\n#### Level 3: Weapon Bond\n\n#### Level 7: War Magic\n\n#### Level 10: Eldritch Strike\n\n#### Level 15: Arcane Charge"
+  }
+}

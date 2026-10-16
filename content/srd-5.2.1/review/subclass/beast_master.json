@@ -1,0 +1,12 @@
+{
+  "ambiguities": [],
+  "unparsedFields": [],
+  "kind": "subclass",
+  "id": "beast_master",
+  "status": "auto_ok",
+  "confidence": "high",
+  "usage": "FireVerse homebrew subclass. Features grant kit flags and combat actions by slug.",
+  "srd": {
+    "text": "Beast Master\n\n#### Level 3: Primal Companion\n\n#### Level 7: Exceptional Training\n\n#### Level 11: Bestial Fury\n\n#### Level 15: Share Spells"
+  }
+}

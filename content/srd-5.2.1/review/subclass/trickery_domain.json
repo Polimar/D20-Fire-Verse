@@ -1,0 +1,12 @@
+{
+  "ambiguities": [],
+  "unparsedFields": [],
+  "kind": "subclass",
+  "id": "trickery_domain",
+  "status": "auto_ok",
+  "confidence": "high",
+  "usage": "FireVerse homebrew subclass. Features grant kit flags and combat actions by slug.",
+  "srd": {
+    "text": "Trickery Domain\n\n#### Level 3: Blessing of the Trickster\n\n#### Level 3: Invoke Duplicity\n\n#### Level 6: Trickster's Transposition\n\n#### Level 17: Improved Duplicity"
+  }
+}

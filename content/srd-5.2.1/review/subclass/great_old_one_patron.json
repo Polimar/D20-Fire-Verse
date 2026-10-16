@@ -1,0 +1,12 @@
+{
+  "ambiguities": [],
+  "unparsedFields": [],
+  "kind": "subclass",
+  "id": "great_old_one_patron",
+  "status": "auto_ok",
+  "confidence": "high",
+  "usage": "FireVerse homebrew subclass. Features grant kit flags and combat actions by slug.",
+  "srd": {
+    "text": "Great Old One Patron\n\n#### Level 3: Awakened Mind\n\n#### Level 3: Psychic Spells\n\n#### Level 6: Clairvoyant Hex\n\n#### Level 10: Thought Shield\n\n#### Level 14: Create Thrall"
+  }
+}

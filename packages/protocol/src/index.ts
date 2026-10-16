@@ -352,6 +352,8 @@ const ERROR_TEXT: Record<string, string> = {
   MULTICLASS_PREREQ: "That class needs higher ability scores.",
   REVIEW_OPEN: "Resolve that entry in the content wizard before it can enter play.",
   LEVEL_CHOICE: "Choose the next level-up step before anything else.",
+  BAD_CHOICE: "That option is not available for this feature.",
+  BAD_SUBCLASS: "That subclass is not available for this class.",
   RESPEC_DISABLED: "Respec is turned off until progression is finished.",
   LEVEL_UP_PENDING: "Finish this hero's level-up before they sit down. Another hero can still play.",
 };

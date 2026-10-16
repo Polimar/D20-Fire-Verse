@@ -1,0 +1,12 @@
+{
+  "ambiguities": [],
+  "unparsedFields": [],
+  "kind": "subclass",
+  "id": "clockwork_sorcery",
+  "status": "auto_ok",
+  "confidence": "high",
+  "usage": "FireVerse homebrew subclass. Features grant kit flags and combat actions by slug.",
+  "srd": {
+    "text": "Clockwork Sorcery\n\n#### Level 3: Clockwork Spells\n\n#### Level 3: Restore Balance\n\n#### Level 6: Bastion of Law\n\n#### Level 14: Trance of Order\n\n#### Level 18: Clockwork Cavalcade"
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "ambiguities": [],
+  "unparsedFields": [],
+  "kind": "subclass",
+  "id": "way_of_the_ascendant_dragon",
+  "status": "auto_ok",
+  "confidence": "high",
+  "usage": "FireVerse homebrew subclass. Features grant kit flags and combat actions by slug.",
+  "srd": {
+    "text": "Way of the Ascendant Dragon\n\n#### Level 3: Draconic Disciple\n\n#### Level 3: Breath of the Dragon\n\n#### Level 6: Wings Unfurled\n\n#### Level 11: Frightful Presence\n\n#### Level 17: Ascendant Aspect"
+  }
+}

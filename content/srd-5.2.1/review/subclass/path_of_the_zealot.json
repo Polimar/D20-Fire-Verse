@@ -1,0 +1,12 @@
+{
+  "ambiguities": [],
+  "unparsedFields": [],
+  "kind": "subclass",
+  "id": "path_of_the_zealot",
+  "status": "auto_ok",
+  "confidence": "high",
+  "usage": "FireVerse homebrew subclass. Features grant kit flags and combat actions by slug.",
+  "srd": {
+    "text": "Path of the Zealot\n\n#### Level 3: Divine Fury\n\n#### Level 3: Warrior of the Gods\n\n#### Level 6: Fanatical Focus\n\n#### Level 10: Zealous Presence\n\n#### Level 14: Rage Beyond Death"
+  }
+}

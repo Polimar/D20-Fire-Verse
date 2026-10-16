@@ -5,7 +5,20 @@
     "actionType": "action",
     "level": 0,
     "combat": true,
-    "effects": [{ "type": "attack", "spellAttack": true, "ability": "spell", "rangeCells": 24, "damage": [{ "dice": "1d10", "damageType": "fire" }] }]
+    "effects": [
+      {
+        "type": "attack",
+        "spellAttack": true,
+        "ability": "spell",
+        "rangeCells": 24,
+        "damage": [
+          {
+            "dice": "1d10",
+            "damageType": "fire"
+          }
+        ]
+      }
+    ]
   },
   "ray_of_frost": {
     "id": "ray_of_frost",
@@ -13,7 +26,26 @@
     "actionType": "action",
     "level": 0,
     "combat": true,
-    "effects": [{ "type": "attack", "spellAttack": true, "ability": "spell", "rangeCells": 12, "damage": [{ "dice": "1d8", "damageType": "cold" }], "onHit": [{ "type": "condition", "condition": "slowed" }] }]
+    "effects": [
+      {
+        "type": "attack",
+        "spellAttack": true,
+        "ability": "spell",
+        "rangeCells": 12,
+        "damage": [
+          {
+            "dice": "1d8",
+            "damageType": "cold"
+          }
+        ],
+        "onHit": [
+          {
+            "type": "condition",
+            "condition": "slowed"
+          }
+        ]
+      }
+    ]
   },
   "sacred_flame": {
     "id": "sacred_flame",
@@ -21,7 +53,22 @@
     "actionType": "action",
     "level": 0,
     "combat": true,
-    "effects": [{ "type": "save", "shape": "one", "ability": "dex", "dcFrom": "spell", "rangeCells": 12, "damage": [{ "dice": "1d8", "damageType": "radiant" }], "halfOnSuccess": false }]
+    "effects": [
+      {
+        "type": "save",
+        "shape": "one",
+        "ability": "dex",
+        "dcFrom": "spell",
+        "rangeCells": 12,
+        "damage": [
+          {
+            "dice": "1d8",
+            "damageType": "radiant"
+          }
+        ],
+        "halfOnSuccess": false
+      }
+    ]
   },
   "produce_flame": {
     "id": "produce_flame",
@@ -29,7 +76,20 @@
     "actionType": "action",
     "level": 0,
     "combat": true,
-    "effects": [{ "type": "attack", "spellAttack": true, "ability": "spell", "rangeCells": 6, "damage": [{ "dice": "1d8", "damageType": "fire" }] }]
+    "effects": [
+      {
+        "type": "attack",
+        "spellAttack": true,
+        "ability": "spell",
+        "rangeCells": 6,
+        "damage": [
+          {
+            "dice": "1d8",
+            "damageType": "fire"
+          }
+        ]
+      }
+    ]
   },
   "vicious_mockery": {
     "id": "vicious_mockery",
@@ -37,7 +97,23 @@
     "actionType": "action",
     "level": 0,
     "combat": true,
-    "effects": [{ "type": "save", "shape": "one", "ability": "wis", "dcFrom": "spell", "rangeCells": 12, "damage": [{ "dice": "1d6", "damageType": "psychic" }], "onFail": "mocked", "halfOnSuccess": false }]
+    "effects": [
+      {
+        "type": "save",
+        "shape": "one",
+        "ability": "wis",
+        "dcFrom": "spell",
+        "rangeCells": 12,
+        "damage": [
+          {
+            "dice": "1d6",
+            "damageType": "psychic"
+          }
+        ],
+        "onFail": "mocked",
+        "halfOnSuccess": false
+      }
+    ]
   },
   "eldritch_blast": {
     "id": "eldritch_blast",
@@ -45,7 +121,20 @@
     "actionType": "action",
     "level": 0,
     "combat": true,
-    "effects": [{ "type": "attack", "spellAttack": true, "ability": "spell", "rangeCells": 24, "damage": [{ "dice": "1d10", "damageType": "force" }] }]
+    "effects": [
+      {
+        "type": "attack",
+        "spellAttack": true,
+        "ability": "spell",
+        "rangeCells": 24,
+        "damage": [
+          {
+            "dice": "1d10",
+            "damageType": "force"
+          }
+        ]
+      }
+    ]
   },
   "spell_mage_armor": {
     "id": "spell_mage_armor",
@@ -53,7 +142,12 @@
     "actionType": "action",
     "level": 1,
     "combat": true,
-    "effects": [{ "type": "mage_armor", "slot": 1 }]
+    "effects": [
+      {
+        "type": "mage_armor",
+        "slot": 1
+      }
+    ]
   },
   "spell_magic_missile": {
     "id": "spell_magic_missile",
@@ -66,7 +160,12 @@
         "type": "auto_hit",
         "missiles": 3,
         "rangeCells": 24,
-        "damage": [{ "dice": "1d4+1", "damageType": "force" }],
+        "damage": [
+          {
+            "dice": "1d4+1",
+            "damageType": "force"
+          }
+        ],
         "slot": 1
       }
     ]
@@ -77,7 +176,18 @@
     "actionType": "action",
     "level": 1,
     "combat": true,
-    "effects": [{ "type": "sleep", "dice": "5d8", "rangeCells": 8, "radius": 4, "slot": 1, "scaling": { "2": "7d8" } }]
+    "effects": [
+      {
+        "type": "sleep",
+        "dice": "5d8",
+        "rangeCells": 8,
+        "radius": 4,
+        "slot": 1,
+        "scaling": {
+          "2": "7d8"
+        }
+      }
+    ]
   },
   "spell_thunderwave": {
     "id": "spell_thunderwave",
@@ -85,7 +195,26 @@
     "actionType": "action",
     "level": 1,
     "combat": true,
-    "effects": [{ "type": "save", "shape": "cube", "ability": "con", "dcFrom": "spell", "lengthCells": 2, "damage": [{ "dice": "2d8", "damageType": "thunder" }], "halfOnSuccess": true, "slot": 1, "scaling": { "2": "3d8" } }]
+    "effects": [
+      {
+        "type": "save",
+        "shape": "cube",
+        "ability": "con",
+        "dcFrom": "spell",
+        "lengthCells": 2,
+        "damage": [
+          {
+            "dice": "2d8",
+            "damageType": "thunder"
+          }
+        ],
+        "halfOnSuccess": true,
+        "slot": 1,
+        "scaling": {
+          "2": "3d8"
+        }
+      }
+    ]
   },
   "spell_chromatic_orb": {
     "id": "spell_chromatic_orb",
@@ -93,7 +222,24 @@
     "actionType": "action",
     "level": 1,
     "combat": true,
-    "effects": [{ "type": "attack", "spellAttack": true, "ability": "spell", "rangeCells": 18, "damage": [{ "dice": "3d8", "damageType": "fire" }], "slot": 1, "scaling": { "2": "4d8" } }]
+    "effects": [
+      {
+        "type": "attack",
+        "spellAttack": true,
+        "ability": "spell",
+        "rangeCells": 18,
+        "damage": [
+          {
+            "dice": "3d8",
+            "damageType": "fire"
+          }
+        ],
+        "slot": 1,
+        "scaling": {
+          "2": "4d8"
+        }
+      }
+    ]
   },
   "spell_acid_arrow": {
     "id": "spell_acid_arrow",
@@ -107,11 +253,28 @@
         "spellAttack": true,
         "ability": "spell",
         "rangeCells": 18,
-        "damage": [{ "dice": "4d4", "damageType": "acid" }],
+        "damage": [
+          {
+            "dice": "4d4",
+            "damageType": "acid"
+          }
+        ],
         "slot": 2,
         "missHalfInitial": true,
-        "delayedOnHit": { "dice": "2d4", "damageType": "acid", "timing": "target_turn_start_after_hit" },
-        "scaling": { "3": "5d4", "4": "6d4", "5": "7d4", "6": "8d4", "7": "9d4", "8": "10d4", "9": "11d4" }
+        "delayedOnHit": {
+          "dice": "2d4",
+          "damageType": "acid",
+          "timing": "target_turn_start_after_hit"
+        },
+        "scaling": {
+          "3": "5d4",
+          "4": "6d4",
+          "5": "7d4",
+          "6": "8d4",
+          "7": "9d4",
+          "8": "10d4",
+          "9": "11d4"
+        }
       }
     ]
   },
@@ -121,7 +284,19 @@
     "actionType": "bonus_action",
     "level": 1,
     "combat": true,
-    "effects": [{ "type": "heal", "dice": "2d4", "ability": "spell", "rangeCells": 12, "slot": 1, "scaling": { "2": "4d4", "3": "6d4" } }]
+    "effects": [
+      {
+        "type": "heal",
+        "dice": "2d4",
+        "ability": "spell",
+        "rangeCells": 12,
+        "slot": 1,
+        "scaling": {
+          "2": "4d4",
+          "3": "6d4"
+        }
+      }
+    ]
   },
   "spell_inflict_wounds": {
     "id": "spell_inflict_wounds",
@@ -129,7 +304,27 @@
     "actionType": "action",
     "level": 1,
     "combat": true,
-    "effects": [{ "type": "save", "shape": "one", "ability": "con", "dcFrom": "spell", "rangeCells": 1, "damage": [{ "dice": "2d10", "damageType": "necrotic" }], "halfOnSuccess": true, "slot": 1, "scaling": { "2": "3d10", "3": "4d10" } }]
+    "effects": [
+      {
+        "type": "save",
+        "shape": "one",
+        "ability": "con",
+        "dcFrom": "spell",
+        "rangeCells": 1,
+        "damage": [
+          {
+            "dice": "2d10",
+            "damageType": "necrotic"
+          }
+        ],
+        "halfOnSuccess": true,
+        "slot": 1,
+        "scaling": {
+          "2": "3d10",
+          "3": "4d10"
+        }
+      }
+    ]
   },
   "spell_shield_of_faith": {
     "id": "spell_shield_of_faith",
@@ -137,7 +332,15 @@
     "actionType": "bonus_action",
     "level": 1,
     "combat": true,
-    "effects": [{ "type": "ward", "acBonus": 2, "rangeCells": 12, "concentration": true, "slot": 1 }]
+    "effects": [
+      {
+        "type": "ward",
+        "acBonus": 2,
+        "rangeCells": 12,
+        "concentration": true,
+        "slot": 1
+      }
+    ]
   },
   "spell_entangle": {
     "id": "spell_entangle",
@@ -145,7 +348,25 @@
     "actionType": "action",
     "level": 1,
     "combat": true,
-    "effects": [{ "type": "save", "shape": "sphere", "ability": "str", "dcFrom": "spell", "lengthCells": 4, "radius": 2, "onFail": "restrained", "concentration": true, "slot": 1, "damage": [{ "dice": "0", "damageType": "none" }] }]
+    "effects": [
+      {
+        "type": "save",
+        "shape": "sphere",
+        "ability": "str",
+        "dcFrom": "spell",
+        "lengthCells": 4,
+        "radius": 2,
+        "onFail": "restrained",
+        "concentration": true,
+        "slot": 1,
+        "damage": [
+          {
+            "dice": "0",
+            "damageType": "none"
+          }
+        ]
+      }
+    ]
   },
   "spell_faerie_fire": {
     "id": "spell_faerie_fire",
@@ -153,7 +374,25 @@
     "actionType": "action",
     "level": 1,
     "combat": true,
-    "effects": [{ "type": "save", "shape": "sphere", "ability": "dex", "dcFrom": "spell", "lengthCells": 12, "radius": 2, "onFail": "outlined", "concentration": true, "slot": 1, "damage": [{ "dice": "0", "damageType": "none" }] }]
+    "effects": [
+      {
+        "type": "save",
+        "shape": "sphere",
+        "ability": "dex",
+        "dcFrom": "spell",
+        "lengthCells": 12,
+        "radius": 2,
+        "onFail": "outlined",
+        "concentration": true,
+        "slot": 1,
+        "damage": [
+          {
+            "dice": "0",
+            "damageType": "none"
+          }
+        ]
+      }
+    ]
   },
   "spell_dissonant_whispers": {
     "id": "spell_dissonant_whispers",
@@ -161,7 +400,26 @@
     "actionType": "action",
     "level": 1,
     "combat": true,
-    "effects": [{ "type": "save", "shape": "one", "ability": "wis", "dcFrom": "spell", "rangeCells": 12, "damage": [{ "dice": "3d6", "damageType": "psychic" }], "halfOnSuccess": false, "slot": 1, "scaling": { "2": "4d6" } }]
+    "effects": [
+      {
+        "type": "save",
+        "shape": "one",
+        "ability": "wis",
+        "dcFrom": "spell",
+        "rangeCells": 12,
+        "damage": [
+          {
+            "dice": "3d6",
+            "damageType": "psychic"
+          }
+        ],
+        "halfOnSuccess": false,
+        "slot": 1,
+        "scaling": {
+          "2": "4d6"
+        }
+      }
+    ]
   },
   "spell_grease": {
     "id": "spell_grease",
@@ -169,7 +427,24 @@
     "actionType": "action",
     "level": 1,
     "combat": true,
-    "effects": [{ "type": "save", "shape": "sphere", "ability": "dex", "dcFrom": "spell", "lengthCells": 12, "radius": 2, "onFail": "prone", "slot": 1, "damage": [{ "dice": "0", "damageType": "none" }] }]
+    "effects": [
+      {
+        "type": "save",
+        "shape": "sphere",
+        "ability": "dex",
+        "dcFrom": "spell",
+        "lengthCells": 12,
+        "radius": 2,
+        "onFail": "prone",
+        "slot": 1,
+        "damage": [
+          {
+            "dice": "0",
+            "damageType": "none"
+          }
+        ]
+      }
+    ]
   },
   "spell_hex": {
     "id": "spell_hex",
@@ -177,7 +452,16 @@
     "actionType": "bonus_action",
     "level": 1,
     "combat": true,
-    "effects": [{ "type": "brand", "dice": "1d6", "damageType": "necrotic", "rangeCells": 18, "concentration": true, "slot": 1 }]
+    "effects": [
+      {
+        "type": "brand",
+        "dice": "1d6",
+        "damageType": "necrotic",
+        "rangeCells": 18,
+        "concentration": true,
+        "slot": 1
+      }
+    ]
   },
   "spell_hunters_mark": {
     "id": "spell_hunters_mark",
@@ -185,7 +469,16 @@
     "actionType": "bonus_action",
     "level": 1,
     "combat": true,
-    "effects": [{ "type": "brand", "dice": "1d6", "damageType": "force", "rangeCells": 18, "concentration": true, "slot": 1 }]
+    "effects": [
+      {
+        "type": "brand",
+        "dice": "1d6",
+        "damageType": "force",
+        "rangeCells": 18,
+        "concentration": true,
+        "slot": 1
+      }
+    ]
   },
   "spell_haste": {
     "id": "spell_haste",
@@ -193,7 +486,14 @@
     "actionType": "action",
     "level": 3,
     "combat": true,
-    "effects": [{ "type": "haste", "rangeCells": 6, "concentration": true, "slot": 3 }]
+    "effects": [
+      {
+        "type": "haste",
+        "rangeCells": 6,
+        "concentration": true,
+        "slot": 3
+      }
+    ]
   },
   "spell_bane": {
     "id": "spell_bane",
@@ -201,7 +501,16 @@
     "actionType": "action",
     "level": 1,
     "combat": true,
-    "effects": [{ "type": "bane", "maxTargets": 3, "baseSlot": 1, "rangeCells": 6, "concentration": true, "slot": 1 }]
+    "effects": [
+      {
+        "type": "bane",
+        "maxTargets": 3,
+        "baseSlot": 1,
+        "rangeCells": 6,
+        "concentration": true,
+        "slot": 1
+      }
+    ]
   },
   "spell_misty_step": {
     "id": "spell_misty_step",
@@ -210,7 +519,13 @@
     "level": 2,
     "combat": true,
     "aim": "cell",
-    "effects": [{ "type": "teleport", "rangeCells": 6, "slot": 2 }]
+    "effects": [
+      {
+        "type": "teleport",
+        "rangeCells": 6,
+        "slot": 2
+      }
+    ]
   },
   "spell_scorching_ray": {
     "id": "spell_scorching_ray",
@@ -218,7 +533,22 @@
     "actionType": "action",
     "level": 2,
     "combat": true,
-    "effects": [{ "type": "rays", "rays": 3, "spellAttack": true, "ability": "spell", "rangeCells": 24, "damage": [{ "dice": "2d6", "damageType": "fire" }], "slot": 2 }]
+    "effects": [
+      {
+        "type": "rays",
+        "rays": 3,
+        "spellAttack": true,
+        "ability": "spell",
+        "rangeCells": 24,
+        "damage": [
+          {
+            "dice": "2d6",
+            "damageType": "fire"
+          }
+        ],
+        "slot": 2
+      }
+    ]
   },
   "spell_shatter": {
     "id": "spell_shatter",
@@ -226,7 +556,33 @@
     "actionType": "action",
     "level": 2,
     "combat": true,
-    "effects": [{ "type": "save", "shape": "sphere", "ability": "con", "dcFrom": "spell", "lengthCells": 12, "radius": 2, "damage": [{ "dice": "3d8", "damageType": "thunder" }], "halfOnSuccess": true, "slot": 2, "scaling": { "3": "4d8", "4": "5d8", "5": "6d8", "6": "7d8", "7": "8d8", "8": "9d8", "9": "10d8" } }]
+    "effects": [
+      {
+        "type": "save",
+        "shape": "sphere",
+        "ability": "con",
+        "dcFrom": "spell",
+        "lengthCells": 12,
+        "radius": 2,
+        "damage": [
+          {
+            "dice": "3d8",
+            "damageType": "thunder"
+          }
+        ],
+        "halfOnSuccess": true,
+        "slot": 2,
+        "scaling": {
+          "3": "4d8",
+          "4": "5d8",
+          "5": "6d8",
+          "6": "7d8",
+          "7": "8d8",
+          "8": "9d8",
+          "9": "10d8"
+        }
+      }
+    ]
   },
   "spell_burning_hands": {
     "id": "spell_burning_hands",
@@ -234,7 +590,33 @@
     "actionType": "action",
     "level": 1,
     "combat": true,
-    "effects": [{ "type": "save", "shape": "cone", "ability": "dex", "dcFrom": "spell", "lengthCells": 3, "damage": [{ "dice": "3d6", "damageType": "fire" }], "halfOnSuccess": true, "slot": 1, "scaling": { "2": "4d6", "3": "5d6", "4": "6d6", "5": "7d6", "6": "8d6", "7": "9d6", "8": "10d6", "9": "11d6" } }]
+    "effects": [
+      {
+        "type": "save",
+        "shape": "cone",
+        "ability": "dex",
+        "dcFrom": "spell",
+        "lengthCells": 3,
+        "damage": [
+          {
+            "dice": "3d6",
+            "damageType": "fire"
+          }
+        ],
+        "halfOnSuccess": true,
+        "slot": 1,
+        "scaling": {
+          "2": "4d6",
+          "3": "5d6",
+          "4": "6d6",
+          "5": "7d6",
+          "6": "8d6",
+          "7": "9d6",
+          "8": "10d6",
+          "9": "11d6"
+        }
+      }
+    ]
   },
   "spell_cure_wounds": {
     "id": "spell_cure_wounds",
@@ -242,7 +624,25 @@
     "actionType": "action",
     "level": 1,
     "combat": true,
-    "effects": [{ "type": "heal", "dice": "2d8", "ability": "spell", "rangeCells": 1, "slot": 1, "scaling": { "2": "4d8", "3": "6d8", "4": "8d8", "5": "10d8", "6": "12d8", "7": "14d8", "8": "16d8", "9": "18d8" } }]
+    "effects": [
+      {
+        "type": "heal",
+        "dice": "2d8",
+        "ability": "spell",
+        "rangeCells": 1,
+        "slot": 1,
+        "scaling": {
+          "2": "4d8",
+          "3": "6d8",
+          "4": "8d8",
+          "5": "10d8",
+          "6": "12d8",
+          "7": "14d8",
+          "8": "16d8",
+          "9": "18d8"
+        }
+      }
+    ]
   },
   "spell_guiding_bolt": {
     "id": "spell_guiding_bolt",
@@ -250,7 +650,37 @@
     "actionType": "action",
     "level": 1,
     "combat": true,
-    "effects": [{ "type": "attack", "spellAttack": true, "ability": "spell", "rangeCells": 24, "damage": [{ "dice": "4d6", "damageType": "radiant" }], "slot": 1, "onHit": [{ "type": "condition", "condition": "attack_advantage_next" }], "scaling": { "2": "5d6", "3": "6d6", "4": "7d6", "5": "8d6", "6": "9d6", "7": "10d6", "8": "11d6", "9": "12d6" } }]
+    "effects": [
+      {
+        "type": "attack",
+        "spellAttack": true,
+        "ability": "spell",
+        "rangeCells": 24,
+        "damage": [
+          {
+            "dice": "4d6",
+            "damageType": "radiant"
+          }
+        ],
+        "slot": 1,
+        "onHit": [
+          {
+            "type": "condition",
+            "condition": "attack_advantage_next"
+          }
+        ],
+        "scaling": {
+          "2": "5d6",
+          "3": "6d6",
+          "4": "7d6",
+          "5": "8d6",
+          "6": "9d6",
+          "7": "10d6",
+          "8": "11d6",
+          "9": "12d6"
+        }
+      }
+    ]
   },
   "spell_ray_of_sickness": {
     "id": "spell_ray_of_sickness",
@@ -258,7 +688,37 @@
     "actionType": "action",
     "level": 1,
     "combat": true,
-    "effects": [{ "type": "attack", "spellAttack": true, "ability": "spell", "rangeCells": 12, "damage": [{ "dice": "2d8", "damageType": "poison" }], "slot": 1, "onHit": [{ "type": "condition", "condition": "poisoned" }], "scaling": { "2": "3d8", "3": "4d8", "4": "5d8", "5": "6d8", "6": "7d8", "7": "8d8", "8": "9d8", "9": "10d8" } }]
+    "effects": [
+      {
+        "type": "attack",
+        "spellAttack": true,
+        "ability": "spell",
+        "rangeCells": 12,
+        "damage": [
+          {
+            "dice": "2d8",
+            "damageType": "poison"
+          }
+        ],
+        "slot": 1,
+        "onHit": [
+          {
+            "type": "condition",
+            "condition": "poisoned"
+          }
+        ],
+        "scaling": {
+          "2": "3d8",
+          "3": "4d8",
+          "4": "5d8",
+          "5": "6d8",
+          "6": "7d8",
+          "7": "8d8",
+          "8": "9d8",
+          "9": "10d8"
+        }
+      }
+    ]
   },
   "spell_hellish_rebuke": {
     "id": "spell_hellish_rebuke",
@@ -266,7 +726,33 @@
     "actionType": "reaction",
     "level": 1,
     "combat": true,
-    "effects": [{ "type": "save", "shape": "one", "ability": "dex", "dcFrom": "spell", "rangeCells": 12, "damage": [{ "dice": "2d10", "damageType": "fire" }], "halfOnSuccess": true, "slot": 1, "scaling": { "2": "3d10", "3": "4d10", "4": "5d10", "5": "6d10", "6": "7d10", "7": "8d10", "8": "9d10", "9": "10d10" } }]
+    "effects": [
+      {
+        "type": "save",
+        "shape": "one",
+        "ability": "dex",
+        "dcFrom": "spell",
+        "rangeCells": 12,
+        "damage": [
+          {
+            "dice": "2d10",
+            "damageType": "fire"
+          }
+        ],
+        "halfOnSuccess": true,
+        "slot": 1,
+        "scaling": {
+          "2": "3d10",
+          "3": "4d10",
+          "4": "5d10",
+          "5": "6d10",
+          "6": "7d10",
+          "7": "8d10",
+          "8": "9d10",
+          "9": "10d10"
+        }
+      }
+    ]
   },
   "spell_mind_spike": {
     "id": "spell_mind_spike",
@@ -274,7 +760,33 @@
     "actionType": "action",
     "level": 2,
     "combat": true,
-    "effects": [{ "type": "save", "shape": "one", "ability": "wis", "dcFrom": "spell", "rangeCells": 24, "damage": [{ "dice": "3d8", "damageType": "psychic" }], "halfOnSuccess": true, "concentration": true, "slot": 2, "scaling": { "3": "4d8", "4": "5d8", "5": "6d8", "6": "7d8", "7": "8d8", "8": "9d8", "9": "10d8" } }]
+    "effects": [
+      {
+        "type": "save",
+        "shape": "one",
+        "ability": "wis",
+        "dcFrom": "spell",
+        "rangeCells": 24,
+        "damage": [
+          {
+            "dice": "3d8",
+            "damageType": "psychic"
+          }
+        ],
+        "halfOnSuccess": true,
+        "concentration": true,
+        "slot": 2,
+        "scaling": {
+          "3": "4d8",
+          "4": "5d8",
+          "5": "6d8",
+          "6": "7d8",
+          "7": "8d8",
+          "8": "9d8",
+          "9": "10d8"
+        }
+      }
+    ]
   },
   "spell_fireball": {
     "id": "spell_fireball",
@@ -282,7 +794,32 @@
     "actionType": "action",
     "level": 3,
     "combat": true,
-    "effects": [{ "type": "save", "shape": "sphere", "ability": "dex", "dcFrom": "spell", "lengthCells": 30, "radius": 4, "damage": [{ "dice": "8d6", "damageType": "fire" }], "halfOnSuccess": true, "slot": 3, "scaling": { "4": "9d6", "5": "10d6", "6": "11d6", "7": "12d6", "8": "13d6", "9": "14d6" } }]
+    "effects": [
+      {
+        "type": "save",
+        "shape": "sphere",
+        "ability": "dex",
+        "dcFrom": "spell",
+        "lengthCells": 30,
+        "radius": 4,
+        "damage": [
+          {
+            "dice": "8d6",
+            "damageType": "fire"
+          }
+        ],
+        "halfOnSuccess": true,
+        "slot": 3,
+        "scaling": {
+          "4": "9d6",
+          "5": "10d6",
+          "6": "11d6",
+          "7": "12d6",
+          "8": "13d6",
+          "9": "14d6"
+        }
+      }
+    ]
   },
   "spell_lightning_bolt": {
     "id": "spell_lightning_bolt",
@@ -290,7 +827,31 @@
     "actionType": "action",
     "level": 3,
     "combat": true,
-    "effects": [{ "type": "save", "shape": "line", "ability": "dex", "dcFrom": "spell", "lengthCells": 20, "damage": [{ "dice": "8d6", "damageType": "lightning" }], "halfOnSuccess": true, "slot": 3, "scaling": { "4": "9d6", "5": "10d6", "6": "11d6", "7": "12d6", "8": "13d6", "9": "14d6" } }]
+    "effects": [
+      {
+        "type": "save",
+        "shape": "line",
+        "ability": "dex",
+        "dcFrom": "spell",
+        "lengthCells": 20,
+        "damage": [
+          {
+            "dice": "8d6",
+            "damageType": "lightning"
+          }
+        ],
+        "halfOnSuccess": true,
+        "slot": 3,
+        "scaling": {
+          "4": "9d6",
+          "5": "10d6",
+          "6": "11d6",
+          "7": "12d6",
+          "8": "13d6",
+          "9": "14d6"
+        }
+      }
+    ]
   },
   "spell_mass_healing_word": {
     "id": "spell_mass_healing_word",
@@ -298,7 +859,24 @@
     "actionType": "bonus_action",
     "level": 3,
     "combat": true,
-    "effects": [{ "type": "heal", "dice": "2d4", "ability": "spell", "rangeCells": 12, "mass": 6, "slot": 3, "scaling": { "4": "3d4", "5": "4d4", "6": "5d4", "7": "6d4", "8": "7d4", "9": "8d4" } }]
+    "effects": [
+      {
+        "type": "heal",
+        "dice": "2d4",
+        "ability": "spell",
+        "rangeCells": 12,
+        "mass": 6,
+        "slot": 3,
+        "scaling": {
+          "4": "3d4",
+          "5": "4d4",
+          "6": "5d4",
+          "7": "6d4",
+          "8": "7d4",
+          "9": "8d4"
+        }
+      }
+    ]
   },
   "spell_blight": {
     "id": "spell_blight",
@@ -306,7 +884,30 @@
     "actionType": "action",
     "level": 4,
     "combat": true,
-    "effects": [{ "type": "save", "shape": "one", "ability": "con", "dcFrom": "spell", "rangeCells": 6, "damage": [{ "dice": "8d8", "damageType": "necrotic" }], "halfOnSuccess": true, "slot": 4, "scaling": { "5": "9d8", "6": "10d8", "7": "11d8", "8": "12d8", "9": "13d8" } }]
+    "effects": [
+      {
+        "type": "save",
+        "shape": "one",
+        "ability": "con",
+        "dcFrom": "spell",
+        "rangeCells": 6,
+        "damage": [
+          {
+            "dice": "8d8",
+            "damageType": "necrotic"
+          }
+        ],
+        "halfOnSuccess": true,
+        "slot": 4,
+        "scaling": {
+          "5": "9d8",
+          "6": "10d8",
+          "7": "11d8",
+          "8": "12d8",
+          "9": "13d8"
+        }
+      }
+    ]
   },
   "spell_ice_storm": {
     "id": "spell_ice_storm",
@@ -314,7 +915,35 @@
     "actionType": "action",
     "level": 4,
     "combat": true,
-    "effects": [{ "type": "save", "shape": "sphere", "ability": "dex", "dcFrom": "spell", "lengthCells": 60, "radius": 4, "damage": [{ "dice": "2d10", "damageType": "bludgeoning" }, { "dice": "4d6", "damageType": "cold" }], "halfOnSuccess": true, "slot": 4, "scaling": { "5": "3d10", "6": "4d10", "7": "5d10", "8": "6d10", "9": "7d10" } }]
+    "effects": [
+      {
+        "type": "save",
+        "shape": "sphere",
+        "ability": "dex",
+        "dcFrom": "spell",
+        "lengthCells": 60,
+        "radius": 4,
+        "damage": [
+          {
+            "dice": "2d10",
+            "damageType": "bludgeoning"
+          },
+          {
+            "dice": "4d6",
+            "damageType": "cold"
+          }
+        ],
+        "halfOnSuccess": true,
+        "slot": 4,
+        "scaling": {
+          "5": "3d10",
+          "6": "4d10",
+          "7": "5d10",
+          "8": "6d10",
+          "9": "7d10"
+        }
+      }
+    ]
   },
   "spell_vitriolic_sphere": {
     "id": "spell_vitriolic_sphere",
@@ -322,19 +951,36 @@
     "actionType": "action",
     "level": 4,
     "combat": true,
-    "effects": [{
-      "type": "save",
-      "shape": "sphere",
-      "ability": "dex",
-      "dcFrom": "spell",
-      "lengthCells": 30,
-      "radius": 4,
-      "damage": [{ "dice": "10d4", "damageType": "acid" }],
-      "halfOnSuccess": true,
-      "slot": 4,
-      "delayedOnHit": { "dice": "5d4", "damageType": "acid", "timing": "target_turn_start_after_hit" },
-      "scaling": { "5": "12d4", "6": "14d4", "7": "16d4", "8": "18d4", "9": "20d4" }
-    }]
+    "effects": [
+      {
+        "type": "save",
+        "shape": "sphere",
+        "ability": "dex",
+        "dcFrom": "spell",
+        "lengthCells": 30,
+        "radius": 4,
+        "damage": [
+          {
+            "dice": "10d4",
+            "damageType": "acid"
+          }
+        ],
+        "halfOnSuccess": true,
+        "slot": 4,
+        "delayedOnHit": {
+          "dice": "5d4",
+          "damageType": "acid",
+          "timing": "target_turn_start_after_hit"
+        },
+        "scaling": {
+          "5": "12d4",
+          "6": "14d4",
+          "7": "16d4",
+          "8": "18d4",
+          "9": "20d4"
+        }
+      }
+    ]
   },
   "spell_wall_of_fire": {
     "id": "spell_wall_of_fire",
@@ -342,7 +988,33 @@
     "actionType": "action",
     "level": 4,
     "combat": true,
-    "effects": [{ "type": "save", "shape": "sphere", "ability": "dex", "dcFrom": "spell", "lengthCells": 24, "radius": 4, "damage": [{ "dice": "5d8", "damageType": "fire" }], "halfOnSuccess": true, "concentration": true, "persistentZone": true, "slot": 4, "scaling": { "5": "6d8", "6": "7d8", "7": "8d8", "8": "9d8", "9": "10d8" } }]
+    "effects": [
+      {
+        "type": "save",
+        "shape": "sphere",
+        "ability": "dex",
+        "dcFrom": "spell",
+        "lengthCells": 24,
+        "radius": 4,
+        "damage": [
+          {
+            "dice": "5d8",
+            "damageType": "fire"
+          }
+        ],
+        "halfOnSuccess": true,
+        "concentration": true,
+        "persistentZone": true,
+        "slot": 4,
+        "scaling": {
+          "5": "6d8",
+          "6": "7d8",
+          "7": "8d8",
+          "8": "9d8",
+          "9": "10d8"
+        }
+      }
+    ]
   },
   "spell_flame_strike": {
     "id": "spell_flame_strike",
@@ -350,7 +1022,35 @@
     "actionType": "action",
     "level": 5,
     "combat": true,
-    "effects": [{ "type": "save", "shape": "sphere", "ability": "dex", "dcFrom": "spell", "lengthCells": 12, "radius": 2, "damage": [{ "dice": "5d6", "damageType": "fire" }, { "dice": "5d6", "damageType": "radiant" }], "halfOnSuccess": true, "slot": 5, "scaling": { "6": "6d6", "7": "7d6", "8": "8d6", "9": "9d6" }, "scalingAll": true }]
+    "effects": [
+      {
+        "type": "save",
+        "shape": "sphere",
+        "ability": "dex",
+        "dcFrom": "spell",
+        "lengthCells": 12,
+        "radius": 2,
+        "damage": [
+          {
+            "dice": "5d6",
+            "damageType": "fire"
+          },
+          {
+            "dice": "5d6",
+            "damageType": "radiant"
+          }
+        ],
+        "halfOnSuccess": true,
+        "slot": 5,
+        "scaling": {
+          "6": "6d6",
+          "7": "7d6",
+          "8": "8d6",
+          "9": "9d6"
+        },
+        "scalingAll": true
+      }
+    ]
   },
   "spell_cone_of_cold": {
     "id": "spell_cone_of_cold",
@@ -358,7 +1058,29 @@
     "actionType": "action",
     "level": 5,
     "combat": true,
-    "effects": [{ "type": "save", "shape": "cone", "ability": "con", "dcFrom": "spell", "lengthCells": 12, "damage": [{ "dice": "8d8", "damageType": "cold" }], "halfOnSuccess": true, "slot": 5, "scaling": { "6": "9d8", "7": "10d8", "8": "11d8", "9": "12d8" } }]
+    "effects": [
+      {
+        "type": "save",
+        "shape": "cone",
+        "ability": "con",
+        "dcFrom": "spell",
+        "lengthCells": 12,
+        "damage": [
+          {
+            "dice": "8d8",
+            "damageType": "cold"
+          }
+        ],
+        "halfOnSuccess": true,
+        "slot": 5,
+        "scaling": {
+          "6": "9d8",
+          "7": "10d8",
+          "8": "11d8",
+          "9": "12d8"
+        }
+      }
+    ]
   },
   "spell_mass_cure_wounds": {
     "id": "spell_mass_cure_wounds",
@@ -366,7 +1088,22 @@
     "actionType": "action",
     "level": 5,
     "combat": true,
-    "effects": [{ "type": "heal", "dice": "5d8", "ability": "spell", "rangeCells": 12, "mass": 6, "slot": 5, "scaling": { "6": "6d8", "7": "7d8", "8": "8d8", "9": "9d8" } }]
+    "effects": [
+      {
+        "type": "heal",
+        "dice": "5d8",
+        "ability": "spell",
+        "rangeCells": 12,
+        "mass": 6,
+        "slot": 5,
+        "scaling": {
+          "6": "6d8",
+          "7": "7d8",
+          "8": "8d8",
+          "9": "9d8"
+        }
+      }
+    ]
   },
   "spell_circle_of_death": {
     "id": "spell_circle_of_death",
@@ -374,7 +1111,29 @@
     "actionType": "action",
     "level": 6,
     "combat": true,
-    "effects": [{ "type": "save", "shape": "sphere", "ability": "con", "dcFrom": "spell", "lengthCells": 30, "radius": 12, "damage": [{ "dice": "8d8", "damageType": "necrotic" }], "halfOnSuccess": true, "slot": 6, "scaling": { "7": "10d8", "8": "12d8", "9": "14d8" } }]
+    "effects": [
+      {
+        "type": "save",
+        "shape": "sphere",
+        "ability": "con",
+        "dcFrom": "spell",
+        "lengthCells": 30,
+        "radius": 12,
+        "damage": [
+          {
+            "dice": "8d8",
+            "damageType": "necrotic"
+          }
+        ],
+        "halfOnSuccess": true,
+        "slot": 6,
+        "scaling": {
+          "7": "10d8",
+          "8": "12d8",
+          "9": "14d8"
+        }
+      }
+    ]
   },
   "spell_disintegrate": {
     "id": "spell_disintegrate",
@@ -382,7 +1141,28 @@
     "actionType": "action",
     "level": 6,
     "combat": true,
-    "effects": [{ "type": "save", "shape": "one", "ability": "dex", "dcFrom": "spell", "rangeCells": 12, "damage": [{ "dice": "10d6+40", "damageType": "force" }], "halfOnSuccess": false, "slot": 6, "scaling": { "7": "13d6+40", "8": "16d6+40", "9": "19d6+40" } }]
+    "effects": [
+      {
+        "type": "save",
+        "shape": "one",
+        "ability": "dex",
+        "dcFrom": "spell",
+        "rangeCells": 12,
+        "damage": [
+          {
+            "dice": "10d6+40",
+            "damageType": "force"
+          }
+        ],
+        "halfOnSuccess": false,
+        "slot": 6,
+        "scaling": {
+          "7": "13d6+40",
+          "8": "16d6+40",
+          "9": "19d6+40"
+        }
+      }
+    ]
   },
   "spell_hold_person": {
     "id": "spell_hold_person",
@@ -390,7 +1170,25 @@
     "actionType": "action",
     "level": 2,
     "combat": true,
-    "effects": [{ "type": "save", "shape": "one", "ability": "wis", "dcFrom": "spell", "rangeCells": 12, "onFail": "paralyzed", "concentration": true, "repeatSave": true, "slot": 2, "damage": [{ "dice": "0", "damageType": "none" }] }]
+    "effects": [
+      {
+        "type": "save",
+        "shape": "one",
+        "ability": "wis",
+        "dcFrom": "spell",
+        "rangeCells": 12,
+        "onFail": "paralyzed",
+        "concentration": true,
+        "repeatSave": true,
+        "slot": 2,
+        "damage": [
+          {
+            "dice": "0",
+            "damageType": "none"
+          }
+        ]
+      }
+    ]
   },
   "spell_hold_monster": {
     "id": "spell_hold_monster",
@@ -398,7 +1196,25 @@
     "actionType": "action",
     "level": 5,
     "combat": true,
-    "effects": [{ "type": "save", "shape": "one", "ability": "wis", "dcFrom": "spell", "rangeCells": 18, "onFail": "paralyzed", "concentration": true, "repeatSave": true, "slot": 5, "damage": [{ "dice": "0", "damageType": "none" }] }]
+    "effects": [
+      {
+        "type": "save",
+        "shape": "one",
+        "ability": "wis",
+        "dcFrom": "spell",
+        "rangeCells": 18,
+        "onFail": "paralyzed",
+        "concentration": true,
+        "repeatSave": true,
+        "slot": 5,
+        "damage": [
+          {
+            "dice": "0",
+            "damageType": "none"
+          }
+        ]
+      }
+    ]
   },
   "spell_silence": {
     "id": "spell_silence",
@@ -407,7 +1223,20 @@
     "level": 2,
     "combat": true,
     "aim": "cell",
-    "effects": [{ "type": "concentration_aura", "origin": "cell", "radiusCells": 4, "filter": "all", "blocksVerbal": true, "deafenedInside": true, "thunderImmuneInside": true, "rangeCells": 24, "concentration": true, "slot": 2 }]
+    "effects": [
+      {
+        "type": "concentration_aura",
+        "origin": "cell",
+        "radiusCells": 4,
+        "filter": "all",
+        "blocksVerbal": true,
+        "deafenedInside": true,
+        "thunderImmuneInside": true,
+        "rangeCells": 24,
+        "concentration": true,
+        "slot": 2
+      }
+    ]
   },
   "spell_darkness": {
     "id": "spell_darkness",
@@ -416,7 +1245,18 @@
     "level": 2,
     "combat": true,
     "aim": "cell",
-    "effects": [{ "type": "concentration_aura", "origin": "cell", "radiusCells": 3, "filter": "all", "heavilyObscured": true, "rangeCells": 12, "concentration": true, "slot": 2 }]
+    "effects": [
+      {
+        "type": "concentration_aura",
+        "origin": "cell",
+        "radiusCells": 3,
+        "filter": "all",
+        "heavilyObscured": true,
+        "rangeCells": 12,
+        "concentration": true,
+        "slot": 2
+      }
+    ]
   },
   "spell_spirit_guardians": {
     "id": "spell_spirit_guardians",
@@ -424,18 +1264,31 @@
     "actionType": "action",
     "level": 3,
     "combat": true,
-    "effects": [{
-      "type": "concentration_aura",
-      "origin": "self",
-      "radiusCells": 3,
-      "filter": "enemy",
-      "speedMult": 0.5,
-      "concentration": true,
-      "slot": 3,
-      "halfOnSuccess": true,
-      "scaling": { "4": "4d8", "5": "5d8", "6": "6d8", "7": "7d8", "8": "8d8", "9": "9d8" },
-      "onEnterOrEndTurn": { "dice": "3d8", "damageType": "radiant", "saveAbility": "wis" }
-    }]
+    "effects": [
+      {
+        "type": "concentration_aura",
+        "origin": "self",
+        "radiusCells": 3,
+        "filter": "enemy",
+        "speedMult": 0.5,
+        "concentration": true,
+        "slot": 3,
+        "halfOnSuccess": true,
+        "scaling": {
+          "4": "4d8",
+          "5": "5d8",
+          "6": "6d8",
+          "7": "7d8",
+          "8": "8d8",
+          "9": "9d8"
+        },
+        "onEnterOrEndTurn": {
+          "dice": "3d8",
+          "damageType": "radiant",
+          "saveAbility": "wis"
+        }
+      }
+    ]
   },
   "spell_magic_weapon": {
     "id": "spell_magic_weapon",
@@ -443,7 +1296,14 @@
     "actionType": "bonus_action",
     "level": 2,
     "combat": true,
-    "effects": [{ "type": "magic_weapon", "rangeCells": 1, "bonus": 1, "slot": 2 }]
+    "effects": [
+      {
+        "type": "magic_weapon",
+        "rangeCells": 1,
+        "bonus": 1,
+        "slot": 2
+      }
+    ]
   },
   "spell_charm_person": {
     "id": "spell_charm_person",
@@ -451,7 +1311,15 @@
     "actionType": "action",
     "level": 1,
     "combat": true,
-    "effects": [{ "type": "charm", "maxTargets": 1, "baseSlot": 1, "rangeCells": 6, "slot": 1 }]
+    "effects": [
+      {
+        "type": "charm",
+        "maxTargets": 1,
+        "baseSlot": 1,
+        "rangeCells": 6,
+        "slot": 1
+      }
+    ]
   },
   "spell_charm_monster": {
     "id": "spell_charm_monster",
@@ -459,7 +1327,15 @@
     "actionType": "action",
     "level": 4,
     "combat": true,
-    "effects": [{ "type": "charm", "maxTargets": 1, "baseSlot": 4, "rangeCells": 6, "slot": 4 }]
+    "effects": [
+      {
+        "type": "charm",
+        "maxTargets": 1,
+        "baseSlot": 4,
+        "rangeCells": 6,
+        "slot": 4
+      }
+    ]
   },
   "spell_banishment": {
     "id": "spell_banishment",
@@ -467,7 +1343,14 @@
     "actionType": "action",
     "level": 4,
     "combat": true,
-    "effects": [{ "type": "banishment", "rangeCells": 6, "concentration": true, "slot": 4 }]
+    "effects": [
+      {
+        "type": "banishment",
+        "rangeCells": 6,
+        "concentration": true,
+        "slot": 4
+      }
+    ]
   },
   "spell_dimension_door": {
     "id": "spell_dimension_door",
@@ -476,7 +1359,13 @@
     "level": 4,
     "combat": true,
     "aim": "cell",
-    "effects": [{ "type": "teleport", "rangeCells": 100, "slot": 4 }]
+    "effects": [
+      {
+        "type": "teleport",
+        "rangeCells": 100,
+        "slot": 4
+      }
+    ]
   },
   "spell_spiritual_weapon": {
     "id": "spell_spiritual_weapon",
@@ -484,7 +1373,13 @@
     "actionType": "bonus_action",
     "level": 2,
     "combat": true,
-    "effects": [{ "type": "spiritual_weapon", "rangeCells": 12, "slot": 2 }]
+    "effects": [
+      {
+        "type": "spiritual_weapon",
+        "rangeCells": 12,
+        "slot": 2
+      }
+    ]
   },
   "spell_spiritual_weapon_strike": {
     "id": "spell_spiritual_weapon_strike",
@@ -492,7 +1387,21 @@
     "actionType": "bonus_action",
     "level": 0,
     "combat": true,
-    "effects": [{ "type": "attack", "spellAttack": true, "ability": "spell", "rangeCells": 12, "damage": [{ "dice": "1d8", "damageType": "force", "ability": "spell" }] }]
+    "effects": [
+      {
+        "type": "attack",
+        "spellAttack": true,
+        "ability": "spell",
+        "rangeCells": 12,
+        "damage": [
+          {
+            "dice": "1d8",
+            "damageType": "force",
+            "ability": "spell"
+          }
+        ]
+      }
+    ]
   },
   "spell_blindness": {
     "id": "spell_blindness",
@@ -500,7 +1409,23 @@
     "actionType": "action",
     "level": 2,
     "combat": true,
-    "effects": [{ "type": "save", "shape": "one", "ability": "con", "dcFrom": "spell", "rangeCells": 6, "onFail": "blinded", "slot": 2, "damage": [{ "dice": "0", "damageType": "none" }] }]
+    "effects": [
+      {
+        "type": "save",
+        "shape": "one",
+        "ability": "con",
+        "dcFrom": "spell",
+        "rangeCells": 6,
+        "onFail": "blinded",
+        "slot": 2,
+        "damage": [
+          {
+            "dice": "0",
+            "damageType": "none"
+          }
+        ]
+      }
+    ]
   },
   "spell_blur": {
     "id": "spell_blur",
@@ -508,7 +1433,14 @@
     "actionType": "action",
     "level": 2,
     "combat": true,
-    "effects": [{ "type": "ward", "blur": true, "concentration": true, "slot": 2 }]
+    "effects": [
+      {
+        "type": "ward",
+        "blur": true,
+        "concentration": true,
+        "slot": 2
+      }
+    ]
   },
   "spell_invisibility": {
     "id": "spell_invisibility",
@@ -516,7 +1448,15 @@
     "actionType": "action",
     "level": 2,
     "combat": true,
-    "effects": [{ "type": "ward", "invisible": true, "concentration": true, "rangeCells": 1, "slot": 2 }]
+    "effects": [
+      {
+        "type": "ward",
+        "invisible": true,
+        "concentration": true,
+        "rangeCells": 1,
+        "slot": 2
+      }
+    ]
   },
   "spell_barkskin": {
     "id": "spell_barkskin",
@@ -524,7 +1464,14 @@
     "actionType": "action",
     "level": 2,
     "combat": true,
-    "effects": [{ "type": "ward", "acFloor": 16, "concentration": true, "slot": 2 }]
+    "effects": [
+      {
+        "type": "ward",
+        "acFloor": 16,
+        "concentration": true,
+        "slot": 2
+      }
+    ]
   },
   "spell_lesser_restoration": {
     "id": "spell_lesser_restoration",
@@ -532,7 +1479,13 @@
     "actionType": "action",
     "level": 2,
     "combat": true,
-    "effects": [{ "type": "restore", "rangeCells": 1, "slot": 2 }]
+    "effects": [
+      {
+        "type": "restore",
+        "rangeCells": 1,
+        "slot": 2
+      }
+    ]
   },
   "spell_aid": {
     "id": "spell_aid",
@@ -540,7 +1493,14 @@
     "actionType": "action",
     "level": 2,
     "combat": true,
-    "effects": [{ "type": "aid", "amount": 5, "allies": 3, "slot": 2 }]
+    "effects": [
+      {
+        "type": "aid",
+        "amount": 5,
+        "allies": 3,
+        "slot": 2
+      }
+    ]
   },
   "rage": {
     "id": "rage",
@@ -548,7 +1508,11 @@
     "actionType": "bonus_action",
     "level": 0,
     "combat": true,
-    "effects": [{ "type": "rage" }]
+    "effects": [
+      {
+        "type": "rage"
+      }
+    ]
   },
   "reckless_attack": {
     "id": "reckless_attack",
@@ -556,7 +1520,11 @@
     "actionType": "action",
     "level": 0,
     "combat": true,
-    "effects": [{ "type": "reckless" }]
+    "effects": [
+      {
+        "type": "reckless"
+      }
+    ]
   },
   "rage_extend": {
     "id": "rage_extend",
@@ -564,7 +1532,11 @@
     "actionType": "bonus_action",
     "level": 0,
     "combat": true,
-    "effects": [{ "type": "rage_extend" }]
+    "effects": [
+      {
+        "type": "rage_extend"
+      }
+    ]
   },
   "action_surge": {
     "id": "action_surge",
@@ -572,7 +1544,11 @@
     "actionType": "action",
     "level": 0,
     "combat": true,
-    "effects": [{ "type": "surge" }]
+    "effects": [
+      {
+        "type": "surge"
+      }
+    ]
   },
   "lay_on_hands": {
     "id": "lay_on_hands",
@@ -580,7 +1556,12 @@
     "actionType": "action",
     "level": 0,
     "combat": true,
-    "effects": [{ "type": "pool_heal", "rangeCells": 1 }]
+    "effects": [
+      {
+        "type": "pool_heal",
+        "rangeCells": 1
+      }
+    ]
   },
   "channel_preserve_life": {
     "id": "channel_preserve_life",
@@ -588,7 +1569,11 @@
     "actionType": "action",
     "level": 0,
     "combat": true,
-    "effects": [{ "type": "channel_preserve" }]
+    "effects": [
+      {
+        "type": "channel_preserve"
+      }
+    ]
   },
   "bardic_inspiration": {
     "id": "bardic_inspiration",
@@ -596,7 +1581,13 @@
     "actionType": "bonus_action",
     "level": 0,
     "combat": true,
-    "effects": [{ "type": "inspire", "dice": "1d6", "rangeCells": 12 }]
+    "effects": [
+      {
+        "type": "inspire",
+        "dice": "1d6",
+        "rangeCells": 12
+      }
+    ]
   },
   "martial_arts_bonus": {
     "id": "martial_arts_bonus",
@@ -604,7 +1595,22 @@
     "actionType": "bonus_action",
     "level": 0,
     "combat": true,
-    "effects": [{ "type": "attack", "ability": "dex", "proficient": true, "rangeCells": 1, "damage": [{ "dice": "1d4", "damageType": "bludgeoning", "ability": "dex" }], "sneakAttackEligible": false }]
+    "effects": [
+      {
+        "type": "attack",
+        "ability": "dex",
+        "proficient": true,
+        "rangeCells": 1,
+        "damage": [
+          {
+            "dice": "1d4",
+            "damageType": "bludgeoning",
+            "ability": "dex"
+          }
+        ],
+        "sneakAttackEligible": false
+      }
+    ]
   },
   "ki_flurry": {
     "id": "ki_flurry",
@@ -612,7 +1618,12 @@
     "actionType": "bonus_action",
     "level": 0,
     "combat": true,
-    "effects": [{ "type": "flurry", "ki": 1 }]
+    "effects": [
+      {
+        "type": "flurry",
+        "ki": 1
+      }
+    ]
   },
   "ki_patient_defense": {
     "id": "ki_patient_defense",
@@ -620,7 +1631,12 @@
     "actionType": "bonus_action",
     "level": 0,
     "combat": true,
-    "effects": [{ "type": "ki_dodge", "ki": 1 }]
+    "effects": [
+      {
+        "type": "ki_dodge",
+        "ki": 1
+      }
+    ]
   },
   "ki_step_of_the_wind": {
     "id": "ki_step_of_the_wind",
@@ -628,42 +1644,1579 @@
     "actionType": "bonus_action",
     "level": 0,
     "combat": true,
-    "effects": [{ "type": "ki_step", "ki": 1 }]
+    "effects": [
+      {
+        "type": "ki_step",
+        "ki": 1
+      }
+    ]
   },
-  "divine_spark": { "id": "divine_spark", "name": "Channel Divinity: Divine Spark", "actionType": "action", "level": 0, "combat": true, "effects": [{ "type": "divine_spark" }] },
-  "turn_undead": { "id": "turn_undead", "name": "Channel Divinity: Turn Undead", "actionType": "action", "level": 0, "combat": true, "effects": [{ "type": "turn_undead" }] },
-  "countercharm": { "id": "countercharm", "name": "Countercharm", "actionType": "bonus_action", "level": 0, "combat": true, "effects": [{ "type": "countercharm" }] },
-  "words_of_creation": { "id": "words_of_creation", "name": "Words of Creation", "actionType": "action", "level": 0, "combat": true, "effects": [{ "type": "words_of_creation" }] },
-  "divine_intervention": { "id": "divine_intervention", "name": "Divine Intervention", "actionType": "action", "level": 0, "combat": true, "effects": [{ "type": "divine_intervention" }] },
-  "wild_shape": { "id": "wild_shape", "name": "Wild Shape", "actionType": "bonus_action", "level": 0, "combat": true, "effects": [{ "type": "wild_shape" }] },
-  "wild_shape_end": { "id": "wild_shape_end", "name": "Leave Wild Shape", "actionType": "bonus_action", "level": 0, "combat": true, "effects": [{ "type": "wild_shape_end" }] },
-  "wild_companion": { "id": "wild_companion", "name": "Wild Companion", "actionType": "action", "level": 0, "combat": true, "effects": [{ "type": "wild_companion" }] },
-  "wild_resurgence": { "id": "wild_resurgence", "name": "Wild Resurgence", "actionType": "bonus_action", "level": 0, "combat": true, "effects": [{ "type": "wild_resurgence" }] },
-  "innate_sorcery": { "id": "innate_sorcery", "name": "Innate Sorcery", "actionType": "bonus_action", "level": 0, "combat": true, "effects": [{ "type": "innate_sorcery" }] },
-  "font_of_magic": { "id": "font_of_magic", "name": "Font of Magic", "actionType": "action", "level": 0, "combat": true, "effects": [{ "type": "font_of_magic" }] },
-  "sorcery_to_slot": { "id": "sorcery_to_slot", "name": "Create Spell Slot", "actionType": "bonus_action", "level": 0, "combat": true, "effects": [{ "type": "sorcery_to_slot" }] },
-  "tireless": { "id": "tireless", "name": "Tireless", "actionType": "action", "level": 0, "combat": true, "effects": [{ "type": "tireless" }] },
-  "natures_veil": { "id": "natures_veil", "name": "Nature's Veil", "actionType": "bonus_action", "level": 0, "combat": true, "effects": [{ "type": "natures_veil" }] },
-  "abjure_foes": { "id": "abjure_foes", "name": "Abjure Foes", "actionType": "action", "level": 0, "combat": true, "effects": [{ "type": "abjure_foes" }] },
-  "faithful_steed": { "id": "faithful_steed", "name": "Find Steed", "actionType": "action", "level": 0, "combat": true, "effects": [{ "type": "faithful_steed" }] },
-  "magical_cunning": { "id": "magical_cunning", "name": "Magical Cunning", "actionType": "action", "level": 0, "combat": true, "effects": [{ "type": "magical_cunning" }] },
-  "eldritch_master": { "id": "eldritch_master", "name": "Eldritch Master", "actionType": "action", "level": 0, "combat": true, "effects": [{ "type": "eldritch_master" }] },
-  "contact_patron": { "id": "contact_patron", "name": "Contact Patron", "actionType": "action", "level": 0, "combat": true, "effects": [{ "type": "contact_patron" }] },
-  "steady_aim": { "id": "steady_aim", "name": "Steady Aim", "actionType": "bonus_action", "level": 0, "combat": true, "effects": [{ "type": "steady_aim" }] },
-  "sacred_weapon": { "id": "sacred_weapon", "name": "Sacred Weapon", "actionType": "bonus_action", "level": 0, "combat": true, "effects": [{ "type": "sacred_weapon" }] },
-  "lands_aid": { "id": "lands_aid", "name": "Land's Aid", "actionType": "action", "level": 0, "combat": true, "effects": [{ "type": "lands_aid" }] },
-  "wholeness_of_body": { "id": "wholeness_of_body", "name": "Wholeness of Body", "actionType": "action", "level": 0, "combat": true, "effects": [{ "type": "wholeness_of_body" }] },
-  "intimidating_presence": { "id": "intimidating_presence", "name": "Intimidating Presence", "actionType": "action", "level": 0, "combat": true, "effects": [{ "type": "intimidating_presence" }] },
-  "dragon_companion": { "id": "dragon_companion", "name": "Dragon Companion", "actionType": "action", "level": 0, "combat": true, "effects": [{ "type": "dragon_companion" }] },
-  "night_spirit": { "id": "night_spirit", "name": "Merge with Shadows", "actionType": "bonus_action", "level": 0, "combat": true, "effects": [{ "type": "night_spirit" }] },
-  "cutting_words": { "id": "cutting_words", "name": "Cutting Words", "actionType": "reaction", "level": 0, "combat": true, "effects": [{ "type": "cutting_words" }] },
-  "deflect_attacks": { "id": "deflect_attacks", "name": "Deflect Attacks", "actionType": "reaction", "level": 0, "combat": true, "effects": [{ "type": "deflect_attacks" }] },
-  "uncanny_dodge": { "id": "uncanny_dodge", "name": "Uncanny Dodge", "actionType": "reaction", "level": 0, "combat": true, "effects": [{ "type": "uncanny_dodge" }] },
-  "ws_cat_claw": { "id": "ws_cat_claw", "name": "Claws", "actionType": "action", "level": 0, "combat": true, "effects": [{ "type": "attack", "attackBonus": 0, "rangeCells": 1, "damage": [{ "dice": "1", "damageType": "slashing" }] }] },
-  "ws_wolf_bite": { "id": "ws_wolf_bite", "name": "Bite", "actionType": "action", "level": 0, "combat": true, "effects": [{ "type": "attack", "attackBonus": 4, "rangeCells": 1, "damage": [{ "dice": "2d4+2", "damageType": "piercing" }] }] },
-  "ws_boar_tusk": { "id": "ws_boar_tusk", "name": "Tusks", "actionType": "action", "level": 0, "combat": true, "effects": [{ "type": "attack", "attackBonus": 3, "rangeCells": 1, "damage": [{ "dice": "1d6+1", "damageType": "slashing" }] }] },
-  "ws_panther_bite": { "id": "ws_panther_bite", "name": "Bite", "actionType": "action", "level": 0, "combat": true, "effects": [{ "type": "attack", "attackBonus": 4, "rangeCells": 1, "damage": [{ "dice": "1d6+2", "damageType": "piercing" }] }] },
-  "ws_panther_claw": { "id": "ws_panther_claw", "name": "Claw", "actionType": "action", "level": 0, "combat": true, "effects": [{ "type": "attack", "attackBonus": 4, "rangeCells": 1, "damage": [{ "dice": "1d4+2", "damageType": "slashing" }] }] },
-  "ws_bear_bite": { "id": "ws_bear_bite", "name": "Bite", "actionType": "action", "level": 0, "combat": true, "effects": [{ "type": "attack", "attackBonus": 5, "rangeCells": 1, "damage": [{ "dice": "1d8+4", "damageType": "piercing" }] }] },
-  "ws_bear_claw": { "id": "ws_bear_claw", "name": "Claw", "actionType": "action", "level": 0, "combat": true, "effects": [{ "type": "attack", "attackBonus": 5, "rangeCells": 1, "damage": [{ "dice": "1d6+4", "damageType": "slashing" }] }] }
+  "divine_spark": {
+    "id": "divine_spark",
+    "name": "Channel Divinity: Divine Spark",
+    "actionType": "action",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "divine_spark"
+      }
+    ]
+  },
+  "turn_undead": {
+    "id": "turn_undead",
+    "name": "Channel Divinity: Turn Undead",
+    "actionType": "action",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "turn_undead"
+      }
+    ]
+  },
+  "countercharm": {
+    "id": "countercharm",
+    "name": "Countercharm",
+    "actionType": "bonus_action",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "countercharm"
+      }
+    ]
+  },
+  "words_of_creation": {
+    "id": "words_of_creation",
+    "name": "Words of Creation",
+    "actionType": "action",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "words_of_creation"
+      }
+    ]
+  },
+  "divine_intervention": {
+    "id": "divine_intervention",
+    "name": "Divine Intervention",
+    "actionType": "action",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "divine_intervention"
+      }
+    ]
+  },
+  "wild_shape": {
+    "id": "wild_shape",
+    "name": "Wild Shape",
+    "actionType": "bonus_action",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "wild_shape"
+      }
+    ]
+  },
+  "wild_shape_end": {
+    "id": "wild_shape_end",
+    "name": "Leave Wild Shape",
+    "actionType": "bonus_action",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "wild_shape_end"
+      }
+    ]
+  },
+  "wild_companion": {
+    "id": "wild_companion",
+    "name": "Wild Companion",
+    "actionType": "action",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "wild_companion"
+      }
+    ]
+  },
+  "wild_resurgence": {
+    "id": "wild_resurgence",
+    "name": "Wild Resurgence",
+    "actionType": "bonus_action",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "wild_resurgence"
+      }
+    ]
+  },
+  "innate_sorcery": {
+    "id": "innate_sorcery",
+    "name": "Innate Sorcery",
+    "actionType": "bonus_action",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "innate_sorcery"
+      }
+    ]
+  },
+  "font_of_magic": {
+    "id": "font_of_magic",
+    "name": "Font of Magic",
+    "actionType": "action",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "font_of_magic"
+      }
+    ]
+  },
+  "sorcery_to_slot": {
+    "id": "sorcery_to_slot",
+    "name": "Create Spell Slot",
+    "actionType": "bonus_action",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "sorcery_to_slot"
+      }
+    ]
+  },
+  "tireless": {
+    "id": "tireless",
+    "name": "Tireless",
+    "actionType": "action",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "tireless"
+      }
+    ]
+  },
+  "natures_veil": {
+    "id": "natures_veil",
+    "name": "Nature's Veil",
+    "actionType": "bonus_action",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "natures_veil"
+      }
+    ]
+  },
+  "abjure_foes": {
+    "id": "abjure_foes",
+    "name": "Abjure Foes",
+    "actionType": "action",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "abjure_foes"
+      }
+    ]
+  },
+  "faithful_steed": {
+    "id": "faithful_steed",
+    "name": "Find Steed",
+    "actionType": "action",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "faithful_steed"
+      }
+    ]
+  },
+  "magical_cunning": {
+    "id": "magical_cunning",
+    "name": "Magical Cunning",
+    "actionType": "action",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "magical_cunning"
+      }
+    ]
+  },
+  "eldritch_master": {
+    "id": "eldritch_master",
+    "name": "Eldritch Master",
+    "actionType": "action",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "eldritch_master"
+      }
+    ]
+  },
+  "contact_patron": {
+    "id": "contact_patron",
+    "name": "Contact Patron",
+    "actionType": "action",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "contact_patron"
+      }
+    ]
+  },
+  "steady_aim": {
+    "id": "steady_aim",
+    "name": "Steady Aim",
+    "actionType": "bonus_action",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "steady_aim"
+      }
+    ]
+  },
+  "sacred_weapon": {
+    "id": "sacred_weapon",
+    "name": "Sacred Weapon",
+    "actionType": "bonus_action",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "sacred_weapon"
+      }
+    ]
+  },
+  "lands_aid": {
+    "id": "lands_aid",
+    "name": "Land's Aid",
+    "actionType": "action",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "lands_aid"
+      }
+    ]
+  },
+  "wholeness_of_body": {
+    "id": "wholeness_of_body",
+    "name": "Wholeness of Body",
+    "actionType": "action",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "wholeness_of_body"
+      }
+    ]
+  },
+  "intimidating_presence": {
+    "id": "intimidating_presence",
+    "name": "Intimidating Presence",
+    "actionType": "action",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "intimidating_presence"
+      }
+    ]
+  },
+  "dragon_companion": {
+    "id": "dragon_companion",
+    "name": "Dragon Companion",
+    "actionType": "action",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "dragon_companion"
+      }
+    ]
+  },
+  "night_spirit": {
+    "id": "night_spirit",
+    "name": "Merge with Shadows",
+    "actionType": "bonus_action",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "night_spirit"
+      }
+    ]
+  },
+  "cutting_words": {
+    "id": "cutting_words",
+    "name": "Cutting Words",
+    "actionType": "reaction",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "cutting_words"
+      }
+    ]
+  },
+  "deflect_attacks": {
+    "id": "deflect_attacks",
+    "name": "Deflect Attacks",
+    "actionType": "reaction",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "deflect_attacks"
+      }
+    ]
+  },
+  "uncanny_dodge": {
+    "id": "uncanny_dodge",
+    "name": "Uncanny Dodge",
+    "actionType": "reaction",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "uncanny_dodge"
+      }
+    ]
+  },
+  "ws_cat_claw": {
+    "id": "ws_cat_claw",
+    "name": "Claws",
+    "actionType": "action",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "attack",
+        "attackBonus": 0,
+        "rangeCells": 1,
+        "damage": [
+          {
+            "dice": "1",
+            "damageType": "slashing"
+          }
+        ]
+      }
+    ]
+  },
+  "ws_wolf_bite": {
+    "id": "ws_wolf_bite",
+    "name": "Bite",
+    "actionType": "action",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "attack",
+        "attackBonus": 4,
+        "rangeCells": 1,
+        "damage": [
+          {
+            "dice": "2d4+2",
+            "damageType": "piercing"
+          }
+        ]
+      }
+    ]
+  },
+  "ws_boar_tusk": {
+    "id": "ws_boar_tusk",
+    "name": "Tusks",
+    "actionType": "action",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "attack",
+        "attackBonus": 3,
+        "rangeCells": 1,
+        "damage": [
+          {
+            "dice": "1d6+1",
+            "damageType": "slashing"
+          }
+        ]
+      }
+    ]
+  },
+  "ws_panther_bite": {
+    "id": "ws_panther_bite",
+    "name": "Bite",
+    "actionType": "action",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "attack",
+        "attackBonus": 4,
+        "rangeCells": 1,
+        "damage": [
+          {
+            "dice": "1d6+2",
+            "damageType": "piercing"
+          }
+        ]
+      }
+    ]
+  },
+  "ws_panther_claw": {
+    "id": "ws_panther_claw",
+    "name": "Claw",
+    "actionType": "action",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "attack",
+        "attackBonus": 4,
+        "rangeCells": 1,
+        "damage": [
+          {
+            "dice": "1d4+2",
+            "damageType": "slashing"
+          }
+        ]
+      }
+    ]
+  },
+  "ws_bear_bite": {
+    "id": "ws_bear_bite",
+    "name": "Bite",
+    "actionType": "action",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "attack",
+        "attackBonus": 5,
+        "rangeCells": 1,
+        "damage": [
+          {
+            "dice": "1d8+4",
+            "damageType": "piercing"
+          }
+        ]
+      }
+    ]
+  },
+  "ws_bear_claw": {
+    "id": "ws_bear_claw",
+    "name": "Claw",
+    "actionType": "action",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "attack",
+        "attackBonus": 5,
+        "rangeCells": 1,
+        "damage": [
+          {
+            "dice": "1d6+4",
+            "damageType": "slashing"
+          }
+        ]
+      }
+    ]
+  },
+  "vitality_of_the_tree": {
+    "id": "vitality_of_the_tree",
+    "name": "Vitality Of The Tree",
+    "actionType": "action",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "vitality_of_the_tree"
+      }
+    ]
+  },
+  "vitality_grant": {
+    "id": "vitality_grant",
+    "name": "Vitality Grant",
+    "actionType": "bonus_action",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "vitality_grant"
+      }
+    ]
+  },
+  "branches_of_the_tree": {
+    "id": "branches_of_the_tree",
+    "name": "Branches Of The Tree",
+    "actionType": "reaction",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "branches_of_the_tree"
+      }
+    ]
+  },
+  "travel_along_the_tree": {
+    "id": "travel_along_the_tree",
+    "name": "Travel Along The Tree",
+    "actionType": "bonus_action",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "travel_along_the_tree"
+      }
+    ]
+  },
+  "choose_rage_of_the_wild": {
+    "id": "choose_rage_of_the_wild",
+    "name": "Choose Rage Of The Wild",
+    "actionType": "bonus_action",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "choose_rage_of_the_wild"
+      }
+    ]
+  },
+  "choose_aspect_of_the_wild": {
+    "id": "choose_aspect_of_the_wild",
+    "name": "Choose Aspect Of The Wild",
+    "actionType": "action",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "choose_aspect_of_the_wild"
+      }
+    ]
+  },
+  "zealous_presence": {
+    "id": "zealous_presence",
+    "name": "Zealous Presence",
+    "actionType": "bonus_action",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "zealous_presence"
+      }
+    ]
+  },
+  "fanatical_focus": {
+    "id": "fanatical_focus",
+    "name": "Fanatical Focus",
+    "actionType": "reaction",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "fanatical_focus"
+      }
+    ]
+  },
+  "mantle_of_inspiration": {
+    "id": "mantle_of_inspiration",
+    "name": "Mantle Of Inspiration",
+    "actionType": "bonus_action",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "mantle_of_inspiration"
+      }
+    ]
+  },
+  "mantle_of_majesty": {
+    "id": "mantle_of_majesty",
+    "name": "Mantle Of Majesty",
+    "actionType": "bonus_action",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "mantle_of_majesty"
+      }
+    ]
+  },
+  "unbreakable_majesty": {
+    "id": "unbreakable_majesty",
+    "name": "Unbreakable Majesty",
+    "actionType": "bonus_action",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "unbreakable_majesty"
+      }
+    ]
+  },
+  "warding_flare": {
+    "id": "warding_flare",
+    "name": "Warding Flare",
+    "actionType": "reaction",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "warding_flare"
+      }
+    ]
+  },
+  "radiance_of_the_dawn": {
+    "id": "radiance_of_the_dawn",
+    "name": "Radiance Of The Dawn",
+    "actionType": "action",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "radiance_of_the_dawn"
+      }
+    ]
+  },
+  "corona_of_light": {
+    "id": "corona_of_light",
+    "name": "Corona Of Light",
+    "actionType": "action",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "corona_of_light"
+      }
+    ]
+  },
+  "blessing_of_the_trickster": {
+    "id": "blessing_of_the_trickster",
+    "name": "Blessing Of The Trickster",
+    "actionType": "action",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "blessing_of_the_trickster"
+      }
+    ]
+  },
+  "invoke_duplicity": {
+    "id": "invoke_duplicity",
+    "name": "Invoke Duplicity",
+    "actionType": "bonus_action",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "invoke_duplicity"
+      }
+    ]
+  },
+  "tricksters_transposition": {
+    "id": "tricksters_transposition",
+    "name": "Tricksters Transposition",
+    "actionType": "bonus_action",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "tricksters_transposition"
+      }
+    ]
+  },
+  "war_priest": {
+    "id": "war_priest",
+    "name": "War Priest",
+    "actionType": "bonus_action",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "war_priest"
+      }
+    ]
+  },
+  "guided_strike": {
+    "id": "guided_strike",
+    "name": "Guided Strike",
+    "actionType": "reaction",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "guided_strike"
+      }
+    ]
+  },
+  "war_gods_blessing": {
+    "id": "war_gods_blessing",
+    "name": "War Gods Blessing",
+    "actionType": "action",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "war_gods_blessing"
+      }
+    ]
+  },
+  "moonlight_step": {
+    "id": "moonlight_step",
+    "name": "Moonlight Step",
+    "actionType": "bonus_action",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "moonlight_step"
+      }
+    ]
+  },
+  "starry_form": {
+    "id": "starry_form",
+    "name": "Starry Form",
+    "actionType": "bonus_action",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "starry_form"
+      }
+    ]
+  },
+  "starry_archer": {
+    "id": "starry_archer",
+    "name": "Starry Archer",
+    "actionType": "bonus_action",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "starry_archer"
+      }
+    ]
+  },
+  "cosmic_omen": {
+    "id": "cosmic_omen",
+    "name": "Cosmic Omen",
+    "actionType": "reaction",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "cosmic_omen"
+      }
+    ]
+  },
+  "wrath_of_the_sea": {
+    "id": "wrath_of_the_sea",
+    "name": "Wrath Of The Sea",
+    "actionType": "bonus_action",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "wrath_of_the_sea"
+      }
+    ]
+  },
+  "oceanic_gift": {
+    "id": "oceanic_gift",
+    "name": "Oceanic Gift",
+    "actionType": "bonus_action",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "oceanic_gift"
+      }
+    ]
+  },
+  "combat_superiority_trip": {
+    "id": "combat_superiority_trip",
+    "name": "Combat Superiority Trip",
+    "actionType": "bonus_action",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "combat_superiority_trip"
+      }
+    ]
+  },
+  "combat_superiority_push": {
+    "id": "combat_superiority_push",
+    "name": "Combat Superiority Push",
+    "actionType": "bonus_action",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "combat_superiority_push"
+      }
+    ]
+  },
+  "combat_superiority_menacing": {
+    "id": "combat_superiority_menacing",
+    "name": "Combat Superiority Menacing",
+    "actionType": "bonus_action",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "combat_superiority_menacing"
+      }
+    ]
+  },
+  "combat_superiority_riposte": {
+    "id": "combat_superiority_riposte",
+    "name": "Combat Superiority Riposte",
+    "actionType": "bonus_action",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "combat_superiority_riposte"
+      }
+    ]
+  },
+  "combat_superiority_precision": {
+    "id": "combat_superiority_precision",
+    "name": "Combat Superiority Precision",
+    "actionType": "bonus_action",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "combat_superiority_precision"
+      }
+    ]
+  },
+  "combat_superiority_sweeping": {
+    "id": "combat_superiority_sweeping",
+    "name": "Combat Superiority Sweeping",
+    "actionType": "bonus_action",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "combat_superiority_sweeping"
+      }
+    ]
+  },
+  "know_your_enemy": {
+    "id": "know_your_enemy",
+    "name": "Know Your Enemy",
+    "actionType": "bonus_action",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "know_your_enemy"
+      }
+    ]
+  },
+  "protective_field": {
+    "id": "protective_field",
+    "name": "Protective Field",
+    "actionType": "reaction",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "protective_field"
+      }
+    ]
+  },
+  "telekinetic_leap": {
+    "id": "telekinetic_leap",
+    "name": "Telekinetic Leap",
+    "actionType": "bonus_action",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "telekinetic_leap"
+      }
+    ]
+  },
+  "telekinetic_movement": {
+    "id": "telekinetic_movement",
+    "name": "Telekinetic Movement",
+    "actionType": "bonus_action",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "telekinetic_movement"
+      }
+    ]
+  },
+  "bulwark_of_force": {
+    "id": "bulwark_of_force",
+    "name": "Bulwark Of Force",
+    "actionType": "bonus_action",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "bulwark_of_force"
+      }
+    ]
+  },
+  "psychic_blades": {
+    "id": "psychic_blades",
+    "name": "Psychic Blades",
+    "actionType": "bonus_action",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "psychic_blades"
+      }
+    ]
+  },
+  "psychic_veil": {
+    "id": "psychic_veil",
+    "name": "Psychic Veil",
+    "actionType": "action",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "psychic_veil"
+      }
+    ]
+  },
+  "spell_thief": {
+    "id": "spell_thief",
+    "name": "Spell Thief",
+    "actionType": "reaction",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "spell_thief"
+      }
+    ]
+  },
+  "arcane_ward_refresh": {
+    "id": "arcane_ward_refresh",
+    "name": "Arcane Ward Refresh",
+    "actionType": "bonus_action",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "arcane_ward_refresh"
+      }
+    ]
+  },
+  "projected_ward": {
+    "id": "projected_ward",
+    "name": "Projected Ward",
+    "actionType": "reaction",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "projected_ward"
+      }
+    ]
+  },
+  "portent": {
+    "id": "portent",
+    "name": "Portent",
+    "actionType": "bonus_action",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "portent"
+      }
+    ]
+  },
+  "third_eye": {
+    "id": "third_eye",
+    "name": "Third Eye",
+    "actionType": "action",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "third_eye"
+      }
+    ]
+  },
+  "illusory_self": {
+    "id": "illusory_self",
+    "name": "Illusory Self",
+    "actionType": "reaction",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "illusory_self"
+      }
+    ]
+  },
+  "overchannel": {
+    "id": "overchannel",
+    "name": "Overchannel",
+    "actionType": "bonus_action",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "overchannel"
+      }
+    ]
+  },
+  "shadow_step": {
+    "id": "shadow_step",
+    "name": "Shadow Step",
+    "actionType": "bonus_action",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "shadow_step"
+      }
+    ]
+  },
+  "cloak_of_shadows": {
+    "id": "cloak_of_shadows",
+    "name": "Cloak Of Shadows",
+    "actionType": "action",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "cloak_of_shadows"
+      }
+    ]
+  },
+  "elemental_attunement": {
+    "id": "elemental_attunement",
+    "name": "Elemental Attunement",
+    "actionType": "bonus_action",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "elemental_attunement"
+      }
+    ]
+  },
+  "environmental_aid": {
+    "id": "environmental_aid",
+    "name": "Environmental Aid",
+    "actionType": "action",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "environmental_aid"
+      }
+    ]
+  },
+  "breath_of_the_dragon": {
+    "id": "breath_of_the_dragon",
+    "name": "Breath Of The Dragon",
+    "actionType": "action",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "breath_of_the_dragon"
+      }
+    ]
+  },
+  "natures_wrath": {
+    "id": "natures_wrath",
+    "name": "Natures Wrath",
+    "actionType": "bonus_action",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "natures_wrath"
+      }
+    ]
+  },
+  "vow_of_enmity": {
+    "id": "vow_of_enmity",
+    "name": "Vow Of Enmity",
+    "actionType": "bonus_action",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "vow_of_enmity"
+      }
+    ]
+  },
+  "peerless_athlete": {
+    "id": "peerless_athlete",
+    "name": "Peerless Athlete",
+    "actionType": "bonus_action",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "peerless_athlete"
+      }
+    ]
+  },
+  "holy_nimbus": {
+    "id": "holy_nimbus",
+    "name": "Holy Nimbus",
+    "actionType": "action",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "holy_nimbus"
+      }
+    ]
+  },
+  "elder_champion": {
+    "id": "elder_champion",
+    "name": "Elder Champion",
+    "actionType": "action",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "elder_champion"
+      }
+    ]
+  },
+  "avenging_angel": {
+    "id": "avenging_angel",
+    "name": "Avenging Angel",
+    "actionType": "action",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "avenging_angel"
+      }
+    ]
+  },
+  "living_legend": {
+    "id": "living_legend",
+    "name": "Living Legend",
+    "actionType": "action",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "living_legend"
+      }
+    ]
+  },
+  "glorious_defense": {
+    "id": "glorious_defense",
+    "name": "Glorious Defense",
+    "actionType": "reaction",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "glorious_defense"
+      }
+    ]
+  },
+  "shadowy_dodge": {
+    "id": "shadowy_dodge",
+    "name": "Shadowy Dodge",
+    "actionType": "reaction",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "shadowy_dodge"
+      }
+    ]
+  },
+  "misty_wanderer": {
+    "id": "misty_wanderer",
+    "name": "Misty Wanderer",
+    "actionType": "bonus_action",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "misty_wanderer"
+      }
+    ]
+  },
+  "fey_reinforcements": {
+    "id": "fey_reinforcements",
+    "name": "Fey Reinforcements",
+    "actionType": "action",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "fey_reinforcements"
+      }
+    ]
+  },
+  "primal_companion": {
+    "id": "primal_companion",
+    "name": "Primal Companion",
+    "actionType": "bonus_action",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "primal_companion"
+      }
+    ]
+  },
+  "companion_attack": {
+    "id": "companion_attack",
+    "name": "Companion Attack",
+    "actionType": "bonus_action",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "companion_attack"
+      }
+    ]
+  },
+  "tides_of_chaos": {
+    "id": "tides_of_chaos",
+    "name": "Tides Of Chaos",
+    "actionType": "bonus_action",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "tides_of_chaos"
+      }
+    ]
+  },
+  "bend_luck": {
+    "id": "bend_luck",
+    "name": "Bend Luck",
+    "actionType": "reaction",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "bend_luck"
+      }
+    ]
+  },
+  "wild_magic_surge": {
+    "id": "wild_magic_surge",
+    "name": "Wild Magic Surge",
+    "actionType": "bonus_action",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "wild_magic_surge"
+      }
+    ]
+  },
+  "dragon_wings": {
+    "id": "dragon_wings",
+    "name": "Dragon Wings",
+    "actionType": "bonus_action",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "dragon_wings"
+      }
+    ]
+  },
+  "dragon_presence": {
+    "id": "dragon_presence",
+    "name": "Dragon Presence",
+    "actionType": "action",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "dragon_presence"
+      }
+    ]
+  },
+  "telepathic_speech": {
+    "id": "telepathic_speech",
+    "name": "Telepathic Speech",
+    "actionType": "bonus_action",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "telepathic_speech"
+      }
+    ]
+  },
+  "revelation_in_flesh": {
+    "id": "revelation_in_flesh",
+    "name": "Revelation In Flesh",
+    "actionType": "bonus_action",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "revelation_in_flesh"
+      }
+    ]
+  },
+  "warping_implosion": {
+    "id": "warping_implosion",
+    "name": "Warping Implosion",
+    "actionType": "action",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "warping_implosion"
+      }
+    ]
+  },
+  "restore_balance": {
+    "id": "restore_balance",
+    "name": "Restore Balance",
+    "actionType": "reaction",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "restore_balance"
+      }
+    ]
+  },
+  "bastion_of_law": {
+    "id": "bastion_of_law",
+    "name": "Bastion Of Law",
+    "actionType": "bonus_action",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "bastion_of_law"
+      }
+    ]
+  },
+  "trance_of_order": {
+    "id": "trance_of_order",
+    "name": "Trance Of Order",
+    "actionType": "bonus_action",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "trance_of_order"
+      }
+    ]
+  },
+  "clockwork_cavalcade": {
+    "id": "clockwork_cavalcade",
+    "name": "Clockwork Cavalcade",
+    "actionType": "action",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "clockwork_cavalcade"
+      }
+    ]
+  },
+  "steps_of_the_fey": {
+    "id": "steps_of_the_fey",
+    "name": "Steps Of The Fey",
+    "actionType": "bonus_action",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "steps_of_the_fey"
+      }
+    ]
+  },
+  "misty_escape": {
+    "id": "misty_escape",
+    "name": "Misty Escape",
+    "actionType": "reaction",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "misty_escape"
+      }
+    ]
+  },
+  "beguiling_defenses": {
+    "id": "beguiling_defenses",
+    "name": "Beguiling Defenses",
+    "actionType": "reaction",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "beguiling_defenses"
+      }
+    ]
+  },
+  "healing_light": {
+    "id": "healing_light",
+    "name": "Healing Light",
+    "actionType": "bonus_action",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "healing_light"
+      }
+    ]
+  },
+  "searing_vengeance": {
+    "id": "searing_vengeance",
+    "name": "Searing Vengeance",
+    "actionType": "action",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "searing_vengeance"
+      }
+    ]
+  },
+  "create_thrall": {
+    "id": "create_thrall",
+    "name": "Create Thrall",
+    "actionType": "action",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "create_thrall"
+      }
+    ]
+  },
+  "inspiring_movement": {
+    "id": "inspiring_movement",
+    "name": "Inspiring Movement",
+    "actionType": "reaction",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "inspiring_movement"
+      }
+    ]
+  },
+  "dazzling_unarmed": {
+    "id": "dazzling_unarmed",
+    "name": "Dazzling Unarmed",
+    "actionType": "bonus_action",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "dazzling_unarmed"
+      }
+    ]
+  },
+  "choose_hunters_prey": {
+    "id": "choose_hunters_prey",
+    "name": "Choose Hunters Prey",
+    "actionType": "action",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "choose_hunters_prey"
+      }
+    ]
+  },
+  "choose_defensive_tactics": {
+    "id": "choose_defensive_tactics",
+    "name": "Choose Defensive Tactics",
+    "actionType": "action",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "choose_defensive_tactics"
+      }
+    ]
+  },
+  "choose_dragon_ancestry": {
+    "id": "choose_dragon_ancestry",
+    "name": "Choose Dragon Ancestry",
+    "actionType": "action",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "choose_dragon_ancestry"
+      }
+    ]
+  },
+  "choose_circle_spells": {
+    "id": "choose_circle_spells",
+    "name": "Choose Circle Spells",
+    "actionType": "action",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "choose_circle_spells"
+      }
+    ]
+  },
+  "undying_sentinel": {
+    "id": "undying_sentinel",
+    "name": "Undying Sentinel",
+    "actionType": "reaction",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "undying_sentinel"
+      }
+    ]
+  },
+  "rage_beyond_death": {
+    "id": "rage_beyond_death",
+    "name": "Rage Beyond Death",
+    "actionType": "bonus_action",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "rage_beyond_death"
+      }
+    ]
+  }
 }

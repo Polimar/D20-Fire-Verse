@@ -91,6 +91,7 @@ import {
   wantsSpellAdvantage,
   wantsSteadyAdvantage,
 } from "./class-runtime.js";
+import { absorbArcaneWard, bastionReduce } from "./subclass-effects.js";
 import { actionCategory, actionSummary, type ActionCategory } from "./action-menu.js";
 import type { Player } from "./types.js";
 import {
@@ -356,6 +357,26 @@ export type CombatToken = {
   stunPrimed?: boolean;
   nickNext?: boolean;
   nickMod?: number;
+  /** Subclass pack state (48 FireVerse subclasses). */
+  subclassChoices?: Record<string, string>;
+  divineFuryUsed?: boolean;
+  wildHeartForm?: string;
+  starryForm?: string;
+  portentDice?: number[];
+  arcaneWardHp?: number;
+  arcaneWardMax?: number;
+  superiorityDice?: number;
+  superiorityDie?: string;
+  psionicDice?: number;
+  psionicDie?: string;
+  healingLightDice?: number;
+  wildMagicReady?: boolean;
+  tidesUsed?: boolean;
+  duplicityActive?: boolean;
+  wrathOfSea?: boolean;
+  elementalAttuned?: boolean;
+  vowTargetId?: string;
+  companion?: { hp: number; maxHp: number; attacks: number };
 };
 
 export type StrikeHit = {
@@ -1231,6 +1252,8 @@ function tickAuraEnter(combat: CombatState, token: CombatToken): void {
 }
 
 function hasFeature(token: CombatToken, flag: string): boolean {
+  if (flag === "fast_hands") return hasFeature(token, "fast_fingers") || Boolean(token.features?.includes("fast_hands") || token.kit?.flags.includes("fast_hands"));
+  if (flag === "dragon_companion") return hasFeature(token, "dragon_presence") || Boolean(token.features?.includes("dragon_companion") || token.kit?.flags.includes("dragon_companion"));
   return Boolean(token.features?.includes(flag) || token.kit?.flags.includes(flag));
 }
 
@@ -3809,10 +3832,7 @@ export function performPcAction(
     dmgTotal += rageBonus;
     keepRage(t, true);
   }
-  if (t.raging && t.reckless && strongSwing && hasFeature(t, "frenzy") && !t.frenzyUsed) {
-    t.frenzyUsed = true;
-    dmgTotal += rageBonus;
-  }
+  // Frenzy (Berserker): extra Nd6 on first rage hit — applied via classDamageRider / subclassDamageRider.
   if (brutal && strongSwing) {
     t.brutalUsed = true;
     dmgTotal += pushPartDamage(rolls, t.name, "1d10", weaponType, "brutal strike", crit);
@@ -4513,6 +4533,8 @@ export function applyDamage(
     return;
   }
   let harm = harmAmount(target, amount, damageType);
+  harm = absorbArcaneWard(target, harm);
+  harm = bastionReduce(target, harm);
   if (target.fireShield && sourceId && harm > 0) {
     const attacker = combat.tokens.find((x) => x.id === sourceId);
     if (attacker && chebyshev(attacker.x, attacker.y, target.x, target.y) <= 1) {

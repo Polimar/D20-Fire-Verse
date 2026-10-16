@@ -1,0 +1,12 @@
+{
+  "ambiguities": [],
+  "unparsedFields": [],
+  "kind": "subclass",
+  "id": "celestial_patron",
+  "status": "auto_ok",
+  "confidence": "high",
+  "usage": "FireVerse homebrew subclass. Features grant kit flags and combat actions by slug.",
+  "srd": {
+    "text": "Celestial Patron\n\n#### Level 3: Healing Light\n\n#### Level 6: Radiant Soul\n\n#### Level 10: Celestial Resilience\n\n#### Level 14: Searing Vengeance"
+  }
+}

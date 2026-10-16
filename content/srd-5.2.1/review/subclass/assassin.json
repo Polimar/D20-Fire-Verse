@@ -1,0 +1,12 @@
+{
+  "ambiguities": [],
+  "unparsedFields": [],
+  "kind": "subclass",
+  "id": "assassin",
+  "status": "auto_ok",
+  "confidence": "high",
+  "usage": "FireVerse homebrew subclass. Features grant kit flags and combat actions by slug.",
+  "srd": {
+    "text": "Assassin\n\n#### Level 3: Assassinate\n\n#### Level 3: Bonus Proficiencies\n\n#### Level 9: Infiltration Expertise\n\n#### Level 13: Envenom Weapons\n\n#### Level 17: Death Strike"
+  }
+}

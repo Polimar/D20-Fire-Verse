@@ -1,0 +1,12 @@
+{
+  "ambiguities": [],
+  "unparsedFields": [],
+  "kind": "subclass",
+  "id": "way_of_shadow",
+  "status": "auto_ok",
+  "confidence": "high",
+  "usage": "FireVerse homebrew subclass. Features grant kit flags and combat actions by slug.",
+  "srd": {
+    "text": "Way of Shadow\n\n#### Level 3: Shadow Arts\n\n#### Level 6: Shadow Step\n\n#### Level 11: Improved Shadow Step\n\n#### Level 17: Cloak of Shadows"
+  }
+}

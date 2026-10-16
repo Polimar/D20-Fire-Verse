@@ -1,0 +1,12 @@
+{
+  "ambiguities": [],
+  "unparsedFields": [],
+  "kind": "subclass",
+  "id": "oath_of_glory",
+  "status": "auto_ok",
+  "confidence": "high",
+  "usage": "FireVerse homebrew subclass. Features grant kit flags and combat actions by slug.",
+  "srd": {
+    "text": "Oath of Glory\n\n#### Level 3: Peerless Athlete\n\n#### Level 3: Inspiring Smite\n\n#### Level 7: Aura of Alacrity\n\n#### Level 15: Glorious Defense\n\n#### Level 20: Living Legend"
+  }
+}

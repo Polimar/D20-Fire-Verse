@@ -55,6 +55,9 @@ function autoPick(hero: ProgressionHero, catalog: CatalogSlice): LevelPick | nul
     if (!sub) return null;
     return { kind: "subclass", subclassId: sub.id };
   }
+  if (ask.kind === "feature_choice") {
+    return { kind: "feature_choice", featureId: ask.featureId, picks: ask.options.slice(0, ask.count) };
+  }
   if (ask.kind === "asi") {
     const primary = catalog.classes.find((row) => row.id === ask.classId)?.primary[0] ?? "str";
     return { kind: "asi", mode: "plus2", ability: primary };

@@ -1,0 +1,12 @@
+{
+  "ambiguities": [],
+  "unparsedFields": [],
+  "kind": "subclass",
+  "id": "gloom_stalker",
+  "status": "auto_ok",
+  "confidence": "high",
+  "usage": "FireVerse homebrew subclass. Features grant kit flags and combat actions by slug.",
+  "srd": {
+    "text": "Gloom Stalker\n\n#### Level 3: Dread Ambusher\n\n#### Level 3: Umbral Sight\n\n#### Level 7: Iron Mind\n\n#### Level 11: Stalker's Flurry\n\n#### Level 15: Shadowy Dodge"
+  }
+}

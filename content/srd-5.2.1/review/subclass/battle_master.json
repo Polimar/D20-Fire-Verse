@@ -1,0 +1,12 @@
+{
+  "ambiguities": [],
+  "unparsedFields": [],
+  "kind": "subclass",
+  "id": "battle_master",
+  "status": "auto_ok",
+  "confidence": "high",
+  "usage": "FireVerse homebrew subclass. Features grant kit flags and combat actions by slug.",
+  "srd": {
+    "text": "Battle Master\n\n#### Level 3: Combat Superiority\n\n#### Level 3: Student of War\n\n#### Level 7: Know Your Enemy\n\n#### Level 10: Improved Combat Superiority\n\n#### Level 15: Relentless"
+  }
+}

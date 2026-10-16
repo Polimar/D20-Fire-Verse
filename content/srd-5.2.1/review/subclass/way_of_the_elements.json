@@ -1,0 +1,12 @@
+{
+  "ambiguities": [],
+  "unparsedFields": [],
+  "kind": "subclass",
+  "id": "way_of_the_elements",
+  "status": "auto_ok",
+  "confidence": "high",
+  "usage": "FireVerse homebrew subclass. Features grant kit flags and combat actions by slug.",
+  "srd": {
+    "text": "Way of the Elements\n\n#### Level 3: Elemental Attunement\n\n#### Level 6: Environmental Aid\n\n#### Level 11: Stride of the Elements\n\n#### Level 17: Avatar of the Elements"
+  }
+}

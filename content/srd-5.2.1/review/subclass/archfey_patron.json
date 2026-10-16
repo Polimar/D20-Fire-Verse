@@ -1,0 +1,12 @@
+{
+  "ambiguities": [],
+  "unparsedFields": [],
+  "kind": "subclass",
+  "id": "archfey_patron",
+  "status": "auto_ok",
+  "confidence": "high",
+  "usage": "FireVerse homebrew subclass. Features grant kit flags and combat actions by slug.",
+  "srd": {
+    "text": "Archfey Patron\n\n#### Level 3: Steps of the Fey\n\n#### Level 6: Misty Escape\n\n#### Level 10: Beguiling Defenses\n\n#### Level 14: Bewitching Leap"
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "ambiguities": [],
+  "unparsedFields": [],
+  "kind": "subclass",
+  "id": "soulknife",
+  "status": "auto_ok",
+  "confidence": "high",
+  "usage": "FireVerse homebrew subclass. Features grant kit flags and combat actions by slug.",
+  "srd": {
+    "text": "Soulknife\n\n#### Level 3: Psionic Power\n\n#### Level 3: Psychic Blades\n\n#### Level 9: Soul Blades\n\n#### Level 13: Psychic Veil\n\n#### Level 17: Rend Mind"
+  }
+}

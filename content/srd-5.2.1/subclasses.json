@@ -39,6 +39,158 @@
       ]
     },
     {
+      "id": "path_of_the_world_tree",
+      "classId": "barbarian",
+      "name": "Path of the World Tree",
+      "level": 3,
+      "features": [
+        "Vitality of the Tree",
+        "Branches of the Tree",
+        "Battering Roots",
+        "Travel Along the Tree"
+      ],
+      "featuresByLevel": [
+        {
+          "level": 3,
+          "features": [
+            "Vitality of the Tree"
+          ]
+        },
+        {
+          "level": 6,
+          "features": [
+            "Branches of the Tree"
+          ]
+        },
+        {
+          "level": 10,
+          "features": [
+            "Battering Roots"
+          ]
+        },
+        {
+          "level": 14,
+          "features": [
+            "Travel Along the Tree"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "path_of_the_wild_heart",
+      "classId": "barbarian",
+      "name": "Path of the Wild Heart",
+      "level": 3,
+      "features": [
+        "Rage of the Wild",
+        "Aspect of the Wild",
+        "Nature Speaker",
+        "Power of the Wild"
+      ],
+      "featuresByLevel": [
+        {
+          "level": 3,
+          "features": [
+            "Rage of the Wild"
+          ]
+        },
+        {
+          "level": 6,
+          "features": [
+            "Aspect of the Wild"
+          ]
+        },
+        {
+          "level": 10,
+          "features": [
+            "Nature Speaker"
+          ]
+        },
+        {
+          "level": 14,
+          "features": [
+            "Power of the Wild"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "path_of_the_zealot",
+      "classId": "barbarian",
+      "name": "Path of the Zealot",
+      "level": 3,
+      "features": [
+        "Divine Fury",
+        "Warrior of the Gods",
+        "Fanatical Focus",
+        "Zealous Presence",
+        "Rage Beyond Death"
+      ],
+      "featuresByLevel": [
+        {
+          "level": 3,
+          "features": [
+            "Divine Fury"
+          ]
+        },
+        {
+          "level": 3,
+          "features": [
+            "Warrior of the Gods"
+          ]
+        },
+        {
+          "level": 6,
+          "features": [
+            "Fanatical Focus"
+          ]
+        },
+        {
+          "level": 10,
+          "features": [
+            "Zealous Presence"
+          ]
+        },
+        {
+          "level": 14,
+          "features": [
+            "Rage Beyond Death"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "college_of_dance",
+      "classId": "bard",
+      "name": "College of Dance",
+      "level": 3,
+      "features": [
+        "Dazzling Footwork",
+        "Inspiring Movement",
+        "Leading Evasion"
+      ],
+      "featuresByLevel": [
+        {
+          "level": 3,
+          "features": [
+            "Dazzling Footwork"
+          ]
+        },
+        {
+          "level": 6,
+          "features": [
+            "Inspiring Movement"
+          ]
+        },
+        {
+          "level": 14,
+          "features": [
+            "Leading Evasion"
+          ]
+        }
+      ]
+    },
+    {
       "id": "college_of_lore",
       "classId": "bard",
       "name": "College of Lore",
@@ -77,13 +229,88 @@
       ]
     },
     {
+      "id": "college_of_glamour",
+      "classId": "bard",
+      "name": "College of Glamour",
+      "level": 3,
+      "features": [
+        "Mantle of Inspiration",
+        "Beguiling Magic",
+        "Mantle of Majesty",
+        "Unbreakable Majesty"
+      ],
+      "featuresByLevel": [
+        {
+          "level": 3,
+          "features": [
+            "Mantle of Inspiration"
+          ]
+        },
+        {
+          "level": 3,
+          "features": [
+            "Beguiling Magic"
+          ]
+        },
+        {
+          "level": 6,
+          "features": [
+            "Mantle of Majesty"
+          ]
+        },
+        {
+          "level": 14,
+          "features": [
+            "Unbreakable Majesty"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "college_of_valour",
+      "classId": "bard",
+      "name": "College of Valour",
+      "level": 3,
+      "features": [
+        "Combat Inspiration",
+        "Martial Training",
+        "Extra Attack",
+        "Battle Magic"
+      ],
+      "featuresByLevel": [
+        {
+          "level": 3,
+          "features": [
+            "Combat Inspiration"
+          ]
+        },
+        {
+          "level": 3,
+          "features": [
+            "Martial Training"
+          ]
+        },
+        {
+          "level": 6,
+          "features": [
+            "Extra Attack"
+          ]
+        },
+        {
+          "level": 14,
+          "features": [
+            "Battle Magic"
+          ]
+        }
+      ]
+    },
+    {
       "id": "life_domain",
       "classId": "cleric",
       "name": "Life Domain",
       "level": 3,
       "features": [
         "Disciple of Life",
-        "Life Domain Spells",
         "Preserve Life",
         "Blessed Healer",
         "Supreme Healing"
@@ -93,12 +320,6 @@
           "level": 3,
           "features": [
             "Disciple of Life"
-          ]
-        },
-        {
-          "level": 3,
-          "features": [
-            "Life Domain Spells"
           ]
         },
         {
@@ -122,13 +343,165 @@
       ]
     },
     {
+      "id": "light_domain",
+      "classId": "cleric",
+      "name": "Light Domain",
+      "level": 3,
+      "features": [
+        "Warding Flare",
+        "Radiance of the Dawn",
+        "Improved Warding Flare",
+        "Corona of Light"
+      ],
+      "featuresByLevel": [
+        {
+          "level": 3,
+          "features": [
+            "Warding Flare"
+          ]
+        },
+        {
+          "level": 3,
+          "features": [
+            "Radiance of the Dawn"
+          ]
+        },
+        {
+          "level": 6,
+          "features": [
+            "Improved Warding Flare"
+          ]
+        },
+        {
+          "level": 17,
+          "features": [
+            "Corona of Light"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "trickery_domain",
+      "classId": "cleric",
+      "name": "Trickery Domain",
+      "level": 3,
+      "features": [
+        "Blessing of the Trickster",
+        "Invoke Duplicity",
+        "Trickster's Transposition",
+        "Improved Duplicity"
+      ],
+      "featuresByLevel": [
+        {
+          "level": 3,
+          "features": [
+            "Blessing of the Trickster"
+          ]
+        },
+        {
+          "level": 3,
+          "features": [
+            "Invoke Duplicity"
+          ]
+        },
+        {
+          "level": 6,
+          "features": [
+            "Trickster's Transposition"
+          ]
+        },
+        {
+          "level": 17,
+          "features": [
+            "Improved Duplicity"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "war_domain",
+      "classId": "cleric",
+      "name": "War Domain",
+      "level": 3,
+      "features": [
+        "War Priest",
+        "Guided Strike",
+        "War God's Blessing",
+        "Avatar of Battle"
+      ],
+      "featuresByLevel": [
+        {
+          "level": 3,
+          "features": [
+            "War Priest"
+          ]
+        },
+        {
+          "level": 3,
+          "features": [
+            "Guided Strike"
+          ]
+        },
+        {
+          "level": 6,
+          "features": [
+            "War God's Blessing"
+          ]
+        },
+        {
+          "level": 17,
+          "features": [
+            "Avatar of Battle"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "circle_of_the_moon",
+      "classId": "druid",
+      "name": "Circle of the Moon",
+      "level": 3,
+      "features": [
+        "Combat Wild Shape",
+        "Primal Strike",
+        "Moonlight Step",
+        "Lunar Form"
+      ],
+      "featuresByLevel": [
+        {
+          "level": 3,
+          "features": [
+            "Combat Wild Shape"
+          ]
+        },
+        {
+          "level": 6,
+          "features": [
+            "Primal Strike"
+          ]
+        },
+        {
+          "level": 10,
+          "features": [
+            "Moonlight Step"
+          ]
+        },
+        {
+          "level": 14,
+          "features": [
+            "Lunar Form"
+          ]
+        }
+      ]
+    },
+    {
       "id": "circle_of_the_land",
       "classId": "druid",
       "name": "Circle of the Land",
       "level": 3,
       "features": [
-        "Circle of the Land Spells",
         "Land's Aid",
+        "Circle Spells",
         "Natural Recovery",
         "Nature's Ward",
         "Nature's Sanctuary"
@@ -137,13 +510,13 @@
         {
           "level": 3,
           "features": [
-            "Circle of the Land Spells"
+            "Land's Aid"
           ]
         },
         {
           "level": 3,
           "features": [
-            "Land's Aid"
+            "Circle Spells"
           ]
         },
         {
@@ -167,6 +540,89 @@
       ]
     },
     {
+      "id": "circle_of_stars",
+      "classId": "druid",
+      "name": "Circle of Stars",
+      "level": 3,
+      "features": [
+        "Star Map",
+        "Starry Form",
+        "Cosmic Omen",
+        "Twinkling Stars",
+        "Starry Flare"
+      ],
+      "featuresByLevel": [
+        {
+          "level": 3,
+          "features": [
+            "Star Map"
+          ]
+        },
+        {
+          "level": 3,
+          "features": [
+            "Starry Form"
+          ]
+        },
+        {
+          "level": 6,
+          "features": [
+            "Cosmic Omen"
+          ]
+        },
+        {
+          "level": 10,
+          "features": [
+            "Twinkling Stars"
+          ]
+        },
+        {
+          "level": 14,
+          "features": [
+            "Starry Flare"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "circle_of_the_sea",
+      "classId": "druid",
+      "name": "Circle of the Sea",
+      "level": 3,
+      "features": [
+        "Wrath of the Sea",
+        "Aquatic Affinity",
+        "Stormborn",
+        "Oceanic Gift"
+      ],
+      "featuresByLevel": [
+        {
+          "level": 3,
+          "features": [
+            "Wrath of the Sea"
+          ]
+        },
+        {
+          "level": 6,
+          "features": [
+            "Aquatic Affinity"
+          ]
+        },
+        {
+          "level": 10,
+          "features": [
+            "Stormborn"
+          ]
+        },
+        {
+          "level": 14,
+          "features": [
+            "Oceanic Gift"
+          ]
+        }
+      ]
+    },
+    {
       "id": "champion",
       "classId": "fighter",
       "name": "Champion",
@@ -176,8 +632,7 @@
         "Remarkable Athlete",
         "Additional Fighting Style",
         "Heroic Warrior",
-        "Superior Critical",
-        "Survivor"
+        "Superior Critical"
       ],
       "featuresByLevel": [
         {
@@ -209,11 +664,500 @@
           "features": [
             "Superior Critical"
           ]
+        }
+      ]
+    },
+    {
+      "id": "battle_master",
+      "classId": "fighter",
+      "name": "Battle Master",
+      "level": 3,
+      "features": [
+        "Combat Superiority",
+        "Student of War",
+        "Know Your Enemy",
+        "Improved Combat Superiority",
+        "Relentless"
+      ],
+      "featuresByLevel": [
+        {
+          "level": 3,
+          "features": [
+            "Combat Superiority"
+          ]
         },
         {
-          "level": 18,
+          "level": 3,
           "features": [
-            "Survivor"
+            "Student of War"
+          ]
+        },
+        {
+          "level": 7,
+          "features": [
+            "Know Your Enemy"
+          ]
+        },
+        {
+          "level": 10,
+          "features": [
+            "Improved Combat Superiority"
+          ]
+        },
+        {
+          "level": 15,
+          "features": [
+            "Relentless"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "eldritch_knight",
+      "classId": "fighter",
+      "name": "Eldritch Knight",
+      "level": 3,
+      "features": [
+        "Spellcasting",
+        "Weapon Bond",
+        "War Magic",
+        "Eldritch Strike",
+        "Arcane Charge"
+      ],
+      "featuresByLevel": [
+        {
+          "level": 3,
+          "features": [
+            "Spellcasting"
+          ]
+        },
+        {
+          "level": 3,
+          "features": [
+            "Weapon Bond"
+          ]
+        },
+        {
+          "level": 7,
+          "features": [
+            "War Magic"
+          ]
+        },
+        {
+          "level": 10,
+          "features": [
+            "Eldritch Strike"
+          ]
+        },
+        {
+          "level": 15,
+          "features": [
+            "Arcane Charge"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "psi_warrior",
+      "classId": "fighter",
+      "name": "Psi Warrior",
+      "level": 3,
+      "features": [
+        "Psionic Power",
+        "Telekinetic Leap",
+        "Telekinetic Thrust",
+        "Guarded Mind",
+        "Bulwark of Force"
+      ],
+      "featuresByLevel": [
+        {
+          "level": 3,
+          "features": [
+            "Psionic Power"
+          ]
+        },
+        {
+          "level": 7,
+          "features": [
+            "Telekinetic Leap"
+          ]
+        },
+        {
+          "level": 7,
+          "features": [
+            "Telekinetic Thrust"
+          ]
+        },
+        {
+          "level": 10,
+          "features": [
+            "Guarded Mind"
+          ]
+        },
+        {
+          "level": 15,
+          "features": [
+            "Bulwark of Force"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "thief",
+      "classId": "rogue",
+      "name": "Thief",
+      "level": 3,
+      "features": [
+        "Fast Fingers",
+        "Second-Story Work",
+        "Supreme Sneak",
+        "Use Magic Device",
+        "Thief's Reflexes"
+      ],
+      "featuresByLevel": [
+        {
+          "level": 3,
+          "features": [
+            "Fast Fingers"
+          ]
+        },
+        {
+          "level": 3,
+          "features": [
+            "Second-Story Work"
+          ]
+        },
+        {
+          "level": 9,
+          "features": [
+            "Supreme Sneak"
+          ]
+        },
+        {
+          "level": 13,
+          "features": [
+            "Use Magic Device"
+          ]
+        },
+        {
+          "level": 17,
+          "features": [
+            "Thief's Reflexes"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "arcane_trickster",
+      "classId": "rogue",
+      "name": "Arcane Trickster",
+      "level": 3,
+      "features": [
+        "Spellcasting",
+        "Mage Hand Legerdemain",
+        "Magical Ambush",
+        "Versatile Trickster",
+        "Spell Thief"
+      ],
+      "featuresByLevel": [
+        {
+          "level": 3,
+          "features": [
+            "Spellcasting"
+          ]
+        },
+        {
+          "level": 3,
+          "features": [
+            "Mage Hand Legerdemain"
+          ]
+        },
+        {
+          "level": 9,
+          "features": [
+            "Magical Ambush"
+          ]
+        },
+        {
+          "level": 13,
+          "features": [
+            "Versatile Trickster"
+          ]
+        },
+        {
+          "level": 17,
+          "features": [
+            "Spell Thief"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "assassin",
+      "classId": "rogue",
+      "name": "Assassin",
+      "level": 3,
+      "features": [
+        "Assassinate",
+        "Bonus Proficiencies",
+        "Infiltration Expertise",
+        "Envenom Weapons",
+        "Death Strike"
+      ],
+      "featuresByLevel": [
+        {
+          "level": 3,
+          "features": [
+            "Assassinate"
+          ]
+        },
+        {
+          "level": 3,
+          "features": [
+            "Bonus Proficiencies"
+          ]
+        },
+        {
+          "level": 9,
+          "features": [
+            "Infiltration Expertise"
+          ]
+        },
+        {
+          "level": 13,
+          "features": [
+            "Envenom Weapons"
+          ]
+        },
+        {
+          "level": 17,
+          "features": [
+            "Death Strike"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "soulknife",
+      "classId": "rogue",
+      "name": "Soulknife",
+      "level": 3,
+      "features": [
+        "Psionic Power",
+        "Psychic Blades",
+        "Soul Blades",
+        "Psychic Veil",
+        "Rend Mind"
+      ],
+      "featuresByLevel": [
+        {
+          "level": 3,
+          "features": [
+            "Psionic Power"
+          ]
+        },
+        {
+          "level": 3,
+          "features": [
+            "Psychic Blades"
+          ]
+        },
+        {
+          "level": 9,
+          "features": [
+            "Soul Blades"
+          ]
+        },
+        {
+          "level": 13,
+          "features": [
+            "Psychic Veil"
+          ]
+        },
+        {
+          "level": 17,
+          "features": [
+            "Rend Mind"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "abjurer",
+      "classId": "wizard",
+      "name": "Abjurer",
+      "level": 3,
+      "features": [
+        "Abjuration Savant",
+        "Arcane Ward",
+        "Projected Ward",
+        "Spell Breaker",
+        "Spell Resistance"
+      ],
+      "featuresByLevel": [
+        {
+          "level": 3,
+          "features": [
+            "Abjuration Savant"
+          ]
+        },
+        {
+          "level": 3,
+          "features": [
+            "Arcane Ward"
+          ]
+        },
+        {
+          "level": 6,
+          "features": [
+            "Projected Ward"
+          ]
+        },
+        {
+          "level": 10,
+          "features": [
+            "Spell Breaker"
+          ]
+        },
+        {
+          "level": 14,
+          "features": [
+            "Spell Resistance"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "evoker",
+      "classId": "wizard",
+      "name": "Evoker",
+      "level": 3,
+      "features": [
+        "Evocation Savant",
+        "Sculpt Spells",
+        "Potent Cantrip",
+        "Empowered Evocation",
+        "Overchannel"
+      ],
+      "featuresByLevel": [
+        {
+          "level": 3,
+          "features": [
+            "Evocation Savant"
+          ]
+        },
+        {
+          "level": 3,
+          "features": [
+            "Sculpt Spells"
+          ]
+        },
+        {
+          "level": 6,
+          "features": [
+            "Potent Cantrip"
+          ]
+        },
+        {
+          "level": 10,
+          "features": [
+            "Empowered Evocation"
+          ]
+        },
+        {
+          "level": 14,
+          "features": [
+            "Overchannel"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "diviner",
+      "classId": "wizard",
+      "name": "Diviner",
+      "level": 3,
+      "features": [
+        "Divination Savant",
+        "Portent",
+        "Expert Divination",
+        "Third Eye",
+        "Greater Portent"
+      ],
+      "featuresByLevel": [
+        {
+          "level": 3,
+          "features": [
+            "Divination Savant"
+          ]
+        },
+        {
+          "level": 3,
+          "features": [
+            "Portent"
+          ]
+        },
+        {
+          "level": 6,
+          "features": [
+            "Expert Divination"
+          ]
+        },
+        {
+          "level": 10,
+          "features": [
+            "Third Eye"
+          ]
+        },
+        {
+          "level": 14,
+          "features": [
+            "Greater Portent"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "illusionist",
+      "classId": "wizard",
+      "name": "Illusionist",
+      "level": 3,
+      "features": [
+        "Illusion Savant",
+        "Improved Phantasmal Force",
+        "Phantasmal Reality",
+        "Illusory Self",
+        "Illusory Reality"
+      ],
+      "featuresByLevel": [
+        {
+          "level": 3,
+          "features": [
+            "Illusion Savant"
+          ]
+        },
+        {
+          "level": 3,
+          "features": [
+            "Improved Phantasmal Force"
+          ]
+        },
+        {
+          "level": 6,
+          "features": [
+            "Phantasmal Reality"
+          ]
+        },
+        {
+          "level": 10,
+          "features": [
+            "Illusory Self"
+          ]
+        },
+        {
+          "level": 14,
+          "features": [
+            "Illusory Reality"
           ]
         }
       ]
@@ -221,7 +1165,7 @@
     {
       "id": "warrior_of_the_open_hand",
       "classId": "monk",
-      "name": "Warrior of the Open Hand",
+      "name": "Way of the Open Hand",
       "level": 3,
       "features": [
         "Open Hand Technique",
@@ -257,24 +1201,138 @@
       ]
     },
     {
+      "id": "way_of_shadow",
+      "classId": "monk",
+      "name": "Way of Shadow",
+      "level": 3,
+      "features": [
+        "Shadow Arts",
+        "Shadow Step",
+        "Improved Shadow Step",
+        "Cloak of Shadows"
+      ],
+      "featuresByLevel": [
+        {
+          "level": 3,
+          "features": [
+            "Shadow Arts"
+          ]
+        },
+        {
+          "level": 6,
+          "features": [
+            "Shadow Step"
+          ]
+        },
+        {
+          "level": 11,
+          "features": [
+            "Improved Shadow Step"
+          ]
+        },
+        {
+          "level": 17,
+          "features": [
+            "Cloak of Shadows"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "way_of_the_elements",
+      "classId": "monk",
+      "name": "Way of the Elements",
+      "level": 3,
+      "features": [
+        "Elemental Attunement",
+        "Environmental Aid",
+        "Stride of the Elements",
+        "Avatar of the Elements"
+      ],
+      "featuresByLevel": [
+        {
+          "level": 3,
+          "features": [
+            "Elemental Attunement"
+          ]
+        },
+        {
+          "level": 6,
+          "features": [
+            "Environmental Aid"
+          ]
+        },
+        {
+          "level": 11,
+          "features": [
+            "Stride of the Elements"
+          ]
+        },
+        {
+          "level": 17,
+          "features": [
+            "Avatar of the Elements"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "way_of_the_ascendant_dragon",
+      "classId": "monk",
+      "name": "Way of the Ascendant Dragon",
+      "level": 3,
+      "features": [
+        "Draconic Disciple",
+        "Breath of the Dragon",
+        "Wings Unfurled",
+        "Frightful Presence",
+        "Ascendant Aspect"
+      ],
+      "featuresByLevel": [
+        {
+          "level": 3,
+          "features": [
+            "Draconic Disciple"
+          ]
+        },
+        {
+          "level": 3,
+          "features": [
+            "Breath of the Dragon"
+          ]
+        },
+        {
+          "level": 6,
+          "features": [
+            "Wings Unfurled"
+          ]
+        },
+        {
+          "level": 11,
+          "features": [
+            "Frightful Presence"
+          ]
+        },
+        {
+          "level": 17,
+          "features": [
+            "Ascendant Aspect"
+          ]
+        }
+      ]
+    },
+    {
       "id": "oath_of_devotion",
       "classId": "paladin",
       "name": "Oath of Devotion",
       "level": 3,
       "features": [
-        "Oath of Devotion Spells",
         "Sacred Weapon",
         "Aura of Devotion",
         "Smite of Protection",
         "Holy Nimbus"
       ],
       "featuresByLevel": [
-        {
-          "level": 3,
-          "features": [
-            "Oath of Devotion Spells"
-          ]
-        },
         {
           "level": 3,
           "features": [
@@ -302,24 +1360,138 @@
       ]
     },
     {
-      "id": "hunter",
-      "classId": "ranger",
-      "name": "Hunter",
+      "id": "oath_of_the_ancients",
+      "classId": "paladin",
+      "name": "Oath of the Ancients",
       "level": 3,
       "features": [
-        "Hunter's Lore",
-        "Hunter's Prey",
-        "Defensive Tactics",
-        "Superior Hunter's Prey",
-        "Superior Hunter's Defense"
+        "Nature's Wrath",
+        "Aura of Warding",
+        "Undying Sentinel",
+        "Elder Champion"
       ],
       "featuresByLevel": [
         {
           "level": 3,
           "features": [
-            "Hunter's Lore"
+            "Nature's Wrath"
           ]
         },
+        {
+          "level": 7,
+          "features": [
+            "Aura of Warding"
+          ]
+        },
+        {
+          "level": 15,
+          "features": [
+            "Undying Sentinel"
+          ]
+        },
+        {
+          "level": 20,
+          "features": [
+            "Elder Champion"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "oath_of_vengeance",
+      "classId": "paladin",
+      "name": "Oath of Vengeance",
+      "level": 3,
+      "features": [
+        "Vow of Enmity",
+        "Relentless Avenger",
+        "Soul of Vengeance",
+        "Avenging Angel"
+      ],
+      "featuresByLevel": [
+        {
+          "level": 3,
+          "features": [
+            "Vow of Enmity"
+          ]
+        },
+        {
+          "level": 7,
+          "features": [
+            "Relentless Avenger"
+          ]
+        },
+        {
+          "level": 15,
+          "features": [
+            "Soul of Vengeance"
+          ]
+        },
+        {
+          "level": 20,
+          "features": [
+            "Avenging Angel"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "oath_of_glory",
+      "classId": "paladin",
+      "name": "Oath of Glory",
+      "level": 3,
+      "features": [
+        "Peerless Athlete",
+        "Inspiring Smite",
+        "Aura of Alacrity",
+        "Glorious Defense",
+        "Living Legend"
+      ],
+      "featuresByLevel": [
+        {
+          "level": 3,
+          "features": [
+            "Peerless Athlete"
+          ]
+        },
+        {
+          "level": 3,
+          "features": [
+            "Inspiring Smite"
+          ]
+        },
+        {
+          "level": 7,
+          "features": [
+            "Aura of Alacrity"
+          ]
+        },
+        {
+          "level": 15,
+          "features": [
+            "Glorious Defense"
+          ]
+        },
+        {
+          "level": 20,
+          "features": [
+            "Living Legend"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "hunter",
+      "classId": "ranger",
+      "name": "Hunter",
+      "level": 3,
+      "features": [
+        "Hunter's Prey",
+        "Defensive Tactics",
+        "Superior Hunter's Defense",
+        "Superior Hunter's Prey"
+      ],
+      "featuresByLevel": [
         {
           "level": 3,
           "features": [
@@ -335,58 +1507,186 @@
         {
           "level": 11,
           "features": [
-            "Superior Hunter's Prey"
+            "Superior Hunter's Defense"
           ]
         },
         {
           "level": 15,
           "features": [
-            "Superior Hunter's Defense"
+            "Superior Hunter's Prey"
           ]
         }
       ]
     },
     {
-      "id": "thief",
-      "classId": "rogue",
-      "name": "Thief",
+      "id": "gloom_stalker",
+      "classId": "ranger",
+      "name": "Gloom Stalker",
       "level": 3,
       "features": [
-        "Fast Hands",
-        "Second-Story Work",
-        "Supreme Sneak",
-        "Use Magic Device",
-        "Thief's Reflexes"
+        "Dread Ambusher",
+        "Umbral Sight",
+        "Iron Mind",
+        "Stalker's Flurry",
+        "Shadowy Dodge"
       ],
       "featuresByLevel": [
         {
           "level": 3,
           "features": [
-            "Fast Hands"
+            "Dread Ambusher"
           ]
         },
         {
           "level": 3,
           "features": [
-            "Second-Story Work"
+            "Umbral Sight"
           ]
         },
         {
-          "level": 9,
+          "level": 7,
           "features": [
-            "Supreme Sneak"
+            "Iron Mind"
           ]
         },
         {
-          "level": 13,
+          "level": 11,
           "features": [
-            "Use Magic Device"
+            "Stalker's Flurry"
           ]
         },
         {
-          "level": 17,
+          "level": 15,
           "features": [
-            "Thief's Reflexes"
+            "Shadowy Dodge"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "fey_wanderer",
+      "classId": "ranger",
+      "name": "Fey Wanderer",
+      "level": 3,
+      "features": [
+        "Dreadful Strikes",
+        "Otherworldly Glamour",
+        "Beguiling Twist",
+        "Fey Reinforcements",
+        "Misty Wanderer"
+      ],
+      "featuresByLevel": [
+        {
+          "level": 3,
+          "features": [
+            "Dreadful Strikes"
+          ]
+        },
+        {
+          "level": 3,
+          "features": [
+            "Otherworldly Glamour"
+          ]
+        },
+        {
+          "level": 7,
+          "features": [
+            "Beguiling Twist"
+          ]
+        },
+        {
+          "level": 11,
+          "features": [
+            "Fey Reinforcements"
+          ]
+        },
+        {
+          "level": 15,
+          "features": [
+            "Misty Wanderer"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "beast_master",
+      "classId": "ranger",
+      "name": "Beast Master",
+      "level": 3,
+      "features": [
+        "Primal Companion",
+        "Exceptional Training",
+        "Bestial Fury",
+        "Share Spells"
+      ],
+      "featuresByLevel": [
+        {
+          "level": 3,
+          "features": [
+            "Primal Companion"
+          ]
+        },
+        {
+          "level": 7,
+          "features": [
+            "Exceptional Training"
+          ]
+        },
+        {
+          "level": 11,
+          "features": [
+            "Bestial Fury"
+          ]
+        },
+        {
+          "level": 15,
+          "features": [
+            "Share Spells"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "wild_magic",
+      "classId": "sorcerer",
+      "name": "Wild Magic",
+      "level": 3,
+      "features": [
+        "Wild Magic Surge",
+        "Tides of Chaos",
+        "Bend Luck",
+        "Controlled Chaos",
+        "Spell Bombardment"
+      ],
+      "featuresByLevel": [
+        {
+          "level": 3,
+          "features": [
+            "Wild Magic Surge"
+          ]
+        },
+        {
+          "level": 3,
+          "features": [
+            "Tides of Chaos"
+          ]
+        },
+        {
+          "level": 6,
+          "features": [
+            "Bend Luck"
+          ]
+        },
+        {
+          "level": 14,
+          "features": [
+            "Controlled Chaos"
+          ]
+        },
+        {
+          "level": 18,
+          "features": [
+            "Spell Bombardment"
           ]
         }
       ]
@@ -398,10 +1698,10 @@
       "level": 3,
       "features": [
         "Draconic Resilience",
-        "Draconic Spells",
+        "Dragon Ancestry",
         "Elemental Affinity",
         "Dragon Wings",
-        "Dragon Companion"
+        "Dragon Presence"
       ],
       "featuresByLevel": [
         {
@@ -413,7 +1713,7 @@
         {
           "level": 3,
           "features": [
-            "Draconic Spells"
+            "Dragon Ancestry"
           ]
         },
         {
@@ -431,7 +1731,135 @@
         {
           "level": 18,
           "features": [
-            "Dragon Companion"
+            "Dragon Presence"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "aberrant_sorcery",
+      "classId": "sorcerer",
+      "name": "Aberrant Sorcery",
+      "level": 3,
+      "features": [
+        "Psionic Spells",
+        "Telepathic Speech",
+        "Psionic Sorcery",
+        "Revelation in Flesh",
+        "Warping Implosion"
+      ],
+      "featuresByLevel": [
+        {
+          "level": 3,
+          "features": [
+            "Psionic Spells"
+          ]
+        },
+        {
+          "level": 3,
+          "features": [
+            "Telepathic Speech"
+          ]
+        },
+        {
+          "level": 6,
+          "features": [
+            "Psionic Sorcery"
+          ]
+        },
+        {
+          "level": 14,
+          "features": [
+            "Revelation in Flesh"
+          ]
+        },
+        {
+          "level": 18,
+          "features": [
+            "Warping Implosion"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "clockwork_sorcery",
+      "classId": "sorcerer",
+      "name": "Clockwork Sorcery",
+      "level": 3,
+      "features": [
+        "Clockwork Spells",
+        "Restore Balance",
+        "Bastion of Law",
+        "Trance of Order",
+        "Clockwork Cavalcade"
+      ],
+      "featuresByLevel": [
+        {
+          "level": 3,
+          "features": [
+            "Clockwork Spells"
+          ]
+        },
+        {
+          "level": 3,
+          "features": [
+            "Restore Balance"
+          ]
+        },
+        {
+          "level": 6,
+          "features": [
+            "Bastion of Law"
+          ]
+        },
+        {
+          "level": 14,
+          "features": [
+            "Trance of Order"
+          ]
+        },
+        {
+          "level": 18,
+          "features": [
+            "Clockwork Cavalcade"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "archfey_patron",
+      "classId": "warlock",
+      "name": "Archfey Patron",
+      "level": 3,
+      "features": [
+        "Steps of the Fey",
+        "Misty Escape",
+        "Beguiling Defenses",
+        "Bewitching Leap"
+      ],
+      "featuresByLevel": [
+        {
+          "level": 3,
+          "features": [
+            "Steps of the Fey"
+          ]
+        },
+        {
+          "level": 6,
+          "features": [
+            "Misty Escape"
+          ]
+        },
+        {
+          "level": 10,
+          "features": [
+            "Beguiling Defenses"
+          ]
+        },
+        {
+          "level": 14,
+          "features": [
+            "Bewitching Leap"
           ]
         }
       ]
@@ -443,7 +1871,6 @@
       "level": 3,
       "features": [
         "Dark One's Blessing",
-        "Fiend Spells",
         "Dark One's Own Luck",
         "Fiendish Resilience",
         "Hurl Through Hell"
@@ -453,12 +1880,6 @@
           "level": 3,
           "features": [
             "Dark One's Blessing"
-          ]
-        },
-        {
-          "level": 3,
-          "features": [
-            "Fiend Spells"
           ]
         },
         {
@@ -482,46 +1903,84 @@
       ]
     },
     {
-      "id": "evoker",
-      "classId": "wizard",
-      "name": "Evoker",
+      "id": "great_old_one_patron",
+      "classId": "warlock",
+      "name": "Great Old One Patron",
       "level": 3,
       "features": [
-        "Evocation Savant",
-        "Potent Cantrip",
-        "Sculpt Spells",
-        "Empowered Evocation",
-        "Overchannel"
+        "Awakened Mind",
+        "Psychic Spells",
+        "Clairvoyant Hex",
+        "Thought Shield",
+        "Create Thrall"
       ],
       "featuresByLevel": [
         {
           "level": 3,
           "features": [
-            "Evocation Savant"
+            "Awakened Mind"
           ]
         },
         {
           "level": 3,
           "features": [
-            "Potent Cantrip"
+            "Psychic Spells"
           ]
         },
         {
           "level": 6,
           "features": [
-            "Sculpt Spells"
+            "Clairvoyant Hex"
           ]
         },
         {
           "level": 10,
           "features": [
-            "Empowered Evocation"
+            "Thought Shield"
           ]
         },
         {
           "level": 14,
           "features": [
-            "Overchannel"
+            "Create Thrall"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "celestial_patron",
+      "classId": "warlock",
+      "name": "Celestial Patron",
+      "level": 3,
+      "features": [
+        "Healing Light",
+        "Radiant Soul",
+        "Celestial Resilience",
+        "Searing Vengeance"
+      ],
+      "featuresByLevel": [
+        {
+          "level": 3,
+          "features": [
+            "Healing Light"
+          ]
+        },
+        {
+          "level": 6,
+          "features": [
+            "Radiant Soul"
+          ]
+        },
+        {
+          "level": 10,
+          "features": [
+            "Celestial Resilience"
+          ]
+        },
+        {
+          "level": 14,
+          "features": [
+            "Searing Vengeance"
           ]
         }
       ]
