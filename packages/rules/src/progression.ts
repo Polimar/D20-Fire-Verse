@@ -175,7 +175,7 @@ function legalSpells(catalog: CatalogSlice, classId: string): SpellSlice[] {
 }
 
 /** Highest spell level the class can cast at this class level. */
-function maxSpellLevel(def: ClassSlice, classLevel: number): number {
+export function maxSpellLevel(def: ClassSlice, classLevel: number): number {
   const row = levelRow(def, classLevel);
   if (row?.pactSlots) return row.pactSlots.slotLevel;
   return Math.max(0, ...Object.entries(row?.spellSlots ?? {}).filter(([, n]) => n > 0).map(([slot]) => Number(slot)));

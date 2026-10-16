@@ -16,7 +16,15 @@ const tvDist = path.join(REPO_ROOT, "tv", "dist");
 const SHOT = path.join(REPO_ROOT, "docs", "e2e", "wizard");
 
 type Cat = {
-  classes: Array<{ id: string; skillChoices: number; skillList: string[]; fightingStyleRequired?: boolean; fightingStyleFeatIds: string[]; level1: { cantrips?: number; preparedSpells?: number; spellsKnown?: number } }>;
+  classes: Array<{
+    id: string;
+    skillChoices: number;
+    skillList: string[];
+    fightingStyleRequired?: boolean;
+    fightingStyleFeatIds: string[];
+    level1: { cantrips?: number; preparedSpells?: number; spellsKnown?: number };
+    maxSpellLevelAt: number[];
+  }>;
   backgrounds: Array<{ id: string; skills: string[] }>;
   species: Array<{ id: string }>;
   feats: Array<{ id: string; category: string }>;
@@ -104,13 +112,15 @@ async function forgeOne(page: Page, base: string, token: string, classId: string
   if ((cls.level1.cantrips ?? 0) + (cls.level1.preparedSpells ?? 0) + (cls.level1.spellsKnown ?? 0) > 0) {
     await shot(page, `${label}-07-spells`);
     const pool = cat.spells.filter((s) => s.classes.includes(classId));
+    const cap = cls.maxSpellLevelAt[1] ?? 1;
+    const leveled = pool.filter((s) => s.level >= 1 && s.level <= cap);
     for (const spell of pool.filter((s) => s.level === 0).slice(0, cls.level1.cantrips ?? 0)) {
       await page.locator(`[data-spell="${spell.id}"][data-bag="cantrip"]`).click();
     }
-    for (const spell of pool.filter((s) => s.level > 0).slice(0, cls.level1.preparedSpells ?? 0)) {
+    for (const spell of leveled.slice(0, cls.level1.preparedSpells ?? 0)) {
       await page.locator(`[data-spell="${spell.id}"][data-bag="prepared"]`).click();
     }
-    for (const spell of pool.filter((s) => s.level > 0).slice(0, cls.level1.spellsKnown ?? 0)) {
+    for (const spell of leveled.slice(0, cls.level1.spellsKnown ?? 0)) {
       await page.locator(`[data-spell="${spell.id}"][data-bag="known"]`).click();
     }
     await page.locator("#hwNext").click();

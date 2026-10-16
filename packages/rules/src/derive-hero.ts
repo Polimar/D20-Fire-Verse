@@ -175,6 +175,23 @@ export function deriveHero(draft: BuilderDraft, catalog: BuilderCatalog, classHi
     }
   }
 
+  const spellCap = clsMeta?.maxSpellLevelAt[level] ?? 0;
+  const spellById = new Map(catalog.spells.map((s) => [s.id, s]));
+  const assertCantrip = (id: string) => {
+    const spell = spellById.get(id);
+    if (!spell || spell.level !== 0 || !spell.classes.includes(draft.classId)) errors.push("BAD_SPELL");
+  };
+  const assertLeveled = (id: string) => {
+    const spell = spellById.get(id);
+    if (!spell || spell.level < 1 || spell.level > spellCap || !spell.classes.includes(draft.classId)) {
+      errors.push("BAD_SPELL");
+    }
+  };
+  for (const id of draft.cantrips ?? []) assertCantrip(id);
+  for (const id of draft.spellsPrepared ?? []) assertLeveled(id);
+  for (const id of draft.spellsKnown ?? []) assertLeveled(id);
+  for (const id of draft.spellbook ?? []) assertLeveled(id);
+
   const hitDie = classHint?.hitDie ?? 10;
   const hp = hpAtLevelOne({ id: draft.classId, hitDie, caster: "none", primary: [], multiclass: {}, levels: [] }, scores.con);
 

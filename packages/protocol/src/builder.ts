@@ -92,6 +92,8 @@ export type BuilderCatalogClass = {
     spellsKnown?: number;
     spellbookSize?: number;
   };
+  /** Index = class level (0 unused). Highest spell level castable at that level. */
+  maxSpellLevelAt: number[];
   fightingStyleRequired?: boolean;
   fightingStyleFeatIds: string[];
   equipChoices: Array<{ id: "A" | "B" | "C"; label: string; items?: string[] }>;

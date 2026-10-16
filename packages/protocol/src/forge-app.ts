@@ -180,6 +180,8 @@ export async function mountForgeApp(host: HTMLElement, opts: ForgeAppOptions): P
 
     const spellHost = host.querySelector("#spellHost")!;
     const pool = catalog.spells.filter((s) => s.classes.includes(draft.classId));
+    const spellCap = cls.maxSpellLevelAt[draft.level ?? 1] ?? 0;
+    const leveled = pool.filter((s) => s.level >= 1 && s.level <= spellCap);
     const needC = cls.level1.cantrips ?? 0;
     const needP = cls.level1.preparedSpells ?? 0;
     const needK = cls.level1.spellsKnown ?? 0;
@@ -187,8 +189,8 @@ export async function mountForgeApp(host: HTMLElement, opts: ForgeAppOptions): P
     if (needC || needP || needK) {
       spellHost.innerHTML = `
         ${needC ? `<p class="meta">Cantrips (${needC})</p>${pool.filter((s) => s.level === 0).map((s) => `<label><input type="checkbox" data-cantrip="${esc(s.id)}" /> ${esc(s.name)}</label>`).join("")}` : ""}
-        ${needP ? `<p class="meta">Prepared (${needP})</p>${pool.filter((s) => s.level > 0).map((s) => `<label><input type="checkbox" data-prepared="${esc(s.id)}" /> ${esc(s.name)}</label>`).join("")}` : ""}
-        ${needK ? `<p class="meta">Spells known (${needK})</p>${pool.filter((s) => s.level > 0).map((s) => `<label><input type="checkbox" data-known="${esc(s.id)}" /> ${esc(s.name)}</label>`).join("")}` : ""}
+        ${needP ? `<p class="meta">Prepared (${needP})</p>${leveled.map((s) => `<label><input type="checkbox" data-prepared="${esc(s.id)}" /> ${esc(s.name)}</label>`).join("")}` : ""}
+        ${needK ? `<p class="meta">Spells known (${needK})</p>${leveled.map((s) => `<label><input type="checkbox" data-known="${esc(s.id)}" /> ${esc(s.name)}</label>`).join("")}` : ""}
         ${bookNeed ? `<p class="meta">Spellbook must include prepared (${bookNeed} spells in book)</p>` : ""}`;
     } else spellHost.innerHTML = "";
 
@@ -224,9 +226,9 @@ export async function mountForgeApp(host: HTMLElement, opts: ForgeAppOptions): P
       draft.about = (host.querySelector("#fgAbout") as HTMLTextAreaElement).value.trim() || undefined;
       draft.languages = (host.querySelector("#fgLang") as HTMLInputElement).value.split(",").map((s) => s.trim()).filter(Boolean);
       if (bookNeed) {
-        draft.spellbook = [...new Set([...(draft.spellsPrepared ?? []), ...(draft.spellsKnown ?? []), ...(draft.cantrips ?? [])])];
+        draft.spellbook = [...new Set([...(draft.spellsPrepared ?? []), ...(draft.spellsKnown ?? [])])];
         while ((draft.spellbook?.length ?? 0) < bookNeed) {
-          const next = pool.find((s) => s.level === 1 && !draft.spellbook!.includes(s.id));
+          const next = leveled.find((s) => !draft.spellbook!.includes(s.id));
           if (!next) break;
           draft.spellbook!.push(next.id);
         }
