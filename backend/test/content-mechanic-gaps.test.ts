@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { before, test } from "node:test";
 import type { ItemDef } from "@d20-fireverse/content-schema";
-import { itemMechanicGap, itemMechanicGapReasons } from "../src/local/content-mechanic-gaps.js";
+import { itemMechanicGap } from "../src/local/content-mechanic-gaps.js";
 import { contentDetail } from "../src/local/content-catalog.js";
 import { listCatalog } from "../src/local/content-catalog.js";
 import { boot } from "./helpers.js";
@@ -51,15 +51,12 @@ test("spell detail lists no combat ability reason", () => {
   assert.ok(detail.missingMechanicReasons.some((r) => /SRD rule not applied|No battlefield effect/i.test(r)));
 });
 
-test("ammunition +1 explains missing mechanic via notModeled review lines", () => {
-  const detail = contentDetail("item", "ammunition_plus_1") as { missingMechanicReasons: string[]; missingMechanic: boolean };
-  assert.equal(detail.missingMechanic, true);
-  assert.ok(detail.missingMechanicReasons.some((r) => /SRD rule not applied/i.test(r) && /rarity/i.test(r)));
-  const reasons = itemMechanicGapReasons(
-    { id: "ammunition_plus_1", name: "Ammunition +1", rarity: "uncommon", slot: "consumable", effects: [{ kind: "attack_bonus", amount: 1 }] },
-    { notModeled: ["The bonus is determined by the rarity of the ammunition."] },
-  );
-  assert.equal(reasons.length, 1);
+test("ammunition +1 +2 +3 are valid: the rarity sentence is the +N bonus already on the item", () => {
+  for (const id of ["ammunition_plus_1", "ammunition_plus_2", "ammunition_plus_3"]) {
+    const detail = contentDetail("item", id) as { missingMechanicReasons: string[]; missingMechanic: boolean };
+    assert.equal(detail.missingMechanic, false, id);
+    assert.equal(detail.missingMechanicReasons.length, 0, id);
+  }
 });
 
 test("drink consumable with empty effects and SRD drink text is a mechanic gap", () => {
