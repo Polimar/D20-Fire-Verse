@@ -5,7 +5,7 @@ import { before, test } from "node:test";
 import { createUser, login, openAuth } from "../src/local/auth.js";
 import { mountAccountRoutes } from "../src/local/admin-http.js";
 import { mountV2Routes } from "../src/local/v2-http.js";
-import { resolveContent, setContentEnabled } from "../src/local/content-catalog.js";
+import { ensureForgeContentDefaults, resolveContent, setContentEnabled } from "../src/local/content-catalog.js";
 import { listHeroes, stashView } from "../src/local/hero.js";
 import { deriveHero } from "@d20-fireverse/rules";
 import { builderCatalog } from "../src/local/builder-catalog.js";
@@ -33,6 +33,39 @@ function enableFighterLine(): void {
     setContentEnabled(kind, id, true);
   }
 }
+
+test("wizard L1 rejects prepared spells above class spell slot cap", () => {
+  ensureForgeContentDefaults();
+  const catalog = builderCatalog();
+  const wizard = catalog.classes.find((c) => c.id === "wizard")!;
+  assert.equal(wizard.maxSpellLevelAt[1], 1);
+  assert.equal(wizard.maxSpellLevelAt[5], 3);
+  const over = catalog.spells.find((s) => s.classes.includes("wizard") && s.level === 3);
+  assert.ok(over);
+  const cantrips = catalog.spells.filter((s) => s.classes.includes("wizard") && s.level === 0).slice(0, wizard.level1.cantrips ?? 3);
+  const l1 = catalog.spells.filter((s) => s.classes.includes("wizard") && s.level === 1);
+  const prepared = [...l1.slice(0, (wizard.level1.preparedSpells ?? 4) - 1).map((s) => s.id), over!.id];
+  const book = [...new Set([...prepared, ...l1.map((s) => s.id)])].slice(0, wizard.level1.spellbookSize ?? 6);
+  const sheet = deriveHero(
+    {
+      classId: "wizard",
+      speciesId: "human",
+      backgroundId: "sage",
+      method: "standard_array",
+      baseAbilities: { str: 8, dex: 14, con: 13, int: 15, wis: 12, cha: 10 },
+      classSkills: ["insight", "investigation"],
+      backgroundAsi: { mode: "plus2plus1", plus2: "int", plus1: "wis" },
+      equipChoice: "A",
+      cantrips: cantrips.map((s) => s.id),
+      spellsPrepared: prepared,
+      spellbook: book,
+    },
+    catalog,
+    { hitDie: 6, saves: ["int", "wis"] },
+  );
+  assert.equal(sheet.ok, false);
+  assert.ok(sheet.errors.includes("BAD_SPELL"));
+});
 
 test("derive fighter L1 preview has HP and attacks", () => {
   enableFighterLine();

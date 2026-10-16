@@ -16,7 +16,15 @@ const companionDist = path.join(REPO_ROOT, "companion", "dist");
 const SHOT = path.join(REPO_ROOT, "docs", "e2e", "companion-wizard");
 
 type Cat = {
-  classes: Array<{ id: string; skillChoices: number; skillList: string[]; fightingStyleRequired?: boolean; fightingStyleFeatIds: string[]; level1: { cantrips?: number; preparedSpells?: number; spellsKnown?: number } }>;
+  classes: Array<{
+    id: string;
+    skillChoices: number;
+    skillList: string[];
+    fightingStyleRequired?: boolean;
+    fightingStyleFeatIds: string[];
+    level1: { cantrips?: number; preparedSpells?: number; spellsKnown?: number };
+    maxSpellLevelAt: number[];
+  }>;
   backgrounds: Array<{ id: string; skills: string[] }>;
   species: Array<{ id: string }>;
   feats: Array<{ id: string; category: string }>;
@@ -190,13 +198,15 @@ test("iPhone 13 companion PWA forges a wizard with touch", async () => {
       await page.waitForFunction(() => /spell/i.test(document.querySelector(".hw h2")?.textContent ?? ""));
       await shot(page, "07-spells");
       const pool = cat.spells.filter((spell) => spell.classes.includes("wizard"));
+      const cap = cls.maxSpellLevelAt[1] ?? 1;
+      const leveled = pool.filter((spell) => spell.level >= 1 && spell.level <= cap);
       for (const spell of pool.filter((spell) => spell.level === 0).slice(0, cls.level1.cantrips ?? 0)) {
         await page.locator(`[data-spell="${spell.id}"][data-bag="cantrip"]`).tap();
       }
-      for (const spell of pool.filter((spell) => spell.level > 0).slice(0, cls.level1.preparedSpells ?? 0)) {
+      for (const spell of leveled.slice(0, cls.level1.preparedSpells ?? 0)) {
         await page.locator(`[data-spell="${spell.id}"][data-bag="prepared"]`).tap();
       }
-      for (const spell of pool.filter((spell) => spell.level > 0).slice(0, cls.level1.spellsKnown ?? 0)) {
+      for (const spell of leveled.slice(0, cls.level1.spellsKnown ?? 0)) {
         await page.locator(`[data-spell="${spell.id}"][data-bag="known"]`).tap();
       }
       await page.locator("#hwNext").tap();

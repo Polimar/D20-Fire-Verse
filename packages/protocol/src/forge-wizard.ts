@@ -302,12 +302,17 @@ export async function mountForgeWizard(host: HTMLElement, opts: ForgeWizardOptio
     return "";
   };
 
+  const spellCap = () => cls().maxSpellLevelAt[draft.level ?? 1] ?? 0;
+
   const fillSpellbook = () => {
     const c = cls();
     const need = c.level1.spellbookSize ?? 0;
     if (need <= 0) return;
     const book = [...new Set([...(draft.spellsPrepared ?? [])])];
-    const pool = catalog.spells.filter((s) => s.classes.includes(draft.classId) && s.level === 1);
+    const cap = spellCap();
+    const pool = catalog.spells.filter(
+      (s) => s.classes.includes(draft.classId) && s.level >= 1 && s.level <= cap,
+    );
     for (const spell of pool) {
       if (book.length >= need) break;
       if (!book.includes(spell.id)) book.push(spell.id);
@@ -414,6 +419,8 @@ export async function mountForgeWizard(host: HTMLElement, opts: ForgeWizardOptio
           .join("")}</div>`;
     } else if (id === "spells") {
       const pool = catalog.spells.filter((s) => s.classes.includes(draft.classId));
+      const cap = spellCap();
+      const leveled = pool.filter((s) => s.level >= 1 && s.level <= cap);
       const block = (title: string, level: "cantrip" | "prepared" | "known", list: typeof pool) =>
         `<p class="hw-meta">${title}</p><div class="hw-row">${list
           .map((s) => {
@@ -422,7 +429,7 @@ export async function mountForgeWizard(host: HTMLElement, opts: ForgeWizardOptio
             return `<button type="button" class="hw-chip ${on ? "picked" : ""}" data-spell="${esc(s.id)}" data-bag="${level}">${esc(s.name)}</button>`;
           })
           .join("")}</div>`;
-      body = `${(c.level1.cantrips ?? 0) ? block(`Cantrips (${c.level1.cantrips})`, "cantrip", pool.filter((s) => s.level === 0)) : ""}${(c.level1.preparedSpells ?? 0) ? block(`Prepared (${c.level1.preparedSpells})`, "prepared", pool.filter((s) => s.level > 0)) : ""}${(c.level1.spellsKnown ?? 0) ? block(`Known (${c.level1.spellsKnown})`, "known", pool.filter((s) => s.level > 0)) : ""}`;
+      body = `${(c.level1.cantrips ?? 0) ? block(`Cantrips (${c.level1.cantrips})`, "cantrip", pool.filter((s) => s.level === 0)) : ""}${(c.level1.preparedSpells ?? 0) ? block(`Prepared (${c.level1.preparedSpells})`, "prepared", leveled) : ""}${(c.level1.spellsKnown ?? 0) ? block(`Known (${c.level1.spellsKnown})`, "known", leveled) : ""}`;
     } else if (id === "details") {
       body = `<label class="hw-field">Name <input id="hwName" maxlength="32" value="${esc(draft.name ?? "")}" /></label>
         <label class="hw-field">About <textarea id="hwAbout" maxlength="240" rows="3">${esc(draft.about ?? "")}</textarea></label>

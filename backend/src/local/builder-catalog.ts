@@ -4,7 +4,7 @@ import type { z } from "zod";
 type BackgroundDef = z.infer<typeof backgroundDef>;
 type FeatDef = z.infer<typeof featDef>;
 import type { BuilderCatalog, AbilityKey } from "@d20-fireverse/protocol/builder";
-import { featCategory, wizardSpellbookSize } from "@d20-fireverse/rules";
+import { featCategory, maxSpellLevel, wizardSpellbookSize, type ClassSlice } from "@d20-fireverse/rules";
 import { enabledById, enabledClasses, enabledSpells, listCatalog } from "./content-catalog.js";
 import { PORTRAITS, portraitUrl } from "./portraits.js";
 import { backgroundStarters, classStarters } from "./starter-equipment.js";
@@ -83,6 +83,8 @@ export function builderCatalog(): BuilderCatalog {
   const classes = enabledClasses().map((c) => {
     const l1 = c.levels.find((row) => row.level === 1);
     const needsStyle = l1?.features.some((f) => /fighting style/i.test(f)) ?? false;
+    const slice = c as ClassSlice;
+    const maxSpellLevelAt = Array.from({ length: 21 }, (_, level) => (level === 0 ? 0 : maxSpellLevel(slice, level)));
     return {
       id: c.id,
       name: c.name,
@@ -96,6 +98,7 @@ export function builderCatalog(): BuilderCatalog {
         spellsKnown: l1?.spellsKnown,
         spellbookSize: c.spellProgression?.mode === "prepared" ? wizardSpellbookSize(1) : undefined,
       },
+      maxSpellLevelAt,
       fightingStyleRequired: needsStyle,
       fightingStyleFeatIds: needsStyle ? styleIds : [],
       equipChoices: classEquipChoices(c.id),

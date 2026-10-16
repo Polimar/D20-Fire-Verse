@@ -2,7 +2,16 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
 import { test } from "node:test";
-import { applyPick, blankProgress, hpGain, multiclassSlots, nextAsk, type CatalogSlice, type ProgressionHero } from "@d20-fireverse/rules";
+import {
+  applyPick,
+  blankProgress,
+  hpGain,
+  maxSpellLevel,
+  multiclassSlots,
+  nextAsk,
+  type CatalogSlice,
+  type ProgressionHero,
+} from "@d20-fireverse/rules";
 import { CONTENT_ROOT } from "../src/local/paths.js";
 
 function load(name: string): { entries: Array<Record<string, unknown>> } {
@@ -40,6 +49,16 @@ function hero(classId: string, xp = 0): ProgressionHero {
 test("average hit points add the die average and Constitution", () => {
   const fighter = catalog().classes.find((row) => row.id === "fighter")!;
   assert.equal(hpGain(fighter, 14), Math.floor(10 / 2) + 1 + 2);
+});
+
+test("maxSpellLevel follows class spell slot and pact tables", () => {
+  const book = catalog();
+  const wizard = book.classes.find((row) => row.id === "wizard")!;
+  const warlock = book.classes.find((row) => row.id === "warlock")!;
+  assert.equal(maxSpellLevel(wizard, 1), 1);
+  assert.equal(maxSpellLevel(wizard, 5), 3);
+  assert.equal(maxSpellLevel(warlock, 1), 1);
+  assert.equal(maxSpellLevel(warlock, 5), 3);
 });
 
 test("a second level is one class choice, not a repeated subclass", () => {
