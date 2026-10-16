@@ -3,8 +3,9 @@
  */
 
 import type { CatalogRow } from "./content-catalog.js";
-import { contentDetail, listCatalog } from "./content-catalog.js";
+import { catalogEntry, contentDetail, listCatalog } from "./content-catalog.js";
 import { primaryGapBucket } from "./content-gap-buckets.js";
+import { FAMILY_HINTS, workFamilyForKind } from "./content-gap-families.js";
 
 export const GAP_REPORT_BASELINE = {
   date: "2026-10-16",
@@ -21,6 +22,9 @@ export type GapReport = {
   spellsTotal: number;
   bucketCounts: Record<string, number>;
   bucketSamples: Record<string, string[]>;
+  workFamilyCounts: Record<string, number>;
+  workFamilySamples: Record<string, string[]>;
+  workFamiliesByKind: Record<string, Record<string, number>>;
   deltaFromBaseline: number;
 };
 
@@ -41,18 +45,33 @@ export function buildGapReport(): GapReport {
   const missingByKind = countByKind(gaps, () => true);
   const bucketCounts: Record<string, number> = {};
   const bucketSamples: Record<string, string[]> = {};
+  const workFamilyCounts: Record<string, number> = {};
+  const workFamilySamples: Record<string, string[]> = {};
+  const workFamiliesByKind: Record<string, Record<string, number>> = {};
 
   for (const row of gaps) {
+    const label = `${row.kind}/${row.id}`;
     if (!row.valid) {
       const b = "catalog_invalid";
       bucketCounts[b] = (bucketCounts[b] ?? 0) + 1;
-      pushSample(bucketSamples, b, `${row.kind}/${row.id}`);
+      pushSample(bucketSamples, b, label);
       continue;
     }
     const detail = contentDetail(row.kind, row.id) as { missingMechanicReasons: string[] };
     const bucket = primaryGapBucket(detail.missingMechanicReasons);
     bucketCounts[bucket] = (bucketCounts[bucket] ?? 0) + 1;
-    pushSample(bucketSamples, bucket, `${row.kind}/${row.id}`);
+    pushSample(bucketSamples, bucket, label);
+
+    const game =
+      row.kind === "spell" || row.kind === "item" || row.kind === "monster"
+        ? catalogEntry(row.kind, row.id)
+        : undefined;
+    const family = workFamilyForKind(row.kind, row.id, game, bucket);
+    workFamilyCounts[family] = (workFamilyCounts[family] ?? 0) + 1;
+    pushSample(workFamilySamples, family, label);
+    const byKind = workFamiliesByKind[row.kind] ?? {};
+    byKind[family] = (byKind[family] ?? 0) + 1;
+    workFamiliesByKind[row.kind] = byKind;
   }
 
   const spells = all.filter((r) => r.kind === "spell");
@@ -64,6 +83,9 @@ export function buildGapReport(): GapReport {
     spellsTotal: spells.length,
     bucketCounts,
     bucketSamples,
+    workFamilyCounts,
+    workFamilySamples,
+    workFamiliesByKind,
     deltaFromBaseline: gaps.length - GAP_REPORT_BASELINE.missingTotal,
   };
 }
@@ -101,6 +123,27 @@ export function formatGapReport(report: GapReport): string {
   }
   if (sortedBuckets.length > 12) {
     lines.push(`  … ${sortedBuckets.length - 12} more bucket(s)`);
+  }
+  lines.push("");
+  lines.push("Work families (batch planning — same fix unlocks many rows):");
+  const sortedFamilies = Object.entries(report.workFamilyCounts).sort((a, b) => b[1] - a[1]);
+  for (const [family, count] of sortedFamilies.slice(0, 15)) {
+    const hint = FAMILY_HINTS[family] ?? "";
+    const samples = (report.workFamilySamples[family] ?? []).join(", ");
+    lines.push(`  ${count.toString().padStart(4)}  ${family}${hint ? ` — ${hint}` : ""}`);
+    if (samples) lines.push(`         e.g. ${samples}`);
+  }
+  if (sortedFamilies.length > 15) {
+    lines.push(`  … ${sortedFamilies.length - 15} more family(s)`);
+  }
+  for (const kind of ["spell", "item", "monster"] as const) {
+    const map = report.workFamiliesByKind[kind];
+    if (!map || !Object.keys(map).length) continue;
+    lines.push("");
+    lines.push(`${kind} families:`);
+    for (const [family, count] of Object.entries(map).sort((a, b) => b[1] - a[1]).slice(0, 8)) {
+      lines.push(`  ${count.toString().padStart(4)}  ${family}`);
+    }
   }
   return lines.join("\n");
 }

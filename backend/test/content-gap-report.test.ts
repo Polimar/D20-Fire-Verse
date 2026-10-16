@@ -1,7 +1,8 @@
 import assert from "node:assert/strict";
 import { before, test } from "node:test";
 import { normalizeGapBucket, primaryGapBucket } from "../src/local/content-gap-buckets.js";
-import { buildGapReport, GAP_REPORT_BASELINE } from "../src/local/content-gap-report.js";
+import { spellWorkFamily } from "../src/local/content-gap-families.js";
+import { buildGapReport, formatGapReport, GAP_REPORT_BASELINE } from "../src/local/content-gap-report.js";
 import { boot } from "./helpers.js";
 
 before(boot);
@@ -29,4 +30,27 @@ test("buildGapReport matches admin-scale missing mechanic queue", () => {
   assert.equal(sumKinds, report.missingTotal);
   assert.equal(typeof report.deltaFromBaseline, "number");
   assert.equal(GAP_REPORT_BASELINE.missingTotal, 556);
+  const familySum = Object.values(report.workFamilyCounts).reduce((a, b) => a + b, 0);
+  assert.equal(familySum, report.missingTotal);
+  assert.ok(report.workFamilyCounts.spell_batch_note_or_wire > 50);
+  const text = formatGapReport(report);
+  assert.match(text, /Work families/);
+  assert.match(text, /spell families:/i);
+});
+
+test("spellWorkFamily routes exploration vs note stub", () => {
+  assert.equal(
+    spellWorkFamily(
+      { id: "detect_magic", name: "Detect Magic", level: 1, school: "divination", description: "", concentration: false },
+      "spell_no_battlefield_effect",
+    ),
+    "spell_batch_note_or_wire",
+  );
+  assert.equal(
+    spellWorkFamily(
+      { id: "detect_magic", name: "Detect Magic", level: 1, school: "divination", description: "", concentration: false },
+      "review_not_modeled",
+    ),
+    "spell_batch_exploration_policy",
+  );
 });

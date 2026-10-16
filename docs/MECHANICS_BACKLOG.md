@@ -2,7 +2,7 @@
 
 Shared design specs for clearing the admin **Missing mechanic (combat)** queue. Nothing is **Enabled for players** until `missingMechanic` is false (`inPlay` in [`content-catalog.ts`](../backend/src/local/content-catalog.ts)).
 
-**Measure progress:** `npm run content:gap-report` (same totals as Admin → Content).
+**Measure progress:** `npm run content:gap-report` (same totals as Admin → Content). The report lists **work families** (batch groupings by shared fix) plus per-kind spell/item/monster breakdown — use those to pick the next wave, not single-row triage.
 
 ## Progress
 
