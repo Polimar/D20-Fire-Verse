@@ -1,0 +1,2560 @@
+{
+  "spell_alarm": {
+    "id": "spell_alarm",
+    "name": "Alarm",
+    "actionType": "action",
+    "level": 1,
+    "combat": false,
+    "sheetOnly": true,
+    "effects": [
+      {
+        "type": "sheet_spell",
+        "summary": "Wards an area against intrusion (out of combat).",
+        "slot": 1
+      }
+    ]
+  },
+  "spell_animate_dead": {
+    "id": "spell_animate_dead",
+    "name": "Animate Dead",
+    "actionType": "action",
+    "level": 3,
+    "combat": false,
+    "sheetOnly": true,
+    "effects": [
+      {
+        "type": "sheet_spell",
+        "summary": "Creates undead servants outside the arena grid.",
+        "slot": 3
+      }
+    ]
+  },
+  "spell_arcane_eye": {
+    "id": "spell_arcane_eye",
+    "name": "Arcane Eye",
+    "actionType": "action",
+    "level": 4,
+    "combat": false,
+    "sheetOnly": true,
+    "effects": [
+      {
+        "type": "sheet_spell",
+        "summary": "Invisible scouting eye for exploration.",
+        "slot": 4
+      }
+    ]
+  },
+  "spell_arcane_lock": {
+    "id": "spell_arcane_lock",
+    "name": "Arcane Lock",
+    "actionType": "action",
+    "level": 2,
+    "combat": false,
+    "sheetOnly": true,
+    "effects": [
+      {
+        "type": "sheet_spell",
+        "summary": "Magically seals a door or chest.",
+        "slot": 2
+      }
+    ]
+  },
+  "spell_astral_projection": {
+    "id": "spell_astral_projection",
+    "name": "Astral Projection",
+    "actionType": "action",
+    "level": 9,
+    "combat": false,
+    "sheetOnly": true,
+    "effects": [
+      {
+        "type": "sheet_spell",
+        "summary": "Projects the party onto the Astral Plane (travel).",
+        "slot": 9
+      }
+    ]
+  },
+  "spell_clairvoyance": {
+    "id": "spell_clairvoyance",
+    "name": "Clairvoyance",
+    "actionType": "action",
+    "level": 3,
+    "combat": false,
+    "sheetOnly": true,
+    "effects": [
+      {
+        "type": "sheet_spell",
+        "summary": "Creates a sensing organ at a known place.",
+        "slot": 3
+      }
+    ]
+  },
+  "spell_commune": {
+    "id": "spell_commune",
+    "name": "Commune",
+    "actionType": "action",
+    "level": 5,
+    "combat": false,
+    "sheetOnly": true,
+    "effects": [
+      {
+        "type": "sheet_spell",
+        "summary": "Asks the gods yes/no questions between scenes.",
+        "slot": 5
+      }
+    ]
+  },
+  "spell_commune_with_nature": {
+    "id": "spell_commune_with_nature",
+    "name": "Commune with Nature",
+    "actionType": "action",
+    "level": 5,
+    "combat": false,
+    "sheetOnly": true,
+    "effects": [
+      {
+        "type": "sheet_spell",
+        "summary": "Learns terrain facts in the wild.",
+        "slot": 5
+      }
+    ]
+  },
+  "spell_comprehend_languages": {
+    "id": "spell_comprehend_languages",
+    "name": "Comprehend Languages",
+    "actionType": "action",
+    "level": 1,
+    "combat": false,
+    "sheetOnly": true,
+    "effects": [
+      {
+        "type": "sheet_spell",
+        "summary": "Understands spoken and written languages.",
+        "slot": 1
+      }
+    ]
+  },
+  "spell_dancing_lights": {
+    "id": "spell_dancing_lights",
+    "name": "Dancing Lights",
+    "actionType": "action",
+    "level": 0,
+    "combat": false,
+    "sheetOnly": true,
+    "effects": [
+      {
+        "type": "sheet_spell",
+        "summary": "Creates harmless floating lights.",
+        "slot": 0
+      }
+    ]
+  },
+  "spell_demiplane": {
+    "id": "spell_demiplane",
+    "name": "Demiplane",
+    "actionType": "action",
+    "level": 8,
+    "combat": false,
+    "sheetOnly": true,
+    "effects": [
+      {
+        "type": "sheet_spell",
+        "summary": "Opens a door to a private extradimensional room.",
+        "slot": 8
+      }
+    ]
+  },
+  "spell_detect_evil_and_good": {
+    "id": "spell_detect_evil_and_good",
+    "name": "Detect Evil and Good",
+    "actionType": "action",
+    "level": 1,
+    "combat": false,
+    "sheetOnly": true,
+    "effects": [
+      {
+        "type": "sheet_spell",
+        "summary": "Senses aberrations, celestials, elementals, fey, fiends, undead.",
+        "slot": 1
+      }
+    ]
+  },
+  "spell_detect_magic": {
+    "id": "spell_detect_magic",
+    "name": "Detect Magic",
+    "actionType": "action",
+    "level": 1,
+    "combat": false,
+    "sheetOnly": true,
+    "effects": [
+      {
+        "type": "sheet_spell",
+        "summary": "Senses magic auras nearby (out of combat).",
+        "slot": 1
+      }
+    ]
+  },
+  "spell_detect_poison_and_disease": {
+    "id": "spell_detect_poison_and_disease",
+    "name": "Detect Poison and Disease",
+    "actionType": "action",
+    "level": 1,
+    "combat": false,
+    "sheetOnly": true,
+    "effects": [
+      {
+        "type": "sheet_spell",
+        "summary": "Senses poisons, venomous creatures, and disease.",
+        "slot": 1
+      }
+    ]
+  },
+  "spell_disguise_self": {
+    "id": "spell_disguise_self",
+    "name": "Disguise Self",
+    "actionType": "action",
+    "level": 1,
+    "combat": false,
+    "sheetOnly": true,
+    "effects": [
+      {
+        "type": "sheet_spell",
+        "summary": "Changes appearance until you dismiss it.",
+        "slot": 1
+      }
+    ]
+  },
+  "spell_divination": {
+    "id": "spell_divination",
+    "name": "Divination",
+    "actionType": "action",
+    "level": 4,
+    "combat": false,
+    "sheetOnly": true,
+    "effects": [
+      {
+        "type": "sheet_spell",
+        "summary": "Receives a truthful reply about a goal.",
+        "slot": 4
+      }
+    ]
+  },
+  "spell_etherealness": {
+    "id": "spell_etherealness",
+    "name": "Etherealness",
+    "actionType": "action",
+    "level": 7,
+    "combat": false,
+    "sheetOnly": true,
+    "effects": [
+      {
+        "type": "sheet_spell",
+        "summary": "Steps into the Border Ethereal for travel.",
+        "slot": 7
+      }
+    ]
+  },
+  "spell_expeditious_retreat": {
+    "id": "spell_expeditious_retreat",
+    "name": "Expeditious Retreat",
+    "actionType": "bonus_action",
+    "level": 1,
+    "combat": false,
+    "sheetOnly": true,
+    "effects": [
+      {
+        "type": "sheet_spell",
+        "summary": "Dash as a bonus action out of grid fights.",
+        "slot": 1
+      }
+    ]
+  },
+  "spell_fabricate": {
+    "id": "spell_fabricate",
+    "name": "Fabricate",
+    "actionType": "action",
+    "level": 4,
+    "combat": false,
+    "sheetOnly": true,
+    "effects": [
+      {
+        "type": "sheet_spell",
+        "summary": "Converts raw materials into finished goods.",
+        "slot": 4
+      }
+    ]
+  },
+  "spell_feather_fall": {
+    "id": "spell_feather_fall",
+    "name": "Feather Fall",
+    "actionType": "reaction",
+    "level": 1,
+    "combat": false,
+    "sheetOnly": true,
+    "effects": [
+      {
+        "type": "sheet_spell",
+        "summary": "Slows falling (story beats, not arena).",
+        "slot": 1
+      }
+    ]
+  },
+  "spell_find_traps": {
+    "id": "spell_find_traps",
+    "name": "Find Traps",
+    "actionType": "action",
+    "level": 2,
+    "combat": false,
+    "sheetOnly": true,
+    "effects": [
+      {
+        "type": "sheet_spell",
+        "summary": "Hints at traps in the current area.",
+        "slot": 2
+      }
+    ]
+  },
+  "spell_forbiddance": {
+    "id": "spell_forbiddance",
+    "name": "Forbiddance",
+    "actionType": "action",
+    "level": 6,
+    "combat": false,
+    "sheetOnly": true,
+    "effects": [
+      {
+        "type": "sheet_spell",
+        "summary": "Wards a site against teleportation and planar travel.",
+        "slot": 6
+      }
+    ]
+  },
+  "spell_freedom_of_movement": {
+    "id": "spell_freedom_of_movement",
+    "name": "Freedom of Movement",
+    "actionType": "action",
+    "level": 4,
+    "combat": false,
+    "sheetOnly": true,
+    "effects": [
+      {
+        "type": "sheet_spell",
+        "summary": "Ignores restraints while exploring.",
+        "slot": 4
+      }
+    ]
+  },
+  "spell_gate": {
+    "id": "spell_gate",
+    "name": "Gate",
+    "actionType": "action",
+    "level": 9,
+    "combat": false,
+    "sheetOnly": true,
+    "effects": [
+      {
+        "type": "sheet_spell",
+        "summary": "Opens a portal between planes.",
+        "slot": 9
+      }
+    ]
+  },
+  "spell_gentle_repose": {
+    "id": "spell_gentle_repose",
+    "name": "Gentle Repose",
+    "actionType": "action",
+    "level": 2,
+    "combat": false,
+    "sheetOnly": true,
+    "effects": [
+      {
+        "type": "sheet_spell",
+        "summary": "Preserves a corpse from decay.",
+        "slot": 2
+      }
+    ]
+  },
+  "spell_hallucinatory_terrain": {
+    "id": "spell_hallucinatory_terrain",
+    "name": "Hallucinatory Terrain",
+    "actionType": "action",
+    "level": 4,
+    "combat": false,
+    "sheetOnly": true,
+    "effects": [
+      {
+        "type": "sheet_spell",
+        "summary": "Makes terrain look like something else.",
+        "slot": 4
+      }
+    ]
+  },
+  "spell_identify": {
+    "id": "spell_identify",
+    "name": "Identify",
+    "actionType": "action",
+    "level": 1,
+    "combat": false,
+    "sheetOnly": true,
+    "effects": [
+      {
+        "type": "sheet_spell",
+        "summary": "Learns the properties of a magic item.",
+        "slot": 1
+      }
+    ]
+  },
+  "spell_instant_summons": {
+    "id": "spell_instant_summons",
+    "name": "Instant Summons",
+    "actionType": "action",
+    "level": 6,
+    "combat": false,
+    "sheetOnly": true,
+    "effects": [
+      {
+        "type": "sheet_spell",
+        "summary": "Marks an item to summon later.",
+        "slot": 6
+      }
+    ]
+  },
+  "spell_jump": {
+    "id": "spell_jump",
+    "name": "Jump",
+    "actionType": "bonus_action",
+    "level": 1,
+    "combat": false,
+    "sheetOnly": true,
+    "effects": [
+      {
+        "type": "sheet_spell",
+        "summary": "Triples jump distance outside combat grid.",
+        "slot": 1
+      }
+    ]
+  },
+  "spell_knock": {
+    "id": "spell_knock",
+    "name": "Knock",
+    "actionType": "action",
+    "level": 2,
+    "combat": false,
+    "sheetOnly": true,
+    "effects": [
+      {
+        "type": "sheet_spell",
+        "summary": "Opens a locked object.",
+        "slot": 2
+      }
+    ]
+  },
+  "spell_legend_lore": {
+    "id": "spell_legend_lore",
+    "name": "Legend Lore",
+    "actionType": "action",
+    "level": 5,
+    "combat": false,
+    "sheetOnly": true,
+    "effects": [
+      {
+        "type": "sheet_spell",
+        "summary": "Learns lore about a famous person or place.",
+        "slot": 5
+      }
+    ]
+  },
+  "spell_light": {
+    "id": "spell_light",
+    "name": "Light",
+    "actionType": "action",
+    "level": 0,
+    "combat": false,
+    "sheetOnly": true,
+    "effects": [
+      {
+        "type": "sheet_spell",
+        "summary": "Makes an object shed bright light.",
+        "slot": 0
+      }
+    ]
+  },
+  "spell_locate_animals_or_plants": {
+    "id": "spell_locate_animals_or_plants",
+    "name": "Locate Animals or Plants",
+    "actionType": "action",
+    "level": 2,
+    "combat": false,
+    "sheetOnly": true,
+    "effects": [
+      {
+        "type": "sheet_spell",
+        "summary": "Points toward a kind of beast or plant.",
+        "slot": 2
+      }
+    ]
+  },
+  "spell_locate_creature": {
+    "id": "spell_locate_creature",
+    "name": "Locate Creature",
+    "actionType": "action",
+    "level": 4,
+    "combat": false,
+    "sheetOnly": true,
+    "effects": [
+      {
+        "type": "sheet_spell",
+        "summary": "Points toward a known creature.",
+        "slot": 4
+      }
+    ]
+  },
+  "spell_locate_object": {
+    "id": "spell_locate_object",
+    "name": "Locate Object",
+    "actionType": "action",
+    "level": 2,
+    "combat": false,
+    "sheetOnly": true,
+    "effects": [
+      {
+        "type": "sheet_spell",
+        "summary": "Points toward a familiar object.",
+        "slot": 2
+      }
+    ]
+  },
+  "spell_mage_hand": {
+    "id": "spell_mage_hand",
+    "name": "Mage Hand",
+    "actionType": "action",
+    "level": 0,
+    "combat": false,
+    "sheetOnly": true,
+    "effects": [
+      {
+        "type": "sheet_spell",
+        "summary": "Invisible hand for light manipulation.",
+        "slot": 0
+      }
+    ]
+  },
+  "spell_magic_mouth": {
+    "id": "spell_magic_mouth",
+    "name": "Magic Mouth",
+    "actionType": "action",
+    "level": 2,
+    "combat": false,
+    "sheetOnly": true,
+    "effects": [
+      {
+        "type": "sheet_spell",
+        "summary": "Stores a spoken message on an object.",
+        "slot": 2
+      }
+    ]
+  },
+  "spell_magnificent_mansion": {
+    "id": "spell_magnificent_mansion",
+    "name": "Magnificent Mansion",
+    "actionType": "action",
+    "level": 7,
+    "combat": false,
+    "sheetOnly": true,
+    "effects": [
+      {
+        "type": "sheet_spell",
+        "summary": "Creates an extradimensional dwelling.",
+        "slot": 7
+      }
+    ]
+  },
+  "spell_major_image": {
+    "id": "spell_major_image",
+    "name": "Major Image",
+    "actionType": "action",
+    "level": 3,
+    "combat": false,
+    "sheetOnly": true,
+    "effects": [
+      {
+        "type": "sheet_spell",
+        "summary": "Creates a large illusion for roleplay.",
+        "slot": 3
+      }
+    ]
+  },
+  "spell_maze": {
+    "id": "spell_maze",
+    "name": "Maze",
+    "actionType": "action",
+    "level": 8,
+    "combat": false,
+    "sheetOnly": true,
+    "effects": [
+      {
+        "type": "sheet_spell",
+        "summary": "Banishes a creature into a labyrinthine demiplane (story).",
+        "slot": 8
+      }
+    ]
+  },
+  "spell_meld_into_stone": {
+    "id": "spell_meld_into_stone",
+    "name": "Meld into Stone",
+    "actionType": "action",
+    "level": 3,
+    "combat": false,
+    "sheetOnly": true,
+    "effects": [
+      {
+        "type": "sheet_spell",
+        "summary": "Steps into stone for hiding/travel.",
+        "slot": 3
+      }
+    ]
+  },
+  "spell_mending": {
+    "id": "spell_mending",
+    "name": "Mending",
+    "actionType": "action",
+    "level": 0,
+    "combat": false,
+    "sheetOnly": true,
+    "effects": [
+      {
+        "type": "sheet_spell",
+        "summary": "Repairs a break or tear in an object.",
+        "slot": 0
+      }
+    ]
+  },
+  "spell_message": {
+    "id": "spell_message",
+    "name": "Message",
+    "actionType": "action",
+    "level": 0,
+    "combat": false,
+    "sheetOnly": true,
+    "effects": [
+      {
+        "type": "sheet_spell",
+        "summary": "Whispers a short message to a creature.",
+        "slot": 0
+      }
+    ]
+  },
+  "spell_mislead": {
+    "id": "spell_mislead",
+    "name": "Mislead",
+    "actionType": "action",
+    "level": 5,
+    "combat": false,
+    "sheetOnly": true,
+    "effects": [
+      {
+        "type": "sheet_spell",
+        "summary": "Creates an illusory double while you turn invisible (story).",
+        "slot": 5
+      }
+    ]
+  },
+  "spell_move_earth": {
+    "id": "spell_move_earth",
+    "name": "Move Earth",
+    "actionType": "action",
+    "level": 6,
+    "combat": false,
+    "sheetOnly": true,
+    "effects": [
+      {
+        "type": "sheet_spell",
+        "summary": "Reshapes dirt or stone in the field.",
+        "slot": 6
+      }
+    ]
+  },
+  "spell_nondetection": {
+    "id": "spell_nondetection",
+    "name": "Nondetection",
+    "actionType": "action",
+    "level": 3,
+    "combat": false,
+    "sheetOnly": true,
+    "effects": [
+      {
+        "type": "sheet_spell",
+        "summary": "Hides a target from divination magic.",
+        "slot": 3
+      }
+    ]
+  },
+  "spell_pass_without_trace": {
+    "id": "spell_pass_without_trace",
+    "name": "Pass without Trace",
+    "actionType": "action",
+    "level": 2,
+    "combat": false,
+    "sheetOnly": true,
+    "effects": [
+      {
+        "type": "sheet_spell",
+        "summary": "Leaves no tracks while traveling.",
+        "slot": 2
+      }
+    ]
+  },
+  "spell_plane_shift": {
+    "id": "spell_plane_shift",
+    "name": "Plane Shift",
+    "actionType": "action",
+    "level": 7,
+    "combat": false,
+    "sheetOnly": true,
+    "effects": [
+      {
+        "type": "sheet_spell",
+        "summary": "Transports creatures to another plane.",
+        "slot": 7
+      }
+    ]
+  },
+  "spell_plant_growth": {
+    "id": "spell_plant_growth",
+    "name": "Plant Growth",
+    "actionType": "action",
+    "level": 3,
+    "combat": false,
+    "sheetOnly": true,
+    "effects": [
+      {
+        "type": "sheet_spell",
+        "summary": "Enriches or overgrows plants in a region.",
+        "slot": 3
+      }
+    ]
+  },
+  "spell_private_sanctum": {
+    "id": "spell_private_sanctum",
+    "name": "Private Sanctum",
+    "actionType": "action",
+    "level": 4,
+    "combat": false,
+    "sheetOnly": true,
+    "effects": [
+      {
+        "type": "sheet_spell",
+        "summary": "Wards an area against scrying and travel.",
+        "slot": 4
+      }
+    ]
+  },
+  "spell_purify_food_and_drink": {
+    "id": "spell_purify_food_and_drink",
+    "name": "Purify Food and Drink",
+    "actionType": "action",
+    "level": 1,
+    "combat": false,
+    "sheetOnly": true,
+    "effects": [
+      {
+        "type": "sheet_spell",
+        "summary": "Purifies spoiled food and drink.",
+        "slot": 1
+      }
+    ]
+  },
+  "spell_reincarnate": {
+    "id": "spell_reincarnate",
+    "name": "Reincarnate",
+    "actionType": "action",
+    "level": 5,
+    "combat": false,
+    "sheetOnly": true,
+    "effects": [
+      {
+        "type": "sheet_spell",
+        "summary": "Returns a dead humanoid in a new body (story).",
+        "slot": 5
+      }
+    ]
+  },
+  "spell_rope_trick": {
+    "id": "spell_rope_trick",
+    "name": "Rope Trick",
+    "actionType": "action",
+    "level": 2,
+    "combat": false,
+    "sheetOnly": true,
+    "effects": [
+      {
+        "type": "sheet_spell",
+        "summary": "Creates an extradimensional refuge.",
+        "slot": 2
+      }
+    ]
+  },
+  "spell_secret_chest": {
+    "id": "spell_secret_chest",
+    "name": "Secret Chest",
+    "actionType": "action",
+    "level": 4,
+    "combat": false,
+    "sheetOnly": true,
+    "effects": [
+      {
+        "type": "sheet_spell",
+        "summary": "Hides a chest on the Ethereal Plane.",
+        "slot": 4
+      }
+    ]
+  },
+  "spell_sending": {
+    "id": "spell_sending",
+    "name": "Sending",
+    "actionType": "action",
+    "level": 3,
+    "combat": false,
+    "sheetOnly": true,
+    "effects": [
+      {
+        "type": "sheet_spell",
+        "summary": "Sends a short message across any distance.",
+        "slot": 3
+      }
+    ]
+  },
+  "spell_heal": {
+    "id": "spell_heal",
+    "name": "Heal",
+    "actionType": "action",
+    "level": 6,
+    "combat": true,
+    "effects": [
+      {
+        "type": "heal",
+        "dice": "7d8+30",
+        "rangeCells": 12,
+        "slot": 6
+      }
+    ]
+  },
+  "spell_mass_heal": {
+    "id": "spell_mass_heal",
+    "name": "Mass Heal",
+    "actionType": "action",
+    "level": 9,
+    "combat": true,
+    "effects": [
+      {
+        "type": "heal",
+        "pool": 700,
+        "mass": 6,
+        "rangeCells": 12,
+        "slot": 9,
+        "dice": "0"
+      }
+    ]
+  },
+  "spell_goodberry": {
+    "id": "spell_goodberry",
+    "name": "Goodberry",
+    "actionType": "action",
+    "level": 1,
+    "combat": true,
+    "effects": [
+      {
+        "type": "goodberry",
+        "berries": 10,
+        "slot": 1
+      }
+    ]
+  },
+  "spell_greater_restoration": {
+    "id": "spell_greater_restoration",
+    "name": "Greater Restoration",
+    "actionType": "action",
+    "level": 5,
+    "combat": true,
+    "effects": [
+      {
+        "type": "restore",
+        "rangeCells": 1,
+        "slot": 5,
+        "clearConditions": [
+          "charmed",
+          "petrified",
+          "cursed"
+        ],
+        "clearExhaustion": 1
+      }
+    ]
+  },
+  "spell_remove_curse": {
+    "id": "spell_remove_curse",
+    "name": "Remove Curse",
+    "actionType": "action",
+    "level": 3,
+    "combat": true,
+    "effects": [
+      {
+        "type": "restore",
+        "rangeCells": 1,
+        "slot": 3,
+        "clearConditions": [
+          "cursed"
+        ]
+      }
+    ]
+  },
+  "spell_revivify": {
+    "id": "spell_revivify",
+    "name": "Revivify",
+    "actionType": "action",
+    "level": 3,
+    "combat": true,
+    "effects": [
+      {
+        "type": "revive",
+        "rangeCells": 1,
+        "slot": 3,
+        "hp": 1,
+        "prone": true
+      }
+    ]
+  },
+  "spell_raise_dead": {
+    "id": "spell_raise_dead",
+    "name": "Raise Dead",
+    "actionType": "action",
+    "level": 5,
+    "combat": true,
+    "effects": [
+      {
+        "type": "revive",
+        "rangeCells": 1,
+        "slot": 5,
+        "hp": 1,
+        "prone": true
+      }
+    ]
+  },
+  "spell_resurrection": {
+    "id": "spell_resurrection",
+    "name": "Resurrection",
+    "actionType": "action",
+    "level": 7,
+    "combat": true,
+    "effects": [
+      {
+        "type": "revive",
+        "rangeCells": 1,
+        "slot": 7,
+        "hpHalf": true,
+        "prone": true
+      }
+    ]
+  },
+  "spell_power_word_heal": {
+    "id": "spell_power_word_heal",
+    "name": "Power Word Heal",
+    "actionType": "action",
+    "level": 9,
+    "combat": true,
+    "effects": [
+      {
+        "type": "power_word",
+        "kind": "heal",
+        "dice": "9d8+40",
+        "rangeCells": 12,
+        "slot": 9
+      }
+    ]
+  },
+  "spell_false_life": {
+    "id": "spell_false_life",
+    "name": "False Life",
+    "actionType": "action",
+    "level": 1,
+    "combat": true,
+    "effects": [
+      {
+        "type": "temp_hp",
+        "dice": "2d4+4",
+        "self": true,
+        "slot": 1,
+        "scalingTemp": 5
+      }
+    ]
+  },
+  "spell_heroes_feast": {
+    "id": "spell_heroes_feast",
+    "name": "Heroes' Feast",
+    "actionType": "action",
+    "level": 6,
+    "combat": true,
+    "effects": [
+      {
+        "type": "heroes_feast",
+        "tempDice": "2d10",
+        "durationPcTurns": 10,
+        "slot": 6
+      }
+    ]
+  },
+  "spell_death_ward": {
+    "id": "spell_death_ward",
+    "name": "Death Ward",
+    "actionType": "action",
+    "level": 4,
+    "combat": true,
+    "effects": [
+      {
+        "type": "death_ward",
+        "rangeCells": 1,
+        "durationPcTurns": 10,
+        "slot": 4
+      }
+    ]
+  },
+  "spell_enhance_ability": {
+    "id": "spell_enhance_ability",
+    "name": "Enhance Ability",
+    "actionType": "action",
+    "level": 2,
+    "combat": true,
+    "effects": [
+      {
+        "type": "enhance_ability",
+        "ability": "str",
+        "rangeCells": 1,
+        "concentration": true,
+        "slot": 2
+      }
+    ]
+  },
+  "spell_foresight": {
+    "id": "spell_foresight",
+    "name": "Foresight",
+    "actionType": "action",
+    "level": 9,
+    "combat": true,
+    "effects": [
+      {
+        "type": "foresight",
+        "rangeCells": 12,
+        "concentration": true,
+        "durationPcTurns": 10,
+        "slot": 9
+      }
+    ]
+  },
+  "spell_heroism": {
+    "id": "spell_heroism",
+    "name": "Heroism",
+    "actionType": "action",
+    "level": 1,
+    "combat": true,
+    "effects": [
+      {
+        "type": "heroism",
+        "rangeCells": 1,
+        "tempHp": 5,
+        "concentration": true,
+        "slot": 1
+      }
+    ]
+  },
+  "spell_guidance": {
+    "id": "spell_guidance",
+    "name": "Guidance",
+    "actionType": "action",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "guidance",
+        "rangeCells": 1,
+        "concentration": true,
+        "slot": 0
+      }
+    ]
+  },
+  "spell_divine_favor": {
+    "id": "spell_divine_favor",
+    "name": "Divine Favor",
+    "actionType": "bonus_action",
+    "level": 1,
+    "combat": true,
+    "effects": [
+      {
+        "type": "next_hit_rider",
+        "dice": "1d4",
+        "damageType": "radiant",
+        "self": true,
+        "durationPcTurns": 10,
+        "concentration": true,
+        "slot": 1
+      }
+    ]
+  },
+  "spell_longstrider": {
+    "id": "spell_longstrider",
+    "name": "Longstrider",
+    "actionType": "action",
+    "level": 1,
+    "combat": true,
+    "effects": [
+      {
+        "type": "speed_buff",
+        "amount": 2,
+        "rangeCells": 1,
+        "durationPcTurns": 10,
+        "slot": 1
+      }
+    ]
+  },
+  "spell_darkvision": {
+    "id": "spell_darkvision",
+    "name": "Darkvision",
+    "actionType": "action",
+    "level": 2,
+    "combat": true,
+    "effects": [
+      {
+        "type": "flag_buff",
+        "flag": "darkvision",
+        "rangeCells": 1,
+        "durationPcTurns": 10,
+        "slot": 2
+      }
+    ]
+  },
+  "spell_fly": {
+    "id": "spell_fly",
+    "name": "Fly",
+    "actionType": "action",
+    "level": 3,
+    "combat": true,
+    "effects": [
+      {
+        "type": "fly",
+        "flySpeedCells": 12,
+        "rangeCells": 1,
+        "concentration": true,
+        "durationPcTurns": 10,
+        "slot": 3
+      }
+    ]
+  },
+  "spell_protection_from_evil_and_good": {
+    "id": "spell_protection_from_evil_and_good",
+    "name": "Protection from Evil and Good",
+    "actionType": "action",
+    "level": 1,
+    "combat": true,
+    "effects": [
+      {
+        "type": "ward",
+        "acBonus": 0,
+        "saveBonus": 1,
+        "rangeCells": 1,
+        "concentration": true,
+        "slot": 1
+      }
+    ]
+  },
+  "spell_protection_from_energy": {
+    "id": "spell_protection_from_energy",
+    "name": "Protection from Energy",
+    "actionType": "action",
+    "level": 3,
+    "combat": true,
+    "effects": [
+      {
+        "type": "resistance_buff",
+        "damageType": "fire",
+        "rangeCells": 1,
+        "concentration": true,
+        "durationPcTurns": 10,
+        "slot": 3
+      }
+    ]
+  },
+  "spell_protection_from_poison": {
+    "id": "spell_protection_from_poison",
+    "name": "Protection from Poison",
+    "actionType": "action",
+    "level": 2,
+    "combat": true,
+    "effects": [
+      {
+        "type": "restore",
+        "rangeCells": 1,
+        "slot": 2,
+        "clearConditions": [
+          "poisoned"
+        ],
+        "immunePoison": true,
+        "durationPcTurns": 10
+      }
+    ]
+  },
+  "spell_resistance": {
+    "id": "spell_resistance",
+    "name": "Resistance",
+    "actionType": "action",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "resistance_buff",
+        "damageType": "fire",
+        "rangeCells": 1,
+        "concentration": true,
+        "durationPcTurns": 10,
+        "slot": 0
+      }
+    ]
+  },
+  "spell_mind_blank": {
+    "id": "spell_mind_blank",
+    "name": "Mind Blank",
+    "actionType": "action",
+    "level": 8,
+    "combat": true,
+    "effects": [
+      {
+        "type": "flag_buff",
+        "flag": "mindBlank",
+        "self": true,
+        "durationPcTurns": 10,
+        "slot": 8
+      }
+    ]
+  },
+  "spell_glibness": {
+    "id": "spell_glibness",
+    "name": "Glibness",
+    "actionType": "action",
+    "level": 8,
+    "combat": true,
+    "effects": [
+      {
+        "type": "flag_buff",
+        "flag": "glibness",
+        "self": true,
+        "durationPcTurns": 10,
+        "slot": 8
+      }
+    ]
+  },
+  "spell_greater_invisibility": {
+    "id": "spell_greater_invisibility",
+    "name": "Greater Invisibility",
+    "actionType": "action",
+    "level": 4,
+    "combat": true,
+    "effects": [
+      {
+        "type": "ward",
+        "invisible": true,
+        "greaterInvis": true,
+        "rangeCells": 1,
+        "concentration": true,
+        "slot": 4
+      }
+    ]
+  },
+  "spell_see_invisibility": {
+    "id": "spell_see_invisibility",
+    "name": "See Invisibility",
+    "actionType": "action",
+    "level": 2,
+    "combat": true,
+    "effects": [
+      {
+        "type": "flag_buff",
+        "flag": "seeInvisible",
+        "self": true,
+        "durationPcTurns": 10,
+        "slot": 2
+      }
+    ]
+  },
+  "spell_fire_shield": {
+    "id": "spell_fire_shield",
+    "name": "Fire Shield",
+    "actionType": "action",
+    "level": 4,
+    "combat": true,
+    "effects": [
+      {
+        "type": "fire_shield",
+        "mode": "warm",
+        "durationPcTurns": 10,
+        "slot": 4
+      }
+    ]
+  },
+  "spell_aura_of_life": {
+    "id": "spell_aura_of_life",
+    "name": "Aura of Life",
+    "actionType": "action",
+    "level": 4,
+    "combat": true,
+    "effects": [
+      {
+        "type": "concentration_aura",
+        "origin": "self",
+        "radiusCells": 6,
+        "filter": "ally",
+        "resistances": [
+          "necrotic"
+        ],
+        "onEnterOrEndTurn": {
+          "heal": 1
+        },
+        "concentration": true,
+        "slot": 4
+      }
+    ]
+  },
+  "spell_hallow": {
+    "id": "spell_hallow",
+    "name": "Hallow",
+    "actionType": "action",
+    "level": 5,
+    "combat": true,
+    "effects": [
+      {
+        "type": "concentration_aura",
+        "origin": "cell",
+        "radiusCells": 2,
+        "filter": "enemy",
+        "rangeCells": 12,
+        "onEnterOrEndTurn": {
+          "saveAbility": "wis",
+          "dice": "0",
+          "damageType": "radiant"
+        },
+        "concentration": true,
+        "slot": 5
+      }
+    ]
+  },
+  "spell_guards_and_wards": {
+    "id": "spell_guards_and_wards",
+    "name": "Guards and Wards",
+    "actionType": "action",
+    "level": 6,
+    "combat": true,
+    "effects": [
+      {
+        "type": "concentration_aura",
+        "origin": "cell",
+        "radiusCells": 6,
+        "filter": "enemy",
+        "rangeCells": 12,
+        "difficultTerrainFor": "enemy",
+        "onEnterOrEndTurn": {
+          "saveAbility": "dex",
+          "dice": "2d8",
+          "damageType": "force",
+          "halfOnSuccess": true
+        },
+        "concentration": true,
+        "slot": 6
+      }
+    ]
+  },
+  "spell_continual_flame": {
+    "id": "spell_continual_flame",
+    "name": "Continual Flame",
+    "actionType": "action",
+    "level": 2,
+    "combat": true,
+    "effects": [
+      {
+        "type": "flag_buff",
+        "flag": "continualFlame",
+        "self": true,
+        "durationPcTurns": 10,
+        "slot": 2
+      }
+    ]
+  },
+  "spell_control_weather": {
+    "id": "spell_control_weather",
+    "name": "Control Weather",
+    "actionType": "action",
+    "level": 8,
+    "combat": true,
+    "effects": [
+      {
+        "type": "flag_buff",
+        "flag": "weatherIgnore",
+        "durationPcTurns": 10,
+        "slot": 8,
+        "party": true
+      }
+    ]
+  },
+  "spell_fog_cloud": {
+    "id": "spell_fog_cloud",
+    "name": "Fog Cloud",
+    "actionType": "action",
+    "level": 1,
+    "combat": true,
+    "effects": [
+      {
+        "type": "concentration_aura",
+        "origin": "cell",
+        "radiusCells": 4,
+        "filter": "all",
+        "heavilyObscured": true,
+        "rangeCells": 24,
+        "concentration": true,
+        "slot": 1
+      }
+    ]
+  },
+  "spell_daylight": {
+    "id": "spell_daylight",
+    "name": "Daylight",
+    "actionType": "action",
+    "level": 3,
+    "combat": true,
+    "effects": [
+      {
+        "type": "daylight",
+        "radiusCells": 12,
+        "rangeCells": 12,
+        "durationPcTurns": 10,
+        "slot": 3
+      }
+    ]
+  },
+  "spell_antilife_shell": {
+    "id": "spell_antilife_shell",
+    "name": "Antilife Shell",
+    "actionType": "action",
+    "level": 5,
+    "combat": true,
+    "effects": [
+      {
+        "type": "concentration_aura",
+        "origin": "self",
+        "radiusCells": 2,
+        "filter": "enemy",
+        "blocksMovement": true,
+        "passCreatureTypes": [
+          "undead",
+          "construct"
+        ],
+        "concentration": true,
+        "slot": 5
+      }
+    ]
+  },
+  "spell_antimagic_field": {
+    "id": "spell_antimagic_field",
+    "name": "Antimagic Field",
+    "actionType": "action",
+    "level": 8,
+    "combat": true,
+    "effects": [
+      {
+        "type": "concentration_aura",
+        "origin": "self",
+        "radiusCells": 2,
+        "filter": "all",
+        "antimagicInside": true,
+        "concentration": true,
+        "slot": 8
+      }
+    ]
+  },
+  "spell_globe_of_invulnerability": {
+    "id": "spell_globe_of_invulnerability",
+    "name": "Globe of Invulnerability",
+    "actionType": "action",
+    "level": 6,
+    "combat": true,
+    "effects": [
+      {
+        "type": "concentration_aura",
+        "origin": "self",
+        "radiusCells": 2,
+        "filter": "ally",
+        "spellImmunityMaxLevel": 6,
+        "concentration": true,
+        "slot": 6
+      }
+    ]
+  },
+  "spell_mirage_arcane": {
+    "id": "spell_mirage_arcane",
+    "name": "Mirage Arcane",
+    "actionType": "action",
+    "level": 7,
+    "combat": true,
+    "effects": [
+      {
+        "type": "concentration_aura",
+        "origin": "cell",
+        "radiusCells": 20,
+        "filter": "all",
+        "heavilyObscured": true,
+        "difficultTerrainFor": "enemy",
+        "rangeCells": 24,
+        "concentration": true,
+        "slot": 7
+      }
+    ]
+  },
+  "spell_programmed_illusion": {
+    "id": "spell_programmed_illusion",
+    "name": "Programmed Illusion",
+    "actionType": "action",
+    "level": 6,
+    "combat": true,
+    "effects": [
+      {
+        "type": "programmed_illusion",
+        "rangeCells": 24,
+        "slot": 6
+      }
+    ]
+  },
+  "spell_project_image": {
+    "id": "spell_project_image",
+    "name": "Project Image",
+    "actionType": "action",
+    "level": 7,
+    "combat": true,
+    "effects": [
+      {
+        "type": "project_image",
+        "rangeCells": 100,
+        "concentration": true,
+        "slot": 7
+      }
+    ]
+  },
+  "spell_flame_blade": {
+    "id": "spell_flame_blade",
+    "name": "Flame Blade",
+    "actionType": "bonus_action",
+    "level": 2,
+    "combat": true,
+    "effects": [
+      {
+        "type": "attack",
+        "spellAttack": true,
+        "ability": "spell",
+        "rangeCells": 1,
+        "damage": [
+          {
+            "dice": "3d6",
+            "damageType": "fire"
+          }
+        ],
+        "concentration": true,
+        "slot": 2
+      }
+    ]
+  },
+  "spell_divine_smite": {
+    "id": "spell_divine_smite",
+    "name": "Divine Smite",
+    "actionType": "reaction",
+    "level": 1,
+    "combat": true,
+    "effects": [
+      {
+        "type": "divine_smite",
+        "dice": "2d8",
+        "damageType": "radiant",
+        "slot": 1
+      }
+    ]
+  },
+  "spell_power_word_kill": {
+    "id": "spell_power_word_kill",
+    "name": "Power Word Kill",
+    "actionType": "action",
+    "level": 9,
+    "combat": true,
+    "effects": [
+      {
+        "type": "power_word",
+        "kind": "kill",
+        "hpThreshold": 100,
+        "rangeCells": 12,
+        "slot": 9
+      }
+    ]
+  },
+  "spell_minor_illusion": {
+    "id": "spell_minor_illusion",
+    "name": "Minor Illusion",
+    "actionType": "action",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "illusion",
+        "rangeCells": 6,
+        "durationPcTurns": 10,
+        "slot": 0
+      }
+    ]
+  },
+  "spell_mirror_image": {
+    "id": "spell_mirror_image",
+    "name": "Mirror Image",
+    "actionType": "action",
+    "level": 2,
+    "combat": true,
+    "effects": [
+      {
+        "type": "mirror_image",
+        "images": 3,
+        "self": true,
+        "durationPcTurns": 10,
+        "slot": 2
+      }
+    ]
+  },
+  "spell_illusory_script": {
+    "id": "spell_illusory_script",
+    "name": "Illusory Script",
+    "actionType": "action",
+    "level": 1,
+    "combat": true,
+    "effects": [
+      {
+        "type": "save",
+        "shape": "one",
+        "ability": "wis",
+        "dcFrom": "spell",
+        "rangeCells": 6,
+        "onFail": "charmed",
+        "halfOnSuccess": false,
+        "slot": 1
+      }
+    ]
+  },
+  "spell_arcanists_magic_aura": {
+    "id": "spell_arcanists_magic_aura",
+    "name": "Arcanist's Magic Aura",
+    "actionType": "action",
+    "level": 2,
+    "combat": true,
+    "effects": [
+      {
+        "type": "flag_buff",
+        "flag": "maskedAura",
+        "rangeCells": 1,
+        "durationPcTurns": 10,
+        "slot": 1
+      }
+    ]
+  },
+  "spell_blink": {
+    "id": "spell_blink",
+    "name": "Blink",
+    "actionType": "action",
+    "level": 3,
+    "combat": true,
+    "effects": [
+      {
+        "type": "blink",
+        "self": true,
+        "concentration": true,
+        "slot": 3
+      }
+    ]
+  },
+  "spell_passwall": {
+    "id": "spell_passwall",
+    "name": "Passwall",
+    "actionType": "action",
+    "level": 5,
+    "combat": true,
+    "effects": [
+      {
+        "type": "teleport",
+        "rangeCells": 6,
+        "throughWall": true,
+        "slot": 5
+      }
+    ]
+  },
+  "spell_floating_disk": {
+    "id": "spell_floating_disk",
+    "name": "Floating Disk",
+    "actionType": "action",
+    "level": 1,
+    "combat": true,
+    "effects": [
+      {
+        "type": "flag_buff",
+        "flag": "floatingDisk",
+        "self": true,
+        "durationPcTurns": 10,
+        "slot": 1
+      }
+    ]
+  },
+  "spell_create_or_destroy_water": {
+    "id": "spell_create_or_destroy_water",
+    "name": "Create or Destroy Water",
+    "actionType": "action",
+    "level": 1,
+    "combat": true,
+    "effects": [
+      {
+        "type": "create_or_destroy_water",
+        "rangeCells": 6,
+        "slot": 1
+      }
+    ]
+  },
+  "spell_create_food_and_water": {
+    "id": "spell_create_food_and_water",
+    "name": "Create Food and Water",
+    "actionType": "action",
+    "level": 3,
+    "combat": true,
+    "effects": [
+      {
+        "type": "grant_inventory",
+        "itemId": "ration",
+        "count": 1,
+        "slot": 3
+      }
+    ]
+  },
+  "spell_find_the_path": {
+    "id": "spell_find_the_path",
+    "name": "Find the Path",
+    "actionType": "action",
+    "level": 6,
+    "combat": true,
+    "effects": [
+      {
+        "type": "flag_buff",
+        "flag": "questHint",
+        "durationPcTurns": 1,
+        "slot": 6,
+        "party": true
+      }
+    ]
+  },
+  "spell_alter_self": {
+    "id": "spell_alter_self",
+    "name": "Alter Self",
+    "actionType": "action",
+    "level": 2,
+    "combat": true,
+    "effects": [
+      {
+        "type": "alter_self",
+        "self": true,
+        "concentration": true,
+        "slot": 2
+      }
+    ]
+  },
+  "spell_animal_shapes": {
+    "id": "spell_animal_shapes",
+    "name": "Animal Shapes",
+    "actionType": "action",
+    "level": 8,
+    "combat": true,
+    "effects": [
+      {
+        "type": "polymorph",
+        "formId": "srd_wolf",
+        "massWilling": true,
+        "rangeCells": 6,
+        "concentration": true,
+        "slot": 8
+      }
+    ]
+  },
+  "spell_animate_objects": {
+    "id": "spell_animate_objects",
+    "name": "Animate Objects",
+    "actionType": "action",
+    "level": 5,
+    "combat": true,
+    "effects": [
+      {
+        "type": "save",
+        "shape": "sphere",
+        "ability": "dex",
+        "dcFrom": "spell",
+        "radius": 2,
+        "rangeCells": 24,
+        "damage": [
+          {
+            "dice": "1d4",
+            "damageType": "bludgeoning"
+          }
+        ],
+        "halfOnSuccess": true,
+        "slot": 5
+      }
+    ]
+  },
+  "spell_create_undead": {
+    "id": "spell_create_undead",
+    "name": "Create Undead",
+    "actionType": "action",
+    "level": 6,
+    "combat": true,
+    "effects": [
+      {
+        "type": "summon",
+        "monsterId": "srd_skeleton",
+        "rangeCells": 12,
+        "concentration": true,
+        "slot": 6
+      }
+    ]
+  },
+  "spell_creation": {
+    "id": "spell_creation",
+    "name": "Creation",
+    "actionType": "action",
+    "level": 5,
+    "combat": true,
+    "effects": [
+      {
+        "type": "grant_inventory",
+        "itemId": "rope",
+        "count": 1,
+        "slot": 5
+      }
+    ]
+  },
+  "spell_awaken": {
+    "id": "spell_awaken",
+    "name": "Awaken",
+    "actionType": "action",
+    "level": 5,
+    "combat": true,
+    "effects": [
+      {
+        "type": "temp_hp",
+        "amount": 10,
+        "rangeCells": 1,
+        "slot": 5
+      }
+    ]
+  },
+  "spell_find_familiar": {
+    "id": "spell_find_familiar",
+    "name": "Find Familiar",
+    "actionType": "action",
+    "level": 1,
+    "combat": true,
+    "effects": [
+      {
+        "type": "familiar",
+        "slot": 1
+      }
+    ]
+  },
+  "spell_phantom_steed": {
+    "id": "spell_phantom_steed",
+    "name": "Phantom Steed",
+    "actionType": "action",
+    "level": 3,
+    "combat": true,
+    "effects": [
+      {
+        "type": "speed_buff",
+        "amount": 4,
+        "self": true,
+        "durationPcTurns": 10,
+        "slot": 3
+      }
+    ]
+  },
+  "spell_planar_ally": {
+    "id": "spell_planar_ally",
+    "name": "Planar Ally",
+    "actionType": "action",
+    "level": 6,
+    "combat": true,
+    "effects": [
+      {
+        "type": "summon",
+        "monsterId": "wolf",
+        "attackOnce": true,
+        "rangeCells": 2,
+        "slot": 6
+      }
+    ]
+  },
+  "spell_augury": {
+    "id": "spell_augury",
+    "name": "Augury",
+    "actionType": "action",
+    "level": 2,
+    "combat": true,
+    "effects": [
+      {
+        "type": "augury",
+        "slot": 2
+      }
+    ]
+  },
+  "spell_clone": {
+    "id": "spell_clone",
+    "name": "Clone",
+    "actionType": "action",
+    "level": 8,
+    "combat": true,
+    "effects": [
+      {
+        "type": "clone",
+        "self": true,
+        "slot": 8
+      }
+    ]
+  },
+  "spell_contingency": {
+    "id": "spell_contingency",
+    "name": "Contingency",
+    "actionType": "action",
+    "level": 6,
+    "combat": true,
+    "effects": [
+      {
+        "type": "contingency",
+        "storedSpellId": "spell_cure_wounds",
+        "slot": 6
+      }
+    ]
+  },
+  "spell_prestidigitation": {
+    "id": "spell_prestidigitation",
+    "name": "Prestidigitation",
+    "actionType": "action",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "cantrip_util",
+        "options": [
+          "snuff",
+          "clean",
+          "sensory"
+        ],
+        "slot": 0
+      }
+    ]
+  },
+  "spell_druidcraft": {
+    "id": "spell_druidcraft",
+    "name": "Druidcraft",
+    "actionType": "action",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "cantrip_util",
+        "options": [
+          "weather",
+          "bloom",
+          "sensory"
+        ],
+        "slot": 0
+      }
+    ]
+  },
+  "spell_elementalism": {
+    "id": "spell_elementalism",
+    "name": "Elementalism",
+    "actionType": "action",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "cantrip_util",
+        "options": [
+          "spark",
+          "breeze",
+          "ripple"
+        ],
+        "slot": 0
+      }
+    ]
+  },
+  "use_goodberry": {
+    "id": "use_goodberry",
+    "name": "Eat Goodberry",
+    "actionType": "bonus_action",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "heal",
+        "dice": "1",
+        "self": true,
+        "consume": "goodberry"
+      }
+    ]
+  },
+  "spell_sequester": {
+    "id": "spell_sequester",
+    "name": "Sequester",
+    "actionType": "action",
+    "level": 7,
+    "combat": false,
+    "sheetOnly": true,
+    "effects": [
+      {
+        "type": "sheet_spell",
+        "summary": "Hides a willing creature or object from detection (out of combat).",
+        "slot": 7
+      }
+    ]
+  },
+  "spell_simulacrum": {
+    "id": "spell_simulacrum",
+    "name": "Simulacrum",
+    "actionType": "action",
+    "level": 7,
+    "combat": false,
+    "sheetOnly": true,
+    "effects": [
+      {
+        "type": "sheet_spell",
+        "summary": "Creates an illusory duplicate (story / downtime).",
+        "slot": 7
+      }
+    ]
+  },
+  "spell_speak_with_animals": {
+    "id": "spell_speak_with_animals",
+    "name": "Speak with Animals",
+    "actionType": "action",
+    "level": 1,
+    "combat": false,
+    "sheetOnly": true,
+    "effects": [
+      {
+        "type": "sheet_spell",
+        "summary": "Talks with beasts outside the arena grid.",
+        "slot": 1
+      }
+    ]
+  },
+  "spell_speak_with_dead": {
+    "id": "spell_speak_with_dead",
+    "name": "Speak with Dead",
+    "actionType": "action",
+    "level": 3,
+    "combat": false,
+    "sheetOnly": true,
+    "effects": [
+      {
+        "type": "sheet_spell",
+        "summary": "Questions a corpse between scenes.",
+        "slot": 3
+      }
+    ]
+  },
+  "spell_speak_with_plants": {
+    "id": "spell_speak_with_plants",
+    "name": "Speak with Plants",
+    "actionType": "action",
+    "level": 3,
+    "combat": false,
+    "sheetOnly": true,
+    "effects": [
+      {
+        "type": "sheet_spell",
+        "summary": "Talks with plants and shrubs.",
+        "slot": 3
+      }
+    ]
+  },
+  "spell_stone_shape": {
+    "id": "spell_stone_shape",
+    "name": "Stone Shape",
+    "actionType": "action",
+    "level": 4,
+    "combat": false,
+    "sheetOnly": true,
+    "effects": [
+      {
+        "type": "sheet_spell",
+        "summary": "Reshapes stone for exploration puzzles.",
+        "slot": 4
+      }
+    ]
+  },
+  "spell_telepathic_bond": {
+    "id": "spell_telepathic_bond",
+    "name": "Telepathic Bond",
+    "actionType": "action",
+    "level": 5,
+    "combat": false,
+    "sheetOnly": true,
+    "effects": [
+      {
+        "type": "sheet_spell",
+        "summary": "Links minds across distance.",
+        "slot": 5
+      }
+    ]
+  },
+  "spell_teleport": {
+    "id": "spell_teleport",
+    "name": "Teleport",
+    "actionType": "action",
+    "level": 7,
+    "combat": false,
+    "sheetOnly": true,
+    "effects": [
+      {
+        "type": "sheet_spell",
+        "summary": "Transports the party between story nodes.",
+        "slot": 7
+      }
+    ]
+  },
+  "spell_teleportation_circle": {
+    "id": "spell_teleportation_circle",
+    "name": "Teleportation Circle",
+    "actionType": "action",
+    "level": 5,
+    "combat": false,
+    "sheetOnly": true,
+    "effects": [
+      {
+        "type": "sheet_spell",
+        "summary": "Creates a permanent circle for travel.",
+        "slot": 5
+      }
+    ]
+  },
+  "spell_thaumaturgy": {
+    "id": "spell_thaumaturgy",
+    "name": "Thaumaturgy",
+    "actionType": "action",
+    "level": 0,
+    "combat": false,
+    "sheetOnly": true,
+    "effects": [
+      {
+        "type": "sheet_spell",
+        "summary": "Minor divine sensory tricks.",
+        "slot": 0
+      }
+    ]
+  },
+  "spell_tiny_hut": {
+    "id": "spell_tiny_hut",
+    "name": "Tiny Hut",
+    "actionType": "action",
+    "level": 3,
+    "combat": false,
+    "sheetOnly": true,
+    "effects": [
+      {
+        "type": "sheet_spell",
+        "summary": "Creates a dome shelter between fights.",
+        "slot": 3
+      }
+    ]
+  },
+  "spell_tongues": {
+    "id": "spell_tongues",
+    "name": "Tongues",
+    "actionType": "action",
+    "level": 3,
+    "combat": false,
+    "sheetOnly": true,
+    "effects": [
+      {
+        "type": "sheet_spell",
+        "summary": "Understands any spoken language.",
+        "slot": 3
+      }
+    ]
+  },
+  "spell_transport_via_plants": {
+    "id": "spell_transport_via_plants",
+    "name": "Transport via Plants",
+    "actionType": "action",
+    "level": 6,
+    "combat": false,
+    "sheetOnly": true,
+    "effects": [
+      {
+        "type": "sheet_spell",
+        "summary": "Steps between plants for travel.",
+        "slot": 6
+      }
+    ]
+  },
+  "spell_tree_stride": {
+    "id": "spell_tree_stride",
+    "name": "Tree Stride",
+    "actionType": "action",
+    "level": 5,
+    "combat": false,
+    "sheetOnly": true,
+    "effects": [
+      {
+        "type": "sheet_spell",
+        "summary": "Tree-to-tree travel.",
+        "slot": 5
+      }
+    ]
+  },
+  "spell_true_seeing": {
+    "id": "spell_true_seeing",
+    "name": "True Seeing",
+    "actionType": "action",
+    "level": 6,
+    "combat": false,
+    "sheetOnly": true,
+    "effects": [
+      {
+        "type": "sheet_spell",
+        "summary": "Sees invisible and ethereal (story).",
+        "slot": 6
+      }
+    ]
+  },
+  "spell_water_breathing": {
+    "id": "spell_water_breathing",
+    "name": "Water Breathing",
+    "actionType": "action",
+    "level": 3,
+    "combat": false,
+    "sheetOnly": true,
+    "effects": [
+      {
+        "type": "sheet_spell",
+        "summary": "Breathes underwater out of combat.",
+        "slot": 3
+      }
+    ]
+  },
+  "spell_water_walk": {
+    "id": "spell_water_walk",
+    "name": "Water Walk",
+    "actionType": "action",
+    "level": 3,
+    "combat": false,
+    "sheetOnly": true,
+    "effects": [
+      {
+        "type": "sheet_spell",
+        "summary": "Walks on liquid surfaces while traveling.",
+        "slot": 3
+      }
+    ]
+  },
+  "spell_wind_walk": {
+    "id": "spell_wind_walk",
+    "name": "Wind Walk",
+    "actionType": "action",
+    "level": 6,
+    "combat": false,
+    "sheetOnly": true,
+    "effects": [
+      {
+        "type": "sheet_spell",
+        "summary": "Turns the party into vapor for travel.",
+        "slot": 6
+      }
+    ]
+  },
+  "spell_wish": {
+    "id": "spell_wish",
+    "name": "Wish",
+    "actionType": "action",
+    "level": 9,
+    "combat": false,
+    "sheetOnly": true,
+    "effects": [
+      {
+        "type": "sheet_spell",
+        "summary": "Campaign-gated narrative wish (not freeform in v1).",
+        "slot": 9
+      }
+    ]
+  },
+  "spell_word_of_recall": {
+    "id": "spell_word_of_recall",
+    "name": "Word of Recall",
+    "actionType": "action",
+    "level": 6,
+    "combat": false,
+    "sheetOnly": true,
+    "effects": [
+      {
+        "type": "sheet_spell",
+        "summary": "Returns the party to a sanctum.",
+        "slot": 6
+      }
+    ]
+  },
+  "spell_shillelagh": {
+    "id": "spell_shillelagh",
+    "name": "Shillelagh",
+    "actionType": "bonus_action",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "next_hit_rider",
+        "dice": "1d8",
+        "damageType": "bludgeoning",
+        "self": true,
+        "durationPcTurns": 10,
+        "slot": 0
+      }
+    ]
+  },
+  "spell_shining_smite": {
+    "id": "spell_shining_smite",
+    "name": "Shining Smite",
+    "actionType": "bonus_action",
+    "level": 2,
+    "combat": true,
+    "effects": [
+      {
+        "type": "next_hit_rider",
+        "dice": "2d6",
+        "damageType": "radiant",
+        "self": true,
+        "durationPcTurns": 10,
+        "concentration": true,
+        "slot": 2
+      }
+    ]
+  },
+  "spell_silent_image": {
+    "id": "spell_silent_image",
+    "name": "Silent Image",
+    "actionType": "action",
+    "level": 1,
+    "combat": true,
+    "effects": [
+      {
+        "type": "illusion",
+        "rangeCells": 12,
+        "durationPcTurns": 10,
+        "concentration": true,
+        "slot": 1
+      }
+    ]
+  },
+  "spell_sorcerous_burst": {
+    "id": "spell_sorcerous_burst",
+    "name": "Sorcerous Burst",
+    "actionType": "action",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "attack",
+        "spellAttack": true,
+        "ability": "spell",
+        "rangeCells": 24,
+        "damage": [
+          {
+            "dice": "1d8",
+            "damageType": "force"
+          }
+        ],
+        "slot": 0
+      }
+    ]
+  },
+  "spell_spare_the_dying": {
+    "id": "spell_spare_the_dying",
+    "name": "Spare the Dying",
+    "actionType": "action",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "restore",
+        "rangeCells": 1,
+        "slot": 0,
+        "clearConditions": [],
+        "stabilize": true
+      }
+    ]
+  },
+  "spell_spider_climb": {
+    "id": "spell_spider_climb",
+    "name": "Spider Climb",
+    "actionType": "action",
+    "level": 2,
+    "combat": true,
+    "effects": [
+      {
+        "type": "flag_buff",
+        "flag": "spiderClimb",
+        "rangeCells": 1,
+        "concentration": true,
+        "durationPcTurns": 10,
+        "slot": 2
+      }
+    ]
+  },
+  "spell_spike_growth": {
+    "id": "spell_spike_growth",
+    "name": "Spike Growth",
+    "actionType": "action",
+    "level": 2,
+    "combat": true,
+    "effects": [
+      {
+        "type": "concentration_aura",
+        "origin": "cell",
+        "radiusCells": 4,
+        "filter": "enemy",
+        "rangeCells": 30,
+        "difficultTerrainFor": "enemy",
+        "onEnterOrEndTurn": {
+          "saveAbility": "dex",
+          "dice": "2d4",
+          "damageType": "piercing",
+          "halfOnSuccess": false
+        },
+        "concentration": true,
+        "slot": 2
+      }
+    ]
+  },
+  "spell_stoneskin": {
+    "id": "spell_stoneskin",
+    "name": "Stoneskin",
+    "actionType": "action",
+    "level": 4,
+    "combat": true,
+    "effects": [
+      {
+        "type": "resistance_buff",
+        "damageType": "bludgeoning",
+        "rangeCells": 1,
+        "concentration": true,
+        "durationPcTurns": 10,
+        "slot": 4
+      }
+    ]
+  },
+  "spell_true_strike": {
+    "id": "spell_true_strike",
+    "name": "True Strike",
+    "actionType": "action",
+    "level": 0,
+    "combat": true,
+    "effects": [
+      {
+        "type": "guidance",
+        "rangeCells": 1,
+        "concentration": true,
+        "slot": 0
+      }
+    ]
+  },
+  "spell_wall_of_force": {
+    "id": "spell_wall_of_force",
+    "name": "Wall of Force",
+    "actionType": "action",
+    "level": 5,
+    "combat": true,
+    "effects": [
+      {
+        "type": "concentration_aura",
+        "origin": "cell",
+        "radiusCells": 2,
+        "filter": "all",
+        "rangeCells": 24,
+        "blocksMovement": true,
+        "concentration": true,
+        "slot": 5
+      }
+    ]
+  },
+  "spell_warding_bond": {
+    "id": "spell_warding_bond",
+    "name": "Warding Bond",
+    "actionType": "action",
+    "level": 2,
+    "combat": true,
+    "effects": [
+      {
+        "type": "ward",
+        "acBonus": 1,
+        "saveBonus": 1,
+        "rangeCells": 1,
+        "slot": 2
+      }
+    ]
+  },
+  "spell_shapechange": {
+    "id": "spell_shapechange",
+    "name": "Shapechange",
+    "actionType": "action",
+    "level": 9,
+    "combat": true,
+    "effects": [
+      {
+        "type": "polymorph",
+        "formId": "srd_skeleton",
+        "rangeCells": 1,
+        "concentration": true,
+        "slot": 9
+      }
+    ]
+  },
+  "spell_time_stop": {
+    "id": "spell_time_stop",
+    "name": "Time Stop",
+    "actionType": "action",
+    "level": 9,
+    "combat": true,
+    "effects": [
+      {
+        "type": "flag_buff",
+        "flag": "timeStop",
+        "self": true,
+        "durationPcTurns": 1,
+        "slot": 9
+      }
+    ]
+  },
+  "spell_true_resurrection": {
+    "id": "spell_true_resurrection",
+    "name": "True Resurrection",
+    "actionType": "action",
+    "level": 9,
+    "combat": true,
+    "effects": [
+      {
+        "type": "revive",
+        "rangeCells": 1,
+        "slot": 9,
+        "hpHalf": true,
+        "prone": true
+      }
+    ]
+  }
+}

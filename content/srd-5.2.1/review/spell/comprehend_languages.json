@@ -9,8 +9,5 @@
   "srd": {
     "line": "Level 1 Divination (Bard, Sorcerer, Warlock, Wizard)",
     "text": "_Level 1 Divination (Bard, Sorcerer, Warlock, Wizard)_\n\n**Casting Time:** Action or Ritual\n**Range:** Self\n**Components:** V, S, M (a pinch of soot and salt)\n**Duration:** 1 hour\n\nFor the duration, you understand the literal meaning of any language that you hear or see signed. You also understand any written language that you see, but you must be touching the surface on which the words are written. It takes about 1 minute to read one page of text. This spell doesn't decode symbols or secret messages."
-  },
-  "notModeled": [
-    "No battlefield effect is run for this spell yet."
-  ]
+  }
 }

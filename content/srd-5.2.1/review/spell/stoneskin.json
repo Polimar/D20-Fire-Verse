@@ -9,8 +9,5 @@
   "srd": {
     "line": "Level 4 Transmutation (Druid, Ranger, Sorcerer, Wizard)",
     "text": "_Level 4 Transmutation (Druid, Ranger, Sorcerer, Wizard)_\n\n**Casting Time:** Action\n**Range:** Touch\n**Components:** V, S, M (diamond dust worth 100+ GP, which the spell consumes)\n**Duration:** Concentration, up to 1 hour\n\nUntil the spell ends, one willing creature you touch has Resistance to Bludgeoning, Piercing, and Slashing damage."
-  },
-  "notModeled": [
-    "No battlefield effect is run for this spell yet."
-  ]
+  }
 }

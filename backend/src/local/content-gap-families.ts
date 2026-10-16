@@ -132,7 +132,7 @@ function isExplorationSpellId(id: string): boolean {
 
 /** Short label for CLI / docs. */
 export const FAMILY_HINTS: Record<string, string> = {
-  spell_batch_note_or_wire: "Implement combat effect (replace note stub) or wire ability",
+  spell_batch_note_or_wire: "Implement combat effect (replace note stub) or wire ability — triage via content/triage/spell_combat_v1.json",
   spell_batch_exploration_policy: "Exploration / out-of-combat — gap until exploration ships",
   spell_batch_control: "Control spells (save + condition / zones)",
   spell_batch_buff_concentration: "Concentration buffs — shared buff pipeline",

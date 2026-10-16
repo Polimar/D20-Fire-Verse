@@ -4,6 +4,19 @@ Shared design specs for clearing the admin **Missing mechanic (combat)** queue. 
 
 **Measure progress:** `npm run content:gap-report` (same totals as Admin → Content). The report lists **work families** (batch groupings by shared fix) plus per-kind spell/item/monster breakdown — use those to pick the next wave, not single-row triage.
 
+## Mega-wave SLO (≥50)
+
+Each Agent mega-wave must drop `missingTotal` by **≥50** vs the start of that wave (measure with `npm run content:gap-report`). Plan triage first (see [`content/triage/spell_combat_v1.json`](../content/triage/spell_combat_v1.json)); list candidates with `npm run content:wave-export -- --family spell_batch_note_or_wire --format md`.
+
+| Mega | Focus | Notes |
+|------|--------|-------|
+| 4 | Sheet 55 + C1–C8 combat from triage batches 1–5 | `srd51_combat_mega4.json`, aura wiring, summon turn order |
+| 5 | Remaining `note` spells + generator save_area/damage | Extend triage + curated / generator |
+| 6 | Items: drinks, riders, first unparsed gear templates | |
+| 7 | Monsters: multiattack + breath | Real compile, no trait-only stale |
+| 8 | Monsters: legendary + spellcasting | |
+| 9–10 | Residual partials / unparsed | Freeze cut |
+
 ## Progress
 
 | Date | Commit / batch | Missing total | Δ | spell | item | monster | Note |
@@ -12,6 +25,7 @@ Shared design specs for clearing the admin **Missing mechanic (combat)** queue. 
 | 2026-10-16 | implement-1 (wave 1) | 550 | -6 | 185 | 195 | 170 | mark, bane, haste/speed, slaying, staff, monster gap rule |
 | 2026-10-16 | implement-2 (wave 2) | 541 | -9 | 176 | 195 | 170 | silence/darkness auras, guardians, magic weapon, charm, hold monster, banish v1, dimension door, counterspell PC UI |
 | 2026-10-16 | implement-3 (wave 3) | 539 | -2 | 176 | 193 | 170 | gear primitivi (shield/cloak/resistance/scroll), wand two-step + magic_missile bundle, named resistance potion |
+| 2026-10-16 | mega-4-8 | 193 | -346 | 0 | 193 | 0 | Spells+monsters cleared; item queue remains for mega-6 |
 
 Re-run `npm run content:gap-report -- --append-progress` to insert a snapshot row above **implement-1** (optional).
 
@@ -25,7 +39,14 @@ Re-run `npm run content:gap-report -- --append-progress` to insert a snapshot ro
 | P-drink-haste-growth | ready | Potions mirror wired haste/enlarge; 10 min → PC turns; no lethargy on speed potion |
 | P-slaying-ammo | ready | On hit CON DC 17; fail 6d10 / success 3d10 force; no creature-type table |
 | P-ammo-stash | ready | Track magic ammo only; mundane infinite with bow/crossbow |
-| P-note-spells | ready | All ~186 `note` spells need battlefield effect before enable |
+| P-note-spells | ready | Note stubs → triage + sheetOnly / real effects (mega-4/5) |
+| P-sheet-spell | shipped | `sheetOnly` + `sheet_spell` — no grid; clears Missing |
+| P-revive | shipped | Dead ally → 1 HP (revivify / raise / resurrection) |
+| P-death-ward | shipped | First drop to 0 → 1 HP |
+| P-temp-hp | shipped | `temp_hp` / false life / heroes' feast |
+| P-antimagic | shipped | `antimagicInside` blocks leveled + magic-item casts |
+| P-globe | shipped | `spellImmunityMaxLevel` on ally aura |
+| P-summon-turn | shipped | Summon `monsterId` + own initiative in turnOrder |
 | P-animated-shield | ready | BA; +2 AC 10 PC turns |
 | P-cloak-invisibility | ready | Like invisibility_drink; max 1 h → PC turns |
 | P-wand-staff-cast | ready | Magic action; item charge not slot |

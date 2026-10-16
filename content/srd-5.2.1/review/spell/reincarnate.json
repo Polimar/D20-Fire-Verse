@@ -9,9 +9,5 @@
   "srd": {
     "line": "Level 5 Necromancy (Druid)",
     "text": "_Level 5 Necromancy (Druid)_\n\n**Casting Time:** 1 hour\n**Range:** Touch\n**Components:** V, S, M (rare oils worth 1,000+ GP, which the spell consumes)\n**Duration:** Instantaneous\n\nYou touch a dead Humanoid or a piece of one. If the creature has been dead no longer than 10 days, the spell forms a new body for it and calls the soul to enter that body. Roll 1d10 and consult the table below to determine the body's species, or the GM chooses another playable species.\n\n| 1d10 | Species | 1d10 | Species |\n| --- | --- | --- | --- |\n| 1 | Roll again. | 6 | Goliath |\n| 2 | Dragonborn | 7 | Halfling |\n| 3 | Dwarf | 8 | Human |\n| 4 | Elf | 9 | Orc |\n| 5 | Gnome | 10 | Tiefling |\n\nThe reincarnated creature makes any choices that a species' description offers, and the creature recalls its former life. It retains the capabilities it had in its original form, except it loses the traits of its previous species and gains the traits of its new one."
-  },
-  "notModeled": [
-    "Long casting time is resolved as a single combat action.",
-    "No battlefield effect is run for this spell yet."
-  ]
+  }
 }

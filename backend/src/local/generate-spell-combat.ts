@@ -10,6 +10,10 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../.
 const spells = JSON.parse(fs.readFileSync(path.join(root, "content/srd-5.2.1/spells.json"), "utf8")).entries as Spell[];
 const curated = JSON.parse(fs.readFileSync(path.join(root, "content/rules/srd51_combat.json"), "utf8")) as Record<string, { id?: string }>;
 const oneshot = JSON.parse(fs.readFileSync(path.join(root, "content/abilities/oneshot_v1.json"), "utf8")) as Record<string, { id?: string }>;
+const mega4Path = path.join(root, "content/rules/srd51_combat_mega4.json");
+const mega4 = fs.existsSync(mega4Path)
+  ? (JSON.parse(fs.readFileSync(mega4Path, "utf8")) as Record<string, { id?: string }>)
+  : {};
 
 type Spell = {
   id: string;
@@ -52,7 +56,14 @@ const KNOWN = new Set([
 ]);
 
 function knownId(id: string): boolean {
-  return Boolean(curated[`spell_${id}`] || curated[id] || oneshot[`spell_${id}`] || oneshot[id]);
+  return Boolean(
+    curated[`spell_${id}`] ||
+      curated[id] ||
+      oneshot[`spell_${id}`] ||
+      oneshot[id] ||
+      mega4[`spell_${id}`] ||
+      mega4[id],
+  );
 }
 
 function cells(ft: number | undefined): number {

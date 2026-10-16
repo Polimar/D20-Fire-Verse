@@ -9,9 +9,5 @@
   "srd": {
     "line": "Level 8 Transmutation (Cleric, Druid, Wizard)",
     "text": "_Level 8 Transmutation (Cleric, Druid, Wizard)_\n\n**Casting Time:** 10 minutes\n**Range:** Self\n**Components:** V, S, M (burning incense)\n**Duration:** Concentration, up to 8 hours\n\nYou take control of the weather within 5 miles of you for the duration. You must be outdoors to cast this spell, and it ends early if you go indoors.\n\nWhen you cast the spell, you change the current weather conditions, which are determined by the GM. You can change precipitation, temperature, and wind. It takes 1d4 × 10 minutes for the new\n\nconditions to take effect. Once they do so, you can change the conditions again. When the spell ends, the weather gradually returns to normal.\n\nWhen you change the weather conditions, find a current condition on the following tables and change its stage by one, up or down. When changing the wind, you can change its direction.\n\n**Precipitation**\n\n| Stage | Condition |\n| --- | --- |\n| 1 | Clear |\n| 2 | Light clouds |\n| 3 | Overcast or ground fog |\n| 4 | Rain, hail, or snow |\n| 5 | Torrential rain, driving hail, or blizzard |\n\n**Temperature**\n\n| Stage | Condition |\n| --- | --- |\n| 1 | Heat wave |\n| 2 | Hot |\n| 3 | Warm |\n| 4 | Cool |\n| 5 | Cold |\n| 6 | Freezing |\n\n**Wind**\n\n| Stage | Condition |\n| --- | --- |\n| 1 | Calm |\n| 2 | Moderate wind |\n| 3 | Strong wind |\n| 4 | Gale |\n| 5 | Storm |"
-  },
-  "notModeled": [
-    "Long casting time is resolved as a single combat action.",
-    "No battlefield effect is run for this spell yet."
-  ]
+  }
 }

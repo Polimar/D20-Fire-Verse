@@ -44,14 +44,25 @@ function enableWizardLine(): void {
   }
 }
 
+function combatWizardSpellIds(level: number): string[] {
+  const prefer = ["magic_missile", "burning_hands", "thunderwave", "mage_armor", "shield", "sleep", "chromatic_orb", "fire_bolt", "ray_of_frost"];
+  const catalog = builderCatalog();
+  const wizard = catalog.spells.filter((s) => s.classes.includes("wizard") && s.level === level);
+  const ranked = [
+    ...prefer.map((id) => wizard.find((s) => s.id === id)).filter(Boolean),
+    ...wizard.filter((s) => !prefer.includes(s.id)),
+  ] as typeof wizard;
+  return ranked.map((s) => s.id);
+}
+
 function wizardDraft() {
   const catalog = builderCatalog();
   const cls = classDefForBuilder("wizard")!;
   const l1 = cls.levels.find((row) => row.level === 1)!;
-  const cantrips = catalog.spells.filter((s) => s.classes.includes("wizard") && s.level === 0).slice(0, l1.cantrips ?? 3).map((s) => s.id);
-  const prepared = catalog.spells.filter((s) => s.classes.includes("wizard") && s.level === 1).slice(0, l1.preparedSpells ?? 4).map((s) => s.id);
+  const cantrips = combatWizardSpellIds(0).slice(0, l1.cantrips ?? 3);
+  const prepared = combatWizardSpellIds(1).slice(0, l1.preparedSpells ?? 4);
   const bookNeed = 6;
-  const level1 = catalog.spells.filter((s) => s.classes.includes("wizard") && s.level === 1).map((s) => s.id);
+  const level1 = combatWizardSpellIds(1);
   const book = [...new Set([...prepared, ...level1])].slice(0, bookNeed);
   return {
     name: "Zephyr Ink",

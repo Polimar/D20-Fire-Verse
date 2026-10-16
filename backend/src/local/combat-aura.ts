@@ -34,6 +34,14 @@ export type AuraMods = {
   blocksVerbal?: boolean;
   deafenedInside?: boolean;
   thunderImmuneInside?: boolean;
+  /** Antimagic Field: leveled spells and magic-item actions fail inside. */
+  antimagicInside?: boolean;
+  /** Globe of Invulnerability: allies ignore spell effects of this level or lower. */
+  spellImmunityMaxLevel?: number;
+  /** Daylight: cancels heavilyObscured from overlapping darkness/fog auras. */
+  dispelsObscured?: boolean;
+  /** Creature types that ignore blocksMovement (antilife shell). */
+  passCreatureTypes?: string[];
   /** Ties aura to a concentrating spell for cleanup. */
   spellAuraId?: string;
 };
@@ -52,6 +60,7 @@ export type AuraToken = {
   dead: boolean;
   teamId?: string;
   monsterId?: string;
+  creatureType?: string;
   features?: string[];
   kit?: { flags: string[] };
   followAuras?: AuraMods[];
@@ -65,6 +74,8 @@ export type AuraToken = {
   auraSpeedMult?: number;
   auraObscured?: boolean;
   auraThunderImmune?: boolean;
+  auraSpellImmunityMaxLevel?: number;
+  auraDifficultTerrain?: boolean;
   conditions?: string[];
 };
 
@@ -179,7 +190,20 @@ export function refreshAuras(combat: AuraCombat, paladinSaveBonus: (source: Aura
     token.auraSpeedMult = 1;
     token.auraObscured = false;
     token.auraThunderImmune = false;
+    token.auraSpellImmunityMaxLevel = 0;
+    token.auraDifficultTerrain = false;
     token.conditions = (token.conditions ?? []).filter((c) => c !== "deafened");
+  }
+  const daylightCells = new Set<string>();
+  for (const aura of combat.auras) {
+    if (!aura.dispelsObscured) continue;
+    const origin = originCell(combat, aura);
+    if (!origin) continue;
+    for (let y = origin.y - aura.radiusCells; y <= origin.y + aura.radiusCells; y += 1) {
+      for (let x = origin.x - aura.radiusCells; x <= origin.x + aura.radiusCells; x += 1) {
+        if (chebyshev(origin.x, origin.y, x, y) <= aura.radiusCells) daylightCells.add(`${x},${y}`);
+      }
+    }
   }
   for (const aura of combat.auras) {
     const owner = combat.tokens.find((t) => t.id === aura.ownerId);
@@ -198,8 +222,14 @@ export function refreshAuras(combat: AuraCombat, paladinSaveBonus: (source: Aura
         token.auraResistances = [...new Set([...(token.auraResistances ?? []), ...aura.resistances])];
       }
       if (aura.speedMult != null) token.auraSpeedMult = Math.min(token.auraSpeedMult ?? 1, aura.speedMult);
-      if (aura.heavilyObscured) token.auraObscured = true;
+      if (aura.heavilyObscured && !daylightCells.has(`${token.x},${token.y}`)) token.auraObscured = true;
       if (aura.thunderImmuneInside) token.auraThunderImmune = true;
+      if (aura.spellImmunityMaxLevel != null) {
+        token.auraSpellImmunityMaxLevel = Math.max(token.auraSpellImmunityMaxLevel ?? 0, aura.spellImmunityMaxLevel);
+      }
+      if (aura.difficultTerrainFor === "enemy" && !isAlly(combat, owner ?? token, token)) {
+        token.auraDifficultTerrain = true;
+      }
       if (aura.deafenedInside) {
         if (!token.conditions) token.conditions = [];
         if (!token.conditions.includes("deafened")) token.conditions.push("deafened");
@@ -209,6 +239,40 @@ export function refreshAuras(combat: AuraCombat, paladinSaveBonus: (source: Aura
       }
     }
   }
+}
+
+export function antimagicAt(combat: AuraCombat, x: number, y: number): boolean {
+  return aurasCovering(combat, x, y).some((a) => a.antimagicInside);
+}
+
+export function spellImmunityLevelAt(combat: AuraCombat, token: AuraToken): number {
+  return token.auraSpellImmunityMaxLevel ?? 0;
+}
+
+export function movementBlockedByAura(combat: AuraCombat, mover: AuraToken, destX: number, destY: number): boolean {
+  for (const aura of aurasCovering(combat, destX, destY)) {
+    if (!aura.blocksMovement) continue;
+    const owner = combat.tokens.find((t) => t.id === aura.ownerId);
+    if (!owner) continue;
+    if (aura.filter === "enemy" && isAlly(combat, owner, mover)) continue;
+    if (aura.filter === "ally" && !isAlly(combat, owner, mover)) continue;
+    const pass = aura.passCreatureTypes ?? [];
+    const ctype = (mover.creatureType ?? "").toLowerCase();
+    if (pass.some((p) => ctype.includes(p.toLowerCase()))) continue;
+    return true;
+  }
+  return false;
+}
+
+export function difficultTerrainMult(combat: AuraCombat, mover: AuraToken, x: number, y: number): number {
+  for (const aura of aurasCovering(combat, x, y)) {
+    if (aura.difficultTerrainFor !== "enemy") continue;
+    const owner = combat.tokens.find((t) => t.id === aura.ownerId);
+    if (!owner) continue;
+    if (isAlly(combat, owner, mover)) continue;
+    return 2;
+  }
+  return 1;
 }
 
 export function plantAura(combat: AuraCombat, owner: AuraToken, spec: AuraMods): CombatAura | undefined {

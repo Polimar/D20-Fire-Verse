@@ -245,6 +245,8 @@ const ERROR_TEXT: Record<string, string> = {
   NO_ITEM: "You don't have that item anymore.",
   NO_CHARGES: "That item has no charges left this fight.",
   SILENCED: "Verbal spells can't be cast inside Silence.",
+  ANTIMAGIC: "Magic fails inside an antimagic field.",
+  NOT_DEAD: "That target isn't dead.",
   NEED_MAGIC_ACTION: "Use the Magic action before casting from a wand or magic item.",
   NOT_ATTACK: "That ability isn't an attack.",
   NO_TARGET: "There's no enemy left to target.",

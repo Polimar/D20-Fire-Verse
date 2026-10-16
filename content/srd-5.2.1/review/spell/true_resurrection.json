@@ -9,9 +9,5 @@
   "srd": {
     "line": "Level 9 Necromancy (Cleric, Druid)",
     "text": "_Level 9 Necromancy (Cleric, Druid)_\n\n**Casting Time:** 1 hour\n**Range:** Touch\n**Components:** V, S, M (diamonds worth 25,000+ GP, which the spell consumes)\n**Duration:** Instantaneous\n\nYou touch a creature that has been dead for no longer than 200 years and that died for any reason except old age. The creature is revived with all its Hit Points.\n\nThis spell closes all wounds, neutralizes any poison, cures all magical contagions, and lifts any curses affecting the creature when it died. The spell replaces damaged or missing organs and limbs. If the creature was Undead, it is restored to its non-Undead form.\n\nThe spell can provide a new body if the original no longer exists, in which case you must speak the creature's name. The creature then appears in an unoccupied space you choose within 10 feet of you."
-  },
-  "notModeled": [
-    "Long casting time is resolved as a single combat action.",
-    "No battlefield effect is run for this spell yet."
-  ]
+  }
 }

@@ -13,10 +13,15 @@ test("every SRD spell has a combat ability", () => {
   assert.deepEqual(missing.map((spell) => spell.id), []);
 });
 
-test("a spell with a mechanic gap is not in play", () => {
+test("a sheet-only spell is clear of mechanic gaps", () => {
   const row = listCatalog().find((entry) => entry.kind === "spell" && entry.id === "detect_magic");
-  assert.equal(row?.missingMechanic, true);
-  assert.equal(row?.inPlay, false);
+  assert.equal(row?.missingMechanic, false);
+});
+
+test("an item with a mechanic gap is not in play", () => {
+  const row = listCatalog().find((entry) => entry.kind === "item" && entry.missingMechanic);
+  assert.ok(row);
+  assert.equal(row.inPlay, false);
 });
 
 test("fireball stays in the catalog without a mechanic gap", () => {
