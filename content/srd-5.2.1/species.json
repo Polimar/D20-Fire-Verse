@@ -11,6 +11,29 @@
         "Damage Resistance",
         "Darkvision",
         "Draconic Flight"
+      ],
+      "traitDetails": [
+        {
+          "name": "Draconic Ancestry",
+          "summary": "Choose a draconic ancestor; it sets your Breath Weapon damage type and resistance."
+        },
+        {
+          "name": "Breath Weapon",
+          "summary": "Exhale destructive energy in a cone or line; uses equal to your Proficiency Bonus per long rest."
+        },
+        {
+          "name": "Damage Resistance",
+          "summary": "You have Resistance to the damage type associated with your Draconic Ancestry."
+        },
+        {
+          "name": "Darkvision",
+          "summary": "You can see in Dim Light within 60 feet as if it were Bright Light, and in Darkness as Dim Light."
+        },
+        {
+          "name": "Draconic Flight",
+          "summary": "As a Bonus Action, sprout spectral wings and fly for 10 minutes.",
+          "unlockLevel": 5
+        }
       ]
     },
     {
@@ -24,7 +47,25 @@
         "Dwarven Toughness",
         "Stonecunning"
       ],
-      "hpPerLevel": 1
+      "hpPerLevel": 1,
+      "traitDetails": [
+        {
+          "name": "Darkvision",
+          "summary": "You can see in Dim Light within 120 feet as if it were Bright Light, and in Darkness as Dim Light."
+        },
+        {
+          "name": "Dwarven Resilience",
+          "summary": "You have Resistance to Poison damage and Advantage on saves against the Poisoned condition."
+        },
+        {
+          "name": "Dwarven Toughness",
+          "summary": "Your Hit Point maximum increases by 1, and it increases by 1 again whenever you gain a level."
+        },
+        {
+          "name": "Stonecunning",
+          "summary": "As a Bonus Action, you gain Tremorsense 60 feet for 10 minutes; uses equal to your Proficiency Bonus per long rest."
+        }
+      ]
     },
     {
       "id": "elf",
@@ -37,6 +78,28 @@
         "Fey Ancestry",
         "Keen Senses",
         "Trance"
+      ],
+      "traitDetails": [
+        {
+          "name": "Darkvision",
+          "summary": "You can see in Dim Light within 60 feet as if it were Bright Light, and in Darkness as Dim Light."
+        },
+        {
+          "name": "Elven Lineage",
+          "summary": "Choose a lineage (for example Drow, High Elf, or Wood Elf) that grants spells and other benefits as you level."
+        },
+        {
+          "name": "Fey Ancestry",
+          "summary": "You have Advantage on saving throws to avoid or end the Charmed condition."
+        },
+        {
+          "name": "Keen Senses",
+          "summary": "You have proficiency in the Insight, Perception, or Survival skill."
+        },
+        {
+          "name": "Trance",
+          "summary": "You don't need to sleep; a 4-hour trance gives you the same benefit as a long rest."
+        }
       ]
     },
     {
@@ -48,6 +111,20 @@
         "Darkvision",
         "Gnomish Cunning",
         "Gnomish Lineage"
+      ],
+      "traitDetails": [
+        {
+          "name": "Darkvision",
+          "summary": "You can see in Dim Light within 60 feet as if it were Bright Light, and in Darkness as Dim Light."
+        },
+        {
+          "name": "Gnomish Cunning",
+          "summary": "You have Advantage on Intelligence, Wisdom, and Charisma saving throws."
+        },
+        {
+          "name": "Gnomish Lineage",
+          "summary": "Choose Forest or Rock Gnome lineage for cantrips and further magic as you level."
+        }
       ]
     },
     {
@@ -59,6 +136,21 @@
         "Giant Ancestry",
         "Large Form",
         "Powerful Build"
+      ],
+      "traitDetails": [
+        {
+          "name": "Giant Ancestry",
+          "summary": "Choose a giant ancestry that grants a supernatural boon you can use a few times per long rest."
+        },
+        {
+          "name": "Large Form",
+          "summary": "As a Bonus Action, become Large for 10 minutes (once per long rest), with Advantage on Strength checks and +10 feet speed.",
+          "unlockLevel": 5
+        },
+        {
+          "name": "Powerful Build",
+          "summary": "You count as one size larger when determining carrying capacity and the weight you can push, drag, or lift."
+        }
       ]
     },
     {
@@ -71,6 +163,24 @@
         "Halfling Nimbleness",
         "Luck",
         "Naturally Stealthy"
+      ],
+      "traitDetails": [
+        {
+          "name": "Brave",
+          "summary": "You have Advantage on saving throws to avoid or end the Frightened condition."
+        },
+        {
+          "name": "Halfling Nimbleness",
+          "summary": "You can move through the space of any creature that is a size larger than yours."
+        },
+        {
+          "name": "Luck",
+          "summary": "When you roll a 1 on a d20 Test, you can reroll the die and must use the new roll."
+        },
+        {
+          "name": "Naturally Stealthy",
+          "summary": "You can take the Hide action even when you are obscured only by a creature that is at least one size larger than you."
+        }
       ]
     },
     {
@@ -82,6 +192,20 @@
         "Resourceful",
         "Skillful",
         "Versatile"
+      ],
+      "traitDetails": [
+        {
+          "name": "Resourceful",
+          "summary": "You gain Heroic Inspiration whenever you finish a long rest."
+        },
+        {
+          "name": "Skillful",
+          "summary": "You gain proficiency in one skill of your choice. Select it on the Training step."
+        },
+        {
+          "name": "Versatile",
+          "summary": "You gain an Origin feat of your choice. Select it on the Training step."
+        }
       ]
     },
     {
@@ -93,6 +217,20 @@
         "Adrenaline Rush",
         "Darkvision",
         "Relentless Endurance"
+      ],
+      "traitDetails": [
+        {
+          "name": "Adrenaline Rush",
+          "summary": "As a Bonus Action, Dash and gain temporary Hit Points; uses equal to your Proficiency Bonus per long rest."
+        },
+        {
+          "name": "Darkvision",
+          "summary": "You can see in Dim Light within 120 feet as if it were Bright Light, and in Darkness as Dim Light."
+        },
+        {
+          "name": "Relentless Endurance",
+          "summary": "When you are reduced to 0 Hit Points but not killed, you can drop to 1 Hit Point instead (once per long rest)."
+        }
       ]
     },
     {
@@ -104,6 +242,20 @@
         "Darkvision",
         "Fiendish Legacy",
         "Otherworldly Presence"
+      ],
+      "traitDetails": [
+        {
+          "name": "Darkvision",
+          "summary": "You can see in Dim Light within 60 feet as if it were Bright Light, and in Darkness as Dim Light."
+        },
+        {
+          "name": "Fiendish Legacy",
+          "summary": "Choose an infernal legacy that grants Resistance and spells as you gain levels."
+        },
+        {
+          "name": "Otherworldly Presence",
+          "summary": "You know the Thaumaturgy cantrip, using Charisma as your spellcasting ability for it."
+        }
       ]
     }
   ]

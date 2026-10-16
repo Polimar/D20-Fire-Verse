@@ -22,6 +22,8 @@ type Cat = {
     skillList: string[];
     fightingStyleRequired?: boolean;
     fightingStyleFeatIds: string[];
+    weaponMastery?: boolean;
+    weaponMasteryCountL1?: number;
     level1: { cantrips?: number; preparedSpells?: number; spellsKnown?: number };
     maxSpellLevelAt: number[];
   }>;
@@ -30,6 +32,7 @@ type Cat = {
   feats: Array<{ id: string; category: string }>;
   spells: Array<{ id: string; level: number; classes: string[] }>;
   skills: Record<string, { label: string }>;
+  masteryWeaponsByClass?: Record<string, Array<{ id: string; masteryId: string }>>;
 };
 
 function mountSite(): express.Express {
@@ -78,8 +81,27 @@ async function forgeOne(page: Page, base: string, token: string, classId: string
   await page.waitForSelector(".hw", { timeout: 20_000 });
   await shot(page, `${label}-01-class`);
   await page.locator(`[data-class="${classId}"]`).click();
+  await page.locator(`[data-class="${classId}"]`).click();
+  if (cls.fightingStyleRequired && cls.fightingStyleFeatIds[0]) {
+    await page.locator(`[data-style="${cls.fightingStyleFeatIds[0]}"]`).click();
+  }
+  if (cls.weaponMastery && (cls.weaponMasteryCountL1 ?? 0) > 0) {
+    const need = cls.weaponMasteryCountL1!;
+    const pool = cat.masteryWeaponsByClass?.[classId] ?? [];
+    const picks: string[] = [];
+    const props = new Set<string>();
+    for (const w of pool) {
+      if (props.has(w.masteryId)) continue;
+      picks.push(w.id);
+      props.add(w.masteryId);
+      if (picks.length >= need) break;
+    }
+    assert.equal(picks.length, need, `mastery picks for ${classId}`);
+    for (const id of picks) await page.locator(`[data-mastery-w="${id}"]`).first().click();
+  }
   await page.locator("#hwNext").click();
   await shot(page, `${label}-02-species`);
+  await page.locator(`[data-species="${species.id}"]`).click();
   await page.locator(`[data-species="${species.id}"]`).click();
   await page.locator("#hwNext").click();
   await shot(page, `${label}-03-origin`);
@@ -95,9 +117,6 @@ async function forgeOne(page: Page, base: string, token: string, classId: string
     const expert = [...new Set([...bg.skills, ...skills])].slice(0, 2);
     assert.equal(expert.length, 2);
     for (const id of expert) await page.locator(`[data-expert="${id}"]`).click();
-  }
-  if (cls.fightingStyleRequired && cls.fightingStyleFeatIds[0]) {
-    await page.locator(`[data-style="${cls.fightingStyleFeatIds[0]}"]`).click();
   }
   if (species.id === "human") {
     const extra = Object.keys(cat.skills).find((id) => !skills.includes(id) && !bg.skills.includes(id));

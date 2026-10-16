@@ -4,7 +4,7 @@ import { accountDb, createUser, openAuth } from "../src/local/auth.js";
 import { commitBuilderDraft } from "../src/local/builder-commit.js";
 import { resolveContent, setContentEnabled } from "../src/local/content-catalog.js";
 import { applyLevelUp, getHero, levelOptions } from "../src/local/hero.js";
-import { boot } from "./helpers.js";
+import { boot, masteryPicksForClass } from "./helpers.js";
 
 before(() => {
   boot();
@@ -17,6 +17,7 @@ test("fighter hero level-up to 2 via progression picks and keeps split spell col
     ["species", "human"],
     ["background", "soldier"],
     ["feat", "defense"],
+    ["feat", "savage_attacker"],
   ] as const) {
     if (kind === "feat") resolveContent(kind, id, { adminNote: "level-up test" });
     setContentEnabled(kind, id, true);
@@ -31,6 +32,9 @@ test("fighter hero level-up to 2 via progression picks and keeps split spell col
     baseAbilities: { str: 15, dex: 14, con: 13, int: 12, wis: 10, cha: 8 },
     classSkills: ["perception", "survival"],
     fightingStyleFeatId: "defense",
+    weaponMasteryWeaponIds: masteryPicksForClass("fighter"),
+    speciesSkill: "insight",
+    originFeatId: "savage_attacker",
     equipChoice: "A",
     backgroundAsi: { mode: "plus2plus1", plus2: "str", plus1: "con" },
     cantrips: [],

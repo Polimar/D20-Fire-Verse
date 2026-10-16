@@ -98,6 +98,8 @@ export function recomputeFromLoadout(
   items: ReadonlyMap<string, ItemRules>,
   baseAc = 10,
   baseSpeed = 6,
+  /** When set, only these weapon kinds (item ids) grant mastery riders. */
+  knownMasteryWeaponIds?: readonly string[],
 ): LoadoutView {
   const bonus = emptyBonus();
   const masteries: string[] = [];
@@ -108,7 +110,8 @@ export function recomputeFromLoadout(
     const item = items.get(id);
     if (!item) continue;
     applyEffects(bonus, item);
-    if (knowsMastery && item.weaponMastery) masteries.push(item.weaponMastery);
+    const kindAllowed = !knownMasteryWeaponIds || knownMasteryWeaponIds.includes(id);
+    if (knowsMastery && item.weaponMastery && kindAllowed) masteries.push(item.weaponMastery);
   }
   const dex = Math.floor((hero.abilities.dex - 10) / 2);
   const armored = Boolean(slots.armor && items.get(slots.armor));

@@ -24,14 +24,33 @@ function enableFighterLine(): void {
     ["item", "longsword"],
     ["item", "chain_mail"],
     ["item", "greatsword"],
+    ["item", "greataxe"],
     ["item", "flail"],
     ["item", "javelin"],
+    ["item", "pike"],
+    ["item", "battleaxe"],
+    ["item", "shortsword"],
     ["feat", "defense"],
     ["feat", "savage_attacker"],
   ] as const) {
     if (kind === "feat" || kind === "item") resolveContent(kind, id, { adminNote: "builder test" });
     setContentEnabled(kind, id, true);
   }
+}
+
+function fighterMasteryPicks(): string[] {
+  const catalog = builderCatalog();
+  const fighter = catalog.classes.find((c) => c.id === "fighter")!;
+  const pool = catalog.masteryWeaponsByClass.fighter ?? [];
+  const picks: string[] = [];
+  const props = new Set<string>();
+  for (const w of pool) {
+    if (props.has(w.masteryId)) continue;
+    picks.push(w.id);
+    props.add(w.masteryId);
+    if (picks.length >= (fighter.weaponMasteryCountL1 || 3)) break;
+  }
+  return picks;
 }
 
 test("wizard L1 rejects prepared spells above class spell slot cap", () => {
@@ -70,6 +89,17 @@ test("wizard L1 rejects prepared spells above class spell slot cap", () => {
 test("derive fighter L1 preview has HP and attacks", () => {
   enableFighterLine();
   const catalog = builderCatalog();
+  const fighter = catalog.classes.find((c) => c.id === "fighter")!;
+  const pool = catalog.masteryWeaponsByClass.fighter ?? [];
+  const masteryPicks: string[] = [];
+  const props = new Set<string>();
+  for (const w of pool) {
+    if (props.has(w.masteryId)) continue;
+    masteryPicks.push(w.id);
+    props.add(w.masteryId);
+    if (masteryPicks.length >= (fighter.weaponMasteryCountL1 || 3)) break;
+  }
+  assert.ok(masteryPicks.length >= 1);
   const sheet = deriveHero(
     {
       classId: "fighter",
@@ -79,15 +109,82 @@ test("derive fighter L1 preview has HP and attacks", () => {
       baseAbilities: { str: 15, dex: 14, con: 13, int: 12, wis: 10, cha: 8 },
       classSkills: ["perception", "survival"],
       fightingStyleFeatId: "defense",
+      weaponMasteryWeaponIds: masteryPicks,
+      speciesSkill: "insight",
+      originFeatId: "savage_attacker",
       equipChoice: "A",
       backgroundAsi: { mode: "plus2plus1", plus2: "str", plus1: "con" },
     },
     catalog,
     { hitDie: 10, saves: ["str", "con"] },
   );
-  assert.equal(sheet.ok, true);
+  assert.equal(sheet.ok, true, sheet.errors.join(","));
   assert.ok(sheet.hp >= 10);
   assert.ok(sheet.attacks.some((a) => a.name.includes("Greatsword") || a.id === "greatsword"));
+});
+
+test("weapon mastery rejects duplicate properties and wrong count", () => {
+  enableFighterLine();
+  const catalog = builderCatalog();
+  const fighter = catalog.classes.find((c) => c.id === "fighter")!;
+  const pool = catalog.masteryWeaponsByClass.fighter ?? [];
+  assert.ok(pool.length >= 2);
+  const need = fighter.weaponMasteryCountL1 || 3;
+  const sheetShort = deriveHero(
+    {
+      classId: "fighter",
+      speciesId: "human",
+      backgroundId: "soldier",
+      method: "standard_array",
+      baseAbilities: { str: 15, dex: 14, con: 13, int: 12, wis: 10, cha: 8 },
+      classSkills: ["perception", "survival"],
+      fightingStyleFeatId: "defense",
+      weaponMasteryWeaponIds: pool.slice(0, 1).map((w) => w.id),
+      speciesSkill: "insight",
+      originFeatId: "savage_attacker",
+      equipChoice: "A",
+      backgroundAsi: { mode: "plus2plus1", plus2: "str", plus1: "con" },
+    },
+    catalog,
+    { hitDie: 10, saves: ["str", "con"] },
+  );
+  assert.ok(sheetShort.errors.includes("NEED_WEAPON_MASTERY"));
+  const sameProp = pool.filter((w) => w.masteryId === pool[0]!.masteryId).slice(0, need);
+  if (sameProp.length >= 2) {
+    const padded = [...sameProp.map((w) => w.id)];
+    while (padded.length < need) padded.push(pool.find((w) => !padded.includes(w.id))!.id);
+    const sheetDup = deriveHero(
+      {
+        classId: "fighter",
+        speciesId: "human",
+        backgroundId: "soldier",
+        method: "standard_array",
+        baseAbilities: { str: 15, dex: 14, con: 13, int: 12, wis: 10, cha: 8 },
+        classSkills: ["perception", "survival"],
+        fightingStyleFeatId: "defense",
+        weaponMasteryWeaponIds: padded.slice(0, need),
+        speciesSkill: "insight",
+        originFeatId: "savage_attacker",
+        equipChoice: "A",
+        backgroundAsi: { mode: "plus2plus1", plus2: "str", plus1: "con" },
+      },
+      catalog,
+      { hitDie: 10, saves: ["str", "con"] },
+    );
+    assert.ok(sheetDup.errors.includes("MASTERY_PROPERTY_DUP") || sheetDup.errors.includes("NEED_WEAPON_MASTERY") || !sheetDup.ok);
+  }
+});
+
+test("catalog exposes mastery pools, blurbs, and species trait details", () => {
+  enableFighterLine();
+  ensureForgeContentDefaults();
+  const catalog = builderCatalog();
+  const fighter = catalog.classes.find((c) => c.id === "fighter")!;
+  assert.ok(fighter.weaponMasteryCountL1 >= 3);
+  assert.ok((catalog.masteryWeaponsByClass.fighter ?? []).length >= 3);
+  assert.ok(Object.keys(fighter.featureBlurbs).length >= 1);
+  const human = catalog.species.find((s) => s.id === "human");
+  assert.ok(human?.traitDetails?.some((t) => t.summary.length > 8));
 });
 
 test("builder commit creates hero and stash", async () => {
@@ -102,6 +199,8 @@ test("builder commit creates hero and stash", async () => {
   await new Promise<void>((r) => server.listen(0, r));
   const port = (server.address() as { port: number }).port;
 
+  const masteryPicks = fighterMasteryPicks();
+  assert.ok(masteryPicks.length >= 3, `expected mastery picks, got ${masteryPicks.join(",")}`);
   const draft = {
     name: "Edda Forge",
     classId: "fighter",
@@ -111,6 +210,9 @@ test("builder commit creates hero and stash", async () => {
     baseAbilities: { str: 15, dex: 14, con: 13, int: 12, wis: 10, cha: 8 },
     classSkills: ["perception", "survival"],
     fightingStyleFeatId: "defense",
+    weaponMasteryWeaponIds: masteryPicks,
+    speciesSkill: "insight",
+    originFeatId: "savage_attacker",
     equipChoice: "A",
     backgroundAsi: { mode: "plus2plus1", plus2: "str", plus1: "con" },
   };

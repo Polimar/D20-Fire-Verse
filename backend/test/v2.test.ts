@@ -21,6 +21,7 @@ import {
   partyElo,
   partyLevel,
   rankedAbsenceIsLoss,
+  recomputeFromLoadout,
   scaleToCap,
   seasonResetElo,
   targetBudgetCr,
@@ -69,6 +70,53 @@ test("the parser tries ten strategies and the danger budget matches the house ru
   assert.equal(rankedAbsenceIsLoss(0, 44_000), false);
   assert.equal(rankedAbsenceIsLoss(0, 45_000), true);
   assert.equal(applyMastery({ mastery: "graze", granted: true, hit: false, melee: true, abilityMod: 3 }).grazeDamage, 3);
+  {
+    const hero = {
+      id: "h",
+      name: "H",
+      level: 1,
+      xp: 0,
+      species: "human",
+      alignment: "neutral",
+      classes: [{ id: "fighter", level: 1 }],
+      abilities: { str: 15, dex: 14, con: 13, int: 12, wis: 10, cha: 8 },
+      proficiency: [],
+      features: ["weapon_mastery"],
+      spells: [],
+    };
+    const items = new Map([
+      [
+        "greatsword",
+        {
+          id: "greatsword",
+          name: "Greatsword",
+          rarity: "common" as const,
+          slot: "mainhand" as const,
+          weaponMastery: "graze" as const,
+          effects: [],
+        },
+      ],
+      [
+        "longsword",
+        {
+          id: "longsword",
+          name: "Longsword",
+          rarity: "common" as const,
+          slot: "mainhand" as const,
+          weaponMastery: "sap" as const,
+          effects: [],
+        },
+      ],
+    ]);
+    const known = recomputeFromLoadout(hero, { armor: null, shield: null, mainhand: "greatsword", offhand: null, trinkets: [], consumables: [] }, items, 10, 6, [
+      "greatsword",
+    ]);
+    assert.deepEqual(known.masteriesAvailable, ["graze"]);
+    const denied = recomputeFromLoadout(hero, { armor: null, shield: null, mainhand: "longsword", offhand: null, trinkets: [], consumables: [] }, items, 10, 6, [
+      "greatsword",
+    ]);
+    assert.deepEqual(denied.masteriesAvailable, []);
+  }
   assert.equal(canAddClass({ level: 1, classes: [{ id: "fighter", level: 1 }] }, false), false);
   const scaled = scaleToCap(
     { level: 8, maxHp: 60, attackBonus: 6, damageBonus: 4, slots: { "1": 2 }, features: ["spellcasting"], spells: ["cure_wounds"] },

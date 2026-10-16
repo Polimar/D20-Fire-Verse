@@ -8,6 +8,7 @@ import type {
   AbilityKey,
 } from "@d20-fireverse/protocol/builder";
 import { abilityMod, validateBaseAbilities } from "./builder-validate.js";
+import { validateWeaponMasteryPicks, type MasteryWeaponOption } from "./builder-mastery.js";
 import { hpAtLevelOne } from "./progression.js";
 
 const ABILITIES: AbilityKey[] = ["str", "dex", "con", "int", "wis", "cha"];
@@ -179,6 +180,26 @@ export function deriveHero(draft: BuilderDraft, catalog: BuilderCatalog, classHi
   }
 
   if (clsMeta?.fightingStyleRequired && !draft.fightingStyleFeatId) errors.push("NEED_FIGHTING_STYLE");
+
+  if (clsMeta?.weaponMastery && (clsMeta.weaponMasteryCountL1 ?? 0) > 0) {
+    const allowedRaw = catalog.masteryWeaponsByClass?.[clsMeta.id] ?? catalog.masteryWeapons ?? [];
+    const allowed: MasteryWeaponOption[] = allowedRaw.map((w) => ({
+      id: w.id,
+      name: w.name,
+      masteryId: w.masteryId,
+      masteryName: w.masteryName,
+      category: w.category,
+      properties: [],
+    }));
+    const masteryErr = validateWeaponMasteryPicks({
+      required: clsMeta.weaponMasteryCountL1,
+      picks: draft.weaponMasteryWeaponIds ?? [],
+      allowed,
+    });
+    if (masteryErr) errors.push(masteryErr);
+  } else if ((draft.weaponMasteryWeaponIds?.length ?? 0) > 0) {
+    errors.push("BAD_WEAPON_MASTERY");
+  }
 
   const cantripNeed = clsMeta?.level1.cantrips ?? 0;
   const preparedNeed = clsMeta?.level1.preparedSpells ?? 0;

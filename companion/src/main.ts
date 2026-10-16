@@ -1,4 +1,6 @@
 import "@fontsource/cinzel/700.css";
+import "@fontsource/source-sans-3/400.css";
+import "@fontsource/source-sans-3/600.css";
 import "@fontsource-variable/literata/opsz.css";
 import "./styles.css";
 import { describeError, plainNarration, srdLabel, folderActionLists, UI_MOVE_ID, type ActionFolder } from "@d20-fireverse/protocol";

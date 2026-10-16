@@ -57,8 +57,13 @@ test("mastery swaps after a long rest and legacy ritual API is retired", () => {
   accountDb().prepare("UPDATE heroes SET classes_json = ? WHERE id = ?").run(JSON.stringify(stored!.classes), row!.id);
   assert.throws(() => swapWeaponMastery(user.id, row!.id, "nick", "push"), /MASTERY_LOCKED/);
   markMasterySwapReady(row!.id);
-  const swapped = swapWeaponMastery(user.id, row!.id, "cleave", "nick");
-  assert.ok(swapped.masteries.includes("nick"));
-  assert.throws(() => swapWeaponMastery(user.id, row!.id, "nick", "sap"), /MASTERY_LOCKED/);
+  const meta = JSON.parse(
+    (accountDb().prepare("SELECT builder_meta_json FROM heroes WHERE id = ?").get(row!.id) as { builder_meta_json?: string }).builder_meta_json ?? "{}",
+  ) as { masteries?: string[] };
+  const drop = meta.masteries?.[0] ?? "cleave";
+  const take = drop === "nick" ? "push" : "nick";
+  const swapped = swapWeaponMastery(user.id, row!.id, drop, take);
+  assert.ok(swapped.masteries.includes(take));
+  assert.throws(() => swapWeaponMastery(user.id, row!.id, take, "sap"), /MASTERY_LOCKED/);
   void hero;
 });

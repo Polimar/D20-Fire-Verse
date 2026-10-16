@@ -1,6 +1,7 @@
 import { randomBytes } from "node:crypto";
 import type { BuilderDraft } from "@d20-fireverse/protocol/builder";
 import { deriveHero } from "@d20-fireverse/rules";
+import { defaultPortrait, isPortraitId } from "./portraits.js";
 import type { SessionUser } from "./auth.js";
 import { accountDb } from "./auth.js";
 import { builderCatalog, classDefForBuilder } from "./builder-catalog.js";
@@ -45,8 +46,14 @@ export function commitBuilderDraft(user: SessionUser, draft: BuilderDraft): Hero
   ) as HeroRow["abilities"];
 
   const spells = [...(draft.cantrips ?? []), ...(draft.spellsPrepared ?? draft.spellsKnown ?? [])];
+  const sex = draft.sex === "m" ? "m" : "f";
+  const portraitId = isPortraitId(draft.portraitId)
+    ? draft.portraitId
+    : defaultPortrait(draft.speciesId, draft.classId, sex);
   const meta = JSON.stringify({
     method: draft.method,
+    sex,
+    portraitId,
     backgroundAsi: draft.backgroundAsi,
     equipChoice: draft.equipChoice,
     backgroundEquipChoice: draft.backgroundEquipChoice ?? "A",
@@ -80,7 +87,7 @@ export function commitBuilderDraft(user: SessionUser, draft: BuilderDraft): Hero
           ...(draft.speciesSkill ? [draft.speciesSkill] : []),
         ]),
       ]),
-      draft.portraitId ?? null,
+      portraitId,
       JSON.stringify((draft.expertiseSkills ?? []).map((id) => `expertise:${id}`)),
       JSON.stringify(spells),
       new Date().toISOString(),
@@ -141,9 +148,17 @@ export function commitBuilderDraft(user: SessionUser, draft: BuilderDraft): Hero
       ...(draft.magicInitiateSpell ? [draft.magicInitiateSpell] : []),
     ]),
   ];
+  const masteryWeaponIds = draft.weaponMasteryWeaponIds ?? [];
+  const masteryProps = masteryWeaponIds
+    .map((wid) => catalog.masteryWeapons.find((w) => w.id === wid)?.masteryId)
+    .filter((id): id is string => Boolean(id));
   const metaExtra = {
     ...JSON.parse(meta) as Record<string, unknown>,
     skilledPicks: draft.skilledPicks,
+    weaponMasteryWeaponIds: masteryWeaponIds,
+    masteryWeapons: masteryWeaponIds,
+    masteries: [...new Set(masteryProps)],
+    fightingStyleFeatId: draft.fightingStyleFeatId,
     magicInitiate: originFeat === "magic_initiate"
       ? {
           cantrips: draft.magicInitiateCantrips,
@@ -153,6 +168,8 @@ export function commitBuilderDraft(user: SessionUser, draft: BuilderDraft): Hero
         }
       : undefined,
     customTool: draft.customTool,
+    sex,
+    portraitId,
   };
   accountDb()
     .prepare(

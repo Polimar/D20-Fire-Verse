@@ -550,9 +550,9 @@ Aggiornare ☐ → ☑ nel PR che chiude il checkpoint indicato.
 
 Step della modal (Hero builder dal menu home; `/forge` apre la stessa modal):
 
-`Class → Species → Origin → Ability scores → Training (skills / fighting style / expertise) → Equipment → Spells (se lanciatore) → Details → Review`
+`Class → Species → Origin → Ability scores → Training (skills / expertise) → Equipment → Spells (se lanciatore) → Details → Review`
 
-Panel scheda: output `DerivedSheet` sempre da preview server. D-pad: frecce per il focus, OK per scegliere, Back chiude o torna, Rewind/Forward cambiano passo.
+Class and Species use a master-detail panel (progression preview, Weapon Mastery + Fighting Style pending on Class). Training shows Fighting Style as read-only if already chosen. D-pad: arrows focus/preview, OK commits the card, Back/Next as usual. Live sheet strip: Level / Prof / HP.
 
 ---
 

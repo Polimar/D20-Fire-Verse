@@ -10,7 +10,7 @@ import { commitBuilderDraft } from "../src/local/builder-commit.js";
 import { resolveContent, setContentEnabled } from "../src/local/content-catalog.js";
 import { equip } from "../src/local/hero.js";
 import { heroDerivedSheet } from "../src/local/hero-sheet.js";
-import { boot } from "./helpers.js";
+import { boot, masteryPicksForClass } from "./helpers.js";
 
 before(() => {
   boot();
@@ -25,30 +25,36 @@ function enableFighterKit(): void {
     ["item", "greatsword"],
     ["item", "chain_mail"],
     ["feat", "defense"],
+    ["feat", "savage_attacker"],
   ] as const) {
     if (kind === "feat" || kind === "item") resolveContent(kind, id, { adminNote: "hero sheet test" });
     setContentEnabled(kind, id, true);
   }
 }
 
-const fighterDraft = {
-  name: "Sheet Test",
-  classId: "fighter",
-  speciesId: "human",
-  backgroundId: "soldier",
-  method: "standard_array" as const,
-  baseAbilities: { str: 15, dex: 14, con: 13, int: 12, wis: 10, cha: 8 },
-  classSkills: ["perception", "survival"],
-  fightingStyleFeatId: "defense",
-  equipChoice: "A" as const,
-  backgroundAsi: { mode: "plus2plus1" as const, plus2: "str" as const, plus1: "con" as const },
-};
+function fighterDraft() {
+  return {
+    name: "Sheet Test",
+    classId: "fighter",
+    speciesId: "human",
+    backgroundId: "soldier",
+    method: "standard_array" as const,
+    baseAbilities: { str: 15, dex: 14, con: 13, int: 12, wis: 10, cha: 8 },
+    classSkills: ["perception", "survival"],
+    fightingStyleFeatId: "defense",
+    weaponMasteryWeaponIds: masteryPicksForClass("fighter"),
+    speciesSkill: "insight",
+    originFeatId: "savage_attacker",
+    equipChoice: "A" as const,
+    backgroundAsi: { mode: "plus2plus1" as const, plus2: "str" as const, plus1: "con" as const },
+  };
+}
 
 test("GET /api/heroes/:id/sheet returns derived attacks and passive perception", async () => {
   enableFighterKit();
   const player = createUser(`sheet${randomUUID().replace(/-/g, "").slice(0, 8)}`, "password", "player");
   const { token } = login(player.username, "password")!;
-  const hero = commitBuilderDraft(player, fighterDraft);
+  const hero = commitBuilderDraft(player, fighterDraft());
 
   const app = express();
   app.use(express.json());
@@ -73,7 +79,7 @@ test("GET /api/heroes/:id/sheet returns derived attacks and passive perception",
 test("equipping a greatsword from stash updates sheet attack rows", () => {
   enableFighterKit();
   const player = createUser(`seqp${randomUUID().replace(/-/g, "").slice(0, 8)}`, "password", "player");
-  const hero = commitBuilderDraft(player, { ...fighterDraft, name: "Equip Test", equipChoice: "B" });
+  const hero = commitBuilderDraft(player, { ...fighterDraft(), name: "Equip Test", equipChoice: "B" });
   const before = heroDerivedSheet(player.id, hero.id);
   assert.ok(before);
   assert.ok(!before.attacks.some((a) => a.id === "gear_greatsword_attack"));

@@ -159,6 +159,7 @@ export * from "./encounter-budget.js";
 export * from "./loadout.js";
 export * from "./item-armory.js";
 export * from "./mastery.js";
+export * from "./builder-mastery.js";
 export * from "./matchmaking.js";
 export * from "./requires.js";
 export * from "./rewards.js";

@@ -1,4 +1,7 @@
 /** Painted portraits shipped in tv/public/art/portraits. */
+import { existsSync } from "node:fs";
+import { join } from "node:path";
+import { REPO_ROOT } from "./paths.js";
 
 export const PORTRAITS = [
   "brenna_ironveal",
@@ -15,18 +18,32 @@ export const PORTRAITS = [
   "messenger",
 ] as const;
 
-export type PortraitId = (typeof PORTRAITS)[number];
+export type PortraitId = (typeof PORTRAITS)[number] | string;
 
 export function portraitUrl(id: string): string {
   return `/art/portraits/${id}.webp`;
 }
 
-export function isPortraitId(id: unknown): id is PortraitId {
+export function isLegacyPortraitId(id: unknown): id is (typeof PORTRAITS)[number] {
   return typeof id === "string" && (PORTRAITS as readonly string[]).includes(id);
 }
 
-/** A sensible face for a forged hero who didn't pick one. */
-export function defaultPortrait(raceId: string, classId: string): PortraitId {
+/** Legacy named portraits or forge pack ids (`forge_species_class_sex_n`). */
+export function isPortraitId(id: unknown): id is PortraitId {
+  if (typeof id !== "string" || !id) return false;
+  if (isLegacyPortraitId(id)) return true;
+  return /^forge_[a-z0-9]+_[a-z0-9]+_[fm]_[12]$/.test(id);
+}
+
+/** A sensible face for a forged hero who didn't pick one. Prefers forge pack when on disk. */
+export function defaultPortrait(raceId: string, classId: string, sex: "f" | "m" = "f"): PortraitId {
+  const forgeId = `forge_${raceId}_${classId}_${sex}_1`;
+  if (
+    /^forge_[a-z0-9]+_[a-z0-9]+_[fm]_[12]$/.test(forgeId) &&
+    existsSync(join(REPO_ROOT, "tv", "public", "art", "portraits", `${forgeId}.webp`))
+  ) {
+    return forgeId;
+  }
   if (raceId === "dragonborn") return "cg_dragonborn";
   if (raceId === "tiefling") return "cg_tiefling";
   if (raceId === "half_orc") return "cg_halforc";

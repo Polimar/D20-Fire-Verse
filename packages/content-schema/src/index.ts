@@ -215,6 +215,14 @@ export const subclassDef = z
   .strict();
 export type SubclassDef = z.infer<typeof subclassDef>;
 
+export const speciesTraitDetail = z
+  .object({
+    name: z.string().min(1),
+    summary: z.string().min(1),
+    unlockLevel: z.number().int().min(1).max(20).optional(),
+  })
+  .strict();
+
 export const speciesDef = z
   .object({
     id: z.string().min(1),
@@ -222,6 +230,7 @@ export const speciesDef = z
     speedFt: z.number().int().positive(),
     size: z.enum(["small", "medium"]),
     traits: z.array(z.string()),
+    traitDetails: z.array(speciesTraitDetail).optional(),
     effects: z.array(effectDef).optional(),
     hpPerLevel: z.number().int().optional(),
   })

@@ -1,5 +1,7 @@
 import "@fontsource/cinzel/500.css";
 import "@fontsource/cinzel/700.css";
+import "@fontsource/source-sans-3/400.css";
+import "@fontsource/source-sans-3/600.css";
 import "@fontsource-variable/literata/opsz.css";
 import "@fontsource-variable/literata/opsz-italic.css";
 import "./styles.css";

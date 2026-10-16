@@ -4,7 +4,7 @@ import { deriveHero } from "@d20-fireverse/rules";
 import { builderCatalog } from "../src/local/builder-catalog.js";
 import { ensureForgeContentDefaults, listCatalog, reloadCatalog } from "../src/local/content-catalog.js";
 import { clearStarterCaches, backgroundStarters } from "../src/local/starter-equipment.js";
-import { boot } from "./helpers.js";
+import { boot, masteryPicksForClass } from "./helpers.js";
 
 before(() => {
   boot();
@@ -62,6 +62,7 @@ test("farmer with tough derives extra HP at L1", () => {
       baseAbilities: { str: 15, dex: 14, con: 13, int: 12, wis: 10, cha: 8 },
       classSkills: ["perception", "survival"],
       fightingStyleFeatId: "defense",
+      weaponMasteryWeaponIds: masteryPicksForClass("fighter"),
       equipChoice: "A",
       backgroundAsi: { mode: "plus2plus1", plus2: "str", plus1: "con" },
       speciesSkill: "athletics",

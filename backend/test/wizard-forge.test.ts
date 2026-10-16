@@ -10,7 +10,7 @@ import { deriveHero } from "@d20-fireverse/rules";
 import { builderCatalog, classDefForBuilder } from "../src/local/builder-catalog.js";
 import { initSheet, refreshMenus } from "../src/local/srd-sheet.js";
 import type { HeroPregen } from "../src/local/hero-pregen.js";
-import { boot } from "./helpers.js";
+import { boot, masteryPicksForClass } from "./helpers.js";
 
 before(() => {
   boot();
@@ -138,6 +138,9 @@ test("starter kit armor sets preview AC for every class", () => {
         backgroundAsi: { mode: "plus2plus1", plus2: "str", plus1: "con" },
         equipChoice: "A",
         fightingStyleFeatId: cls.levels.some((row) => row.features.some((f) => /fighting style/i.test(f))) ? "archery" : undefined,
+        ...(cls.weaponMastery ? { weaponMasteryWeaponIds: masteryPicksForClass(classId) } : {}),
+        speciesSkill: "insight",
+        originFeatId: "savage_attacker",
       },
       catalog,
       { hitDie: cls.hitDie, saves: cls.saves, spellSlotsL1: l1?.spellSlots },
@@ -157,6 +160,9 @@ test("starter kit armor sets preview AC for every class", () => {
       backgroundAsi: { mode: "plus2plus1", plus2: "dex", plus1: "con" },
       equipChoice: "B",
       fightingStyleFeatId: "archery",
+      weaponMasteryWeaponIds: masteryPicksForClass("fighter"),
+      speciesSkill: "insight",
+      originFeatId: "savage_attacker",
     },
     catalog,
     { hitDie: fighter.hitDie, saves: fighter.saves },

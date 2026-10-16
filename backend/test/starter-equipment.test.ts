@@ -5,7 +5,7 @@ import { classStarters, backgroundStarters, resolveClassStarter } from "../src/l
 import { resolveContent, setContentEnabled } from "../src/local/content-catalog.js";
 import { createUser, openAuth } from "../src/local/auth.js";
 import { wallet } from "../src/local/hero.js";
-import { boot } from "./helpers.js";
+import { boot, masteryPicksForClass } from "./helpers.js";
 
 before(() => {
   boot();
@@ -36,6 +36,7 @@ test("fighter gold bundle credits wallet on commit", () => {
     ["species", "human"],
     ["background", "soldier"],
     ["feat", "defense"],
+    ["feat", "savage_attacker"],
   ] as const) {
     if (kind === "feat") resolveContent(kind, id, { adminNote: "starter gold" });
     setContentEnabled(kind, id, true);
@@ -53,6 +54,9 @@ test("fighter gold bundle credits wallet on commit", () => {
     baseAbilities: { str: 15, dex: 14, con: 13, int: 12, wis: 10, cha: 8 },
     classSkills: ["perception", "survival"],
     fightingStyleFeatId: "defense",
+    weaponMasteryWeaponIds: masteryPicksForClass("fighter"),
+    speciesSkill: "insight",
+    originFeatId: "savage_attacker",
     equipChoice: "C",
     backgroundEquipChoice: "B",
     backgroundAsi: { mode: "plus2plus1", plus2: "str", plus1: "con" },

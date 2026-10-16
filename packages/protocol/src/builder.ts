@@ -27,6 +27,8 @@ export type BuilderDraft = {
   /** Rogue (and later bard) expertise picks. Must already be proficient. */
   expertiseSkills?: string[];
   fightingStyleFeatId?: string;
+  /** L1 Weapon Mastery: chosen weapon kind item ids. */
+  weaponMasteryWeaponIds?: string[];
   cantrips?: string[];
   spellsPrepared?: string[];
   spellsKnown?: string[];
@@ -47,6 +49,8 @@ export type BuilderDraft = {
   backgroundEquipChoice?: "A" | "B";
   about?: string;
   languages?: string[];
+  /** Presentation for portrait filtering: female or male. */
+  sex?: "f" | "m";
   portraitId?: string;
 };
 
@@ -89,9 +93,24 @@ export type DerivedSheet = {
   errors: string[];
 };
 
+export type BuilderCatalogClassLevel = {
+  level: number;
+  features: string[];
+};
+
+export type BuilderMasteryWeapon = {
+  id: string;
+  name: string;
+  masteryId: string;
+  masteryName: string;
+  category: "simple_melee" | "simple_ranged" | "martial_melee" | "martial_ranged";
+};
+
 export type BuilderCatalogClass = {
   id: string;
   name: string;
+  hitDie: number;
+  saves: AbilityKey[];
   skillChoices: number;
   skillList: string[];
   caster: string;
@@ -106,13 +125,33 @@ export type BuilderCatalogClass = {
   maxSpellLevelAt: number[];
   fightingStyleRequired?: boolean;
   fightingStyleFeatIds: string[];
+  weaponMastery: boolean;
+  weaponMasteryCountL1: number;
+  weaponMasteryMeleeOnly: boolean;
+  /** Feature names by level 1–20. */
+  levels: BuilderCatalogClassLevel[];
+  /** SRD blurbs for L1–3 features (feature name → text). */
+  featureBlurbs: Record<string, string>;
   equipChoices: Array<{ id: "A" | "B" | "C"; label: string; items?: string[] }>;
+};
+
+export type BuilderSpeciesTrait = {
+  name: string;
+  summary: string;
+  unlockLevel?: number;
 };
 
 export type BuilderCatalog = {
   standardArray: number[];
   pointBuy: { budget: number; min: number; max: number };
-  species: Array<{ id: string; name: string; traits: string[] }>;
+  species: Array<{
+    id: string;
+    name: string;
+    traits: string[];
+    speedFt: number;
+    size: string;
+    traitDetails: BuilderSpeciesTrait[];
+  }>;
   backgrounds: Array<{
     id: string;
     name: string;
@@ -128,5 +167,16 @@ export type BuilderCatalog = {
   feats: Array<{ id: string; name: string; category: string; asiChoices?: AbilityKey[]; repeatable?: boolean }>;
   spells: Array<{ id: string; name: string; level: number; classes: string[] }>;
   skills: Record<string, { label: string; ability: AbilityKey }>;
-  portraits: Array<{ id: string; url: string }>;
+  portraits: Array<{
+    id: string;
+    url: string;
+    speciesId?: string;
+    classId?: string;
+    sex?: "f" | "m";
+    variant?: number;
+  }>;
+  /** All weapons with a mastery property (filter per class client-side or via class.masteryWeapons). */
+  masteryWeapons: BuilderMasteryWeapon[];
+  /** Pre-filtered mastery weapons by class id. */
+  masteryWeaponsByClass: Record<string, BuilderMasteryWeapon[]>;
 };

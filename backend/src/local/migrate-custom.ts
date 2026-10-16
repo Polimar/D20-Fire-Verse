@@ -61,6 +61,17 @@ function draftFromLegacy(raw: Legacy): BuilderDraft {
   const human = speciesId === "human";
   const origin = catalog.feats.find((f) => f.category === "origin");
   const extraSkill = human ? cls.skillList.find((id) => !classSkills.includes(id) && !background.skills.includes(id)) : undefined;
+  const masteryNeed = cls.weaponMastery ? cls.weaponMasteryCountL1 : 0;
+  const masteryPicks: string[] = [];
+  if (masteryNeed > 0) {
+    const props = new Set<string>();
+    for (const w of catalog.masteryWeaponsByClass[cls.id] ?? []) {
+      if (props.has(w.masteryId)) continue;
+      masteryPicks.push(w.id);
+      props.add(w.masteryId);
+      if (masteryPicks.length >= masteryNeed) break;
+    }
+  }
   return {
     name: raw.name,
     classId: cls.id,
@@ -70,6 +81,7 @@ function draftFromLegacy(raw: Legacy): BuilderDraft {
     baseAbilities: scores,
     classSkills: classSkills.slice(0, cls.skillChoices),
     fightingStyleFeatId: style,
+    ...(masteryPicks.length ? { weaponMasteryWeaponIds: masteryPicks } : {}),
     cantrips,
     spellsPrepared: prepared,
     spellsKnown: knownSpells,

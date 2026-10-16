@@ -12,7 +12,9 @@ import { gearAttackId } from "./gear-abilities.js";
 import { giantStrengthPotionByItemId } from "./giant-strength-potions.js";
 import { healingPotionByItemId } from "./healing-potions.js";
 import { invisibilityPotionByItemId } from "./invisibility-potion.js";
+import { accountDb } from "./auth.js";
 import { classPackWeapon, equippedGear, getHero, listHeroes, type EquippedItem, type HeroRow } from "./hero.js";
+import { portraitUrl } from "./portraits.js";
 
 type Ability = "str" | "dex" | "con" | "int" | "wis" | "cha";
 type Rider = { damage: string; damageType?: string };
@@ -193,6 +195,20 @@ export function heroPregen(heroId: string, lookup: Lookup): HeroPregen | undefin
   };
   const weapons: string[] = [];
   const masteryKnown = hasFlag(kit, "weapon_mastery");
+  /** When set, only these weapon kinds (item ids) grant mastery riders (PHB 2024-shaped). */
+  let knownMasteryWeapons: string[] | undefined;
+  {
+    const row = accountDb()
+      .prepare("SELECT builder_meta_json FROM heroes WHERE id = ?")
+      .get(heroId) as { builder_meta_json?: string } | undefined;
+    try {
+      const meta = JSON.parse(row?.builder_meta_json ?? "{}") as { masteryWeapons?: string[]; weaponMasteryWeaponIds?: string[] };
+      const list = meta.masteryWeapons ?? meta.weaponMasteryWeaponIds;
+      if (Array.isArray(list) && list.length) knownMasteryWeapons = list.map(String);
+    } catch {
+      knownMasteryWeapons = undefined;
+    }
+  }
   for (const entry of live) {
     const isWeaponSlot = entry.slot === "mainhand" || entry.slot === "offhand";
     const base = isWeaponSlot ? baseOf(entry.item, classWeapon(primary.id)) : undefined;
@@ -201,7 +217,9 @@ export function heroPregen(heroId: string, lookup: Lookup): HeroPregen | undefin
     if (isWeaponSlot && !attackId) notes.push(`${entry.item.name} names no base weapon the game knows, so it cannot attack.`);
     const bucket: WeaponGear | undefined = attackId ? (sheet.weapons[attackId] ??= { attack: 0, damage: 0, onHit: [] }) : undefined;
     const mastery = base?.weaponMastery ?? entry.item.weaponMastery;
-    if (masteryKnown && mastery) {
+    const kindId = base?.id ?? entry.item.id;
+    const kindAllowed = !knownMasteryWeapons || knownMasteryWeapons.includes(kindId);
+    if (masteryKnown && mastery && kindAllowed) {
       sheet.masteries.push(mastery);
       if (bucket) bucket.mastery = mastery;
     }
@@ -371,7 +389,11 @@ export function heroPregen(heroId: string, lookup: Lookup): HeroPregen | undefin
     speedCells,
     proficiencyBonus: row?.proficiencyBonus ?? 2 + Math.floor((hero.level - 1) / 4),
     inventory,
-    portrait: hero.portrait ?? undefined,
+    portrait: hero.portrait
+      ? hero.portrait.startsWith("/")
+        ? hero.portrait
+        : portraitUrl(hero.portrait)
+      : undefined,
     ownerUserId: hero.userId,
     spellSlots: slots,
     spellAbility: cls?.spellAbility,

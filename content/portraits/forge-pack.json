@@ -1,0 +1,36 @@
+{
+  "style": "oil-painted fantasy RPG bust portrait, dark moody background, cinematic lighting, square crop",
+  "species": ["dragonborn", "dwarf", "elf", "gnome", "goliath", "halfling", "human", "orc", "tiefling"],
+  "classes": ["barbarian", "bard", "cleric", "druid", "fighter", "monk", "paladin", "ranger", "rogue", "sorcerer", "warlock", "wizard"],
+  "sexes": ["f", "m"],
+  "variants": [1, 2],
+  "speciesLook": {
+    "dragonborn": "dragonborn with scales and a short snout, not a human face, reptilian eyes",
+    "dwarf": "stocky dwarf, broad face, shorter stature cues in framing",
+    "elf": "elegant elf, pointed ears, refined features",
+    "gnome": "small gnome, large expressive eyes, lively face",
+    "goliath": "towering goliath, stone-like mottled skin, strong jaw",
+    "halfling": "halfling, youthful round face, warm expression",
+    "human": "human adventurer",
+    "orc": "orc with green-grey skin, tusks, strong brow",
+    "tiefling": "tiefling with horns and a tail tip visible, infernal heritage"
+  },
+  "classLook": {
+    "barbarian": "fur and leather, tribal marks, primal warrior",
+    "bard": "colorful performing clothes, lute or flute hint",
+    "cleric": "holy symbol and chain or robes, serene resolve",
+    "druid": "natural materials, leaves and leather, wild calm",
+    "fighter": "practical armor, soldier bearing",
+    "monk": "simple wraps, martial calm, no heavy armor",
+    "paladin": "polished plate, radiant conviction",
+    "ranger": "hooded cloak, wilderness gear, bow or dual blades hint",
+    "rogue": "dark leather, hood or scarf, sly look",
+    "sorcerer": "arcane glow, dramatic clothing, innate power",
+    "warlock": "occult jewelry, eerie light, pact-touched",
+    "wizard": "robes and a book or staff, scholarly mage"
+  },
+  "sexLook": {
+    "f": "female presentation",
+    "m": "male presentation"
+  }
+}
