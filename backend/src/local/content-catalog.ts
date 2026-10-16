@@ -352,6 +352,14 @@ function effectShort(e: Loose): string {
       return `${String(e.ability).toUpperCase()} ${String(e.score)}`;
     case "stat_drink":
       return `drink ${String(e.ability).toUpperCase()} ${String(e.score)}`;
+    case "resistance_drink":
+      return `drink resist ${String(e.damageType)}`;
+    case "animated_shield":
+      return `animate shield +${String(e.acBonus ?? 2)} AC`;
+    case "cloak_invisibility":
+      return `cloak invis ${String(e.durationPcTurns ?? 10)} turns`;
+    case "scroll_cast":
+      return `scroll ${String(e.spellId).replace(/_/g, " ")}`;
     case "stat_increase_cap":
       return `${String(e.ability).toUpperCase()} cap ${String(e.cap)}`;
     default:

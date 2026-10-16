@@ -38,7 +38,15 @@ function itemEngineReasons(game: ItemDef): string[] {
 }
 
 function itemDrinkReasons(game: ItemDef, review?: ContentReviewHints): string[] {
-  if (game.effects.some((effect) => effect.kind === "haste_drink" || effect.kind === "heal_drink" || effect.kind === "invisibility_drink")) {
+  if (
+    game.effects.some(
+      (effect) =>
+        effect.kind === "haste_drink" ||
+        effect.kind === "heal_drink" ||
+        effect.kind === "invisibility_drink" ||
+        effect.kind === "resistance_drink",
+    )
+  ) {
     return [];
   }
   const srdText = String(review?.srd?.text ?? "");
@@ -119,7 +127,14 @@ export function mechanicGapReasons(kind: string, id: string, game: unknown, revi
             (item.id === "staff_of_striking" && item.effects.some((effect) => effect.kind === "on_hit_rider")))) ||
         (/Strength without the belt/i.test(reason) && item.effects.some((effect) => effect.kind === "stat_set" || effect.kind === "stat_drink")) ||
         (/becomes nonmagical/i.test(reason) && item.effects.some((effect) => effect.kind === "on_hit_rider" && effect.saveDc)) ||
-        (/Haste spell/i.test(reason) && item.effects.some((effect) => effect.kind === "haste_drink"));
+        (/Haste spell/i.test(reason) && item.effects.some((effect) => effect.kind === "haste_drink")) ||
+        (/Bonus Action to end/i.test(reason) && item.effects.some((effect) => effect.kind === "animated_shield")) ||
+        (/Incapacitated/i.test(reason) && item.effects.some((effect) => effect.kind === "animated_shield")) ||
+        (/regains 1d3/i.test(reason) && item.effects.some((effect) => effect.kind === "cloak_invisibility")) ||
+        (/pull the hood down/i.test(reason) && item.effects.some((effect) => effect.kind === "cloak_invisibility")) ||
+        (/increase the spell's level/i.test(reason) &&
+          item.id === "wand_of_magic_missiles" &&
+          item.effects.some((effect) => effect.kind === "grant_spell"));
       const kept = reasons.filter((reason) => !stale(reason));
       reasons.length = 0;
       reasons.push(...kept, ...itemEngineReasons(item), ...itemDrinkReasons(item, review));

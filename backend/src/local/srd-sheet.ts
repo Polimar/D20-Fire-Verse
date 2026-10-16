@@ -11,6 +11,8 @@ import { wildShapeForm } from "./wild-shape-forms.js";
 import type { GearSheet } from "./hero-pregen.js";
 import { HEALING_POTIONS } from "./healing-potions.js";
 import { SPEED_POTION_ABILITY_ID, SPEED_POTION_INVENTORY } from "./speed-potion.js";
+import { FIRE_RESISTANCE_ABILITY_ID, FIRE_RESISTANCE_INVENTORY } from "./resistance-potion.js";
+import { SPELL_SCROLLS } from "./spell-scroll.js";
 import { GIANT_STRENGTH_POTIONS } from "./giant-strength-potions.js";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -238,6 +240,8 @@ export function initSheet(token: CombatToken, pregen: Pregen, saved?: Vitals): v
     }
     token.followAuras = [...gear.followAuras];
     token.plantAuras = [...gear.plantAuras];
+    token.gearCombatAbilities = [...gear.combatAbilities];
+    token.cloakChargePool = gear.cloakChargePool;
     if (gear.plantAuras.length) token.abilityUses = { ...(token.abilityUses ?? {}), rod_plant: 1 };
   }
   if (token.baseMaxHp == null) token.baseMaxHp = token.maxHp;
@@ -397,6 +401,10 @@ export function refreshMenus(token: CombatToken, pregen: Pregen | undefined, loo
     if (token.inventory.includes(potion.inventoryToken)) place(potion.abilityId);
   }
   if (token.inventory.includes(SPEED_POTION_INVENTORY)) place(SPEED_POTION_ABILITY_ID);
+  if (token.inventory.includes(FIRE_RESISTANCE_INVENTORY)) place(FIRE_RESISTANCE_ABILITY_ID);
+  for (const scroll of SPELL_SCROLLS) {
+    if (token.inventory.includes(scroll.inventoryToken)) place(scroll.abilityId);
+  }
   for (const potion of GIANT_STRENGTH_POTIONS) {
     if (token.inventory.includes(potion.inventoryToken)) place(potion.abilityId);
   }
@@ -410,6 +418,14 @@ export function refreshMenus(token: CombatToken, pregen: Pregen | undefined, loo
   for (const id of token.grantedSpells ?? []) {
     const pool = token.gearSpells?.[id];
     if (pool && (token.gearCharges?.[pool] ?? 0) > 0) place(id, true);
+  }
+  for (const id of token.gearCombatAbilities ?? []) {
+    if (id === "use_cloak_invisibility") {
+      const pool = token.cloakChargePool;
+      if (pool && (token.gearCharges?.[pool] ?? 0) > 0) place(id);
+      continue;
+    }
+    place(id, id === "animate_animated_shield");
   }
   if ((token.plantAuras ?? []).length) {
     place("rod_plant");

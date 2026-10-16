@@ -55,6 +55,22 @@
     "combat": true,
     "effects": [{ "type": "mage_armor", "slot": 1 }]
   },
+  "spell_magic_missile": {
+    "id": "spell_magic_missile",
+    "name": "Magic Missile",
+    "actionType": "action",
+    "level": 1,
+    "combat": true,
+    "effects": [
+      {
+        "type": "auto_hit",
+        "missiles": 3,
+        "rangeCells": 24,
+        "damage": [{ "dice": "1d4+1", "damageType": "force" }],
+        "slot": 1
+      }
+    ]
+  },
   "spell_sleep": {
     "id": "spell_sleep",
     "name": "Sleep",

@@ -1,0 +1,13 @@
+{
+  "ambiguities": [],
+  "unparsedFields": [],
+  "kind": "item",
+  "id": "spell_scroll_fireball",
+  "status": "auto_ok",
+  "confidence": "high",
+  "usage": "Read in combat if Fireball is on your class list; over-slot spells need a spellcasting check. Scroll is destroyed on use.",
+  "srd": {
+    "line": "Scroll, Rare",
+    "text": "_Scroll, Rare_\n\nA Spell Scroll bearing Fireball."
+  }
+}

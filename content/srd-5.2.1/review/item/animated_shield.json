@@ -1,33 +1,13 @@
 {
-  "ambiguities": [
-    {
-      "field": "effects",
-      "summary": "No typed effect matches this item. The rules listed under Not modeled stay text only.",
-      "options": [
-        {
-          "label": "Approve with no typed effects",
-          "patch": {
-            "effects": []
-          }
-        }
-      ],
-      "parserChoice": 0
-    }
-  ],
-  "unparsedFields": [
-    "effects"
-  ],
+  "ambiguities": [],
+  "unparsedFields": [],
   "kind": "item",
   "id": "animated_shield",
-  "status": "needs_review",
-  "confidence": "low",
-  "usage": "Vendor, loot, and stash. Account heroes carry its typed effects into fights while it is equipped (and attuned, when required).",
+  "status": "auto_ok",
+  "confidence": "high",
+  "usage": "Bonus action while equipped and attuned: +2 AC for about a minute (PC turns). Ends when the timed effect expires.",
   "srd": {
     "line": "Armor (Shield), Very Rare (Requires Attunement)",
     "text": "_Armor (Shield), Very Rare (Requires Attunement)_\n\nWhile holding this Shield, you can take a Bonus Action to cause it to animate. The Shield leaps into the air and hovers in your space to protect you as if you were wielding it, leaving your hands free. The Shield remains animate for 1 minute, until you take a Bonus Action to end this effect, or until you die or have the Incapacitated condition, at which point the Shield falls to the ground or into your hand if you have one free."
-  },
-  "notModeled": [
-    "While holding this Shield, you can take a Bonus Action to cause it to animate.",
-    "The Shield remains animate for 1 minute, until you take a Bonus Action to end this effect, or until you die or have the Incapacitated condition, at which point the Shield falls to the ground or into your hand if you have one free."
-  ]
+  }
 }

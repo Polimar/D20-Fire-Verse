@@ -230,6 +230,7 @@ test("a magic weapon rider, its resistance, and an item spell reach the fight", 
   assert.equal(strike.hits[0]!.damage, 4 + 2 + 3);
 
   token.hasAction = true;
+  performPcAction(combat, "P1", "std_magic");
   performPcAction(combat, "P1", spellId!, "en-1");
   assert.equal(token.gearCharges?.[wand], 6);
   assert.deepEqual(token.slots, {});

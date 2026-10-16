@@ -301,6 +301,38 @@ function itemEffectLine(effect: EffectDef, weapon: boolean, item: ItemDef): Engi
         detail: "Drink as an action to gain Haste for this fight (no concentration, no lethargy when it ends).",
         ok: true,
       };
+    case "resistance_drink":
+      return {
+        label: "Drink",
+        detail: `Drink as an action to gain resistance to ${effect.damageType} damage for about an hour (fight turns).`,
+        ok: true,
+      };
+    case "animated_shield":
+      return {
+        label: "Animate",
+        detail: `Bonus action: +${effect.acBonus ?? 2} AC while the shield hovers (${effect.durationPcTurns ?? 10} of your turns).`,
+        ok: true,
+      };
+    case "cloak_invisibility":
+      return {
+        label: "Invisible",
+        detail: `Magic action: spend 1 charge to become Invisible for about an hour (fight turns).`,
+        ok: true,
+      };
+    case "scroll_cast": {
+      const known = getAbility(`spell_${effect.spellId}`) ?? getAbility(effect.spellId);
+      return known
+        ? {
+            label: "Scroll",
+            detail: `Read as an action to cast ${known.name} without a slot; the scroll is destroyed.`,
+            ok: true,
+          }
+        : {
+            label: "Scroll",
+            detail: `${String(effect.spellId).replace(/_/g, " ")}: no combat spell wired.`,
+            ok: false,
+          };
+    }
     case "resistance":
       return { label: "Resistance", detail: `Half ${effect.damageType} damage taken.`, ok: true };
     case "immunity":

@@ -35,6 +35,10 @@ export type GearSheet = {
   notes: string[];
   followAuras: import("./combat-aura.js").AuraMods[];
   plantAuras: import("./combat-aura.js").AuraMods[];
+  /** Bonus/action menu ability ids from equipped item effects (animated shield, cloak, …). */
+  combatAbilities: string[];
+  /** Item instance id paying for cloak invisibility charges. */
+  cloakChargePool?: string;
 };
 
 export type HeroPregen = Pregen & {
@@ -182,6 +186,7 @@ export function heroPregen(heroId: string, lookup: Lookup): HeroPregen | undefin
     notes,
     followAuras: [],
     plantAuras: [],
+    combatAbilities: [],
   };
   const weapons: string[] = [];
   const masteryKnown = hasFlag(kit, "weapon_mastery");
@@ -281,6 +286,20 @@ export function heroPregen(heroId: string, lookup: Lookup): HeroPregen | undefin
         case "stat_drink":
         case "invisibility_drink":
         case "haste_drink":
+        case "resistance_drink":
+        case "scroll_cast":
+          break;
+        case "animated_shield":
+          if (!sheet.combatAbilities.includes("animate_animated_shield")) {
+            sheet.combatAbilities.push("animate_animated_shield");
+          }
+          break;
+        case "cloak_invisibility":
+          if (!sheet.combatAbilities.includes("use_cloak_invisibility")) {
+            sheet.combatAbilities.push("use_cloak_invisibility");
+          }
+          sheet.cloakChargePool = entry.instanceId;
+          sheet.charges[entry.instanceId] = entry.item.charges ?? sheet.charges[entry.instanceId] ?? 3;
           break;
         case "resistance":
           sheet.resistances.push(effect.damageType);

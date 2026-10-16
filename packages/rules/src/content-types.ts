@@ -59,6 +59,10 @@ export type ItemRules = {
     | { kind: "save_bonus"; amount: number }
     | { kind: "heal_drink"; dice: string }
     | { kind: "invisibility_drink"; durationPcTurns?: number }
+    | { kind: "resistance_drink"; damageType: string; durationPcTurns?: number; inventoryToken?: string }
+    | { kind: "animated_shield"; acBonus?: number; durationPcTurns?: number }
+    | { kind: "cloak_invisibility"; durationPcTurns?: number }
+    | { kind: "scroll_cast"; spellId: string; inventoryToken?: string }
     | {
         kind: "grant_aura" | "plant_aura";
         radiusCells: number;

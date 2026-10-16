@@ -18,6 +18,7 @@ import {
   type MapDef,
   type Pregen,
 } from "./campaign.js";
+import type { HeroPregen } from "./hero-pregen.js";
 import {
   getArenaMap,
   isCustomArenaId,
@@ -299,6 +300,9 @@ export type CombatToken = {
   followAuras?: AuraMods[];
   spellAuras?: AuraMods[];
   plantAuras?: AuraMods[];
+  gearCombatAbilities?: string[];
+  cloakChargePool?: string;
+  animatedShieldBonus?: number;
   charmedBy?: string;
   banished?: boolean;
   banishedBy?: string;
@@ -2454,6 +2458,73 @@ function castSpecial(
     statusEvent(combat, t, name, `${t.name} casts aid. ${allies.map((a) => a.name).join(", ")} gain ${amount} hit points.`);
     return { rolls: [] };
   }
+  if (effect.type === "animated_shield") {
+    if (t.animatedShieldBonus) throw new Error("ALREADY_USED");
+    const bonus = Number(effect.acBonus ?? 2);
+    const turns = Number(effect.durationPcTurns ?? 10);
+    t.animatedShieldBonus = bonus;
+    t.timedEffects = [
+      ...(t.timedEffects ?? []),
+      { label: name, pcTurnsLeft: turns, spellId: "animated_shield" },
+    ];
+    spendEconomy(t, true);
+    statusEvent(combat, t, name, `${t.name}'s shield floats — +${bonus} AC.`);
+    refreshReachable(combat);
+    return { rolls: [] };
+  }
+  if (effect.type === "cloak_invisibility") {
+    const pool = t.cloakChargePool;
+    const left = pool ? (t.gearCharges?.[pool] ?? 0) : 0;
+    if (!pool || left <= 0) throw new Error("NO_CHARGES");
+    if (!t.magicActionReady) throw new Error("NEED_MAGIC_ACTION");
+    t.magicActionReady = false;
+    t.gearCharges![pool] = left - 1;
+    const duration = Number(effect.durationPcTurns ?? 10);
+    spendEconomy(t, false);
+    t.invisible = true;
+    t.timedEffects = [
+      ...(t.timedEffects ?? []).filter((row) => row.spellId !== INVISIBILITY_POTION_EFFECT_ID),
+      { label: name, pcTurnsLeft: duration, spellId: INVISIBILITY_POTION_EFFECT_ID },
+    ];
+    statusEvent(combat, t, name, `${t.name} pulls the hood down and vanishes.`);
+    refreshReachable(combat);
+    return { rolls: [] };
+  }
+  if (effect.type === "scroll_cast") {
+    const inv = String(effect.consume ?? effect.inventoryToken ?? "");
+    const spellBare = String(effect.spellId ?? "").replace(/^spell_/, "");
+    const spellId = spellBare ? `spell_${spellBare}` : castId;
+    const idx = inv ? t.inventory.indexOf(inv) : -1;
+    if (idx < 0) throw new Error("NO_ITEM");
+    const seatPregen = pregen && Array.isArray((pregen as HeroPregen).spellsKnown) ? (pregen as HeroPregen) : undefined;
+    const known =
+      (t.spells?.includes(spellId) ?? false) ||
+      (seatPregen?.spellsKnown.some((id) => id === spellBare || id === spellId) ?? false);
+    if (!known) throw new Error("BAD_ABILITY");
+    const ability = getAbility(spellId);
+    const spellLevel = Number((ability as { level?: number } | undefined)?.level ?? 1);
+    const maxSlot = Math.max(0, ...Object.keys(t.slots ?? {}).map((k) => Number(k)).filter((n) => (t.slots?.[String(n)] ?? 0) > 0));
+    let rolls: DiceRoll[] = [];
+    if (spellLevel > maxSlot) {
+      const dc = 10 + spellLevel;
+      const key = t.spellAbility ?? seatPregen?.spellAbility ?? "int";
+      const bonus = abilityMod(abilityScore(t, pregen, key));
+      const roll = rollCheck({ roller: t.name, label: "Scroll", bonus, dc, purpose: "save" });
+      rolls = [roll];
+      if (roll.outcome !== "success") {
+        t.inventory.splice(idx, 1);
+        spendEconomy(t, false);
+        statusEvent(combat, t, name, `${t.name} fails to read the scroll (${roll.total} vs DC ${dc}). It crumbles.`, rolls);
+        refreshReachable(combat);
+        return { rolls };
+      }
+    }
+    t.inventory.splice(idx, 1);
+    combat.skipSlotSpend = true;
+    const nested = performPcAction(combat, t.playerId!, spellId, targetId, dest);
+    combat.skipSlotSpend = false;
+    return nested;
+  }
   if (effect.type === "rays") {
     if (!targetId) throw new Error("NEED_TARGET");
     const rayTarget = combat.tokens.find((x) => x.id === targetId && !x.dead);
@@ -2528,7 +2599,8 @@ export function performPcAction(
   const abilityLevel = Number(
     (ability as { level?: number }).level ?? (ability.effects[0] as { slot?: number } | undefined)?.slot ?? 0,
   );
-  const magicSkip = !isBonus && abilityLevel > 0 && t.magicActionReady && isAction;
+  const magicReadyForItem = t.magicActionReady;
+  const magicSkip = !isBonus && abilityLevel > 0 && magicReadyForItem && isAction;
   if (magicSkip) t.magicActionReady = false;
 
   if (gate?.phase !== "damage") {
@@ -2558,6 +2630,9 @@ export function performPcAction(
   const pool = t.gearSpells?.[castId];
   const charges = pool ? (t.gearCharges?.[pool] ?? 0) : 0;
   const fromItem = t.sheetDriven && level > 0 && charges > 0 && !(t.spells?.includes(castId) && slotReady(t, level));
+  if (fromItem && gate?.phase !== "damage" && !magicReadyForItem) {
+    throw new Error("NEED_MAGIC_ACTION");
+  }
   if (fromItem) {
     t.gearCharges![pool!] = charges - 1;
   } else if (
@@ -2841,6 +2916,24 @@ export function performPcAction(
   }
   if (effect.type === "magic_weapon") {
     return castMagicWeaponSpell(combat, t, pregen, ability.name, effect, isBonus, castId, targetId, slotUsed || level);
+  }
+  if (effect.type === "resistance_drink") {
+    const inv = String(effect.consume ?? effect.inventoryToken ?? "");
+    const idx = inv ? t.inventory.indexOf(inv) : -1;
+    if (idx < 0) throw new Error("NO_ITEM");
+    const dtype = String(effect.damageType ?? "fire");
+    const duration = Number(effect.durationPcTurns ?? 10);
+    const effectId = `resistance_drink_${dtype}`;
+    t.inventory.splice(idx, 1);
+    t.damageResistances = [...new Set([...(t.damageResistances ?? []), dtype])];
+    t.timedEffects = [
+      ...(t.timedEffects ?? []).filter((row) => row.spellId !== effectId),
+      { label: ability.name, pcTurnsLeft: duration, spellId: effectId },
+    ];
+    spendEconomy(t, isBonus);
+    statusEvent(combat, t, ability.name, `${t.name} drinks ${ability.name} — resistance to ${dtype}.`);
+    refreshReachable(combat);
+    return { rolls: [] };
   }
   if (effect.type === "invisibility_drink") {
     if (effect.consume) {
@@ -3845,7 +3938,12 @@ function spendEconomy(t: CombatToken, bonus: boolean, opts: { attack?: boolean }
 }
 
 function effectiveAc(token: CombatToken): number {
-  return Math.max(token.ac, token.acFloor ?? 0) + (token.acBonus ?? 0) + (token.auraAc ?? 0);
+  return (
+    Math.max(token.ac, token.acFloor ?? 0) +
+    (token.acBonus ?? 0) +
+    (token.auraAc ?? 0) +
+    (token.animatedShieldBonus ?? 0)
+  );
 }
 
 function offerDamageDefense(
@@ -3922,6 +4020,11 @@ function tickGlobalTimedEffects(combat: CombatState): void {
         continue;
       }
       if (row.spellId === "spell_magic_weapon") token.magicWeaponBonus = undefined;
+      if (row.spellId === "animated_shield") token.animatedShieldBonus = undefined;
+      if (row.spellId?.startsWith("resistance_drink_")) {
+        const dtype = row.spellId.slice("resistance_drink_".length);
+        token.damageResistances = (token.damageResistances ?? []).filter((d) => d !== dtype);
+      }
       if (token.concentrating?.spellId === row.spellId) breakConcentration(combat, token);
       statusEvent(combat, token, row.label, `${row.label} ends on ${token.name}.`);
     }

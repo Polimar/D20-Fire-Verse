@@ -555,6 +555,60 @@
     "needsTarget": false,
     "effects": [{ "type": "haste_drink", "consume": "potion_speed" }]
   },
+  "use_potion_resistance_fire": {
+    "id": "use_potion_resistance_fire",
+    "name": "Use Object: Potion of Resistance (Fire)",
+    "actionType": "action",
+    "needsTarget": false,
+    "effects": [
+      {
+        "type": "resistance_drink",
+        "damageType": "fire",
+        "durationPcTurns": 10,
+        "consume": "potion_resistance_fire"
+      }
+    ]
+  },
+  "animate_animated_shield": {
+    "id": "animate_animated_shield",
+    "name": "Animate Shield",
+    "actionType": "bonus_action",
+    "needsTarget": false,
+    "effects": [{ "type": "animated_shield", "acBonus": 2, "durationPcTurns": 10 }]
+  },
+  "use_cloak_invisibility": {
+    "id": "use_cloak_invisibility",
+    "name": "Cloak of Invisibility",
+    "actionType": "action",
+    "needsTarget": false,
+    "effects": [{ "type": "cloak_invisibility", "durationPcTurns": 10 }]
+  },
+  "use_scroll_fireball": {
+    "id": "use_scroll_fireball",
+    "name": "Read Scroll: Fireball",
+    "actionType": "action",
+    "needsTarget": true,
+    "effects": [
+      {
+        "type": "scroll_cast",
+        "spellId": "fireball",
+        "inventoryToken": "scroll_fireball"
+      }
+    ]
+  },
+  "use_scroll_cure_wounds": {
+    "id": "use_scroll_cure_wounds",
+    "name": "Read Scroll: Cure Wounds",
+    "actionType": "action",
+    "needsTarget": true,
+    "effects": [
+      {
+        "type": "scroll_cast",
+        "spellId": "cure_wounds",
+        "inventoryToken": "scroll_cure_wounds"
+      }
+    ]
+  },
   "use_potion_giant_strength_hill": {
     "id": "use_potion_giant_strength_hill",
     "name": "Use Object: Potion of Giant Strength (Hill)",

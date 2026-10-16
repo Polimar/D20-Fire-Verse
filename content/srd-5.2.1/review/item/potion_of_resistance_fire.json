@@ -1,0 +1,13 @@
+{
+  "ambiguities": [],
+  "unparsedFields": [],
+  "kind": "item",
+  "id": "potion_of_resistance_fire",
+  "status": "auto_ok",
+  "confidence": "high",
+  "usage": "Drink in combat as an action; gain fire resistance for about an hour (PC turns).",
+  "srd": {
+    "line": "Potion, Uncommon",
+    "text": "_Potion, Uncommon_\n\nWhen you drink this potion, you gain Resistance to one damage type for 1 hour. The GM chooses the type or determines it randomly from the options below.\n\n| d10 | Damage Type |\n| --- | --- |\n| 1 | Acid |\n| 2 | Cold |\n| 3 | Fire |\n| 4 | Force |\n| 5 | Lightning |\n| 6 | Necrotic |\n| 7 | Poison |\n| 8 | Psychic |\n| 9 | Radiant |\n| 10 | Thunder |"
+  }
+}

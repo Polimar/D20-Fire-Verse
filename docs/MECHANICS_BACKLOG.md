@@ -11,7 +11,7 @@ Shared design specs for clearing the admin **Missing mechanic (combat)** queue. 
 | 2026-10-16 | baseline design | 556 | — | 188 | 198 | 170 | Design sessions batches 1–5 |
 | 2026-10-16 | implement-1 (wave 1) | 550 | -6 | 185 | 195 | 170 | mark, bane, haste/speed, slaying, staff, monster gap rule |
 | 2026-10-16 | implement-2 (wave 2) | 541 | -9 | 176 | 195 | 170 | silence/darkness auras, guardians, magic weapon, charm, hold monster, banish v1, dimension door, counterspell PC UI |
-| | implement-3 | | | | | | |
+| 2026-10-16 | implement-3 (wave 3) | 539 | -2 | 176 | 193 | 170 | gear primitivi (shield/cloak/resistance/scroll), wand two-step + magic_missile bundle, named resistance potion |
 
 Re-run `npm run content:gap-report -- --append-progress` to insert a snapshot row above **implement-1** (optional).
 

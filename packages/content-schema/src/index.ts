@@ -110,6 +110,34 @@ export const effectDef = z.discriminatedUnion("kind", [
       durationPcTurns: z.number().int().positive().optional(),
     })
     .strict(),
+  z
+    .object({
+      kind: z.literal("resistance_drink"),
+      damageType: z.string().min(1),
+      durationPcTurns: z.number().int().positive().optional(),
+      inventoryToken: z.string().min(1).optional(),
+    })
+    .strict(),
+  z
+    .object({
+      kind: z.literal("animated_shield"),
+      acBonus: z.number().int().positive().optional(),
+      durationPcTurns: z.number().int().positive().optional(),
+    })
+    .strict(),
+  z
+    .object({
+      kind: z.literal("cloak_invisibility"),
+      durationPcTurns: z.number().int().positive().optional(),
+    })
+    .strict(),
+  z
+    .object({
+      kind: z.literal("scroll_cast"),
+      spellId: z.string().min(1),
+      inventoryToken: z.string().min(1).optional(),
+    })
+    .strict(),
   z.object({ kind: z.literal("grant_aura"), ...auraFields }).strict(),
   z.object({ kind: z.literal("plant_aura"), ...auraFields }).strict(),
 ]);

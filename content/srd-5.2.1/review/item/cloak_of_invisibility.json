@@ -1,33 +1,13 @@
 {
-  "ambiguities": [
-    {
-      "field": "effects",
-      "summary": "No typed effect matches this item. The rules listed under Not modeled stay text only.",
-      "options": [
-        {
-          "label": "Approve with no typed effects",
-          "patch": {
-            "effects": []
-          }
-        }
-      ],
-      "parserChoice": 0
-    }
-  ],
-  "unparsedFields": [
-    "effects"
-  ],
+  "ambiguities": [],
+  "unparsedFields": [],
   "kind": "item",
   "id": "cloak_of_invisibility",
-  "status": "needs_review",
-  "confidence": "low",
-  "usage": "Vendor, loot, and stash. Account heroes carry its typed effects into fights while it is equipped (and attuned, when required).",
+  "status": "auto_ok",
+  "confidence": "high",
+  "usage": "Magic action while attuned: spend 1 of 3 charges per fight to become Invisible for about an hour (PC turns). Charges refill at the next fight.",
   "srd": {
     "line": "Wondrous Item, Legendary (Requires Attunement)",
     "text": "_Wondrous Item, Legendary (Requires Attunement)_\n\nThis cloak has 3 charges and regains 1d3 expended charges daily at dawn. While wearing the cloak, you can take a Magic action to pull its hood over your\nhead and expend 1 charge to give yourself the Invisible condition for 1 hour. The effect ends early if you pull the hood down (no action required) or cease wearing the cloak."
-  },
-  "notModeled": [
-    "This cloak has 3 charges and regains 1d3 expended charges daily at dawn.",
-    "While wearing the cloak, you can take a Magic action to pull its hood over your head and expend 1 charge to give yourself the Invisible condition for 1 hour."
-  ]
+  }
 }

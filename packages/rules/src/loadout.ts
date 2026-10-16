@@ -78,6 +78,10 @@ function applyEffects(bonus: PassiveBonuses, item: ItemRules): void {
       case "stat_drink":
       case "invisibility_drink":
       case "haste_drink":
+      case "resistance_drink":
+      case "animated_shield":
+      case "cloak_invisibility":
+      case "scroll_cast":
       case "save_bonus":
         break;
       default: {

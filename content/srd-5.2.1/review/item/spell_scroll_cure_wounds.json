@@ -1,0 +1,13 @@
+{
+  "ambiguities": [],
+  "unparsedFields": [],
+  "kind": "item",
+  "id": "spell_scroll_cure_wounds",
+  "status": "auto_ok",
+  "confidence": "high",
+  "usage": "Read in combat if Cure Wounds is on your class list; scroll is destroyed on use.",
+  "srd": {
+    "line": "Scroll, Common",
+    "text": "_Scroll, Common_\n\nA Spell Scroll bearing Cure Wounds."
+  }
+}

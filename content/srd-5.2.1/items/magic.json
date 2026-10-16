@@ -131,7 +131,13 @@
       "requires": {
         "attunement": true
       },
-      "effects": []
+      "effects": [
+        {
+          "kind": "animated_shield",
+          "acBonus": 2,
+          "durationPcTurns": 10
+        }
+      ]
     },
     {
       "id": "apparatus_of_the_crab",
@@ -701,7 +707,12 @@
       "requires": {
         "attunement": true
       },
-      "effects": [],
+      "effects": [
+        {
+          "kind": "cloak_invisibility",
+          "durationPcTurns": 10
+        }
+      ],
       "charges": 3
     },
     {
@@ -2451,6 +2462,20 @@
       "effects": []
     },
     {
+      "id": "potion_of_resistance_fire",
+      "name": "Potion of Resistance (Fire)",
+      "rarity": "uncommon",
+      "slot": "consumable",
+      "effects": [
+        {
+          "kind": "resistance_drink",
+          "damageType": "fire",
+          "durationPcTurns": 10,
+          "inventoryToken": "potion_resistance_fire"
+        }
+      ]
+    },
+    {
       "id": "potion_of_speed",
       "name": "Potion of Speed",
       "rarity": "very_rare",
@@ -3110,6 +3135,32 @@
         "attunement": true
       },
       "effects": []
+    },
+    {
+      "id": "spell_scroll_cure_wounds",
+      "name": "Spell Scroll (Cure Wounds)",
+      "rarity": "common",
+      "slot": "consumable",
+      "effects": [
+        {
+          "kind": "scroll_cast",
+          "spellId": "cure_wounds",
+          "inventoryToken": "scroll_cure_wounds"
+        }
+      ]
+    },
+    {
+      "id": "spell_scroll_fireball",
+      "name": "Spell Scroll (Fireball)",
+      "rarity": "rare",
+      "slot": "consumable",
+      "effects": [
+        {
+          "kind": "scroll_cast",
+          "spellId": "fireball",
+          "inventoryToken": "scroll_fireball"
+        }
+      ]
     },
     {
       "id": "spell_scroll",
