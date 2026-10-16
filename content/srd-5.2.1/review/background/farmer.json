@@ -1,0 +1,12 @@
+{
+  "ambiguities": [],
+  "unparsedFields": [],
+  "kind": "background",
+  "id": "farmer",
+  "status": "auto_ok",
+  "confidence": "high",
+  "usage": "Chargen background. Grants the listed skills.",
+  "srd": {
+    "text": "**Ability Scores:** Strength, Constitution, Wisdom\n**Feat:** Tough\n**Skill Proficiencies:** animal handling and nature\n**Tool Proficiency:** land vehicles\n**Equipment:** _Choose A or B:_ (A) Sickle, Healer's Kit, Traveler's Clothes, 23 GP; or (B) 50 GP"
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "ambiguities": [],
+  "unparsedFields": [],
+  "kind": "feat",
+  "id": "boon_of_skill_mastery",
+  "status": "auto_ok",
+  "confidence": "high",
+  "usage": "Feat choice for chargen or level-up.",
+  "srd": {
+    "text": "_Epic Boon Feat (Prerequisite: Level 19+)_ Increase one ability score by 1, to a maximum of 30. You gain proficiency in all skills."
+  }
+}

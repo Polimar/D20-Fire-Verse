@@ -118,13 +118,19 @@ export function vendorCalendar(from: Date, days: number): VendorDay[] {
   return out;
 }
 
-export function buyVendorSlot(userId: string, itemId: string, now = new Date()): OwnedItem {
+export function buyVendorSlot(userId: string, itemId: string, now = new Date(), heroFeatures: string[] = []): OwnedItem {
   const slot = vendorStock(now).find((row) => row.itemId === itemId);
   if (!slot) throw new Error("NOT_IN_SHOP");
+  const catalogItem = enabledItems().find((i) => i.id === itemId);
+  const mundane = catalogItem?.rarity === "common";
+  const price =
+    heroFeatures.includes("crafter") && mundane
+      ? Math.max(1, Math.floor(slot.priceGold * 0.8))
+      : slot.priceGold;
   const bag = wallet(userId);
-  if (bag.gold < slot.priceGold) throw new Error("NEED_GOLD");
-  const item = giveItemOwned(userId, itemId, slot.priceGold);
-  recordEvent(userId, null, "gold", { delta: -slot.priceGold, reason: "vendor", itemId });
+  if (bag.gold < price) throw new Error("NEED_GOLD");
+  const item = giveItemOwned(userId, itemId, price);
+  recordEvent(userId, null, "gold", { delta: -price, reason: "vendor", itemId });
   return item;
 }
 

@@ -9,14 +9,6 @@ import { enabledById, enabledClasses, enabledSpells, listCatalog } from "./conte
 import { PORTRAITS, portraitUrl } from "./portraits.js";
 import { backgroundStarters, classStarters } from "./starter-equipment.js";
 
-/** Mechanical reference: background ability score options (PHB 2024). */
-const BACKGROUND_ABILITIES: Record<string, AbilityKey[]> = {
-  acolyte: ["wis", "int", "cha"],
-  criminal: ["dex", "con", "int"],
-  sage: ["int", "wis", "cha"],
-  soldier: ["str", "dex", "con"],
-};
-
 const SKILL_ABILITY: Record<string, AbilityKey> = {
   acrobatics: "dex",
   animal_handling: "wis",
@@ -75,7 +67,10 @@ export function builderCatalog(): BuilderCatalog {
       name: b.name,
       skills: b.skills,
       featId: b.feat,
-      abilityOptions: BACKGROUND_ABILITIES[b.id] ?? ["str", "dex", "con", "int", "wis", "cha"],
+      featChoice: b.featChoice,
+      tools: b.tools,
+      custom: b.custom,
+      abilityOptions: b.abilityOptions ?? (["str", "dex", "con", "int", "wis", "cha"] as AbilityKey[]),
       equipChoices: backgroundEquipChoices(b.id),
     }));
 
@@ -109,7 +104,13 @@ export function builderCatalog(): BuilderCatalog {
     .filter((row) => row.kind === "feat" && row.inPlay)
     .map((row) => enabledById<FeatDef>("feat", row.id))
     .filter((f): f is FeatDef => Boolean(f))
-    .map((f) => ({ id: f.id, name: f.name, category: featCategory(f) }));
+    .map((f) => ({
+      id: f.id,
+      name: f.name,
+      category: featCategory(f),
+      asiChoices: f.asiChoices,
+      repeatable: f.repeatable,
+    }));
 
   const spells = enabledSpells().map((s) => ({ id: s.id, name: s.name, level: s.level, classes: s.classes }));
 

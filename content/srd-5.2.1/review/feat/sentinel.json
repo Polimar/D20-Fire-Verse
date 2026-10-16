@@ -1,0 +1,12 @@
+{
+  "ambiguities": [],
+  "unparsedFields": [],
+  "kind": "feat",
+  "id": "sentinel",
+  "status": "auto_ok",
+  "confidence": "high",
+  "usage": "Feat choice for chargen or level-up.",
+  "srd": {
+    "text": "_General Feat (Prerequisite: Level 4+)_ Increase Strength or Dexterity by 1. When you hit with an Opportunity Attack, the target's Speed becomes 0. Creatures provoke Opportunity Attacks even if they Disengage. If an enemy within 5 feet attacks an ally, you can make a melee attack against that enemy as a Reaction."
+  }
+}

@@ -7,17 +7,170 @@
         "insight",
         "religion"
       ],
+      "abilityOptions": [
+        "int",
+        "wis",
+        "cha"
+      ],
+      "tools": [
+        "calligraphers_supplies"
+      ],
       "feat": "magic_initiate",
       "featChoice": "cleric"
+    },
+    {
+      "id": "artisan",
+      "name": "Artisan",
+      "skills": [
+        "investigation",
+        "persuasion"
+      ],
+      "abilityOptions": [
+        "str",
+        "dex",
+        "int"
+      ],
+      "tools": [
+        "artisans_tools"
+      ],
+      "feat": "crafter"
+    },
+    {
+      "id": "charlatan",
+      "name": "Charlatan",
+      "skills": [
+        "deception",
+        "sleight_of_hand"
+      ],
+      "abilityOptions": [
+        "dex",
+        "con",
+        "cha"
+      ],
+      "tools": [
+        "disguise_kit"
+      ],
+      "feat": "skilled"
     },
     {
       "id": "criminal",
       "name": "Criminal",
       "skills": [
-        "sleight_of_hand",
-        "stealth"
+        "stealth",
+        "sleight_of_hand"
+      ],
+      "abilityOptions": [
+        "dex",
+        "con",
+        "int"
+      ],
+      "tools": [
+        "thieves_tools"
       ],
       "feat": "alert"
+    },
+    {
+      "id": "entertainer",
+      "name": "Entertainer",
+      "skills": [
+        "acrobatics",
+        "performance"
+      ],
+      "abilityOptions": [
+        "dex",
+        "con",
+        "cha"
+      ],
+      "tools": [
+        "musical_instrument"
+      ],
+      "feat": "musician"
+    },
+    {
+      "id": "farmer",
+      "name": "Farmer",
+      "skills": [
+        "animal_handling",
+        "nature"
+      ],
+      "abilityOptions": [
+        "str",
+        "con",
+        "wis"
+      ],
+      "tools": [
+        "land_vehicles"
+      ],
+      "feat": "tough"
+    },
+    {
+      "id": "guard",
+      "name": "Guard",
+      "skills": [
+        "athletics",
+        "perception"
+      ],
+      "abilityOptions": [
+        "str",
+        "int",
+        "wis"
+      ],
+      "tools": [
+        "gaming_set"
+      ],
+      "feat": "alert"
+    },
+    {
+      "id": "guide",
+      "name": "Guide",
+      "skills": [
+        "stealth",
+        "survival"
+      ],
+      "abilityOptions": [
+        "dex",
+        "con",
+        "wis"
+      ],
+      "tools": [
+        "cartographers_tools"
+      ],
+      "feat": "magic_initiate",
+      "featChoice": "druid"
+    },
+    {
+      "id": "hermit",
+      "name": "Hermit",
+      "skills": [
+        "medicine",
+        "religion"
+      ],
+      "abilityOptions": [
+        "con",
+        "wis",
+        "cha"
+      ],
+      "tools": [
+        "herbalism_kit"
+      ],
+      "feat": "healer"
+    },
+    {
+      "id": "noble",
+      "name": "Noble",
+      "skills": [
+        "history",
+        "persuasion"
+      ],
+      "abilityOptions": [
+        "str",
+        "int",
+        "cha"
+      ],
+      "tools": [
+        "gaming_set"
+      ],
+      "feat": "skilled"
     },
     {
       "id": "sage",
@@ -26,8 +179,50 @@
         "arcana",
         "history"
       ],
+      "abilityOptions": [
+        "con",
+        "int",
+        "wis"
+      ],
+      "tools": [
+        "calligraphers_supplies"
+      ],
       "feat": "magic_initiate",
       "featChoice": "wizard"
+    },
+    {
+      "id": "sailor",
+      "name": "Sailor",
+      "skills": [
+        "athletics",
+        "perception"
+      ],
+      "abilityOptions": [
+        "str",
+        "dex",
+        "wis"
+      ],
+      "tools": [
+        "navigators_tools"
+      ],
+      "feat": "tavern_brawler"
+    },
+    {
+      "id": "merchant",
+      "name": "Merchant",
+      "skills": [
+        "animal_handling",
+        "persuasion"
+      ],
+      "abilityOptions": [
+        "con",
+        "int",
+        "cha"
+      ],
+      "tools": [
+        "navigators_tools"
+      ],
+      "feat": "lucky"
     },
     {
       "id": "soldier",
@@ -36,7 +231,63 @@
         "athletics",
         "intimidation"
       ],
+      "abilityOptions": [
+        "str",
+        "dex",
+        "con"
+      ],
+      "tools": [
+        "gaming_set"
+      ],
       "feat": "savage_attacker"
+    },
+    {
+      "id": "urchin",
+      "name": "Urchin",
+      "skills": [
+        "stealth",
+        "sleight_of_hand"
+      ],
+      "abilityOptions": [
+        "dex",
+        "con",
+        "wis"
+      ],
+      "tools": [
+        "thieves_tools"
+      ],
+      "feat": "lucky"
+    },
+    {
+      "id": "wayfarer",
+      "name": "Wayfarer",
+      "skills": [
+        "insight",
+        "stealth"
+      ],
+      "abilityOptions": [
+        "dex",
+        "wis",
+        "cha"
+      ],
+      "tools": [
+        "disguise_kit"
+      ],
+      "feat": "lucky"
+    },
+    {
+      "id": "custom",
+      "name": "Custom Origin",
+      "skills": [],
+      "abilityOptions": [
+        "str",
+        "dex",
+        "con",
+        "int",
+        "wis",
+        "cha"
+      ],
+      "custom": true
     }
   ]
 }

@@ -266,6 +266,17 @@ export type CombatToken = {
   savageUsed?: boolean;
   cleaveUsed?: boolean;
   heroicInspiration?: boolean;
+  luckPoints?: number;
+  luckPointsMax?: number;
+  ignoreResistance?: boolean;
+  truesight?: boolean;
+  mountId?: string;
+  combatProwessUsed?: boolean;
+  recoveryUsed?: boolean;
+  fateUsed?: boolean;
+  tavernPushUsed?: boolean;
+  protectionReactionReady?: boolean;
+  miFreeCastUsed?: boolean;
   /** Movement left this turn that provokes no opportunity attacks. */
   freeMove?: number;
   /** Sap: disadvantage on this creature's next attack roll; cleared when the sapper's turn starts. */
@@ -1224,7 +1235,11 @@ function hasFeature(token: CombatToken, flag: string): boolean {
 }
 
 function styleHas(token: CombatToken, style: string): boolean {
-  return Boolean(token.fightingStyles?.includes(style) || token.fightingStyle === style);
+  return Boolean(
+    token.fightingStyles?.includes(style) ||
+      token.fightingStyle === style ||
+      token.features?.includes(style),
+  );
 }
 
 function keepRage(token: CombatToken, onOwnTurn: boolean): void {
@@ -3533,7 +3548,12 @@ export function performPcAction(
   const weaponSwing = isWeaponAttack(atkEffect);
   const strongSwing = strengthWeapon(atkEffect, pregen, t);
   if (styleHas(t, "archery") && ranged && weaponSwing) attackBonus += 2;
-  if (styleHas(t, "dueling") && !ranged && weaponSwing) attackBonus += 2;
+  if (hasFeature(t, "crossbow_expert") && ranged && weaponSwing) {
+    /* ignore loading / close-range disadv handled below */
+  }
+  if (hasFeature(t, "sharpshooter") && ranged && weaponSwing) {
+    /* long range and cover handled in range/cover checks */
+  }
   if (!atkEffect.spellAttack && t.channelAttack) attackBonus += t.channelAttack;
   const magicWeapon = t.weaponGear?.[castId];
   attackBonus += (t.gearAttackBonus ?? 0) + (magicWeapon?.attack ?? 0) + (t.magicWeaponBonus ?? 0);
@@ -3555,16 +3575,18 @@ export function performPcAction(
   const advantage =
     (t.hidden || Boolean(t.helpingTargetId) || t.invisible || recklessAdv || easyTarget || (Boolean(atkEffect.spellAttack) && wantsSpellAdvantage(t)) || wantsSteadyAdvantage(t)) &&
     !hasFeature(target, "elusive");
+  const closeRangeDisadv =
+    ranged && foeAdjacent && !hasFeature(t, "crossbow_expert") && !hasFeature(t, "sharpshooter");
   const disadvantage =
-    (ranged && foeAdjacent) ||
+    closeRangeDisadv ||
     hasCondition(t, "prone") ||
     hasCondition(t, "restrained") ||
     hasCondition(t, "frightened") ||
     hasCondition(t, "blinded") ||
     (Boolean(target.invisible) &&
       !(
-        (hasFeature(t, "feral_senses") || hasFeature(t, "boon_of_truesight")) &&
-        chebyshev(t.x, t.y, target.x, target.y) <= (hasFeature(t, "boon_of_truesight") ? 12 : 6)
+        (hasFeature(t, "feral_senses") || hasFeature(t, "boon_of_truesight") || t.truesight) &&
+        chebyshev(t.x, t.y, target.x, target.y) <= (hasFeature(t, "boon_of_truesight") || t.truesight ? 12 : 6)
       )) ||
     Boolean(target.blur) ||
     Boolean(t.sappedBy) ||
@@ -3702,6 +3724,14 @@ export function performPcAction(
     );
   }
   if (savage) t.savageUsed = true;
+  if (styleHas(t, "dueling") && !ranged && weaponSwing) dmgTotal += 2;
+  if (hasFeature(t, "great_weapon_master") && weaponSwing && props.some((p) => p.includes("heavy"))) {
+    dmgTotal += pregen?.proficiencyBonus ?? 2;
+  }
+  if (hasFeature(t, "boon_of_irresistible_offense")) {
+    /* resistance ignored in applyDamage path via token flag */
+    t.ignoreResistance = true;
+  }
   if (sneakLand) {
     t.sneakUsed = true;
     dmgTotal += pushPartDamage(rolls, t.name, sneakNote, weaponType, "sneak attack", crit);
@@ -5465,6 +5495,9 @@ export function buildPcSheet(
     stable: Boolean(token.stable),
     deathSuccesses: token.deathSuccesses ?? 0,
     deathFailures: token.deathFailures ?? 0,
+    luckPoints: token.luckPoints,
+    luckPointsMax: token.luckPointsMax,
+    heroicInspiration: token.heroicInspiration,
     resources: {
       ki: token.ki ?? null,
       layOnHands: token.layOnHands ?? null,
@@ -5477,6 +5510,8 @@ export function buildPcSheet(
       hitDice: token.hitDice ?? null,
       extraAttacks: token.kit?.extraAttacks ?? null,
       heroicInspiration: token.heroicInspiration ?? null,
+      luckPoints: token.luckPoints ?? null,
+      luckPointsMax: token.luckPointsMax ?? null,
     },
     economy: {
       movementLeft: token.movementLeft,

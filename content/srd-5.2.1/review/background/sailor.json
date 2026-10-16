@@ -1,0 +1,12 @@
+{
+  "ambiguities": [],
+  "unparsedFields": [],
+  "kind": "background",
+  "id": "sailor",
+  "status": "auto_ok",
+  "confidence": "high",
+  "usage": "Chargen background. Grants the listed skills.",
+  "srd": {
+    "text": "**Ability Scores:** Strength, Dexterity, Wisdom\n**Feat:** Tavern Brawler\n**Skill Proficiencies:** athletics and perception\n**Tool Proficiency:** navigators tools\n**Equipment:** _Choose A or B:_ (A) Club, Navigator's Tools, Traveler's Clothes, 10 GP; or (B) 50 GP"
+  }
+}

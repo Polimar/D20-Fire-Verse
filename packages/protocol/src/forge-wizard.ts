@@ -270,20 +270,34 @@ export async function mountForgeWizard(host: HTMLElement, opts: ForgeWizardOptio
 
   const cls = () => catalog.classes.find((c) => c.id === draft.classId)!;
   const bg = () => catalog.backgrounds.find((b) => b.id === draft.backgroundId)!;
+  const originFeatId = () => (bg().custom ? draft.customFeatId : bg().featId);
+
   const visibleSteps = (): StepId[] => {
     const c = cls();
-    const needSpell = (c.level1.cantrips ?? 0) + (c.level1.preparedSpells ?? 0) + (c.level1.spellsKnown ?? 0) > 0;
-    return STEPS.filter((id) => id !== "spells" || needSpell);
+    const needClassSpell = (c.level1.cantrips ?? 0) + (c.level1.preparedSpells ?? 0) + (c.level1.spellsKnown ?? 0) > 0;
+    const needMi = originFeatId() === "magic_initiate";
+    return STEPS.filter((id) => id !== "spells" || needClassSpell || needMi);
   };
 
   const validateStep = (id: StepId): string => {
     const c = cls();
+    if (id === "origin" && bg().custom) {
+      if ((draft.customSkills?.length ?? 0) !== 2) return "Custom origin: pick 2 skills.";
+      if (!draft.customFeatId) return "Custom origin: pick an origin feat.";
+      if (!draft.customTool) return "Custom origin: pick a tool.";
+    }
     if (id === "training") {
       if (draft.classSkills.length !== c.skillChoices) return `Pick ${c.skillChoices} class skills.`;
       if (draft.classId === "rogue" && (draft.expertiseSkills?.length ?? 0) !== 2) return "Pick 2 skills for Expertise.";
       if (c.fightingStyleRequired && !draft.fightingStyleFeatId) return "Pick a fighting style.";
       if (draft.speciesId === "human" && !draft.speciesSkill) return "Humans pick one extra skill.";
       if (draft.speciesId === "human" && !draft.originFeatId) return "Humans pick an origin feat.";
+      if (originFeatId() === "skilled" && (draft.skilledPicks?.length ?? 0) !== 3) return "Skilled: pick 3 skills or tools.";
+      if (bg().custom) {
+        if ((draft.customSkills?.length ?? 0) !== 2) return "Custom origin: pick 2 skills.";
+        if (!draft.customFeatId) return "Custom origin: pick an origin feat.";
+        if (!draft.customTool) return "Custom origin: pick a tool.";
+      }
     }
     if (id === "spells") {
       const needC = c.level1.cantrips ?? 0;
@@ -292,6 +306,11 @@ export async function mountForgeWizard(host: HTMLElement, opts: ForgeWizardOptio
       if ((draft.cantrips?.length ?? 0) !== needC) return `Pick ${needC} cantrips.`;
       if ((draft.spellsPrepared?.length ?? 0) !== needP) return `Prepare ${needP} spells.`;
       if ((draft.spellsKnown?.length ?? 0) !== needK) return `Learn ${needK} spells.`;
+      if (originFeatId() === "magic_initiate") {
+        if ((draft.magicInitiateCantrips?.length ?? 0) !== 2) return "Magic Initiate: pick 2 cantrips.";
+        if (!draft.magicInitiateSpell) return "Magic Initiate: pick a 1st-level spell.";
+        if (!draft.magicInitiateAbility) return "Magic Initiate: pick a spellcasting ability.";
+      }
     }
     if (id === "details" && !(draft.name ?? "").trim()) return "Name the hero.";
     if (id === "scores" && draft.method === "standard_array") {
@@ -351,9 +370,25 @@ export async function mountForgeWizard(host: HTMLElement, opts: ForgeWizardOptio
       body = `<div class="hw-grid">${catalog.backgrounds
         .map(
           (row) =>
-            `<button type="button" class="hw-card ${row.id === draft.backgroundId ? "picked" : ""}" data-bg="${esc(row.id)}">${crest(row.id)}<strong>${esc(row.name)}</strong><em>${row.skills.map((s) => catalog.skills[s]?.label ?? s).join(", ")}</em></button>`,
+            `<button type="button" class="hw-card ${row.id === draft.backgroundId ? "picked" : ""}" data-bg="${esc(row.id)}">${crest(row.id)}<strong>${esc(row.name)}</strong><em>${row.custom ? "Choose skills, feat, and tool" : row.skills.map((s) => catalog.skills[s]?.label ?? s).join(", ")}</em></button>`,
         )
         .join("")}</div>`;
+      if (origin.custom) {
+        const skillChips = Object.entries(catalog.skills)
+          .map(
+            ([sid, s]) =>
+              `<button type="button" class="hw-chip ${draft.customSkills?.includes(sid) ? "picked" : ""}" data-cskill="${esc(sid)}">${esc(s.label)}</button>`,
+          )
+          .join("");
+        const featChips = catalog.feats
+          .filter((f) => f.category === "origin")
+          .map((f) => `<button type="button" class="hw-chip ${draft.customFeatId === f.id ? "picked" : ""}" data-cfeat="${esc(f.id)}">${esc(f.name)}</button>`)
+          .join("");
+        const tools = ["thieves_tools", "herbalism_kit", "disguise_kit", "calligraphers_supplies", "navigators_tools", "gaming_set", "musical_instrument", "artisans_tools"];
+        body += `<p class="hw-meta">Custom skills (2)</p><div class="hw-row">${skillChips}</div>
+          <p class="hw-meta">Origin feat</p><div class="hw-row">${featChips}</div>
+          <p class="hw-meta">Tool</p><div class="hw-row">${tools.map((t) => `<button type="button" class="hw-chip ${draft.customTool === t ? "picked" : ""}" data-ctool="${esc(t)}">${esc(t.replace(/_/g, " "))}</button>`).join("")}</div>`;
+      }
     } else if (id === "species") {
       body = `<div class="hw-grid">${catalog.species
         .map(
@@ -380,7 +415,8 @@ export async function mountForgeWizard(host: HTMLElement, opts: ForgeWizardOptio
         <div class="hw-row"><button type="button" class="hw-chip ${draft.backgroundAsi?.mode === "plus2plus1" ? "picked" : ""}" data-asi="plus2plus1">+2 and +1</button><button type="button" class="hw-chip ${draft.backgroundAsi?.mode === "plus1x3" ? "picked" : ""}" data-asi="plus1x3">+1 / +1 / +1</button></div>
         <div class="hw-row">${origin.abilityOptions.map((a) => `<button type="button" class="hw-chip" data-asi-ab="${a}">${a}</button>`).join("")}</div>`;
     } else if (id === "training") {
-      const bgSkills = new Set(bg()?.skills ?? []);
+      const originSkillsList = origin.custom ? (draft.customSkills ?? []) : (origin.skills ?? []);
+      const bgSkills = new Set(originSkillsList);
       const skills = c.skillList
         .map((sk) => {
           const on = draft.classSkills.includes(sk);
@@ -395,7 +431,7 @@ export async function mountForgeWizard(host: HTMLElement, opts: ForgeWizardOptio
         : "";
       const expert =
         c.id === "rogue"
-          ? `<p class="hw-meta">Expertise (2)</p><div class="hw-row">${[...new Set([...(bg()?.skills ?? []), ...draft.classSkills, ...(draft.speciesSkill ? [draft.speciesSkill] : [])])]
+          ? `<p class="hw-meta">Expertise (2)</p><div class="hw-row">${[...new Set([...originSkillsList, ...draft.classSkills, ...(draft.speciesSkill ? [draft.speciesSkill] : [])])]
               .map((sk) => `<button type="button" class="hw-chip ${draft.expertiseSkills?.includes(sk) ? "picked" : ""}" data-expert="${esc(sk)}">${esc(catalog.skills[sk]?.label ?? sk)}</button>`)
               .join("")}</div>`
           : "";
@@ -409,7 +445,13 @@ export async function mountForgeWizard(host: HTMLElement, opts: ForgeWizardOptio
                .map((f) => `<button type="button" class="hw-chip ${draft.originFeatId === f.id ? "picked" : ""}" data-ofeat="${esc(f.id)}">${esc(f.name)}</button>`)
                .join("")}</div>`
           : "";
-      body = `<p class="hw-meta">Pick ${c.skillChoices} class skills</p><p class="hw-meta">Green chips are already from your origin — choose different skills.</p><div class="hw-row">${skills}</div>${expert}${styles}${human}`;
+      const skilled =
+        originFeatId() === "skilled"
+          ? `<p class="hw-meta">Skilled picks (3)</p><div class="hw-row">${Object.entries(catalog.skills)
+              .map(([sid, s]) => `<button type="button" class="hw-chip ${draft.skilledPicks?.includes(sid) ? "picked" : ""}" data-skilled="${esc(sid)}">${esc(s.label)}</button>`)
+              .join("")}</div>`
+          : "";
+      body = `<p class="hw-meta">Pick ${c.skillChoices} class skills</p><p class="hw-meta">Green chips are already from your origin — choose different skills.</p><div class="hw-row">${skills}</div>${expert}${styles}${human}${skilled}`;
     } else if (id === "gear") {
       body = `<p class="hw-meta">Class kit</p><div class="hw-grid">${c.equipChoices
         .map((e) => `<button type="button" class="hw-card ${draft.equipChoice === e.id ? "picked" : ""}" data-equip="${e.id}"><strong>${e.id}</strong><em>${esc(e.label)}</em></button>`)
@@ -430,6 +472,21 @@ export async function mountForgeWizard(host: HTMLElement, opts: ForgeWizardOptio
           })
           .join("")}</div>`;
       body = `${(c.level1.cantrips ?? 0) ? block(`Cantrips (${c.level1.cantrips})`, "cantrip", pool.filter((s) => s.level === 0)) : ""}${(c.level1.preparedSpells ?? 0) ? block(`Prepared (${c.level1.preparedSpells})`, "prepared", leveled) : ""}${(c.level1.spellsKnown ?? 0) ? block(`Known (${c.level1.spellsKnown})`, "known", leveled) : ""}`;
+      if (originFeatId() === "magic_initiate") {
+        const list = origin.featChoice ?? "wizard";
+        const miPool = catalog.spells.filter((s) => s.classes.includes(list));
+        body += `<p class="hw-meta">Magic Initiate (${esc(list)}) cantrips (2)</p><div class="hw-row">${miPool
+          .filter((s) => s.level === 0)
+          .map((s) => `<button type="button" class="hw-chip ${draft.magicInitiateCantrips?.includes(s.id) ? "picked" : ""}" data-mi-c="${esc(s.id)}">${esc(s.name)}</button>`)
+          .join("")}</div>
+          <p class="hw-meta">Magic Initiate 1st-level spell</p><div class="hw-row">${miPool
+            .filter((s) => s.level === 1)
+            .map((s) => `<button type="button" class="hw-chip ${draft.magicInitiateSpell === s.id ? "picked" : ""}" data-mi-s="${esc(s.id)}">${esc(s.name)}</button>`)
+            .join("")}</div>
+          <p class="hw-meta">Spellcasting ability</p><div class="hw-row">${(["int", "wis", "cha"] as const)
+            .map((a) => `<button type="button" class="hw-chip ${draft.magicInitiateAbility === a ? "picked" : ""}" data-mi-ab="${a}">${a}</button>`)
+            .join("")}</div>`;
+      }
     } else if (id === "details") {
       body = `<label class="hw-field">Name <input id="hwName" maxlength="32" value="${esc(draft.name ?? "")}" /></label>
         <label class="hw-field">About <textarea id="hwAbout" maxlength="240" rows="3">${esc(draft.about ?? "")}</textarea></label>
@@ -461,7 +518,13 @@ export async function mountForgeWizard(host: HTMLElement, opts: ForgeWizardOptio
     host.querySelectorAll<HTMLButtonElement>("[data-bg]").forEach((b) =>
       b.addEventListener("click", () => {
         draft.backgroundId = b.dataset.bg!;
-        const originSkills = bg().skills ?? [];
+        draft.customSkills = [];
+        draft.customFeatId = undefined;
+        draft.customTool = undefined;
+        draft.skilledPicks = [];
+        draft.magicInitiateCantrips = [];
+        draft.magicInitiateSpell = undefined;
+        const originSkills = bg().custom ? (draft.customSkills ?? []) : (bg().skills ?? []);
         draft.classSkills = draft.classSkills.filter((sk) => !originSkills.includes(sk));
         const options = bg().abilityOptions;
         draft.backgroundAsi = {
@@ -469,6 +532,61 @@ export async function mountForgeWizard(host: HTMLElement, opts: ForgeWizardOptio
           plus2: options[0]!,
           plus1: options.find((a) => a !== options[0]) ?? options[0]!,
         };
+        paint();
+      }),
+    );
+    host.querySelectorAll<HTMLButtonElement>("[data-cskill]").forEach((b) =>
+      b.addEventListener("click", () => {
+        const sk = b.dataset.cskill!;
+        const cur = new Set(draft.customSkills ?? []);
+        if (cur.has(sk)) cur.delete(sk);
+        else if (cur.size < 2) cur.add(sk);
+        draft.customSkills = [...cur];
+        paint();
+      }),
+    );
+    host.querySelectorAll<HTMLButtonElement>("[data-cfeat]").forEach((b) =>
+      b.addEventListener("click", () => {
+        draft.customFeatId = b.dataset.cfeat;
+        draft.skilledPicks = [];
+        paint();
+      }),
+    );
+    host.querySelectorAll<HTMLButtonElement>("[data-ctool]").forEach((b) =>
+      b.addEventListener("click", () => {
+        draft.customTool = b.dataset.ctool;
+        paint();
+      }),
+    );
+    host.querySelectorAll<HTMLButtonElement>("[data-skilled]").forEach((b) =>
+      b.addEventListener("click", () => {
+        const sk = b.dataset.skilled!;
+        const cur = new Set(draft.skilledPicks ?? []);
+        if (cur.has(sk)) cur.delete(sk);
+        else if (cur.size < 3) cur.add(sk);
+        draft.skilledPicks = [...cur];
+        paint();
+      }),
+    );
+    host.querySelectorAll<HTMLButtonElement>("[data-mi-c]").forEach((b) =>
+      b.addEventListener("click", () => {
+        const idSpell = b.dataset.miC!;
+        const cur = new Set(draft.magicInitiateCantrips ?? []);
+        if (cur.has(idSpell)) cur.delete(idSpell);
+        else if (cur.size < 2) cur.add(idSpell);
+        draft.magicInitiateCantrips = [...cur];
+        paint();
+      }),
+    );
+    host.querySelectorAll<HTMLButtonElement>("[data-mi-s]").forEach((b) =>
+      b.addEventListener("click", () => {
+        draft.magicInitiateSpell = b.dataset.miS;
+        paint();
+      }),
+    );
+    host.querySelectorAll<HTMLButtonElement>("[data-mi-ab]").forEach((b) =>
+      b.addEventListener("click", () => {
+        draft.magicInitiateAbility = b.dataset.miAb as AbilityKey;
         paint();
       }),
     );
@@ -503,10 +621,11 @@ export async function mountForgeWizard(host: HTMLElement, opts: ForgeWizardOptio
     host.querySelectorAll<HTMLButtonElement>("[data-skill]").forEach((b) =>
       b.addEventListener("click", () => {
         const sk = b.dataset.skill!;
-        if ((bg().skills ?? []).includes(sk)) return;
+        const originSkills = bg().custom ? (draft.customSkills ?? []) : (bg().skills ?? []);
+        if (originSkills.includes(sk)) return;
         if (draft.classSkills.includes(sk)) draft.classSkills = draft.classSkills.filter((x) => x !== sk);
         else if (draft.classSkills.length < c.skillChoices) draft.classSkills = [...draft.classSkills, sk];
-        const allowed = new Set([...(bg().skills ?? []), ...draft.classSkills, ...(draft.speciesSkill ? [draft.speciesSkill] : [])]);
+        const allowed = new Set([...originSkills, ...draft.classSkills, ...(draft.speciesSkill ? [draft.speciesSkill] : [])]);
         draft.expertiseSkills = (draft.expertiseSkills ?? []).filter((id) => allowed.has(id));
         paint();
       }),

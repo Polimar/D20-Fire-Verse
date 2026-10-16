@@ -1,0 +1,12 @@
+{
+  "ambiguities": [],
+  "unparsedFields": [],
+  "kind": "feat",
+  "id": "crafter",
+  "status": "auto_ok",
+  "confidence": "high",
+  "usage": "Feat choice for chargen or level-up.",
+  "srd": {
+    "text": "_Origin Feat_ You gain proficiency with three artisan tools of your choice. You buy nonmagical items at 80% price. During a Long Rest you can craft one nonmagical item or consumable at half the usual gold cost."
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "ambiguities": [],
+  "unparsedFields": [],
+  "kind": "background",
+  "id": "merchant",
+  "status": "auto_ok",
+  "confidence": "high",
+  "usage": "Chargen background. Grants the listed skills.",
+  "srd": {
+    "text": "**Ability Scores:** Constitution, Intelligence, Charisma\n**Feat:** Lucky\n**Skill Proficiencies:** animal handling and persuasion\n**Tool Proficiency:** navigators tools\n**Equipment:** _Choose A or B:_ (A) Fine Clothes, Pouch, 22 GP; or (B) 50 GP"
+  }
+}

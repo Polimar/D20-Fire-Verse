@@ -1,0 +1,12 @@
+{
+  "ambiguities": [],
+  "unparsedFields": [],
+  "kind": "feat",
+  "id": "mounted_combatant",
+  "status": "auto_ok",
+  "confidence": "high",
+  "usage": "Feat choice for chargen or level-up.",
+  "srd": {
+    "text": "_General Feat (Prerequisite: Level 4+)_ Increase Strength, Dexterity, or Wisdom by 1. While mounted, you have Advantage on melee attacks against unmounted creatures smaller than your mount, can redirect attacks targeting the mount to yourself, and your mount has Evasion on Dexterity saves."
+  }
+}

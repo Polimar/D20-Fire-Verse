@@ -1,0 +1,12 @@
+{
+  "ambiguities": [],
+  "unparsedFields": [],
+  "kind": "feat",
+  "id": "musician",
+  "status": "auto_ok",
+  "confidence": "high",
+  "usage": "Feat choice for chargen or level-up.",
+  "srd": {
+    "text": "_Origin Feat_ You gain proficiency with three musical instruments. After a Short or Long Rest, you may grant Heroic Inspiration to a number of allies up to your Proficiency Bonus."
+  }
+}

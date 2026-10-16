@@ -1,0 +1,12 @@
+{
+  "ambiguities": [],
+  "unparsedFields": [],
+  "kind": "background",
+  "id": "guide",
+  "status": "auto_ok",
+  "confidence": "high",
+  "usage": "Chargen background. Grants the listed skills.",
+  "srd": {
+    "text": "**Ability Scores:** Dexterity, Constitution, Wisdom\n**Feat:** Magic Initiate (druid)\n**Skill Proficiencies:** stealth and survival\n**Tool Proficiency:** cartographers tools\n**Equipment:** _Choose A or B:_ (A) Shortbow, 20 Arrows, Quiver, Traveler's Clothes, 3 GP; or (B) 50 GP"
+  }
+}

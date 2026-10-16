@@ -1,0 +1,12 @@
+{
+  "ambiguities": [],
+  "unparsedFields": [],
+  "kind": "feat",
+  "id": "heavy_armor_master",
+  "status": "auto_ok",
+  "confidence": "high",
+  "usage": "Feat choice for chargen or level-up.",
+  "srd": {
+    "text": "_General Feat (Prerequisite: Level 4+)_ Increase Strength or Constitution by 1. While wearing Heavy armor, Bludgeoning, Piercing, and Slashing damage you take is reduced by your Proficiency Bonus."
+  }
+}

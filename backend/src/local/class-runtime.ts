@@ -286,6 +286,45 @@ const ACTIONS: Record<string, (token: CombatToken, ctx: ClassCtx) => { line: str
     if (foe) foe.sappedBy = token.id;
     return { line: `${token.name} cuts the moment with a word.`, rolls: [] };
   },
+  healer_kit(token, ctx) {
+    const ally = ctx.target ?? ctx.allies.find((a) => a.id !== token.id) ?? token;
+    const { roll, total } = die(token.name, "1d4", "heal", "Healer");
+    const face = Number((roll as { faces?: number[] }).faces?.[0] ?? total);
+    const healed = face === 1 ? 2 + Math.floor(Math.random() * 4) + 1 + ctx.prof : total + 1 + ctx.prof;
+    heal(ally, healed);
+    return { line: `${token.name} tends ${ally.name} for ${healed} hit points.`, rolls: [roll] };
+  },
+  protection(token, ctx) {
+    const foe = ctx.target ?? ctx.foes[0];
+    if (!foe) throw new Error("NEED_TARGET");
+    foe.auraAttackDisadvAgainst = true;
+    token.reactionReady = false;
+    return { line: `${token.name} interposes a shield.`, rolls: [] };
+  },
+  sentinel_guard(token, ctx) {
+    const foe = ctx.target ?? ctx.foes[0];
+    if (!foe) throw new Error("NEED_TARGET");
+    foe.movementLeft = 0;
+    token.reactionReady = false;
+    return { line: `${token.name} pins ${foe.name} in place.`, rolls: [] };
+  },
+  lucky_save(token) {
+    if ((token.luckPoints ?? 0) < 1) throw new Error("ALREADY_USED");
+    token.luckPoints = (token.luckPoints ?? 0) - 1;
+    token.heroicInspiration = true;
+    return { line: `${token.name} spends Luck.`, rolls: [] };
+  },
+  telekinetic_shove(token, ctx) {
+    const foe = ctx.target ?? ctx.foes[0];
+    if (!foe) throw new Error("NEED_TARGET");
+    const dc = 8 + ctx.prof + modOf(ctx.abilities, "int");
+    const roll = rollCheck({ roller: foe.name, label: "Telekinetic shove", bonus: 0, dc, purpose: "save" });
+    if (roll.outcome !== "success") {
+      const dx = Math.sign(foe.x - token.x) || 1;
+      foe.x += dx;
+    }
+    return { line: `${token.name} shoves with a thought.`, rolls: [roll] };
+  },
 };
 
 export function castClassFeature(token: CombatToken, effectType: string, ctx: ClassCtx): { line: string; rolls: DiceRoll[] } | null {
@@ -388,6 +427,11 @@ export function classMenus(token: CombatToken): { actions: string[]; bonus: stri
   if (has(token, "cutting_words") && (token.bardicLeft ?? 0) > 0) push(reactions, "cutting_words");
   if (has(token, "deflect_attacks")) push(reactions, "deflect_attacks");
   if (has(token, "uncanny_dodge")) push(reactions, "uncanny_dodge");
+  if (has(token, "protection")) push(reactions, "protection");
+  if (has(token, "sentinel")) push(reactions, "sentinel_guard");
+  if (has(token, "healer")) push(actions, "healer_kit");
+  if (has(token, "telekinetic")) push(bonus, "telekinetic_shove");
+  if (has(token, "lucky") && (token.luckPoints ?? 0) > 0) push(reactions, "lucky_save");
   if (has(token, "fast_hands")) push(bonus, "std_utilize");
   return { actions, bonus, reactions };
 }
@@ -594,7 +638,7 @@ export function fiendLuck(token: CombatToken): number {
 
 export function spellRecall(token: CombatToken, slot: number): boolean {
   if (!has(token, "boon_of_spell_recall") || slot < 1 || slot > 4) return false;
-  return rollNotation("1d4").total === slot;
+  return rollNotation("1d4").total === 1;
 }
 
 export function freeCast(token: CombatToken, level: number): boolean {

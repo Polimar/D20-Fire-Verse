@@ -1,0 +1,12 @@
+{
+  "ambiguities": [],
+  "unparsedFields": [],
+  "kind": "feat",
+  "id": "crossbow_expert",
+  "status": "auto_ok",
+  "confidence": "high",
+  "usage": "Feat choice for chargen or level-up.",
+  "srd": {
+    "text": "_General Feat (Prerequisite: Level 4+)_ Increase Dexterity by 1. You ignore the Loading property of crossbows. Being within 5 feet of an enemy does not impose Disadvantage on your ranged attacks. When you attack with a one-handed crossbow, you can make one extra crossbow attack as a Bonus Action."
+  }
+}

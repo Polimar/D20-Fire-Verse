@@ -237,6 +237,10 @@ export const backgroundDef = z
     feat: z.string().optional(),
     /** The option the background fixes, e.g. "cleric" for Magic Initiate (Cleric). */
     featChoice: z.string().optional(),
+    /** Ability scores the background may increase (+2/+1 or +1×3). Custom may list all six. */
+    abilityOptions: z.array(abilityKey).min(3).max(6).optional(),
+    /** Custom origin: player picks skills/feat/tools freely. */
+    custom: z.boolean().optional(),
   })
   .strict();
 
@@ -305,6 +309,8 @@ export const featDef = z
     repeatable: z.boolean(),
     description: z.string().min(1),
     prerequisites: z.array(z.string()).optional(),
+    /** Half-feat: abilities the player may raise by +1 when taking this feat. */
+    asiChoices: z.array(abilityKey).min(1).optional(),
   })
   .strict();
 

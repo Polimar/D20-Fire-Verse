@@ -1,0 +1,12 @@
+{
+  "ambiguities": [],
+  "unparsedFields": [],
+  "kind": "background",
+  "id": "hermit",
+  "status": "auto_ok",
+  "confidence": "high",
+  "usage": "Chargen background. Grants the listed skills.",
+  "srd": {
+    "text": "**Ability Scores:** Constitution, Wisdom, Charisma\n**Feat:** Healer\n**Skill Proficiencies:** medicine and religion\n**Tool Proficiency:** herbalism kit\n**Equipment:** _Choose A or B:_ (A) Herbalism Kit, Blanket, Robe, 15 GP; or (B) 50 GP"
+  }
+}

@@ -101,6 +101,384 @@
       "name": "Boon of Truesight",
       "repeatable": false,
       "description": "_Epic Boon Feat (Prerequisite: Level 19+)_ You gain the following benefits. _Ability Score Increase._ Increase one ability score of your choice by 1, to a maximum of 30. _Truesight._ You have Truesight with a range of 60 feet."
+    },
+    {
+      "id": "crafter",
+      "name": "Crafter",
+      "repeatable": false,
+      "description": "_Origin Feat_ You gain proficiency with three artisan tools of your choice. You buy nonmagical items at 80% price. During a Long Rest you can craft one nonmagical item or consumable at half the usual gold cost."
+    },
+    {
+      "id": "healer",
+      "name": "Healer",
+      "repeatable": false,
+      "description": "_Origin Feat_ As an Action, expend one use of a Healer's Kit to restore 1d4 + 1 + your Proficiency Bonus hit points to a creature. When you heal with a spell or this feat, reroll any heal die that shows a 1."
+    },
+    {
+      "id": "lucky",
+      "name": "Lucky",
+      "repeatable": false,
+      "description": "_Origin Feat_ You have Luck Points equal to your Proficiency Bonus (regain on a Long Rest). Spend 1 point to gain Advantage on an attack, ability check, or saving throw, or to impose Disadvantage on an attack against you."
+    },
+    {
+      "id": "musician",
+      "name": "Musician",
+      "repeatable": false,
+      "description": "_Origin Feat_ You gain proficiency with three musical instruments. After a Short or Long Rest, you may grant Heroic Inspiration to a number of allies up to your Proficiency Bonus."
+    },
+    {
+      "id": "tavern_brawler",
+      "name": "Tavern Brawler",
+      "repeatable": false,
+      "description": "_Origin Feat_ Your Unarmed Strikes deal 1d4 + Strength bludgeoning. Once per turn when you hit with an Unarmed Strike, you may also push the target 5 feet. Reroll any 1 on Unarmed or improvised weapon damage dice."
+    },
+    {
+      "id": "tough",
+      "name": "Tough",
+      "repeatable": false,
+      "description": "_Origin Feat_ Your hit point maximum increases by twice your level. When you gain a level, you gain 2 additional hit points."
+    },
+    {
+      "id": "dueling",
+      "name": "Dueling",
+      "repeatable": false,
+      "description": "_Fighting Style Feat (Prerequisite: Fighting Style Feature)_ When you are wielding a Melee weapon in one hand and no other weapons, you gain a +2 bonus to damage rolls with that weapon."
+    },
+    {
+      "id": "protection",
+      "name": "Protection",
+      "repeatable": false,
+      "description": "_Fighting Style Feat (Prerequisite: Fighting Style Feature)_ When a creature you can see attacks a target other than you that is within 5 feet of you, you can take a Reaction to impose Disadvantage on the attack roll. You must be wielding a Shield."
+    },
+    {
+      "id": "actor",
+      "name": "Actor",
+      "repeatable": false,
+      "description": "_General Feat (Prerequisite: Level 4+)_ Increase your Charisma by 1. You have Advantage on Deception and Performance checks to pass yourself off as someone else, and you can mimic speech.",
+      "asiChoices": [
+        "cha"
+      ],
+      "prerequisites": [
+        "Level 4+"
+      ]
+    },
+    {
+      "id": "athlete",
+      "name": "Athlete",
+      "repeatable": false,
+      "description": "_General Feat (Prerequisite: Level 4+)_ Increase Strength or Dexterity by 1. Climbing speed equals your Speed. Standing from Prone costs only 5 feet. You need only 5 feet of run-up to jump.",
+      "asiChoices": [
+        "str",
+        "dex"
+      ],
+      "prerequisites": [
+        "Level 4+"
+      ]
+    },
+    {
+      "id": "charger",
+      "name": "Charger",
+      "repeatable": false,
+      "description": "_General Feat (Prerequisite: Level 4+)_ Increase Strength or Dexterity by 1. When you Dash, your Speed increases by 10 feet for that move. If you move at least 10 feet straight toward a target and hit it with a melee attack, add 1d8 damage or push it 10 feet.",
+      "asiChoices": [
+        "str",
+        "dex"
+      ],
+      "prerequisites": [
+        "Level 4+"
+      ]
+    },
+    {
+      "id": "crossbow_expert",
+      "name": "Crossbow Expert",
+      "repeatable": false,
+      "description": "_General Feat (Prerequisite: Level 4+)_ Increase Dexterity by 1. You ignore the Loading property of crossbows. Being within 5 feet of an enemy does not impose Disadvantage on your ranged attacks. When you attack with a one-handed crossbow, you can make one extra crossbow attack as a Bonus Action.",
+      "asiChoices": [
+        "dex"
+      ],
+      "prerequisites": [
+        "Level 4+"
+      ]
+    },
+    {
+      "id": "dual_wielder",
+      "name": "Dual Wielder",
+      "repeatable": false,
+      "description": "_General Feat (Prerequisite: Level 4+)_ Increase Strength or Dexterity by 1. You can Two-Weapon Fight with weapons that lack the Light property (but not Two-Handed). After the Attack action with a Light weapon, you can make one Bonus Action attack with another weapon.",
+      "asiChoices": [
+        "str",
+        "dex"
+      ],
+      "prerequisites": [
+        "Level 4+"
+      ]
+    },
+    {
+      "id": "great_weapon_master",
+      "name": "Great Weapon Master",
+      "repeatable": false,
+      "description": "_General Feat (Prerequisite: Level 4+)_ Increase Strength by 1. When you hit with a Heavy weapon, add your Proficiency Bonus to the damage. When you score a Critical Hit or reduce a creature to 0 HP with a melee weapon, you can make one melee attack as a Bonus Action.",
+      "asiChoices": [
+        "str"
+      ],
+      "prerequisites": [
+        "Level 4+"
+      ]
+    },
+    {
+      "id": "heavily_armored",
+      "name": "Heavily Armored",
+      "repeatable": false,
+      "description": "_General Feat (Prerequisite: Level 4+)_ Increase Strength or Constitution by 1. You gain proficiency with Heavy armor.",
+      "asiChoices": [
+        "str",
+        "con"
+      ],
+      "prerequisites": [
+        "Level 4+"
+      ]
+    },
+    {
+      "id": "heavy_armor_master",
+      "name": "Heavy Armor Master",
+      "repeatable": false,
+      "description": "_General Feat (Prerequisite: Level 4+)_ Increase Strength or Constitution by 1. While wearing Heavy armor, Bludgeoning, Piercing, and Slashing damage you take is reduced by your Proficiency Bonus.",
+      "asiChoices": [
+        "str",
+        "con"
+      ],
+      "prerequisites": [
+        "Level 4+"
+      ]
+    },
+    {
+      "id": "mounted_combatant",
+      "name": "Mounted Combatant",
+      "repeatable": false,
+      "description": "_General Feat (Prerequisite: Level 4+)_ Increase Strength, Dexterity, or Wisdom by 1. While mounted, you have Advantage on melee attacks against unmounted creatures smaller than your mount, can redirect attacks targeting the mount to yourself, and your mount has Evasion on Dexterity saves.",
+      "asiChoices": [
+        "str",
+        "dex",
+        "wis"
+      ],
+      "prerequisites": [
+        "Level 4+"
+      ]
+    },
+    {
+      "id": "polearm_master",
+      "name": "Polearm Master",
+      "repeatable": false,
+      "description": "_General Feat (Prerequisite: Level 4+)_ Increase Strength or Dexterity by 1. When you take the Attack action with a Quarterstaff, Spear, Glaive, or Halberd, you can make a Bonus Action butt attack (1d4 bludgeoning). Creatures provoke Opportunity Attacks when they enter your reach with those weapons.",
+      "asiChoices": [
+        "str",
+        "dex"
+      ],
+      "prerequisites": [
+        "Level 4+"
+      ]
+    },
+    {
+      "id": "resilient",
+      "name": "Resilient",
+      "repeatable": false,
+      "description": "_General Feat (Prerequisite: Level 4+)_ Increase one ability score by 1 and gain proficiency in saving throws using that ability.",
+      "asiChoices": [
+        "str",
+        "dex",
+        "con",
+        "int",
+        "wis",
+        "cha"
+      ],
+      "prerequisites": [
+        "Level 4+"
+      ]
+    },
+    {
+      "id": "sentinel",
+      "name": "Sentinel",
+      "repeatable": false,
+      "description": "_General Feat (Prerequisite: Level 4+)_ Increase Strength or Dexterity by 1. When you hit with an Opportunity Attack, the target's Speed becomes 0. Creatures provoke Opportunity Attacks even if they Disengage. If an enemy within 5 feet attacks an ally, you can make a melee attack against that enemy as a Reaction.",
+      "asiChoices": [
+        "str",
+        "dex"
+      ],
+      "prerequisites": [
+        "Level 4+"
+      ]
+    },
+    {
+      "id": "sharpshooter",
+      "name": "Sharpshooter",
+      "repeatable": false,
+      "description": "_General Feat (Prerequisite: Level 4+)_ Increase Dexterity by 1. Attacking at long range does not impose Disadvantage. Your ranged weapon attacks ignore Half and Three-Quarters cover. Being within 5 feet of an enemy does not impose Disadvantage on your ranged attacks.",
+      "asiChoices": [
+        "dex"
+      ],
+      "prerequisites": [
+        "Level 4+"
+      ]
+    },
+    {
+      "id": "shield_master",
+      "name": "Shield Master",
+      "repeatable": false,
+      "description": "_General Feat (Prerequisite: Level 4+)_ Increase Strength by 1. If you hit with a melee attack while wielding a Shield, you can Bonus Action shove (push or prone; target Strength save). If you succeed on a Dexterity save that would halve damage, you can take a Reaction to take no damage instead.",
+      "asiChoices": [
+        "str"
+      ],
+      "prerequisites": [
+        "Level 4+"
+      ]
+    },
+    {
+      "id": "speedy",
+      "name": "Speedy",
+      "repeatable": false,
+      "description": "_General Feat (Prerequisite: Level 4+)_ Increase Dexterity or Constitution by 1. Your Speed increases by 10 feet. Difficult terrain does not slow you when you Dash. Opportunity Attacks against you have Disadvantage.",
+      "asiChoices": [
+        "dex",
+        "con"
+      ],
+      "prerequisites": [
+        "Level 4+"
+      ]
+    },
+    {
+      "id": "war_caster",
+      "name": "War Caster",
+      "repeatable": false,
+      "description": "_General Feat (Prerequisite: Level 4+)_ Increase Intelligence, Wisdom, or Charisma by 1. You have Advantage on Constitution saves to maintain Concentration. You can perform somatic components with weapons or a shield in hand. When a creature provokes an Opportunity Attack from you, you can cast a single-target spell as the Reaction instead.",
+      "asiChoices": [
+        "int",
+        "wis",
+        "cha"
+      ],
+      "prerequisites": [
+        "Level 4+"
+      ]
+    },
+    {
+      "id": "spell_sniper",
+      "name": "Spell Sniper",
+      "repeatable": false,
+      "description": "_General Feat (Prerequisite: Level 4+)_ Increase Intelligence, Wisdom, or Charisma by 1. Double the range of spells that require an attack roll. Your ranged spell attacks ignore Half and Three-Quarters cover. You learn one cantrip that requires an attack roll.",
+      "asiChoices": [
+        "int",
+        "wis",
+        "cha"
+      ],
+      "prerequisites": [
+        "Level 4+"
+      ]
+    },
+    {
+      "id": "fey_touched",
+      "name": "Fey Touched",
+      "repeatable": false,
+      "description": "_General Feat (Prerequisite: Level 4+)_ Increase Intelligence, Wisdom, or Charisma by 1. You learn Misty Step and one 1st-level Enchantment or Illusion spell. You can cast each once without a slot per Long Rest.",
+      "asiChoices": [
+        "int",
+        "wis",
+        "cha"
+      ],
+      "prerequisites": [
+        "Level 4+"
+      ]
+    },
+    {
+      "id": "shadow_touched",
+      "name": "Shadow Touched",
+      "repeatable": false,
+      "description": "_General Feat (Prerequisite: Level 4+)_ Increase Intelligence, Wisdom, or Charisma by 1. You learn Invisibility and one 1st-level Illusion or Necromancy spell. You can cast each once without a slot per Long Rest.",
+      "asiChoices": [
+        "int",
+        "wis",
+        "cha"
+      ],
+      "prerequisites": [
+        "Level 4+"
+      ]
+    },
+    {
+      "id": "telekinetic",
+      "name": "Telekinetic",
+      "repeatable": false,
+      "description": "_General Feat (Prerequisite: Level 4+)_ Increase Intelligence, Wisdom, or Charisma by 1. You learn Mage Hand (invisible, +30 feet range). As a Bonus Action, you can shove or pull a creature within 30 feet 5 feet (Strength save).",
+      "asiChoices": [
+        "int",
+        "wis",
+        "cha"
+      ],
+      "prerequisites": [
+        "Level 4+"
+      ]
+    },
+    {
+      "id": "telepathic",
+      "name": "Telepathic",
+      "repeatable": false,
+      "description": "_General Feat (Prerequisite: Level 4+)_ Increase Intelligence, Wisdom, or Charisma by 1. You can communicate telepathically within 60 feet. You can cast Detect Thoughts once without a slot per Long Rest.",
+      "asiChoices": [
+        "int",
+        "wis",
+        "cha"
+      ],
+      "prerequisites": [
+        "Level 4+"
+      ]
+    },
+    {
+      "id": "boon_of_fortitude",
+      "name": "Boon of Fortitude",
+      "repeatable": false,
+      "description": "_Epic Boon Feat (Prerequisite: Level 19+)_ Increase one ability score by 1, to a maximum of 30. Your hit point maximum increases by 40. When you regain hit points, you regain additional hit points equal to your Constitution modifier (minimum 1).",
+      "asiChoices": [
+        "str",
+        "dex",
+        "con",
+        "int",
+        "wis",
+        "cha"
+      ],
+      "prerequisites": [
+        "Level 19+"
+      ]
+    },
+    {
+      "id": "boon_of_recovery",
+      "name": "Boon of Recovery",
+      "repeatable": false,
+      "description": "_Epic Boon Feat (Prerequisite: Level 19+)_ Increase one ability score by 1, to a maximum of 30. When you are reduced to 0 hit points, you can take a Reaction to regain hit points equal to half your hit point maximum (once per Long Rest).",
+      "asiChoices": [
+        "str",
+        "dex",
+        "con",
+        "int",
+        "wis",
+        "cha"
+      ],
+      "prerequisites": [
+        "Level 19+"
+      ]
+    },
+    {
+      "id": "boon_of_skill_mastery",
+      "name": "Boon of Skill Mastery",
+      "repeatable": false,
+      "description": "_Epic Boon Feat (Prerequisite: Level 19+)_ Increase one ability score by 1, to a maximum of 30. You gain proficiency in all skills.",
+      "asiChoices": [
+        "str",
+        "dex",
+        "con",
+        "int",
+        "wis",
+        "cha"
+      ],
+      "prerequisites": [
+        "Level 19+"
+      ]
     }
   ]
 }

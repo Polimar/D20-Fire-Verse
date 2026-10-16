@@ -64,6 +64,7 @@ function wizardDraft() {
   const bookNeed = 6;
   const level1 = combatWizardSpellIds(1);
   const book = [...new Set([...prepared, ...level1])].slice(0, bookNeed);
+  const miPool = catalog.spells.filter((s) => s.classes.includes("wizard"));
   return {
     name: "Zephyr Ink",
     classId: "wizard",
@@ -77,6 +78,11 @@ function wizardDraft() {
     cantrips,
     spellsPrepared: prepared,
     spellbook: book,
+    magicInitiateCantrips: miPool.filter((s) => s.level === 0).slice(0, 2).map((s) => s.id),
+    magicInitiateSpell: miPool.find((s) => s.level === 1 && !prepared.includes(s.id))?.id ?? miPool.find((s) => s.level === 1)?.id,
+    magicInitiateAbility: "int" as const,
+    speciesSkill: "perception",
+    originFeatId: "alert",
   };
 }
 

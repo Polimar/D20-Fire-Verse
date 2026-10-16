@@ -39,7 +39,14 @@ export type SubclassSlice = {
   features: string[];
   featuresByLevel?: Array<{ level: number; features: string[] }>;
 };
-export type FeatSlice = { id: string; name: string; prerequisites?: string[]; description?: string };
+export type FeatSlice = {
+  id: string;
+  name: string;
+  prerequisites?: string[];
+  description?: string;
+  asiChoices?: AbilityKey[];
+  repeatable?: boolean;
+};
 export type SpellSlice = { id: string; name: string; level: number; classes: string[] };
 export type SpeciesSlice = { id: string; name?: string; hpPerLevel?: number; speedFt?: number };
 
@@ -65,7 +72,7 @@ export type LevelPick =
   | { kind: "subclass"; subclassId: string }
   | { kind: "asi"; mode: "plus2"; ability: AbilityKey }
   | { kind: "asi"; mode: "plus1"; abilities: [AbilityKey, AbilityKey] }
-  | { kind: "feat"; featId: string }
+  | { kind: "feat"; featId: string; ability?: AbilityKey }
   | { kind: "spells"; spells: string[]; cantrips: string[] }
   | { kind: "fighting_style"; featId: string }
   | { kind: "skill"; skills: string[] };
@@ -325,8 +332,23 @@ export function applyPick(hero: ProgressionHero, pick: LevelPick, catalog: Catal
     const category = featCategory(feat);
     if (category === "epic" ? !ask.epic : category !== "general" && category !== "fighting_style") throw new Error("BAD_FEAT");
     if (featMinLevel(feat) > next.level) throw new Error("FEAT_LEVEL");
-    if (next.features.includes(feat.id)) throw new Error("FEAT_TAKEN");
+    if (!feat.repeatable && next.features.includes(feat.id)) throw new Error("FEAT_TAKEN");
+    if (feat.asiChoices?.length) {
+      if (!pick.ability || !feat.asiChoices.includes(pick.ability)) throw new Error("NEED_FEAT_ASI");
+      const cap = category === "epic" ? 30 : 20;
+      next.abilities[pick.ability] = Math.min(cap, next.abilities[pick.ability] + 1);
+    }
     next.features.push(feat.id);
+    if (feat.id === "tough") next.maxHp += 2 * next.level;
+    if (feat.id === "boon_of_fortitude") next.maxHp += 40;
+    if (feat.id === "boon_of_skill_mastery") {
+      const allSkills = [
+        "acrobatics", "animal_handling", "arcana", "athletics", "deception", "history", "insight",
+        "intimidation", "investigation", "medicine", "nature", "perception", "performance",
+        "persuasion", "religion", "sleight_of_hand", "stealth", "survival",
+      ];
+      next.proficiency = [...new Set([...next.proficiency, ...allSkills])];
+    }
     return next;
   }
   if (ask.kind === "fighting_style" && pick.kind === "fighting_style") {
