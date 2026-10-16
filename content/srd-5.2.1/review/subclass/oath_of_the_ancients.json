@@ -1,0 +1,12 @@
+{
+  "ambiguities": [],
+  "unparsedFields": [],
+  "kind": "subclass",
+  "id": "oath_of_the_ancients",
+  "status": "auto_ok",
+  "confidence": "high",
+  "usage": "FireVerse homebrew subclass. Features grant kit flags and combat actions by slug.",
+  "srd": {
+    "text": "Oath of the Ancients\n\n#### Level 3: Nature's Wrath\n\n#### Level 7: Aura of Warding\n\n#### Level 15: Undying Sentinel\n\n#### Level 20: Elder Champion"
+  }
+}

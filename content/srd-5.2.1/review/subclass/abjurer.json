@@ -1,0 +1,12 @@
+{
+  "ambiguities": [],
+  "unparsedFields": [],
+  "kind": "subclass",
+  "id": "abjurer",
+  "status": "auto_ok",
+  "confidence": "high",
+  "usage": "FireVerse homebrew subclass. Features grant kit flags and combat actions by slug.",
+  "srd": {
+    "text": "Abjurer\n\n#### Level 3: Abjuration Savant\n\n#### Level 3: Arcane Ward\n\n#### Level 6: Projected Ward\n\n#### Level 10: Spell Breaker\n\n#### Level 14: Spell Resistance"
+  }
+}

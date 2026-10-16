@@ -1,0 +1,12 @@
+{
+  "ambiguities": [],
+  "unparsedFields": [],
+  "kind": "subclass",
+  "id": "arcane_trickster",
+  "status": "auto_ok",
+  "confidence": "high",
+  "usage": "FireVerse homebrew subclass. Features grant kit flags and combat actions by slug.",
+  "srd": {
+    "text": "Arcane Trickster\n\n#### Level 3: Spellcasting\n\n#### Level 3: Mage Hand Legerdemain\n\n#### Level 9: Magical Ambush\n\n#### Level 13: Versatile Trickster\n\n#### Level 17: Spell Thief"
+  }
+}

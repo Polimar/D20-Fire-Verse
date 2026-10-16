@@ -1,0 +1,12 @@
+{
+  "ambiguities": [],
+  "unparsedFields": [],
+  "kind": "subclass",
+  "id": "light_domain",
+  "status": "auto_ok",
+  "confidence": "high",
+  "usage": "FireVerse homebrew subclass. Features grant kit flags and combat actions by slug.",
+  "srd": {
+    "text": "Light Domain\n\n#### Level 3: Warding Flare\n\n#### Level 3: Radiance of the Dawn\n\n#### Level 6: Improved Warding Flare\n\n#### Level 17: Corona of Light"
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "ambiguities": [],
+  "unparsedFields": [],
+  "kind": "subclass",
+  "id": "wild_magic",
+  "status": "auto_ok",
+  "confidence": "high",
+  "usage": "FireVerse homebrew subclass. Features grant kit flags and combat actions by slug.",
+  "srd": {
+    "text": "Wild Magic\n\n#### Level 3: Wild Magic Surge\n\n#### Level 3: Tides of Chaos\n\n#### Level 6: Bend Luck\n\n#### Level 14: Controlled Chaos\n\n#### Level 18: Spell Bombardment"
+  }
+}

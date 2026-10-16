@@ -1,0 +1,12 @@
+{
+  "ambiguities": [],
+  "unparsedFields": [],
+  "kind": "subclass",
+  "id": "path_of_the_wild_heart",
+  "status": "auto_ok",
+  "confidence": "high",
+  "usage": "FireVerse homebrew subclass. Features grant kit flags and combat actions by slug.",
+  "srd": {
+    "text": "Path of the Wild Heart\n\n#### Level 3: Rage of the Wild\n\n#### Level 6: Aspect of the Wild\n\n#### Level 10: Nature Speaker\n\n#### Level 14: Power of the Wild"
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "ambiguities": [],
+  "unparsedFields": [],
+  "kind": "subclass",
+  "id": "college_of_glamour",
+  "status": "auto_ok",
+  "confidence": "high",
+  "usage": "FireVerse homebrew subclass. Features grant kit flags and combat actions by slug.",
+  "srd": {
+    "text": "College of Glamour\n\n#### Level 3: Mantle of Inspiration\n\n#### Level 3: Beguiling Magic\n\n#### Level 6: Mantle of Majesty\n\n#### Level 14: Unbreakable Majesty"
+  }
+}

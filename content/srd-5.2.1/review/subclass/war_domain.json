@@ -1,0 +1,12 @@
+{
+  "ambiguities": [],
+  "unparsedFields": [],
+  "kind": "subclass",
+  "id": "war_domain",
+  "status": "auto_ok",
+  "confidence": "high",
+  "usage": "FireVerse homebrew subclass. Features grant kit flags and combat actions by slug.",
+  "srd": {
+    "text": "War Domain\n\n#### Level 3: War Priest\n\n#### Level 3: Guided Strike\n\n#### Level 6: War God's Blessing\n\n#### Level 17: Avatar of Battle"
+  }
+}

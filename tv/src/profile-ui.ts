@@ -149,7 +149,28 @@ function paint(): void {
     b.addEventListener("click", () => {
       if (busy) return;
       busy = true;
-      void api(`/api/heroes/${b.dataset.level}/level-up`, { method: "POST", body: "{}" })
+      const heroId = b.dataset.level!;
+      void api<{
+        ask: { kind: string; classId?: string; featureId?: string; options?: string[] } | null;
+        subclasses: Array<{ id: string; name: string; classId: string }>;
+        classes: string[];
+        featureChoices?: { featureId: string; options: string[] };
+      }>(`/api/heroes/${heroId}/level-options`)
+        .then((opts) => {
+          const ask = opts.ask;
+          let body: Record<string, unknown> = {};
+          if (ask?.kind === "class") body = { kind: "class", classId: opts.classes[0] ?? ask.classId };
+          else if (ask?.kind === "subclass") {
+            const pick = opts.subclasses[0]?.id;
+            if (!pick) throw new Error("BAD_SUBCLASS");
+            body = { kind: "subclass", subclassId: pick };
+          } else if (ask?.kind === "feature_choice") {
+            const pick = ask.options?.[0] ?? opts.featureChoices?.options[0];
+            body = { kind: "feature_choice", featureId: ask.featureId, picks: pick ? [pick] : [] };
+          } else if (ask?.kind === "fighting_style") body = { kind: "fighting_style", featId: "defense" };
+          else if (ask?.kind === "asi") body = { kind: "asi", mode: "plus2", ability: "str" };
+          return api(`/api/heroes/${heroId}/level-up`, { method: "POST", body: JSON.stringify(body) });
+        })
         .then(() => reload())
         .then(() => {
           msg("Level applied.", "ok");

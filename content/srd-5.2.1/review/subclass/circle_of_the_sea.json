@@ -1,0 +1,12 @@
+{
+  "ambiguities": [],
+  "unparsedFields": [],
+  "kind": "subclass",
+  "id": "circle_of_the_sea",
+  "status": "auto_ok",
+  "confidence": "high",
+  "usage": "FireVerse homebrew subclass. Features grant kit flags and combat actions by slug.",
+  "srd": {
+    "text": "Circle of the Sea\n\n#### Level 3: Wrath of the Sea\n\n#### Level 6: Aquatic Affinity\n\n#### Level 10: Stormborn\n\n#### Level 14: Oceanic Gift"
+  }
+}

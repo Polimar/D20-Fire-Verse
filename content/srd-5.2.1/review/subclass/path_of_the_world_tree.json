@@ -1,0 +1,12 @@
+{
+  "ambiguities": [],
+  "unparsedFields": [],
+  "kind": "subclass",
+  "id": "path_of_the_world_tree",
+  "status": "auto_ok",
+  "confidence": "high",
+  "usage": "FireVerse homebrew subclass. Features grant kit flags and combat actions by slug.",
+  "srd": {
+    "text": "Path of the World Tree\n\n#### Level 3: Vitality of the Tree\n\n#### Level 6: Branches of the Tree\n\n#### Level 10: Battering Roots\n\n#### Level 14: Travel Along the Tree"
+  }
+}

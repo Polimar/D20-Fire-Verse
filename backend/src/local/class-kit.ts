@@ -114,9 +114,10 @@ export function buildKit(classes: KitClass[], heroFeatures: string[] = [], looku
     kit.actionSurge = Math.max(kit.actionSurge, uses(names, /^action surge/i));
     kit.indomitable = Math.max(kit.indomitable, uses(names, /^indomitable/i));
     if (entry.id === "fighter") kit.fighterLevel = entry.level;
-    if (names.some((name) => /^extra attack$/i.test(name))) kit.extraAttacks = Math.max(kit.extraAttacks, 1);
-    if (names.some((name) => /^two extra attacks$/i.test(name))) kit.extraAttacks = Math.max(kit.extraAttacks, 2);
-    if (names.some((name) => /^three extra attacks$/i.test(name))) kit.extraAttacks = Math.max(kit.extraAttacks, 3);
+    const allNames = [...names, ...subNames];
+    if (allNames.some((name) => /^extra attack$/i.test(name))) kit.extraAttacks = Math.max(kit.extraAttacks, 1);
+    if (allNames.some((name) => /^two extra attacks$/i.test(name))) kit.extraAttacks = Math.max(kit.extraAttacks, 2);
+    if (allNames.some((name) => /^three extra attacks$/i.test(name))) kit.extraAttacks = Math.max(kit.extraAttacks, 3);
     if (names.some((name) => /^fast movement$/i.test(name))) kit.fastMovementFt = 10;
     if (subNames.some((name) => /^improved critical$/i.test(name))) kit.critMin = Math.min(kit.critMin, 19);
     if (subNames.some((name) => /^superior critical$/i.test(name))) kit.critMin = Math.min(kit.critMin, 18);

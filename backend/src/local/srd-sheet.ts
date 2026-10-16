@@ -244,6 +244,16 @@ export function initSheet(token: CombatToken, pregen: Pregen, saved?: Vitals): v
     token.features.push("paladins_smite");
   }
   seedClassResources(token, level, pregen.abilities, true);
+  // Map permanent feature_choice grants (hunters_prey:colossus_slayer) onto subclassChoices.
+  token.subclassChoices = token.subclassChoices ?? {};
+  for (const flag of token.features ?? []) {
+    const colon = flag.indexOf(":");
+    if (colon > 0) {
+      const key = flag.slice(0, colon);
+      const value = flag.slice(colon + 1);
+      if (key && value) token.subclassChoices[key] = value;
+    }
+  }
   const gear = extra.gear;
   if (gear) {
     token.gearAttackBonus = gear.attack;
@@ -294,6 +304,22 @@ export function exportVitals(token: CombatToken): Vitals {
     stable: token.stable,
     secondWindUsed: token.secondWindUsed,
     exhaustionLevel: token.exhaustionLevel,
+  };
+}
+
+/** Subclass resource summary for sheet / companion (FireVerse 48-pack). */
+export function subclassResourceSummary(token: CombatToken): Record<string, number | string | undefined> {
+  return {
+    superiorityDice: token.superiorityDice,
+    superiorityDie: token.superiorityDie,
+    psionicDice: token.psionicDice,
+    healingLightDice: token.healingLightDice,
+    arcaneWardHp: token.arcaneWardHp,
+    companionHp: token.companion?.hp,
+    companionMaxHp: token.companion?.maxHp,
+    portentDice: token.portentDice?.join(","),
+    wildHeartForm: token.wildHeartForm ?? token.subclassChoices?.rage_of_the_wild,
+    starryForm: token.starryForm ?? token.subclassChoices?.starry_form,
   };
 }
 

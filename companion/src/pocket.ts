@@ -283,7 +283,23 @@ export function mountPocket(host: HTMLElement, adopt: (key: string) => void, sca
     });
     card().querySelector("#armLevel")?.addEventListener("click", () => {
       if (!hero) return;
-      void api(`/api/heroes/${hero.id}/level-up`, { method: "POST", body: "{}" }).then(() => openArmory());
+      void api<{
+        ask: { kind: string; classId?: string; featureId?: string; options?: string[] } | null;
+        subclasses: Array<{ id: string; name: string }>;
+        classes: string[];
+      }>(`/api/heroes/${hero.id}/level-options`)
+        .then((opts) => {
+          const ask = opts.ask;
+          let body: Record<string, unknown> = {};
+          if (ask?.kind === "class") body = { kind: "class", classId: opts.classes[0] ?? "fighter" };
+          else if (ask?.kind === "subclass") body = { kind: "subclass", subclassId: opts.subclasses[0]?.id };
+          else if (ask?.kind === "feature_choice") {
+            body = { kind: "feature_choice", featureId: ask.featureId, picks: ask.options?.slice(0, 1) ?? [] };
+          } else if (ask?.kind === "asi") body = { kind: "asi", mode: "plus2", ability: "str" };
+          else if (ask?.kind === "fighting_style") body = { kind: "fighting_style", featId: "defense" };
+          return api(`/api/heroes/${hero.id}/level-up`, { method: "POST", body: JSON.stringify(body) });
+        })
+        .then(() => openArmory());
     });
     card().querySelectorAll<HTMLButtonElement>("[data-equip]").forEach((button) => {
       button.addEventListener("click", () => {

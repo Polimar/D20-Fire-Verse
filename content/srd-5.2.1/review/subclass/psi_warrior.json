@@ -1,0 +1,12 @@
+{
+  "ambiguities": [],
+  "unparsedFields": [],
+  "kind": "subclass",
+  "id": "psi_warrior",
+  "status": "auto_ok",
+  "confidence": "high",
+  "usage": "FireVerse homebrew subclass. Features grant kit flags and combat actions by slug.",
+  "srd": {
+    "text": "Psi Warrior\n\n#### Level 3: Psionic Power\n\n#### Level 7: Telekinetic Leap\n\n#### Level 7: Telekinetic Thrust\n\n#### Level 10: Guarded Mind\n\n#### Level 15: Bulwark of Force"
+  }
+}

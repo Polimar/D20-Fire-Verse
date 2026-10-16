@@ -1,0 +1,12 @@
+{
+  "ambiguities": [],
+  "unparsedFields": [],
+  "kind": "subclass",
+  "id": "illusionist",
+  "status": "auto_ok",
+  "confidence": "high",
+  "usage": "FireVerse homebrew subclass. Features grant kit flags and combat actions by slug.",
+  "srd": {
+    "text": "Illusionist\n\n#### Level 3: Illusion Savant\n\n#### Level 3: Improved Phantasmal Force\n\n#### Level 6: Phantasmal Reality\n\n#### Level 10: Illusory Self\n\n#### Level 14: Illusory Reality"
+  }
+}

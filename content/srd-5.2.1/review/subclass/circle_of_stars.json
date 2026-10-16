@@ -1,0 +1,12 @@
+{
+  "ambiguities": [],
+  "unparsedFields": [],
+  "kind": "subclass",
+  "id": "circle_of_stars",
+  "status": "auto_ok",
+  "confidence": "high",
+  "usage": "FireVerse homebrew subclass. Features grant kit flags and combat actions by slug.",
+  "srd": {
+    "text": "Circle of Stars\n\n#### Level 3: Star Map\n\n#### Level 3: Starry Form\n\n#### Level 6: Cosmic Omen\n\n#### Level 10: Twinkling Stars\n\n#### Level 14: Starry Flare"
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "ambiguities": [],
+  "unparsedFields": [],
+  "kind": "subclass",
+  "id": "circle_of_the_moon",
+  "status": "auto_ok",
+  "confidence": "high",
+  "usage": "FireVerse homebrew subclass. Features grant kit flags and combat actions by slug.",
+  "srd": {
+    "text": "Circle of the Moon\n\n#### Level 3: Combat Wild Shape\n\n#### Level 6: Primal Strike\n\n#### Level 10: Moonlight Step\n\n#### Level 14: Lunar Form"
+  }
+}

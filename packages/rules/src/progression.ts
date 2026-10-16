@@ -65,7 +65,8 @@ export type PendingAsk =
   | { kind: "asi"; atLevel: number; classId: string; epic: boolean }
   | { kind: "spells"; atLevel: number; classId: string; cantrips: number; spells: number }
   | { kind: "fighting_style"; atLevel: number; classId: string }
-  | { kind: "skill"; atLevel: number; classId: string; count: number };
+  | { kind: "skill"; atLevel: number; classId: string; count: number }
+  | { kind: "feature_choice"; atLevel: number; classId: string; featureId: string; options: string[]; count: number };
 
 export type LevelPick =
   | { kind: "class"; classId: string }
@@ -75,7 +76,17 @@ export type LevelPick =
   | { kind: "feat"; featId: string; ability?: AbilityKey }
   | { kind: "spells"; spells: string[]; cantrips: string[] }
   | { kind: "fighting_style"; featId: string }
-  | { kind: "skill"; skills: string[] };
+  | { kind: "skill"; skills: string[] }
+  | { kind: "feature_choice"; featureId: string; picks: string[] };
+
+/** Subclass features that require a permanent pick (FireVerse pack). */
+export const SUBCLASS_LEVEL_CHOICES: Record<string, string[]> = {
+  aspect_of_the_wild: ["owl", "panther", "elephant"],
+  hunters_prey: ["colossus_slayer", "horde_breaker"],
+  defensive_tactics: ["escape_the_horde", "multiattack_defense"],
+  dragon_ancestry: ["fire", "cold", "lightning", "acid", "poison"],
+  circle_spells: ["arid", "polar", "temperate", "tropical"],
+};
 
 export type ProgressionHero = HeroRules & {
   cantrips: string[];
@@ -301,12 +312,27 @@ export function applyPick(hero: ProgressionHero, pick: LevelPick, catalog: Catal
     const progress = next.classes.find((row) => row.id === pick.classId)!;
     grant(next, levelRow(def, progress.level)?.features ?? []);
     const sub = progress.subclass ? catalog.subclasses.find((row) => row.id === progress.subclass) : undefined;
-    if (sub) grant(next, subclassFeaturesAt(sub, progress.level));
+    const newSubFeatures = sub ? subclassFeaturesAt(sub, progress.level) : [];
+    if (sub) grant(next, newSubFeatures);
     next.maxHp += hpGain(def, next.abilities.con, species);
     next.level += 1;
     next.pending = followUps(next, def, progress, catalog);
-    if (sub && subclassFeaturesAt(sub, progress.level).some((feature) => /^additional fighting style$/i.test(feature))) {
+    if (sub && newSubFeatures.some((feature) => /^additional fighting style$/i.test(feature))) {
       next.pending.push({ kind: "fighting_style", atLevel: next.level, classId: def.id });
+    }
+    for (const feature of newSubFeatures) {
+      const key = feature.toLowerCase().replace(/['’]/g, "").replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "");
+      const options = SUBCLASS_LEVEL_CHOICES[key];
+      if (options) {
+        next.pending.push({
+          kind: "feature_choice",
+          atLevel: next.level,
+          classId: def.id,
+          featureId: key,
+          options,
+          count: 1,
+        });
+      }
     }
     return next;
   }
@@ -315,7 +341,31 @@ export function applyPick(hero: ProgressionHero, pick: LevelPick, catalog: Catal
     if (!sub) throw new Error("BAD_SUBCLASS");
     const progress = next.classes.find((row) => row.id === ask.classId);
     if (progress) progress.subclass = sub.id;
-    grant(next, subclassFeaturesUpTo(sub, progress?.level ?? sub.level));
+    const granted = subclassFeaturesUpTo(sub, progress?.level ?? sub.level);
+    grant(next, granted);
+    for (const feature of granted) {
+      const key = feature.toLowerCase().replace(/['’]/g, "").replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "");
+      const options = SUBCLASS_LEVEL_CHOICES[key];
+      if (options) {
+        next.pending.push({
+          kind: "feature_choice",
+          atLevel: next.level,
+          classId: ask.classId,
+          featureId: key,
+          options,
+          count: 1,
+        });
+      }
+    }
+    return next;
+  }
+  if (ask.kind === "feature_choice" && pick.kind === "feature_choice") {
+    if (pick.featureId !== ask.featureId) throw new Error("LEVEL_CHOICE");
+    if (pick.picks.length !== ask.count) throw new Error("LEVEL_CHOICE");
+    for (const value of pick.picks) {
+      if (!ask.options.includes(value)) throw new Error("BAD_CHOICE");
+      next.features.push(`${ask.featureId}:${value}`);
+    }
     return next;
   }
   if (ask.kind === "asi" && pick.kind === "asi") {

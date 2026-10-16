@@ -1,0 +1,12 @@
+{
+  "ambiguities": [],
+  "unparsedFields": [],
+  "kind": "subclass",
+  "id": "aberrant_sorcery",
+  "status": "auto_ok",
+  "confidence": "high",
+  "usage": "FireVerse homebrew subclass. Features grant kit flags and combat actions by slug.",
+  "srd": {
+    "text": "Aberrant Sorcery\n\n#### Level 3: Psionic Spells\n\n#### Level 3: Telepathic Speech\n\n#### Level 6: Psionic Sorcery\n\n#### Level 14: Revelation in Flesh\n\n#### Level 18: Warping Implosion"
+  }
+}

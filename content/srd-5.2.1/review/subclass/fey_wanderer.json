@@ -1,0 +1,12 @@
+{
+  "ambiguities": [],
+  "unparsedFields": [],
+  "kind": "subclass",
+  "id": "fey_wanderer",
+  "status": "auto_ok",
+  "confidence": "high",
+  "usage": "FireVerse homebrew subclass. Features grant kit flags and combat actions by slug.",
+  "srd": {
+    "text": "Fey Wanderer\n\n#### Level 3: Dreadful Strikes\n\n#### Level 3: Otherworldly Glamour\n\n#### Level 7: Beguiling Twist\n\n#### Level 11: Fey Reinforcements\n\n#### Level 15: Misty Wanderer"
+  }
+}

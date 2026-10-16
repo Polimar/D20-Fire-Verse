@@ -1,0 +1,12 @@
+{
+  "ambiguities": [],
+  "unparsedFields": [],
+  "kind": "subclass",
+  "id": "college_of_valour",
+  "status": "auto_ok",
+  "confidence": "high",
+  "usage": "FireVerse homebrew subclass. Features grant kit flags and combat actions by slug.",
+  "srd": {
+    "text": "College of Valour\n\n#### Level 3: Combat Inspiration\n\n#### Level 3: Martial Training\n\n#### Level 6: Extra Attack\n\n#### Level 14: Battle Magic"
+  }
+}

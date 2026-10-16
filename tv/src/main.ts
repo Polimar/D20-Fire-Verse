@@ -1711,19 +1711,49 @@ function onRoomState(next: RoomState) {
       const panel = document.createElement("section");
       panel.id = "levelUpLive";
       panel.className = "chargen-panel is-open";
-      panel.innerHTML = `<div class="chargen-frame"><h2>Level up</h2><p class="meta">Choose on this screen. The table will not seat this hero again until the choice is made.</p>
-        <label class="admin-field"><span>Class id</span><input id="lvClassLive" /></label>
-        <button type="button" class="primary" id="lvGo">Confirm</button></div>`;
+      panel.innerHTML = `<div class="chargen-frame"><h2>Level up</h2><p class="meta">Loading choices…</p></div>`;
       document.body.appendChild(panel);
-      panel.querySelector("#lvGo")?.addEventListener("click", () => {
-        const classId = panel.querySelector<HTMLInputElement>("#lvClassLive")?.value.trim();
-        void fetch(`/api/heroes/${next.levelUp!.heroId}/level-up`, {
-          method: "POST",
-          credentials: "same-origin",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(classId ? { kind: "class", classId } : { kind: "class", classId: "fighter" }),
-        }).then(() => panel.remove());
-      });
+      void fetch(`/api/heroes/${next.levelUp.heroId}/level-options`, { credentials: "same-origin" })
+        .then((r) => r.json())
+        .then((opts: {
+          ask: { kind: string; classId?: string; featureId?: string; options?: string[] } | null;
+          subclasses: Array<{ id: string; name: string; classId: string }>;
+          classes: string[];
+        }) => {
+          const ask = opts.ask;
+          const subOpts = (opts.subclasses ?? [])
+            .map((s) => `<option value="${s.id}">${s.name}</option>`)
+            .join("");
+          const featureOpts = (ask?.kind === "feature_choice" ? ask.options ?? [] : [])
+            .map((o) => `<option value="${o}">${o.replace(/_/g, " ")}</option>`)
+            .join("");
+          panel.innerHTML = `<div class="chargen-frame"><h2>Level up</h2>
+            <p class="meta">${ask?.kind === "subclass" ? "Pick a subclass." : ask?.kind === "feature_choice" ? "Pick a feature option." : "Confirm the next level."}</p>
+            ${ask?.kind === "subclass" ? `<label class="admin-field"><span>Subclass</span><select id="lvSubLive">${subOpts}</select></label>` : ""}
+            ${ask?.kind === "feature_choice" ? `<label class="admin-field"><span>Choice</span><select id="lvFeatLive">${featureOpts}</select></label>` : ""}
+            ${ask?.kind === "class" ? `<label class="admin-field"><span>Class id</span><input id="lvClassLive" value="${opts.classes[0] ?? ""}" /></label>` : ""}
+            <button type="button" class="primary" id="lvGo">Confirm</button></div>`;
+          panel.querySelector("#lvGo")?.addEventListener("click", () => {
+            let body: Record<string, unknown> = { kind: "class", classId: "fighter" };
+            if (ask?.kind === "class") {
+              const classId = panel.querySelector<HTMLInputElement>("#lvClassLive")?.value.trim() || opts.classes[0] || "fighter";
+              body = { kind: "class", classId };
+            } else if (ask?.kind === "subclass") {
+              const subclassId = panel.querySelector<HTMLSelectElement>("#lvSubLive")?.value;
+              body = { kind: "subclass", subclassId };
+            } else if (ask?.kind === "feature_choice") {
+              const pick = panel.querySelector<HTMLSelectElement>("#lvFeatLive")?.value;
+              body = { kind: "feature_choice", featureId: ask.featureId, picks: pick ? [pick] : [] };
+            }
+            void fetch(`/api/heroes/${next.levelUp!.heroId}/level-up`, {
+              method: "POST",
+              credentials: "same-origin",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(body),
+            }).then(() => panel.remove());
+          });
+        })
+        .catch(() => panel.remove());
     }
   }
   pendingTable = null;

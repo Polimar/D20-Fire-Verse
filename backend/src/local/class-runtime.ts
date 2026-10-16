@@ -7,6 +7,13 @@
 import type { CombatToken } from "./combat.js";
 import { makeDiceRoll, rollCheck, rollNotation, type DiceRoll } from "./dice.js";
 import { legalWildShapeForms, wildShapeDurationPcTurns, wildShapeForm } from "./wild-shape-forms.js";
+import {
+  castSubclassFeature,
+  onSubclassTurnStart,
+  seedSubclassResources,
+  subclassDamageRider,
+  subclassMenus,
+} from "./subclass-effects.js";
 
 function abilityMod(score: number): number {
   return Math.floor((score - 10) / 2);
@@ -329,8 +336,8 @@ const ACTIONS: Record<string, (token: CombatToken, ctx: ClassCtx) => { line: str
 
 export function castClassFeature(token: CombatToken, effectType: string, ctx: ClassCtx): { line: string; rolls: DiceRoll[] } | null {
   const run = ACTIONS[effectType];
-  if (!run) return null;
-  return run(token, ctx);
+  if (run) return run(token, ctx);
+  return castSubclassFeature(token, effectType, ctx);
 }
 
 export function seedClassResources(token: CombatToken, level: number, abilities: Record<string, number>, speedAlready: boolean): void {
@@ -368,6 +375,7 @@ export function seedClassResources(token: CombatToken, level: number, abilities:
   if (has(token, "fiendish_resilience") && !token.damageResistances?.includes("fire")) {
     token.damageResistances = [...(token.damageResistances ?? []), "fire"];
   }
+  seedSubclassResources(token, level, abilities, Math.max(2, Math.ceil(level / 4) + 1));
   if (has(token, "superior_defense") && !token.heavyArmor) {
     const types = ["bludgeoning", "piercing", "slashing", "acid", "cold", "lightning", "thunder", "poison", "necrotic", "radiant", "psychic"];
     token.damageResistances = [...new Set([...(token.damageResistances ?? []), ...types])];
@@ -432,7 +440,11 @@ export function classMenus(token: CombatToken): { actions: string[]; bonus: stri
   if (has(token, "healer")) push(actions, "healer_kit");
   if (has(token, "telekinetic")) push(bonus, "telekinetic_shove");
   if (has(token, "lucky") && (token.luckPoints ?? 0) > 0) push(reactions, "lucky_save");
-  if (has(token, "fast_hands")) push(bonus, "std_utilize");
+  if (has(token, "fast_hands") || has(token, "fast_fingers")) push(bonus, "std_utilize");
+  const sub = subclassMenus(token);
+  for (const id of sub.actions) push(actions, id);
+  for (const id of sub.bonus) push(bonus, id);
+  for (const id of sub.reactions) push(reactions, id);
   return { actions, bonus, reactions };
 }
 
@@ -456,6 +468,7 @@ export function onClassTurn(token: CombatToken, level: number, abilities: Record
   token.affinityUsed = false;
   token.evokeUsed = false;
   token.prowessUsed = false;
+  onSubclassTurnStart(token, round);
 }
 
 export function onClassShortRest(token: CombatToken, level: number, abilities: Record<string, number>, maxSlots?: Record<string, number>): string[] {
@@ -582,7 +595,15 @@ export function classDamageRider(
     uses(token).hell = 0;
     return { dice: "10d10", type: "psychic", flat: 0 };
   }
-  void level;
+  const sub = subclassDamageRider(token, level, abilities, {
+    weapon: opts.weapon,
+    firstHitThisTurn: !token.frenzyUsed && !token.divineFuryUsed,
+    targetHurt: opts.targetHurt,
+    cantrip: opts.cantrip,
+    spell: opts.spell,
+    melee: opts.weapon,
+  });
+  if (sub) return sub;
   return null;
 }
 
