@@ -39,7 +39,16 @@ export type ItemRules = {
     | { kind: "ac_bonus"; amount: number }
     | { kind: "attack_bonus"; amount: number }
     | { kind: "damage_bonus"; amount: number; damageType?: string }
-    | { kind: "on_hit_rider"; damage: string; damageType?: string }
+    | {
+        kind: "on_hit_rider";
+        damage: string;
+        damageType?: string;
+        saveAbility?: string;
+        saveDc?: number;
+        halfDamage?: string;
+        triggerOnAnyHit?: boolean;
+      }
+    | { kind: "haste_drink"; inventoryToken?: string }
     | { kind: "resistance"; damageType: string }
     | { kind: "immunity"; damageType: string }
     | { kind: "grant_spell"; spellId: string }

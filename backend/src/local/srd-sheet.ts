@@ -10,6 +10,7 @@ import { classMenus, onClassLongRest, onClassShortRest, seedClassResources } fro
 import { wildShapeForm } from "./wild-shape-forms.js";
 import type { GearSheet } from "./hero-pregen.js";
 import { HEALING_POTIONS } from "./healing-potions.js";
+import { SPEED_POTION_ABILITY_ID, SPEED_POTION_INVENTORY } from "./speed-potion.js";
 import { GIANT_STRENGTH_POTIONS } from "./giant-strength-potions.js";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -281,6 +282,9 @@ export const ATTACK_VARIANTS = {
   tm_push: "Tactical Master: Push",
   tm_sap: "Tactical Master: Sap",
   tm_slow: "Tactical Master: Slow",
+  striking_1: "Staff strike (1 charge)",
+  striking_2: "Staff strike (2 charges)",
+  striking_3: "Staff strike (3 charges)",
 } as const;
 
 export type AttackVariant = keyof typeof ATTACK_VARIANTS;
@@ -318,6 +322,11 @@ function attackVariants(token: CombatToken, pregen: Pregen | undefined, id: stri
   if (has("brutal_strike") && has("reckless_attack") && strong && !token.brutalUsed && (token.reckless || firstRoll)) {
     out.push(`brutal_force:${id}`, `brutal_hamstring:${id}`);
   }
+  const staffPool = token.gearCharges && Object.keys(token.gearCharges).find((k) => k.includes("staff_of_striking"));
+  const staffCharges = staffPool ? (token.gearCharges?.[staffPool] ?? 0) : 0;
+  if (staffCharges >= 1) out.push(`striking_1:${id}`);
+  if (staffCharges >= 2) out.push(`striking_2:${id}`);
+  if (staffCharges >= 3) out.push(`striking_3:${id}`);
   const own = token.weaponGear?.[id]?.mastery;
   if (has("tactical_master") && has("weapon_mastery") && own) {
     for (const mastery of ["push", "sap", "slow"]) {
@@ -387,11 +396,17 @@ export function refreshMenus(token: CombatToken, pregen: Pregen | undefined, loo
   for (const potion of HEALING_POTIONS) {
     if (token.inventory.includes(potion.inventoryToken)) place(potion.abilityId);
   }
+  if (token.inventory.includes(SPEED_POTION_INVENTORY)) place(SPEED_POTION_ABILITY_ID);
   for (const potion of GIANT_STRENGTH_POTIONS) {
     if (token.inventory.includes(potion.inventoryToken)) place(potion.abilityId);
   }
   for (const id of token.cantrips ?? []) place(id);
-  for (const id of token.spells ?? []) place(id);
+  for (const id of token.spells ?? []) {
+    place(id);
+    if (id === "spell_hex") {
+      for (const ab of ["str", "dex", "con", "int", "wis", "cha"]) pushUnique(bonus, `spell_hex:${ab}`);
+    }
+  }
   for (const id of token.grantedSpells ?? []) {
     const pool = token.gearSpells?.[id];
     if (pool && (token.gearCharges?.[pool] ?? 0) > 0) place(id, true);

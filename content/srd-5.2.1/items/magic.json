@@ -70,7 +70,17 @@
       "name": "Ammunition of Slaying",
       "rarity": "very_rare",
       "slot": "consumable",
-      "effects": []
+      "effects": [
+        {
+          "kind": "on_hit_rider",
+          "damage": "6d10",
+          "damageType": "force",
+          "saveAbility": "con",
+          "saveDc": 17,
+          "halfDamage": "3d10",
+          "triggerOnAnyHit": true
+        }
+      ]
     },
     {
       "id": "amulet_of_health",
@@ -2445,7 +2455,7 @@
       "name": "Potion of Speed",
       "rarity": "very_rare",
       "slot": "consumable",
-      "effects": []
+      "effects": [{ "kind": "haste_drink" }]
     },
     {
       "id": "potion_of_vitality",
@@ -3322,6 +3332,7 @@
       "name": "Staff of Striking",
       "rarity": "very_rare",
       "slot": "trinket",
+      "baseItems": ["quarterstaff"],
       "requires": {
         "attunement": true
       },

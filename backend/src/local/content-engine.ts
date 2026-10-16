@@ -196,7 +196,8 @@ function spellView(id: string, game: SpellDef): EngineView {
   const srdDice = srdDamageLines.map((d) => d.dice).join(" + ") ?? "";
   const delayed = effect.delayedOnHit as { dice?: string } | undefined;
   const zoneExtra = effect.persistentZone ? 1 : 0;
-  const modeledDamageLines = engineParts.length + (delayed?.dice ? 1 : 0) + zoneExtra;
+  const brandRider = effect.type === "brand" && typeof effect.dice === "string" ? 1 : 0;
+  const modeledDamageLines = engineParts.length + (delayed?.dice ? 1 : 0) + zoneExtra + brandRider;
   if (srdDamageLines.length > modeledDamageLines) {
     const primary = srdDamageLines[0]?.dice;
     const wired = engineParts[0]?.dice;
@@ -237,7 +238,7 @@ function spellView(id: string, game: SpellDef): EngineView {
   };
 }
 
-function itemEffectLine(effect: EffectDef, weapon: boolean): EngineLine {
+function itemEffectLine(effect: EffectDef, weapon: boolean, item: ItemDef): EngineLine {
   switch (effect.kind) {
     case "ac_bonus":
       return { label: "AC", detail: `+${effect.amount} Armor Class while equipped.`, ok: true };
@@ -265,10 +266,16 @@ function itemEffectLine(effect: EffectDef, weapon: boolean): EngineLine {
       };
     case "on_hit_rider": {
       const typeNote = effect.damageType ?? "the weapon's damage type";
-      return weapon
+      const ammoRider = item.slot === "consumable" && /ammunition/i.test(item.id) && effect.kind === "on_hit_rider";
+      const weaponCarrier = weapon || Boolean(item.baseItems?.length) || ammoRider;
+      const saveNote =
+        effect.saveAbility && effect.saveDc
+          ? ` On any hit, target makes a ${effect.saveAbility.toUpperCase()} save DC ${effect.saveDc} or takes ${effect.damage}${effect.halfDamage ? ` (half ${effect.halfDamage} on success)` : ""}.`
+          : "";
+      return weaponCarrier
         ? {
             label: "On hit",
-            detail: `+${effect.damage} ${typeNote} rolled on every hit (doubled on a crit). Resistance reads the weapon's damage type for the whole hit.`,
+            detail: `+${effect.damage} ${typeNote} rolled on every hit (doubled on a crit). Resistance reads the weapon's damage type for the whole hit.${saveNote}`,
             ok: true,
           }
         : {
@@ -277,6 +284,12 @@ function itemEffectLine(effect: EffectDef, weapon: boolean): EngineLine {
             ok: false,
           };
     }
+    case "haste_drink":
+      return {
+        label: "Drink",
+        detail: "Drink as an action to gain Haste for this fight (no concentration, no lethargy when it ends).",
+        ok: true,
+      };
     case "resistance":
       return { label: "Resistance", detail: `Half ${effect.damageType} damage taken.`, ok: true };
     case "immunity":
@@ -345,7 +358,7 @@ function itemView(game: ItemDef): EngineView {
   } else if ((game.slot === "mainhand" || game.slot === "offhand") && !game.weapon) {
     lines.push({ label: "Weapon attack", detail: "No base weapon the game knows, so equipping it gives no attack.", ok: false });
   }
-  lines.push(...game.effects.map((effect) => itemEffectLine(effect, isWeapon)));
+  lines.push(...game.effects.map((effect) => itemEffectLine(effect, isWeapon, game)));
   if (game.requires?.attunement) lines.push({ label: "Attunement", detail: "Does nothing until the hero attunes to it.", ok: true });
   const grantsSpell = game.effects.some((e) => e.kind === "grant_spell");
   if (grantsSpell) {

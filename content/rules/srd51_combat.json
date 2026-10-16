@@ -161,7 +161,31 @@
     "actionType": "bonus_action",
     "level": 1,
     "combat": true,
-    "effects": [{ "type": "brand", "dice": "1d6", "rangeCells": 18, "concentration": true, "slot": 1 }]
+    "effects": [{ "type": "brand", "dice": "1d6", "damageType": "necrotic", "rangeCells": 18, "concentration": true, "slot": 1 }]
+  },
+  "spell_hunters_mark": {
+    "id": "spell_hunters_mark",
+    "name": "Hunter's Mark",
+    "actionType": "bonus_action",
+    "level": 1,
+    "combat": true,
+    "effects": [{ "type": "brand", "dice": "1d6", "damageType": "force", "rangeCells": 18, "concentration": true, "slot": 1 }]
+  },
+  "spell_haste": {
+    "id": "spell_haste",
+    "name": "Haste",
+    "actionType": "action",
+    "level": 3,
+    "combat": true,
+    "effects": [{ "type": "haste", "rangeCells": 6, "concentration": true, "slot": 3 }]
+  },
+  "spell_bane": {
+    "id": "spell_bane",
+    "name": "Bane",
+    "actionType": "action",
+    "level": 1,
+    "combat": true,
+    "effects": [{ "type": "bane", "maxTargets": 3, "baseSlot": 1, "rangeCells": 6, "concentration": true, "slot": 1 }]
   },
   "spell_misty_step": {
     "id": "spell_misty_step",

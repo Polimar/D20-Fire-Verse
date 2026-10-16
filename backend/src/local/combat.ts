@@ -174,7 +174,15 @@ export type CombatToken = {
   gearAttackBonus?: number;
   gearDamageBonus?: number;
   /** Magic weapon bonuses, keyed by the attack they ride on. */
-  weaponGear?: Record<string, { attack: number; damage: number; onHit: Array<{ damage: string; damageType?: string }>; mastery?: string }>;
+  weaponGear?: Record<
+    string,
+    {
+      attack: number;
+      damage: number;
+      onHit: Array<{ damage: string; damageType?: string; saveAbility?: string; saveDc?: number; halfDamage?: string }>;
+      mastery?: string;
+    }
+  >;
   masteries?: string[];
   grantedSpells?: string[];
   /** Spell id → the equipped item that casts it. */
@@ -204,7 +212,13 @@ export type CombatToken = {
   magicActionReady?: boolean;
   spiritualRounds?: number;
   concentrating?: { spellId: string; targetId?: string };
-  brand?: { by: string; dice: string };
+  brand?: { by: string; dice: string; damageType?: string; hexAbility?: string; huntersMark?: boolean };
+  /** After a marked foe dies, the caster may spend a later BA to move Hex / Hunter's Mark. */
+  pendingMarkRetarget?: string;
+  baned?: boolean;
+  hasted?: boolean;
+  hasteSkipLethargy?: boolean;
+  hasteBaseSpeed?: number;
   hitDie?: number;
   hitDice?: number;
   /** 2024 exhaustion tier 0–6 on this token. */
@@ -1560,7 +1574,9 @@ function creatureSave(
   if (token.countercharm && (key === "wis" || key === "cha")) advantage = true;
   if (key === "str" && token.raging) advantage = true;
   if (hasCondition(token, "poisoned") || hasCondition(token, "frightened")) disadvantage = true;
-  const bonus = saveBonus(token, key) + (token.auraBonus ?? 0);
+  let banePenalty = 0;
+  if (token.baned) banePenalty = rollNotation("1d4").total;
+  const bonus = saveBonus(token, key) + (token.auraBonus ?? 0) - banePenalty;
   const label = `${ability.toUpperCase()} save`;
   const once = (mode: D20Mode, extra = 0) =>
     rollCheck({
@@ -2310,7 +2326,16 @@ function castSpecial(
     const foe = combat.tokens.find((x) => x.id === targetId && isFoe(combat, t, x));
     if (!foe) throw new Error("BAD_TARGET");
     demandShot(combat, t, foe);
-    foe.brand = { by: t.id, dice: String(effect.dice ?? "1d6") };
+    for (const other of combat.tokens) {
+      if (other.brand?.by === t.id) other.brand = undefined;
+    }
+    foe.brand = {
+      by: t.id,
+      dice: String(effect.dice ?? "1d6"),
+      damageType: effect.damageType ? String(effect.damageType) : undefined,
+      hexAbility: effect.hexAbility ? String(effect.hexAbility) : undefined,
+      huntersMark: castId === "spell_hunters_mark",
+    };
     setConcentration(combat, t, castId, foe.id);
     spendEconomy(t, isBonus);
     statusEvent(combat, t, name, `${t.name} brands ${foe.name}.`);
@@ -2435,6 +2460,11 @@ export function performPcAction(
 
   let quicken = false;
   let castId = abilityId;
+  let hexAbilityPick: string | undefined;
+  if (abilityId.startsWith("spell_hex:")) {
+    hexAbilityPick = abilityId.slice("spell_hex:".length);
+    castId = "spell_hex";
+  }
   if (castId.startsWith("wild_shape:")) {
     t.wildShapePick = castId.slice("wild_shape:".length);
     castId = "wild_shape";
@@ -2481,6 +2511,9 @@ export function performPcAction(
 
   const effect = { ...(ability.effects[0] ?? {}) };
   if (!ability.effects[0]) throw new Error("NO_EFFECT");
+  if (hexAbilityPick && effect.type === "brand") effect.hexAbility = hexAbilityPick;
+  const markRetargetFree =
+    (castId === "spell_hex" || castId === "spell_hunters_mark") && t.pendingMarkRetarget === castId;
   const pregen = t.characterId ? getPregen(t.characterId) : undefined;
   const prof = pregen?.proficiencyBonus ?? 2;
   if (t.raging && !(t.wildShaped && hasFeature(t, "beast_spells")) && (castId.startsWith("spell_") || t.cantrips?.includes(castId) || t.spells?.includes(castId))) {
@@ -2500,6 +2533,7 @@ export function performPcAction(
     level > 0 &&
     castId !== "spell_spiritual_weapon_strike" &&
     !(castId === "spell_hunters_mark" && favoredMarkFree(t)) &&
+    !markRetargetFree &&
     !freeCast(t, level)
   ) {
     slotUsed = spendSlot(t, level);
@@ -2515,6 +2549,7 @@ export function performPcAction(
     }
     if (grown && typeof effect.dice === "string") effect.dice = grown;
   }
+  if (markRetargetFree) t.pendingMarkRetarget = undefined;
   if (quicken && !t.abilityUses?.quicken_free) t.sorceryPoints = (t.sorceryPoints ?? 0) - 2;
   if (quicken) t.abilityUses = { ...(t.abilityUses ?? {}), meta_spent: 1, quicken_free: 0 };
   if (level > 0) {
@@ -2723,6 +2758,25 @@ export function performPcAction(
     statusEvent(combat, t, ability.name, `${t.name} drinks ${ability.name} — ${key.toUpperCase()} becomes ${score}.`);
     refreshReachable(combat);
     return { rolls: [] };
+  }
+  if (effect.type === "haste" || effect.type === "haste_drink") {
+    const ally = targetId ? combat.tokens.find((x) => x.id === targetId && isFriend(combat, t, x)) : t;
+    if (!ally) throw new Error("BAD_TARGET");
+    if (effect.consume) {
+      const item = String(effect.consume);
+      const idx = t.inventory.indexOf(item);
+      if (idx < 0) throw new Error("NO_ITEM");
+      t.inventory.splice(idx, 1);
+    }
+    applyHaste(ally, true);
+    if (effect.type === "haste" && effect.concentration) setConcentration(combat, t, castId, ally.id);
+    spendEconomy(t, isBonus);
+    statusEvent(combat, t, ability.name, `${ally.name} moves with supernatural speed.`);
+    refreshReachable(combat);
+    return { rolls: [] };
+  }
+  if (effect.type === "bane") {
+    return castBaneSpell(combat, t, pregen, ability.name, effect, isBonus, castId, targetId, slotUsed || level);
   }
   if (effect.type === "invisibility_drink") {
     if (effect.consume) {
@@ -2958,6 +3012,8 @@ export function performPcAction(
   const mode: D20Mode = d20Mode(advantage, disadvantage);
   let blessBonus = 0;
   if (gate?.phase !== "damage" && t.blessed) blessBonus = rollNotation("1d4").total;
+  let banePenalty = 0;
+  if (gate?.phase !== "damage" && target.baned) banePenalty = rollNotation("1d4").total;
 
   const resumed = gate?.phase === "damage" ? gate.strike : null;
   const attackRoll = resumed
@@ -2965,7 +3021,7 @@ export function performPcAction(
     : rollAttack({
         roller: t.name,
         label: `${ability.name} vs ${target.name}${blessBonus ? " · Bless" : ""}`,
-        bonus: attackBonus + blessBonus,
+        bonus: attackBonus + blessBonus - banePenalty,
         ac: effectiveAc(target),
         mode,
         critMin: weaponSwing ? t.kit?.critMin : undefined,
@@ -3112,7 +3168,26 @@ export function performPcAction(
   }
 
   if (target.brand?.by === t.id) {
-    dmgTotal += pushPartDamage(rolls, t.name, target.brand.dice, weaponType, "brand", crit);
+    const brandType = target.brand.damageType ?? weaponType;
+    dmgTotal += pushPartDamage(rolls, t.name, target.brand.dice, brandType, "brand", crit);
+  }
+  if (landed) {
+    for (const rider of magicWeapon?.onHit ?? []) {
+      if (!rider.saveAbility || !rider.saveDc) continue;
+      const { roll: saveRoll, ok: saved } = creatureSave(target, rider.saveAbility, rider.saveDc, true);
+      rolls.push(saveRoll);
+      const dice = saved ? rider.halfDamage ?? "0" : rider.damage;
+      if (dice && dice !== "0") {
+        dmgTotal += pushPartDamage(rolls, t.name, dice, rider.damageType ?? "force", "on hit", crit);
+      }
+    }
+  }
+  if (variant === "striking_1" || variant === "striking_2" || variant === "striking_3") {
+    const spend = variant === "striking_1" ? 1 : variant === "striking_2" ? 2 : 3;
+    const pool = staffStrikingChargePool(t);
+    if (!pool || (t.gearCharges?.[pool] ?? 0) < spend) throw new Error("NO_CHARGES");
+    t.gearCharges![pool] = (t.gearCharges![pool] ?? 0) - spend;
+    dmgTotal += pushPartDamage(rolls, t.name, `${spend}d6`, "force", "staff strike", crit);
   }
   if (t.nickNext) {
     dmgTotal += t.nickMod ?? 0;
@@ -3845,7 +3920,80 @@ export function applyDamage(
   }
 }
 
+function applyHaste(token: CombatToken, skipLethargy: boolean): void {
+  if (!token.hasteBaseSpeed) token.hasteBaseSpeed = token.speedCells;
+  token.hasted = true;
+  token.hasteSkipLethargy = skipLethargy;
+  token.speedCells = token.hasteBaseSpeed * 2;
+  token.movementLeft = Math.max(token.movementLeft, token.speedCells);
+  token.acBonus = (token.acBonus ?? 0) + 2;
+  token.extraAction = true;
+}
+
+function staffStrikingChargePool(token: CombatToken): string | undefined {
+  if (!token.gearCharges) return undefined;
+  return Object.keys(token.gearCharges).find((key) => key.includes("staff_of_striking") || key.includes("striking"));
+}
+
+function castBaneSpell(
+  combat: CombatState,
+  caster: CombatToken,
+  pregen: Pregen | undefined,
+  name: string,
+  effect: Record<string, unknown>,
+  isBonus: boolean,
+  castId: string,
+  targetId: string | undefined,
+  slotLevel: number,
+): { rolls: DiceRoll[] } {
+  if (!targetId) throw new Error("NEED_TARGET");
+  const range = Number(effect.rangeCells ?? 6);
+  const baseCap = Number(effect.maxTargets ?? 3);
+  const baseSlot = Number(effect.baseSlot ?? 1);
+  const cap = baseCap + Math.max(0, slotLevel - baseSlot);
+  const origin = combat.tokens.find((x) => x.id === targetId);
+  if (!origin || !isFoe(combat, caster, origin)) throw new Error("BAD_TARGET");
+  const picked: CombatToken[] = [origin];
+  for (const foe of combat.tokens) {
+    if (picked.length >= cap) break;
+    if (foe.dead || !isFoe(combat, caster, foe) || picked.includes(foe)) continue;
+    if (chebyshev(foe.x, foe.y, caster.x, caster.y) > range) continue;
+    if (!clearShot(combat, caster.x, caster.y, foe.x, foe.y)) continue;
+    picked.push(foe);
+  }
+  const prof = pregen?.proficiencyBonus ?? 2;
+  const dc = 8 + prof + abilityMod(abilityScore(caster, pregen, caster.spellAbility ?? "cha"));
+  const rolls: DiceRoll[] = [];
+  const names: string[] = [];
+  for (const foe of picked) {
+    foe.baned = false;
+    const { roll, ok } = creatureSave(foe, "cha", dc, true);
+    rolls.push(roll);
+    if (!ok) {
+      foe.baned = true;
+      names.push(foe.name);
+    }
+  }
+  if (effect.concentration) setConcentration(combat, caster, castId);
+  spendEconomy(caster, isBonus);
+  statusEvent(
+    combat,
+    caster,
+    name,
+    names.length ? `${caster.name} casts ${name} on ${names.join(", ")}.` : `${caster.name} casts ${name}, but everyone resists.`,
+    rolls,
+  );
+  refreshReachable(combat);
+  return { rolls };
+}
+
 function markDead(combat: CombatState, target: CombatToken): void {
+  if (target.brand?.by) {
+    const caster = combat.tokens.find((x) => x.id === target.brand!.by);
+    if (caster?.concentrating?.targetId === target.id && (caster.concentrating.spellId === "spell_hex" || caster.concentrating.spellId === "spell_hunters_mark")) {
+      caster.pendingMarkRetarget = caster.concentrating.spellId;
+    }
+  }
   target.dead = true;
   target.dying = false;
   target.hp = 0;
@@ -3884,6 +4032,9 @@ function breakConcentration(combat: CombatState, token: CombatToken): void {
   if (!focus) return;
   if (focus.spellId === "spell_bless") {
     for (const ally of combat.tokens) ally.blessed = false;
+  }
+  if (focus.spellId === "spell_bane") {
+    for (const foe of combat.tokens) foe.baned = false;
   }
   if (focus.targetId) {
     const marked = combat.tokens.find((x) => x.id === focus.targetId);

@@ -1,32 +1,13 @@
 {
-  "ambiguities": [
-    {
-      "field": "effects",
-      "summary": "No typed effect matches this item. The rules listed under Not modeled stay text only.",
-      "options": [
-        {
-          "label": "Approve with no typed effects",
-          "patch": {
-            "effects": []
-          }
-        }
-      ],
-      "parserChoice": 0
-    }
-  ],
-  "unparsedFields": [
-    "effects"
-  ],
+  "ambiguities": [],
+  "unparsedFields": [],
   "kind": "item",
   "id": "potion_of_speed",
-  "status": "needs_review",
-  "confidence": "low",
-  "usage": "Vendor, loot, and stash. Account heroes carry its typed effects into fights while it is equipped (and attuned, when required).",
+  "status": "auto_ok",
+  "confidence": "high",
+  "usage": "Vendor, loot, and stash. Drink in combat as an action; Haste lasts for the current fight with no lethargy.",
   "srd": {
     "line": "Potion, Very Rare",
-    "text": "_Potion, Very Rare_\n\nWhen you drink this potion, you gain the effect of the _Haste_ spell for 1 minute (no Concentration required) without suffering the wave of lethargy that typically occurs when the effect ends.\n\nThis potion's yellow fluid is streaked with black and swirls on its own."
-  },
-  "notModeled": [
-    "When you drink this potion, you gain the effect of the Haste spell for 1 minute (no Concentration required) without suffering the wave of lethargy that typically occurs when the effect ends."
-  ]
+    "text": "_Potion, Very Rare_\n\nWhen you drink this potion, you gain the effect of the _Haste_ spell for 1 minute (no Concentration required) without suffering the wave of lethargy that typically occurs when the effect ends."
+  }
 }

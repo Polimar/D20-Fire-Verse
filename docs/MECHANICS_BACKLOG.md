@@ -9,7 +9,8 @@ Shared design specs for clearing the admin **Missing mechanic (combat)** queue. 
 | Date | Commit / batch | Missing total | Δ | spell | item | monster | Note |
 |------|----------------|---------------|---|-------|------|---------|------|
 | 2026-10-16 | baseline design | 556 | — | 188 | 198 | 170 | Design sessions batches 1–5 |
-| | implement-1 | | | | | | *(after first mechanics PR)* |
+| 2026-10-16 | implement-1 (wave 1) | 550 | -6 | 185 | 195 | 170 | mark, bane, haste/speed, slaying, staff, monster gap rule |
+| | implement-2 | | | | | | |
 | | implement-2 | | | | | | |
 
 Re-run `npm run content:gap-report -- --append-progress` to insert a snapshot row above **implement-1** (optional).

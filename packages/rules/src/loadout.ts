@@ -74,6 +74,11 @@ function applyEffects(bonus: PassiveBonuses, item: ItemRules): void {
         break;
       case "stat_set":
       case "stat_increase_cap":
+      case "heal_drink":
+      case "stat_drink":
+      case "invisibility_drink":
+      case "haste_drink":
+      case "save_bonus":
         break;
       default: {
         const neverEffect: never = effect;

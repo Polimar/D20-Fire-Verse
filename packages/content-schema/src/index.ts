@@ -76,6 +76,16 @@ export const effectDef = z.discriminatedUnion("kind", [
       kind: z.literal("on_hit_rider"),
       damage: z.string().min(1),
       damageType: z.string().min(1).optional(),
+      saveAbility: z.enum(["str", "dex", "con", "int", "wis", "cha"]).optional(),
+      saveDc: z.number().int().positive().optional(),
+      halfDamage: z.string().min(1).optional(),
+      triggerOnAnyHit: z.boolean().optional(),
+    })
+    .strict(),
+  z
+    .object({
+      kind: z.literal("haste_drink"),
+      inventoryToken: z.string().min(1).optional(),
     })
     .strict(),
   z.object({ kind: z.literal("resistance"), damageType: z.string().min(1) }).strict(),

@@ -8,11 +8,11 @@ import { boot } from "./helpers.js";
 
 before(boot);
 
-test("potion of speed is needs review with missing mechanic flag", () => {
+test("potion of speed is clear after haste drink is implemented", () => {
   const row = listCatalog().find((r) => r.kind === "item" && r.id === "potion_of_speed");
   assert.ok(row);
-  assert.equal(row.reviewStatus, "needs_review");
-  assert.equal(row.missingMechanic, true);
+  assert.equal(row.missingMechanic, false);
+  assert.equal(row.reviewStatus, "auto_ok");
 });
 
 test("potion of invisibility is clear after combat drink is implemented", () => {

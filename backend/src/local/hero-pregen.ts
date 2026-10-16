@@ -258,9 +258,18 @@ export function heroPregen(heroId: string, lookup: Lookup): HeroPregen | undefin
           else sheet.damage += effect.amount;
           break;
         case "on_hit_rider": {
-          const rider = effect.damageType !== undefined
-            ? { damage: effect.damage, damageType: effect.damageType }
-            : { damage: effect.damage };
+          const rider =
+            effect.saveAbility && effect.saveDc
+              ? {
+                  damage: effect.damage,
+                  damageType: effect.damageType,
+                  saveAbility: effect.saveAbility,
+                  saveDc: effect.saveDc,
+                  halfDamage: effect.halfDamage,
+                }
+              : effect.damageType !== undefined
+                ? { damage: effect.damage, damageType: effect.damageType }
+                : { damage: effect.damage };
           if (bucket) bucket.onHit.push(rider);
           else {
             const typeNote = effect.damageType ?? "weapon damage type";
@@ -271,6 +280,7 @@ export function heroPregen(heroId: string, lookup: Lookup): HeroPregen | undefin
         case "heal_drink":
         case "stat_drink":
         case "invisibility_drink":
+        case "haste_drink":
           break;
         case "resistance":
           sheet.resistances.push(effect.damageType);

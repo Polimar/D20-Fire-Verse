@@ -548,6 +548,13 @@
       }
     ]
   },
+  "use_potion_speed": {
+    "id": "use_potion_speed",
+    "name": "Use Object: Potion of Speed",
+    "actionType": "action",
+    "needsTarget": false,
+    "effects": [{ "type": "haste_drink", "consume": "potion_speed" }]
+  },
   "use_potion_giant_strength_hill": {
     "id": "use_potion_giant_strength_hill",
     "name": "Use Object: Potion of Giant Strength (Hill)",

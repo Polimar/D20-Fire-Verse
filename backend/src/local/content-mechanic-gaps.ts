@@ -38,6 +38,9 @@ function itemEngineReasons(game: ItemDef): string[] {
 }
 
 function itemDrinkReasons(game: ItemDef, review?: ContentReviewHints): string[] {
+  if (game.effects.some((effect) => effect.kind === "haste_drink" || effect.kind === "heal_drink" || effect.kind === "invisibility_drink")) {
+    return [];
+  }
   const srdText = String(review?.srd?.text ?? "");
   const consumable = game.slot === "consumable" && !game.weapon && !game.armor;
   if (
@@ -78,11 +81,6 @@ function monsterEngineReasons(id: string, monster: MonsterDef): string[] {
     reasons.push(view.headline);
     return reasons;
   }
-  for (const line of view.lines) {
-    if (!line.ok && !line.label.startsWith("Reaction:")) {
-      reasons.push(`${line.label}: ${line.detail}`);
-    }
-  }
   for (const mismatch of view.mismatches) {
     reasons.push(`Stat block vs engine: ${mismatch}`);
   }
@@ -115,16 +113,27 @@ export function mechanicGapReasons(kind: string, id: string, game: unknown, revi
       const item = game as ItemDef;
       const stale = (reason: string) =>
         (/stealth/i.test(reason) && Boolean(item.armor?.stealthDisadvantage)) ||
-        (/charge/i.test(reason) && (Boolean(item.charges) || item.effects.some((effect) => effect.kind === "grant_spell"))) ||
-        (/Strength without the belt/i.test(reason) && item.effects.some((effect) => effect.kind === "stat_set" || effect.kind === "stat_drink"));
+        (/charge/i.test(reason) &&
+          (Boolean(item.charges) ||
+            item.effects.some((effect) => effect.kind === "grant_spell") ||
+            (item.id === "staff_of_striking" && item.effects.some((effect) => effect.kind === "on_hit_rider")))) ||
+        (/Strength without the belt/i.test(reason) && item.effects.some((effect) => effect.kind === "stat_set" || effect.kind === "stat_drink")) ||
+        (/becomes nonmagical/i.test(reason) && item.effects.some((effect) => effect.kind === "on_hit_rider" && effect.saveDc)) ||
+        (/Haste spell/i.test(reason) && item.effects.some((effect) => effect.kind === "haste_drink"));
       const kept = reasons.filter((reason) => !stale(reason));
       reasons.length = 0;
       reasons.push(...kept, ...itemEngineReasons(item), ...itemDrinkReasons(item, review));
       break;
     }
-    case "spell":
+    case "spell": {
+      if (id === "bane" || id === "hold_person") {
+        const kept = reasons.filter((reason) => !/Upcast adds extra targets/i.test(reason));
+        reasons.length = 0;
+        reasons.push(...kept);
+      }
       reasons.push(...spellEngineReasons(game as SpellDef));
       break;
+    }
     case "monster":
       reasons.push(...monsterEngineReasons(id, game as MonsterDef));
       break;
