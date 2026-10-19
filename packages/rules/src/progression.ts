@@ -49,6 +49,16 @@ export type FeatSlice = {
 };
 export type SpellSlice = { id: string; name: string; level: number; classes: string[] };
 export type SpeciesSlice = { id: string; name?: string; hpPerLevel?: number; speedFt?: number };
+export type MetamagicSlice = { id: string; name: string; cost: number; minLevel?: number };
+export type InvocationSlice = {
+  id: string;
+  name: string;
+  minLevel: number;
+  prereq?: string;
+  repeatable?: boolean;
+  combatTag?: string;
+};
+export type LanguageSlice = { id: string; name: string; rare?: boolean };
 
 export type CatalogSlice = {
   classes: ClassSlice[];
@@ -56,6 +66,9 @@ export type CatalogSlice = {
   feats: FeatSlice[];
   spells: SpellSlice[];
   species?: SpeciesSlice[];
+  metamagic?: MetamagicSlice[];
+  invocations?: InvocationSlice[];
+  languages?: LanguageSlice[];
   xpThresholds: number[];
 };
 
@@ -72,6 +85,14 @@ export type PendingAsk =
       spells: number;
       /** Wizard: new spells to copy into the spellbook (2 per wizard level after 1). */
       spellbook?: number;
+      /** Highest spell level this class can prepare/copy at this class level (slot table). */
+      maxSpellLevel: number;
+      /** Magical Secrets / warrior cantrips: spell lists to pool from. */
+      lists?: string[];
+      /** Mystic Arcanum: exact spell level (6–9). */
+      exactLevel?: number;
+      /** How applyPick stores the pick. Default prepared/cantrips. */
+      purpose?: "prepared" | "magical_secrets" | "arcanum" | "warrior_cantrips";
     }
   | { kind: "fighting_style"; atLevel: number; classId: string }
   | { kind: "skill"; atLevel: number; classId: string; count: number }
@@ -83,7 +104,12 @@ export type PendingAsk =
       /** When set, only these proficient skills may be chosen (e.g. Wizard Scholar). */
       pool?: string[];
     }
-  | { kind: "feature_choice"; atLevel: number; classId: string; featureId: string; options: string[]; count: number };
+  | { kind: "feature_choice"; atLevel: number; classId: string; featureId: string; options: string[]; count: number }
+  | { kind: "metamagic"; atLevel: number; classId: string; count: number }
+  | { kind: "invocation"; atLevel: number; classId: string; count: number }
+  | { kind: "language"; atLevel: number; classId: string; count: number }
+  | { kind: "spell_mastery"; atLevel: number; classId: string }
+  | { kind: "signature_spells"; atLevel: number; classId: string };
 
 export type LevelPick =
   | { kind: "class"; classId: string }
@@ -95,7 +121,12 @@ export type LevelPick =
   | { kind: "fighting_style"; featId: string }
   | { kind: "skill"; skills: string[] }
   | { kind: "expertise"; skills: string[] }
-  | { kind: "feature_choice"; featureId: string; picks: string[] };
+  | { kind: "feature_choice"; featureId: string; picks: string[] }
+  | { kind: "metamagic"; options: string[] }
+  | { kind: "invocation"; options: string[] }
+  | { kind: "language"; languages: string[] }
+  | { kind: "spell_mastery"; level1: string; level2: string }
+  | { kind: "signature_spells"; spells: [string, string] };
 
 /** Wizard Scholar: expertise in one of these skills (must already be proficient). */
 export const SCHOLAR_SKILLS = ["arcana", "history", "investigation", "medicine", "nature", "religion"] as const;
@@ -106,6 +137,65 @@ export function expertiseFlag(skill: string): string {
 
 export function hasExpertise(features: readonly string[], skill: string): boolean {
   return features.includes(expertiseFlag(skill));
+}
+
+export function metamagicFlag(id: string): string {
+  return `metamagic:${id}`;
+}
+
+export function invocationFlag(id: string): string {
+  return `invocation:${id}`;
+}
+
+export function languageFlag(id: string): string {
+  return `language:${id}`;
+}
+
+export function orderFlag(id: string): string {
+  return `order:${id}`;
+}
+
+export function arcanumFlag(spellLevel: number, spellId: string): string {
+  return `arcanum:${spellLevel}:${spellId}`;
+}
+
+export function masteryFlag(spellLevel: 1 | 2, spellId: string): string {
+  return `mastery:${spellLevel}:${spellId}`;
+}
+
+export function signatureFlag(spellId: string): string {
+  return `signature:${spellId}`;
+}
+
+export function hasMetamagic(features: readonly string[], id: string): boolean {
+  return features.includes(metamagicFlag(id));
+}
+
+export function hasInvocation(features: readonly string[], id: string): boolean {
+  return features.includes(invocationFlag(id));
+}
+
+/** Divine Order / Primal Order options by class. */
+export const ORDER_OPTIONS: Record<string, string[]> = {
+  cleric: ["protector", "thaumaturge"],
+  druid: ["magician", "warden"],
+};
+
+/** Magical Secrets: Bard 10+ prepared picks may come from these lists. */
+export const MAGICAL_SECRETS_LISTS = ["bard", "cleric", "druid", "wizard"] as const;
+
+export function fightingStyleFeats(
+  catalog: CatalogSlice,
+  classId: string,
+  features: readonly string[],
+): FeatSlice[] {
+  return catalog.feats.filter((feat) => {
+    if (featCategory(feat) !== "fighting_style") return false;
+    if (features.includes(feat.id)) return false;
+    if (feat.id === "blessed_warrior") return classId === "paladin";
+    if (feat.id === "druidic_warrior") return classId === "ranger";
+    return true;
+  });
 }
 
 /** Subclass features that require a permanent pick (FireVerse pack). */
@@ -194,6 +284,97 @@ function skillGrant(features: string[]): number {
   return features.some((feature) => /^primal knowledge$/i.test(feature.trim())) ? 1 : 0;
 }
 
+function orderOptionsFor(def: ClassSlice, features: string[]): string[] | null {
+  if (features.some((feature) => /^divine order$/i.test(feature.trim()))) return ORDER_OPTIONS.cleric ?? null;
+  if (features.some((feature) => /^primal order$/i.test(feature.trim()))) return ORDER_OPTIONS.druid ?? null;
+  return null;
+}
+
+/** SRD Metamagic: 2 at Sorcerer 2, +2 at 10, +2 at 17. */
+function metamagicGain(features: string[], classLevel: number): number {
+  if (!features.some((feature) => /^metamagic$/i.test(feature.trim()))) return 0;
+  if (classLevel === 2 || classLevel === 10 || classLevel === 17) return 2;
+  return 0;
+}
+
+function invocationCap(def: ClassSlice, classLevel: number): number {
+  const raw = levelRow(def, classLevel)?.columns?.eldritch_invocations;
+  const n = Number(raw ?? 0);
+  return Number.isFinite(n) ? n : 0;
+}
+
+function invocationGain(def: ClassSlice, classLevel: number): number {
+  return Math.max(0, invocationCap(def, classLevel) - invocationCap(def, classLevel - 1));
+}
+
+function languageGrant(features: string[]): number {
+  if (features.some((feature) => /^deft explorer$/i.test(feature.trim()))) return 2;
+  if (features.some((feature) => /^thieves'? cant$/i.test(feature.trim()))) return 1;
+  return 0;
+}
+
+function arcanumSpellLevel(features: string[]): number | null {
+  for (const feature of features) {
+    const match = feature.match(/mystic arcanum \(level (\d+)/i);
+    if (match) return Number(match[1]);
+  }
+  return null;
+}
+
+function needsSpellMastery(features: string[]): boolean {
+  return features.some((feature) => /^spell mastery$/i.test(feature.trim()));
+}
+
+function needsSignatureSpells(features: string[]): boolean {
+  return features.some((feature) => /^signature spells$/i.test(feature.trim()));
+}
+
+function magicalSecretsActive(def: ClassSlice, classLevel: number): boolean {
+  return def.id === "bard" && classLevel >= 10;
+}
+
+export function knownMetamagic(features: readonly string[]): string[] {
+  return features.filter((f) => f.startsWith("metamagic:")).map((f) => f.slice("metamagic:".length));
+}
+
+export function knownInvocations(features: readonly string[]): string[] {
+  return features.filter((f) => f.startsWith("invocation:")).map((f) => f.slice("invocation:".length));
+}
+
+export function knownLanguages(features: readonly string[]): string[] {
+  return features.filter((f) => f.startsWith("language:")).map((f) => f.slice("language:".length));
+}
+
+export function metamagicCandidates(hero: ProgressionHero, catalog: CatalogSlice): string[] {
+  const have = new Set(knownMetamagic(hero.features));
+  return (catalog.metamagic ?? []).filter((row) => !have.has(row.id)).map((row) => row.id);
+}
+
+export function invocationCandidates(
+  hero: ProgressionHero,
+  catalog: CatalogSlice,
+  classLevel: number,
+): string[] {
+  const have = new Set(knownInvocations(hero.features));
+  return (catalog.invocations ?? [])
+    .filter((row) => {
+      if (!row.repeatable && have.has(row.id)) return false;
+      if (row.minLevel > classLevel) return false;
+      if (row.prereq?.startsWith("invocation:") && !have.has(row.prereq.slice("invocation:".length))) {
+        return false;
+      }
+      return true;
+    })
+    .map((row) => row.id);
+}
+
+export function languageCandidates(hero: ProgressionHero, catalog: CatalogSlice): string[] {
+  const have = new Set(knownLanguages(hero.features));
+  return (catalog.languages ?? [])
+    .filter((row) => !have.has(row.id) && row.id !== "common" && row.id !== "thieves_cant")
+    .map((row) => row.id);
+}
+
 /**
  * Expertise picks at this level.
  * - Expertise (bard/rogue/ranger): 2 skills you are proficient in
@@ -270,16 +451,29 @@ export function asksForClassLevel(def: ClassSlice, classLevel: number, hadSubcla
   const row = levelRow(def, classLevel);
   const features = row?.features ?? [];
   const asks: PendingAsk["kind"][] = [];
+  if (orderOptionsFor(def, features)) asks.push("feature_choice");
   if (needsSubclass(features) && !hadSubclass) asks.push("subclass");
   if (needsFightingStyle(features)) asks.push("fighting_style");
   if (skillGrant(features)) asks.push("skill");
   if (expertiseGrant(features)) asks.push("expertise");
+  if (languageGrant(features)) asks.push("language");
+  if (metamagicGain(features, classLevel)) asks.push("metamagic");
+  if (invocationGain(def, classLevel) > 0) asks.push("invocation");
+  if (arcanumSpellLevel(features) != null) asks.push("spells"); // purpose set in followUps
+  if (needsSpellMastery(features)) asks.push("spell_mastery");
+  if (needsSignatureSpells(features)) asks.push("signature_spells");
   if (needsAsi(features)) asks.push("asi");
   const prev = levelRow(def, classLevel - 1);
   const spellGain = (row?.preparedSpells ?? row?.spellsKnown ?? 0) - (prev?.preparedSpells ?? prev?.spellsKnown ?? 0);
   const cantripGain = (row?.cantrips ?? 0) - (prev?.cantrips ?? 0);
   const bookGain = wizardSpellbookGain(def, classLevel);
-  if ((spellGain > 0 || cantripGain > 0 || bookGain > 0 || classLevel === 1) && def.spellProgression) asks.push("spells");
+  const hasPreparedGain =
+    (spellGain > 0 || cantripGain > 0 || bookGain > 0 || classLevel === 1) && Boolean(def.spellProgression);
+  if (hasPreparedGain && !asks.includes("spells")) asks.push("spells");
+  // Warlock arcanum + prepared gain in the same level: followUps emits two spell asks.
+  if (hasPreparedGain && arcanumSpellLevel(features) != null) {
+    /* keep single "spells" kind; followUps doubles */
+  }
   return asks;
 }
 
@@ -323,6 +517,81 @@ export function pruneSatisfiedPending(hero: ProgressionHero): PendingAsk[] {
     break;
   }
   return pending;
+}
+
+/** Catch-up: Divine/Primal Order when the class feature is present but no order:* flag. */
+export function catchUpOrderAsk(hero: ProgressionHero, catalog: CatalogSlice): PendingAsk | null {
+  for (const progress of hero.classes) {
+    const def = classDef(catalog, progress.id);
+    if (!def) continue;
+    for (let level = 1; level <= progress.level; level++) {
+      const options = orderOptionsFor(def, levelRow(def, level)?.features ?? []);
+      if (!options) continue;
+      if (hero.features.some((f) => f.startsWith("order:"))) return null;
+      return {
+        kind: "feature_choice",
+        atLevel: hero.level,
+        classId: def.id,
+        featureId: "order",
+        options,
+        count: 1,
+      };
+    }
+  }
+  return null;
+}
+
+export function catchUpMetamagicAsk(hero: ProgressionHero, catalog: CatalogSlice): PendingAsk | null {
+  for (const progress of hero.classes) {
+    const def = classDef(catalog, progress.id);
+    if (!def || def.id !== "sorcerer") continue;
+    let need = 0;
+    for (let level = 1; level <= progress.level; level++) {
+      need += metamagicGain(levelRow(def, level)?.features ?? [], level);
+    }
+    const have = knownMetamagic(hero.features).length;
+    const deficit = need - have;
+    if (deficit <= 0) continue;
+    if (metamagicCandidates(hero, catalog).length < deficit) continue;
+    return { kind: "metamagic", atLevel: hero.level, classId: def.id, count: deficit };
+  }
+  return null;
+}
+
+export function catchUpInvocationAsk(hero: ProgressionHero, catalog: CatalogSlice): PendingAsk | null {
+  for (const progress of hero.classes) {
+    const def = classDef(catalog, progress.id);
+    if (!def || def.id !== "warlock") continue;
+    const need = invocationCap(def, progress.level);
+    const have = knownInvocations(hero.features).length;
+    const deficit = need - have;
+    if (deficit <= 0) continue;
+    if (invocationCandidates(hero, catalog, progress.level).length < deficit) continue;
+    return { kind: "invocation", atLevel: hero.level, classId: def.id, count: deficit };
+  }
+  return null;
+}
+
+export function catchUpLanguageAsk(hero: ProgressionHero, catalog: CatalogSlice): PendingAsk | null {
+  for (const progress of hero.classes) {
+    const def = classDef(catalog, progress.id);
+    if (!def) continue;
+    let need = 0;
+    for (let level = 1; level <= progress.level; level++) {
+      const features = levelRow(def, level)?.features ?? [];
+      need += languageGrant(features);
+      if (features.some((feature) => /^thieves'? cant$/i.test(feature.trim())) && !hero.features.includes(languageFlag("thieves_cant"))) {
+        // Will be granted when the ask is answered or via a soft grant in nextAsk path.
+      }
+    }
+    // Count only player-chosen languages (exclude thieves_cant auto grant for deficit math of "1 other").
+    const chosen = knownLanguages(hero.features).filter((id) => id !== "thieves_cant" && id !== "common");
+    const deficit = need - chosen.length;
+    if (deficit <= 0) continue;
+    if (languageCandidates(hero, catalog).length < deficit) continue;
+    return { kind: "language", atLevel: hero.level, classId: def.id, count: deficit };
+  }
+  return null;
 }
 
 /**
@@ -389,6 +658,7 @@ export function catchUpSpellAsk(hero: ProgressionHero, catalog: CatalogSlice): P
       classId: def.id,
       cantrips: cantripNeed,
       spells: prepNeed,
+      maxSpellLevel: top,
       ...(bookNeed ? { spellbook: bookNeed } : {}),
     };
   }
@@ -404,10 +674,17 @@ export type NextAskOpts = {
 export function nextAsk(hero: ProgressionHero, catalog: CatalogSlice, opts?: NextAskOpts): PendingAsk | null {
   const pending = pruneSatisfiedPending(hero);
   if (pending[0]) return pending[0];
-  const spellCatchUp = catchUpSpellAsk(hero, catalog);
-  if (spellCatchUp) return spellCatchUp;
-  const expertiseCatchUp = catchUpExpertiseAsk(hero, catalog);
-  if (expertiseCatchUp) return expertiseCatchUp;
+  const catchUps = [
+    catchUpOrderAsk(hero, catalog),
+    catchUpSpellAsk(hero, catalog),
+    catchUpExpertiseAsk(hero, catalog),
+    catchUpMetamagicAsk(hero, catalog),
+    catchUpInvocationAsk(hero, catalog),
+    catchUpLanguageAsk(hero, catalog),
+  ];
+  for (const ask of catchUps) {
+    if (ask) return ask;
+  }
   const target = opts?.ignoreXp ? hero.level + 1 : levelForXp(hero.xp, catalog.xpThresholds);
   if (hero.level >= target || hero.level >= 20) return null;
   if (!levelableClasses(hero, catalog).length) return null;
@@ -432,7 +709,7 @@ export function suggestLevelPick(hero: ProgressionHero, catalog: CatalogSlice, o
     return { kind: "asi", mode: "plus2", ability: primary };
   }
   if (ask.kind === "fighting_style") {
-    const feat = catalog.feats.find((row) => featCategory(row) === "fighting_style" && !hero.features.includes(row.id));
+    const feat = fightingStyleFeats(catalog, ask.classId, hero.features)[0];
     if (!feat) return null;
     return { kind: "fighting_style", featId: feat.id };
   }
@@ -447,23 +724,63 @@ export function suggestLevelPick(hero: ProgressionHero, catalog: CatalogSlice, o
     if (open.length !== ask.count) return null;
     return { kind: "expertise", skills: open };
   }
+  if (ask.kind === "metamagic") {
+    const open = metamagicCandidates(hero, catalog).slice(0, ask.count);
+    if (open.length !== ask.count) return null;
+    return { kind: "metamagic", options: open };
+  }
+  if (ask.kind === "invocation") {
+    const classLevel = hero.classes.find((row) => row.id === ask.classId)?.level ?? 1;
+    const open = invocationCandidates(hero, catalog, classLevel).slice(0, ask.count);
+    if (open.length !== ask.count) return null;
+    return { kind: "invocation", options: open };
+  }
+  if (ask.kind === "language") {
+    const open = languageCandidates(hero, catalog).slice(0, ask.count);
+    if (open.length !== ask.count) return null;
+    return { kind: "language", languages: open };
+  }
+  if (ask.kind === "spell_mastery") {
+    const book = new Set(hero.spellbook ?? []);
+    const legal = legalSpells(catalog, ask.classId);
+    const level1 = legal.find((s) => s.level === 1 && book.has(s.id))?.id;
+    const level2 = legal.find((s) => s.level === 2 && book.has(s.id))?.id;
+    if (!level1 || !level2) return null;
+    return { kind: "spell_mastery", level1, level2 };
+  }
+  if (ask.kind === "signature_spells") {
+    const book = new Set(hero.spellbook ?? []);
+    const picks = legalSpells(catalog, ask.classId)
+      .filter((s) => s.level === 3 && book.has(s.id))
+      .slice(0, 2)
+      .map((s) => s.id);
+    if (picks.length !== 2) return null;
+    return { kind: "signature_spells", spells: [picks[0]!, picks[1]!] };
+  }
   if (ask.kind === "spells") {
     const book = new Set(hero.spellbook ?? []);
     const known = new Set([...hero.spells, ...hero.cantrips]);
-    const legal = catalog.spells.filter((spell) => spell.classes.includes(ask.classId));
+    const def = catalog.classes.find((row) => row.id === ask.classId);
+    const classLevel = hero.classes.find((row) => row.id === ask.classId)?.level ?? 1;
+    const top = ask.maxSpellLevel || (def ? maxSpellLevel(def, classLevel) : 0);
+    const legal = ask.lists?.length
+      ? spellsFromLists(catalog, ask.lists)
+      : catalog.spells.filter((spell) => spell.classes.includes(ask.classId));
     const cantrips = legal
       .filter((spell) => spell.level === 0 && !known.has(spell.id))
       .slice(0, ask.cantrips)
       .map((spell) => spell.id);
     const bookNeed = ask.spellbook ?? 0;
     const spellbook = legal
-      .filter((spell) => spell.level > 0 && !book.has(spell.id) && !known.has(spell.id))
+      .filter((spell) => spell.level > 0 && spell.level <= top && !book.has(spell.id))
       .slice(0, bookNeed)
       .map((spell) => spell.id);
     const afterBook = new Set([...book, ...spellbook]);
-    const prepPool = bookNeed
-      ? legal.filter((spell) => spell.level > 0 && afterBook.has(spell.id) && !known.has(spell.id))
-      : legal.filter((spell) => spell.level > 0 && !known.has(spell.id));
+    const prepPool = ask.exactLevel != null
+      ? legal.filter((spell) => spell.level === ask.exactLevel && !known.has(spell.id))
+      : bookNeed
+        ? legal.filter((spell) => spell.level > 0 && spell.level <= top && afterBook.has(spell.id) && !known.has(spell.id))
+        : legal.filter((spell) => spell.level > 0 && spell.level <= top && !known.has(spell.id));
     const spells = prepPool.slice(0, ask.spells).map((spell) => spell.id);
     if (cantrips.length !== ask.cantrips || spells.length !== ask.spells || spellbook.length !== bookNeed) return null;
     return { kind: "spells", spells, cantrips, ...(bookNeed ? { spellbook } : {}) };
@@ -474,6 +791,11 @@ export function suggestLevelPick(hero: ProgressionHero, catalog: CatalogSlice, o
 /** XP needed to unlock the next character level (or current floor). */
 export function xpToReachLevel(level: number, thresholds: readonly number[]): number {
   return thresholdForLevel(level, thresholds);
+}
+
+function spellsFromLists(catalog: CatalogSlice, lists: string[]): SpellSlice[] {
+  const allow = new Set(lists);
+  return catalog.spells.filter((spell) => spell.classes.some((cls) => allow.has(cls)));
 }
 
 function spellAsk(
@@ -487,7 +809,9 @@ function spellAsk(
   const row = levelRow(def, classLevel);
   const prev = levelRow(def, classLevel - 1);
   const top = maxSpellLevel(def, classLevel);
-  const legal = legalSpells(catalog, def.id);
+  const secrets = magicalSecretsActive(def, classLevel);
+  const lists = secrets ? [...MAGICAL_SECRETS_LISTS] : undefined;
+  const legal = lists ? spellsFromLists(catalog, lists) : legalSpells(catalog, def.id);
   const openCantrips = legal.filter((spell) => spell.level === 0 && !known.has(spell.id)).length;
   const openSpells = legal.filter((spell) => spell.level > 0 && spell.level <= top && !known.has(spell.id)).length;
   const openBook = legal.filter((spell) => spell.level > 0 && spell.level <= top && !book.has(spell.id)).length;
@@ -504,7 +828,22 @@ function spellAsk(
     classId: def.id,
     cantrips,
     spells,
+    maxSpellLevel: top,
     ...(spellbook ? { spellbook } : {}),
+    ...(lists ? { lists, purpose: "magical_secrets" as const } : {}),
+  };
+}
+
+function arcanumAsk(def: ClassSlice, atLevel: number, spellLevel: number): PendingAsk {
+  return {
+    kind: "spells",
+    atLevel,
+    classId: def.id,
+    cantrips: 0,
+    spells: 1,
+    maxSpellLevel: spellLevel,
+    exactLevel: spellLevel,
+    purpose: "arcanum",
   };
 }
 
@@ -517,24 +856,39 @@ function grant(next: ProgressionHero, features: string[]): void {
 /** The choices one class level opens, in the order the hero answers them. */
 function followUps(next: ProgressionHero, def: ClassSlice, progress: ClassProgress, catalog: CatalogSlice): PendingAsk[] {
   const row = levelRow(def, progress.level);
+  const features = row?.features ?? [];
   const known = new Set([...next.spells, ...next.cantrips]);
   const book = new Set(next.spellbook ?? []);
   const out: PendingAsk[] = [];
+  let emittedPreparedSpells = false;
+  let emittedArcanum = false;
   for (const kind of asksForClassLevel(def, progress.level, Boolean(progress.subclass))) {
-    if (kind === "subclass") {
+    if (kind === "feature_choice") {
+      const options = orderOptionsFor(def, features);
+      if (options && !next.features.some((f) => f.startsWith("order:"))) {
+        out.push({
+          kind: "feature_choice",
+          atLevel: next.level,
+          classId: def.id,
+          featureId: "order",
+          options,
+          count: 1,
+        });
+      }
+    } else if (kind === "subclass") {
       if (catalog.subclasses.some((sub) => sub.classId === def.id)) out.push({ kind, atLevel: next.level, classId: def.id });
     } else if (kind === "asi") {
-      out.push({ kind, atLevel: next.level, classId: def.id, epic: epic(row?.features ?? []) });
+      out.push({ kind, atLevel: next.level, classId: def.id, epic: epic(features) });
     } else if (kind === "fighting_style") {
-      if (catalog.feats.some((feat) => featCategory(feat) === "fighting_style" && !next.features.includes(feat.id))) {
+      if (fightingStyleFeats(catalog, def.id, next.features).length) {
         out.push({ kind, atLevel: next.level, classId: def.id });
       }
     } else if (kind === "skill") {
       const open = (def.skillList ?? []).filter((skill) => !next.proficiency.includes(skill));
-      const count = Math.min(open.length, skillGrant(row?.features ?? []));
+      const count = Math.min(open.length, skillGrant(features));
       if (count) out.push({ kind, atLevel: next.level, classId: def.id, count });
     } else if (kind === "expertise") {
-      const grant = expertiseGrant(row?.features ?? []);
+      const grant = expertiseGrant(features);
       if (grant) {
         const ask: Extract<PendingAsk, { kind: "expertise" }> = {
           kind: "expertise",
@@ -546,9 +900,39 @@ function followUps(next: ProgressionHero, def: ClassSlice, progress: ClassProgre
         const open = expertiseCandidates(next, ask);
         if (open.length >= grant.count) out.push(ask);
       }
-    } else if (def.spellProgression) {
-      const ask = spellAsk(def, progress.level, next.level, known, catalog, book);
-      if (ask) out.push(ask);
+    } else if (kind === "language") {
+      if (features.some((feature) => /^thieves'? cant$/i.test(feature.trim()))) {
+        grant(next, [languageFlag("thieves_cant")]);
+      }
+      const count = languageGrant(features);
+      if (count && languageCandidates(next, catalog).length >= count) {
+        out.push({ kind: "language", atLevel: next.level, classId: def.id, count });
+      }
+    } else if (kind === "metamagic") {
+      const count = metamagicGain(features, progress.level);
+      if (count && metamagicCandidates(next, catalog).length >= count) {
+        out.push({ kind: "metamagic", atLevel: next.level, classId: def.id, count });
+      }
+    } else if (kind === "invocation") {
+      const count = invocationGain(def, progress.level);
+      if (count && invocationCandidates(next, catalog, progress.level).length >= count) {
+        out.push({ kind: "invocation", atLevel: next.level, classId: def.id, count });
+      }
+    } else if (kind === "spell_mastery") {
+      out.push({ kind: "spell_mastery", atLevel: next.level, classId: def.id });
+    } else if (kind === "signature_spells") {
+      out.push({ kind: "signature_spells", atLevel: next.level, classId: def.id });
+    } else if (kind === "spells") {
+      const arc = arcanumSpellLevel(features);
+      if (arc != null && !emittedArcanum) {
+        out.push(arcanumAsk(def, next.level, arc));
+        emittedArcanum = true;
+      }
+      if (!emittedPreparedSpells && def.spellProgression) {
+        const ask = spellAsk(def, progress.level, next.level, known, catalog, book);
+        if (ask) out.push(ask);
+        emittedPreparedSpells = true;
+      }
     }
   }
   return out;
@@ -640,6 +1024,22 @@ export function applyPick(hero: ProgressionHero, pick: LevelPick, catalog: Catal
       if (!ask.options.includes(value)) throw new Error("BAD_CHOICE");
       next.features.push(`${ask.featureId}:${value}`);
     }
+    if (ask.featureId === "order" && pick.picks.some((p) => p === "thaumaturge" || p === "magician")) {
+      const list = ask.classId;
+      next.pending = [
+        {
+          kind: "spells",
+          atLevel: next.level,
+          classId: ask.classId,
+          cantrips: 1,
+          spells: 0,
+          maxSpellLevel: 0,
+          lists: [list],
+          purpose: "warrior_cantrips",
+        },
+        ...next.pending,
+      ];
+    }
     return next;
   }
   if (ask.kind === "asi" && pick.kind === "asi") {
@@ -676,10 +1076,26 @@ export function applyPick(hero: ProgressionHero, pick: LevelPick, catalog: Catal
     return next;
   }
   if (ask.kind === "fighting_style" && pick.kind === "fighting_style") {
-    const feat = catalog.feats.find((row) => row.id === pick.featId);
-    if (!feat || featCategory(feat) !== "fighting_style") throw new Error("BAD_FEAT");
-    if (next.features.includes(feat.id)) throw new Error("FEAT_TAKEN");
+    const allowed = fightingStyleFeats(catalog, ask.classId, next.features);
+    const feat = allowed.find((row) => row.id === pick.featId);
+    if (!feat) throw new Error("BAD_FEAT");
     next.features.push(feat.id);
+    if (feat.id === "blessed_warrior" || feat.id === "druidic_warrior") {
+      const list = feat.id === "blessed_warrior" ? "cleric" : "druid";
+      next.pending = [
+        {
+          kind: "spells",
+          atLevel: next.level,
+          classId: ask.classId,
+          cantrips: 2,
+          spells: 0,
+          maxSpellLevel: 0,
+          lists: [list],
+          purpose: "warrior_cantrips",
+        },
+        ...next.pending,
+      ];
+    }
     return next;
   }
   if (ask.kind === "skill" && pick.kind === "skill") {
@@ -705,18 +1121,28 @@ export function applyPick(hero: ProgressionHero, pick: LevelPick, catalog: Catal
   }
   if (ask.kind === "spells" && pick.kind === "spells") {
     const def = classDef(catalog, ask.classId);
-    if (!def?.spellProgression) throw new Error("NO_SPELL_PROGRESSION");
     const progress = next.classes.find((row) => row.id === ask.classId);
-    const top = maxSpellLevel(def, progress?.level ?? 1);
-    const legal = new Map(legalSpells(catalog, ask.classId).map((spell) => [spell.id, spell]));
+    const top = ask.maxSpellLevel || (def ? maxSpellLevel(def, progress?.level ?? 1) : 0);
+    const pool = ask.lists?.length ? spellsFromLists(catalog, ask.lists) : legalSpells(catalog, ask.classId);
+    const legal = new Map(pool.map((spell) => [spell.id, spell]));
     const bookNeed = ask.spellbook ?? 0;
     const bookPicks = pick.spellbook ?? [];
+    if (ask.purpose === "arcanum") {
+      if (pick.spells.length !== 1 || pick.cantrips.length || bookPicks.length) throw new Error("NEED_SPELLS");
+      const spell = legal.get(pick.spells[0]!);
+      if (!spell || spell.level !== (ask.exactLevel ?? ask.maxSpellLevel)) throw new Error("BAD_SPELL");
+      next.features.push(arcanumFlag(spell.level, spell.id));
+      if (!next.spells.includes(spell.id)) next.spells.push(spell.id);
+      return next;
+    }
+    if (!def?.spellProgression && ask.purpose !== "warrior_cantrips") throw new Error("NO_SPELL_PROGRESSION");
     for (const id of pick.cantrips) {
       if (legal.get(id)?.level !== 0) throw new Error("BAD_SPELL");
     }
     for (const id of [...pick.spells, ...bookPicks]) {
       const spell = legal.get(id);
       if (!spell || spell.level === 0 || spell.level > top) throw new Error("BAD_SPELL");
+      if (ask.exactLevel != null && spell.level !== ask.exactLevel) throw new Error("BAD_SPELL");
     }
     if (bookPicks.length !== bookNeed) throw new Error("NEED_SPELLS");
     if (bookPicks.some((id) => next.spellbook?.includes(id))) throw new Error("SPELL_TAKEN");
@@ -726,12 +1152,73 @@ export function applyPick(hero: ProgressionHero, pick: LevelPick, catalog: Catal
     if (pick.spells.length !== ask.spells || pick.cantrips.length !== ask.cantrips) throw new Error("NEED_SPELLS");
     if (bookNeed) {
       next.spellbook = [...(next.spellbook ?? []), ...bookPicks];
-      // Prepared picks for a wizard must come from the spellbook (including just-added pages).
       const inBook = new Set(next.spellbook);
       if (pick.spells.some((id) => !inBook.has(id))) throw new Error("BAD_SPELL");
     }
     next.spells.push(...pick.spells);
     next.cantrips.push(...pick.cantrips);
+    return next;
+  }
+  if (ask.kind === "metamagic" && pick.kind === "metamagic") {
+    const open = metamagicCandidates(next, catalog);
+    if (
+      pick.options.length !== ask.count ||
+      pick.options.some((id) => !open.includes(id)) ||
+      new Set(pick.options).size !== pick.options.length
+    ) {
+      throw new Error("BAD_CHOICE");
+    }
+    for (const id of pick.options) next.features.push(metamagicFlag(id));
+    return next;
+  }
+  if (ask.kind === "invocation" && pick.kind === "invocation") {
+    const classLevel = next.classes.find((row) => row.id === ask.classId)?.level ?? 1;
+    const open = invocationCandidates(next, catalog, classLevel);
+    if (
+      pick.options.length !== ask.count ||
+      pick.options.some((id) => !open.includes(id)) ||
+      new Set(pick.options).size !== pick.options.length
+    ) {
+      throw new Error("BAD_CHOICE");
+    }
+    for (const id of pick.options) next.features.push(invocationFlag(id));
+    return next;
+  }
+  if (ask.kind === "language" && pick.kind === "language") {
+    const open = languageCandidates(next, catalog);
+    if (
+      pick.languages.length !== ask.count ||
+      pick.languages.some((id) => !open.includes(id)) ||
+      new Set(pick.languages).size !== pick.languages.length
+    ) {
+      throw new Error("BAD_CHOICE");
+    }
+    for (const id of pick.languages) next.features.push(languageFlag(id));
+    return next;
+  }
+  if (ask.kind === "spell_mastery" && pick.kind === "spell_mastery") {
+    const book = new Set(next.spellbook ?? []);
+    const legal = new Map(legalSpells(catalog, ask.classId).map((s) => [s.id, s]));
+    const s1 = legal.get(pick.level1);
+    const s2 = legal.get(pick.level2);
+    if (!s1 || s1.level !== 1 || !book.has(s1.id)) throw new Error("BAD_SPELL");
+    if (!s2 || s2.level !== 2 || !book.has(s2.id)) throw new Error("BAD_SPELL");
+    next.features.push(masteryFlag(1, s1.id), masteryFlag(2, s2.id));
+    for (const id of [s1.id, s2.id]) {
+      if (!next.spells.includes(id)) next.spells.push(id);
+    }
+    return next;
+  }
+  if (ask.kind === "signature_spells" && pick.kind === "signature_spells") {
+    const book = new Set(next.spellbook ?? []);
+    const legal = new Map(legalSpells(catalog, ask.classId).map((s) => [s.id, s]));
+    if (pick.spells.length !== 2 || new Set(pick.spells).size !== 2) throw new Error("NEED_SPELLS");
+    for (const id of pick.spells) {
+      const spell = legal.get(id);
+      if (!spell || spell.level !== 3 || !book.has(id)) throw new Error("BAD_SPELL");
+      next.features.push(signatureFlag(id));
+      if (!next.spells.includes(id)) next.spells.push(id);
+    }
     return next;
   }
   throw new Error("LEVEL_CHOICE");

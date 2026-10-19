@@ -324,6 +324,7 @@ const ERROR_TEXT: Record<string, string> = {
   NO_REACTION: "There is nothing to react to.",
   REACTION_PENDING: "Someone still has a reaction to answer.",
   NO_SORCERY: "You don't have enough sorcery points.",
+  NO_METAMAGIC: "You haven't learned that Metamagic option.",
   NO_KI: "You don't have enough ki.",
   BONUS_SPELL: "After a bonus-action spell, only a cantrip is left.",
   DYING: "That hero is down — wait for a death save or for someone to help.",

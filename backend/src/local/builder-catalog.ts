@@ -63,12 +63,17 @@ function backgroundEquipChoices(backgroundId: string): Array<{ id: "A" | "B"; la
   return row.options.map((o) => ({ id: o.id as "A" | "B", label: o.label.slice(0, 96) }));
 }
 
-function fightingStyles(): string[] {
+function fightingStylesForClass(classId: string): string[] {
   return listCatalog()
     .filter((row) => row.kind === "feat" && row.inPlay)
     .map((row) => enabledById<FeatDef>("feat", row.id))
     .filter((f): f is FeatDef => Boolean(f))
     .filter((f) => featCategory(f) === "fighting_style")
+    .filter((f) => {
+      if (f.id === "blessed_warrior") return classId === "paladin";
+      if (f.id === "druidic_warrior") return classId === "ranger";
+      return true;
+    })
     .map((f) => f.id);
 }
 
@@ -136,7 +141,6 @@ export function builderCatalog(): BuilderCatalog {
       equipChoices: backgroundEquipChoices(b.id),
     }));
 
-  const styleIds = fightingStyles();
   const masteryPool = allMasteryWeapons();
   const masteryWeaponsByClass: Record<string, BuilderMasteryWeapon[]> = {};
 
@@ -165,7 +169,7 @@ export function builderCatalog(): BuilderCatalog {
       },
       maxSpellLevelAt,
       fightingStyleRequired: needsStyle,
-      fightingStyleFeatIds: needsStyle ? styleIds : [],
+      fightingStyleFeatIds: needsStyle ? fightingStylesForClass(c.id) : [],
       weaponMastery: Boolean(c.weaponMastery),
       weaponMasteryCountL1: c.weaponMastery ? masteryCount : 0,
       weaponMasteryMeleeOnly: CLASS_MASTERY_MELEE_ONLY.has(c.id),

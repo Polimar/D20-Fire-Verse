@@ -1,0 +1,223 @@
+{
+  "entries": [
+    {
+      "id": "agonizing_blast",
+      "name": "Agonizing Blast",
+      "minLevel": 2,
+      "prereq": "warlock_damage_cantrip",
+      "repeatable": true,
+      "combatTag": "damage_mod",
+      "description": "Choose one of your known Warlock cantrips that deals damage. You can add your Charisma modifier to that spell's damage rolls."
+    },
+    {
+      "id": "armor_of_shadows",
+      "name": "Armor of Shadows",
+      "minLevel": 1,
+      "combatTag": "ac",
+      "description": "You can cast Mage Armor on yourself without expending a spell slot."
+    },
+    {
+      "id": "ascendant_step",
+      "name": "Ascendant Step",
+      "minLevel": 5,
+      "combatTag": "free_cast",
+      "freeSpell": "levitate",
+      "description": "You can cast Levitate on yourself without expending a spell slot."
+    },
+    {
+      "id": "devils_sight",
+      "name": "Devil's Sight",
+      "minLevel": 2,
+      "combatTag": "senses",
+      "description": "You can see normally in Dim Light and Darkness—both magical and nonmagical—within 120 feet of yourself."
+    },
+    {
+      "id": "devouring_blade",
+      "name": "Devouring Blade",
+      "minLevel": 12,
+      "prereq": "invocation:thirsting_blade",
+      "combatTag": "attack",
+      "description": "The Extra Attack of your Thirsting Blade invocation confers two extra attacks rather than one."
+    },
+    {
+      "id": "eldritch_mind",
+      "name": "Eldritch Mind",
+      "minLevel": 1,
+      "combatTag": "concentration",
+      "description": "You have Advantage on Constitution saving throws that you make to maintain Concentration."
+    },
+    {
+      "id": "eldritch_smite",
+      "name": "Eldritch Smite",
+      "minLevel": 5,
+      "prereq": "invocation:pact_of_the_blade",
+      "combatTag": "damage",
+      "description": "Once per turn when you hit a creature with your pact weapon, you can expend a Pact Magic spell slot to deal extra Force damage and possibly knock the target Prone."
+    },
+    {
+      "id": "eldritch_spear",
+      "name": "Eldritch Spear",
+      "minLevel": 2,
+      "prereq": "warlock_damage_cantrip",
+      "repeatable": true,
+      "combatTag": "range",
+      "description": "Choose one of your known Warlock cantrips that deals damage and has a range of 10+ feet. When you cast that spell, its range increases by a number of feet equal to 30 times your Warlock level."
+    },
+    {
+      "id": "fiendish_vigor",
+      "name": "Fiendish Vigor",
+      "minLevel": 2,
+      "combatTag": "free_cast",
+      "freeSpell": "false_life",
+      "description": "You can cast False Life on yourself without expending a spell slot. When you cast the spell with this feature, you don't roll the die for the Temporary Hit Points; you automatically get the highest number on the die."
+    },
+    {
+      "id": "gaze_of_two_minds",
+      "name": "Gaze of Two Minds",
+      "minLevel": 5,
+      "combatTag": "utility",
+      "description": "As a Bonus Action, touch a willing creature and perceive through its senses until the end of your next turn."
+    },
+    {
+      "id": "gift_of_the_depths",
+      "name": "Gift of the Depths",
+      "minLevel": 5,
+      "combatTag": "movement",
+      "description": "You can breathe underwater, gain a Swim Speed equal to your Speed, and cast Water Breathing once per Long Rest without a spell slot."
+    },
+    {
+      "id": "gift_of_the_protectors",
+      "name": "Gift of the Protectors",
+      "minLevel": 9,
+      "prereq": "invocation:pact_of_the_tome",
+      "combatTag": "passive",
+      "description": "Creatures named in your Book of Shadows drop to 1 Hit Point instead of 0 once per Long Rest."
+    },
+    {
+      "id": "investment_of_the_chain_master",
+      "name": "Investment of the Chain Master",
+      "minLevel": 5,
+      "prereq": "invocation:pact_of_the_chain",
+      "combatTag": "familiar",
+      "description": "When you cast Find Familiar, you infuse the familiar with eldritch power."
+    },
+    {
+      "id": "lessons_of_the_first_ones",
+      "name": "Lessons of the First Ones",
+      "minLevel": 2,
+      "repeatable": true,
+      "combatTag": "feat",
+      "description": "Gain one Origin feat of your choice."
+    },
+    {
+      "id": "lifedrinker",
+      "name": "Lifedrinker",
+      "minLevel": 9,
+      "prereq": "invocation:pact_of_the_blade",
+      "combatTag": "damage",
+      "description": "Once per turn when you hit with your pact weapon, deal extra damage and optionally expend a Hit Point Die to heal."
+    },
+    {
+      "id": "mask_of_many_faces",
+      "name": "Mask of Many Faces",
+      "minLevel": 2,
+      "combatTag": "free_cast",
+      "freeSpell": "disguise_self",
+      "description": "You can cast Disguise Self without expending a spell slot."
+    },
+    {
+      "id": "master_of_myriad_forms",
+      "name": "Master of Myriad Forms",
+      "minLevel": 5,
+      "combatTag": "free_cast",
+      "freeSpell": "alter_self",
+      "description": "You can cast Alter Self without expending a spell slot."
+    },
+    {
+      "id": "misty_visions",
+      "name": "Misty Visions",
+      "minLevel": 2,
+      "combatTag": "free_cast",
+      "freeSpell": "silent_image",
+      "description": "You can cast Silent Image without expending a spell slot."
+    },
+    {
+      "id": "one_with_shadows",
+      "name": "One with Shadows",
+      "minLevel": 5,
+      "combatTag": "free_cast",
+      "freeSpell": "invisibility",
+      "description": "While in Dim Light or Darkness, you can cast Invisibility on yourself without expending a spell slot."
+    },
+    {
+      "id": "otherworldly_leap",
+      "name": "Otherworldly Leap",
+      "minLevel": 2,
+      "combatTag": "free_cast",
+      "freeSpell": "jump",
+      "description": "You can cast Jump on yourself without expending a spell slot."
+    },
+    {
+      "id": "pact_of_the_blade",
+      "name": "Pact of the Blade",
+      "minLevel": 1,
+      "combatTag": "weapon",
+      "description": "As a Bonus Action, conjure a pact weapon or bond with a magic weapon."
+    },
+    {
+      "id": "pact_of_the_chain",
+      "name": "Pact of the Chain",
+      "minLevel": 1,
+      "combatTag": "familiar",
+      "freeSpell": "find_familiar",
+      "description": "You learn Find Familiar and can cast it as a Magic action without expending a spell slot."
+    },
+    {
+      "id": "pact_of_the_tome",
+      "name": "Pact of the Tome",
+      "minLevel": 1,
+      "combatTag": "spells",
+      "description": "Conjure a Book of Shadows containing three cantrips and two level 1 Ritual spells from any class list."
+    },
+    {
+      "id": "repelling_blast",
+      "name": "Repelling Blast",
+      "minLevel": 2,
+      "prereq": "warlock_attack_cantrip",
+      "repeatable": true,
+      "combatTag": "push",
+      "description": "Choose one of your known Warlock cantrips that requires an attack roll. When you hit a Large or smaller creature with that cantrip, you can push the creature up to 10 feet straight away from you."
+    },
+    {
+      "id": "thirsting_blade",
+      "name": "Thirsting Blade",
+      "minLevel": 5,
+      "prereq": "invocation:pact_of_the_blade",
+      "combatTag": "extra_attack",
+      "description": "You gain the Extra Attack feature for your pact weapon only."
+    },
+    {
+      "id": "visions_of_distant_realms",
+      "name": "Visions of Distant Realms",
+      "minLevel": 9,
+      "combatTag": "free_cast",
+      "freeSpell": "arcane_eye",
+      "description": "You can cast Arcane Eye without expending a spell slot."
+    },
+    {
+      "id": "whispers_of_the_grave",
+      "name": "Whispers of the Grave",
+      "minLevel": 7,
+      "combatTag": "free_cast",
+      "freeSpell": "speak_with_dead",
+      "description": "You can cast Speak with Dead without expending a spell slot."
+    },
+    {
+      "id": "witch_sight",
+      "name": "Witch Sight",
+      "minLevel": 15,
+      "combatTag": "senses",
+      "description": "You have Truesight with a range of 30 feet."
+    }
+  ]
+}

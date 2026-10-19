@@ -61,6 +61,18 @@
       "description": "_Fighting Style Feat (Prerequisite: Fighting Style Feature)_ When you make an extra attack as a result of using a weapon that has the Light property, you can add your ability modifier to the damage of that attack if you aren't already adding it to the damage. ### Epic Boon Feats"
     },
     {
+      "id": "druidic_warrior",
+      "name": "Druidic Warrior",
+      "repeatable": false,
+      "description": "_Fighting Style Feat (Ranger)_ You learn two Druid cantrips of your choice. The chosen cantrips count as Ranger spells for you, and Wisdom is your spellcasting ability for them. Whenever you gain a Ranger level, you can replace one of these cantrips with another Druid cantrip."
+    },
+    {
+      "id": "blessed_warrior",
+      "name": "Blessed Warrior",
+      "repeatable": false,
+      "description": "_Fighting Style Feat (Paladin)_ You learn two Cleric cantrips of your choice. The chosen cantrips count as Paladin spells for you, and Charisma is your spellcasting ability for them. Whenever you gain a Paladin level, you can replace one of these cantrips with another Cleric cantrip."
+    },
+    {
       "id": "boon_of_combat_prowess",
       "name": "Boon of Combat Prowess",
       "repeatable": false,
@@ -88,7 +100,7 @@
       "id": "boon_of_spell_recall",
       "name": "Boon of Spell Recall",
       "repeatable": false,
-      "description": "_Epic Boon Feat (Prerequisite: Level 19+, Spellcasting Feature)_ You gain the following benefits. _Ability Score Increase._ Increase your Intelligence, Wisdom, or Charisma score by 1, to a maximum of 30. _Free Casting._ Whenever you cast a spell with a level 1–4 spell slot, roll 1d4. If the number you roll is the same as the slot's level, the slot isn't expended."
+      "description": "_Epic Boon Feat (Prerequisite: Level 19+, Spellcasting Feature)_ You gain the following benefits. _Ability Score Increase._ Increase your Intelligence, Wisdom, or Charisma score by 1, to a maximum of 30. _Free Casting._ Whenever you cast a spell with a level 1\u20134 spell slot, roll 1d4. If the number you roll is the same as the slot's level, the slot isn't expended."
     },
     {
       "id": "boon_of_the_night_spirit",

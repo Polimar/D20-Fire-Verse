@@ -516,7 +516,12 @@ export function refreshMenus(token: CombatToken, pregen: Pregen | undefined, loo
     token.reactionIds = token.reactionIds ?? [];
     pushUnique(token.reactionIds, id);
   }
-  if ((token.sorceryPoints ?? 0) >= 2 && !token.castLeveled && !token.castBonusSpell) {
+  const canQuicken =
+    (token.features?.includes("metamagic:quickened") || token.features?.includes("metamagic_quickened")) &&
+    (token.sorceryPoints ?? 0) >= 2 &&
+    !token.castLeveled &&
+    !token.castBonusSpell;
+  if (canQuicken) {
     for (const id of [...(token.cantrips ?? []), ...(token.spells ?? [])]) {
       const ability = lookup(id);
       if (!ability || ability.actionType === "bonus_action" || ability.actionType === "reaction") continue;

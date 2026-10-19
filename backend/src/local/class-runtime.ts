@@ -362,15 +362,31 @@ export function seedClassResources(token: CombatToken, level: number, abilities:
   if (has(token, "dragon_companion")) bag.companion = 1;
   if (has(token, "stroke_of_luck")) bag.stroke = 1;
   if (has(token, "hurl_through_hell")) bag.hell = 1;
-  if (has(token, "spell_mastery")) bag.mastery_cast = 2;
-  if (has(token, "signature_spells")) bag.signature_cast = 2;
-  if (has(token, "mystic_arcanum")) bag.arcanum = 1;
+  if ((token.features ?? []).some((f) => f.startsWith("mastery:"))) bag.mastery_cast = 99;
+  if ((token.features ?? []).some((f) => f.startsWith("signature:"))) bag.signature_cast = 2;
+  const arcanums = (token.features ?? []).filter((f) => f.startsWith("arcanum:"));
+  if (arcanums.length) {
+    bag.arcanum = arcanums.length;
+    for (const flag of arcanums) {
+      const level = Number(flag.split(":")[1] ?? 0);
+      if (level) bag[`arcanum_${level}`] = 1;
+    }
+  }
   if (!speedAlready && has(token, "roving")) token.speedCells += 2;
   if (has(token, "second_story_work")) token.speedCells += 1;
   if (has(token, "dragon_wings")) token.speedCells += 2;
   if (has(token, "draconic_resilience")) {
     const dex = modOf(abilities, "dex");
     token.ac = Math.max(token.ac, 13 + dex);
+  }
+  // Armor of Shadows — Mage Armor at will while not in heavy armor loadout.
+  if (hasInvocationOption(token, "armor_of_shadows") && !token.heavyArmor) {
+    const dex = modOf(abilities, "dex");
+    token.ac = Math.max(token.ac, 13 + dex);
+  }
+  // Devil's Sight — see in magical/nonmagical darkness (treat as truesight for combat vision).
+  if (hasInvocationOption(token, "devils_sight")) {
+    token.truesight = true;
   }
   if (has(token, "fiendish_resilience") && !token.damageResistances?.includes("fire")) {
     token.damageResistances = [...(token.damageResistances ?? []), "fire"];
@@ -662,22 +678,36 @@ export function spellRecall(token: CombatToken, slot: number): boolean {
   return rollNotation("1d4").total === 1;
 }
 
-export function freeCast(token: CombatToken, level: number): boolean {
-  if (level === 1 || level === 2) {
-    if (has(token, "spell_mastery") && (uses(token).mastery_cast ?? 0) > 0) {
-      uses(token).mastery_cast = (uses(token).mastery_cast ?? 0) - 1;
-      return true;
-    }
+/** Free casting only for the spell ids chosen at level-up (mastery / signature / arcanum). */
+export function freeCast(token: CombatToken, level: number, spellId?: string): boolean {
+  const feats = token.features ?? [];
+  if (!spellId) return false;
+  if ((level === 1 || level === 2) && feats.includes(`mastery:${level}:${spellId}`)) {
+    // Spell Mastery: at will at the spell's lowest level.
+    return true;
   }
-  if (level === 3 && has(token, "signature_spells") && (uses(token).signature_cast ?? 0) > 0) {
+  if (level === 3 && feats.includes(`signature:${spellId}`) && (uses(token).signature_cast ?? 0) > 0) {
     uses(token).signature_cast = (uses(token).signature_cast ?? 0) - 1;
     return true;
   }
-  if (level >= 6 && has(token, "mystic_arcanum") && (uses(token).arcanum ?? 0) > 0) {
-    uses(token).arcanum = 0;
+  if (level >= 6 && feats.includes(`arcanum:${level}:${spellId}`)) {
+    const key = `arcanum_${level}`;
+    if ((uses(token)[key] ?? uses(token).arcanum ?? 0) <= 0) return false;
+    uses(token)[key] = 0;
+    if (uses(token).arcanum != null) uses(token).arcanum = 0;
     return true;
   }
   return false;
+}
+
+export function hasMetamagicOption(token: CombatToken, option: string): boolean {
+  const feats = token.features ?? [];
+  return feats.includes(`metamagic:${option}`) || feats.includes(`metamagic_${option}`);
+}
+
+export function hasInvocationOption(token: CombatToken, option: string): boolean {
+  const feats = token.features ?? [];
+  return feats.includes(`invocation:${option}`) || feats.includes(`invocation_${option}`);
 }
 
 export function favoredMarkFree(token: CombatToken): boolean {

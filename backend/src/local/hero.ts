@@ -12,12 +12,21 @@ import {
   blankProgress,
   canEquip,
   catchUpExpertiseAsk,
+  catchUpInvocationAsk,
+  catchUpLanguageAsk,
+  catchUpMetamagicAsk,
+  catchUpOrderAsk,
   catchUpSpellAsk,
   expertiseCandidates,
   featCategory,
+  fightingStyleFeats,
   firstLevel,
+  invocationCandidates,
+  languageCandidates,
   levelableClasses,
   levelForXp,
+  maxSpellLevel,
+  metamagicCandidates,
   milestoneReward,
   nextAsk,
   pruneSatisfiedPending,
@@ -582,6 +591,13 @@ export function canLevelUp(heroId: string): boolean {
   return levelForXp(hero.xp, xpThresholds()) > hero.level;
 }
 
+function loadJsonEntries<T>(file: string): T[] {
+  const full = path.join(CONTENT_ROOT, "srd-5.2.1", file);
+  if (!fs.existsSync(full)) return [];
+  const raw = JSON.parse(fs.readFileSync(full, "utf8")) as { entries?: T[] };
+  return raw.entries ?? [];
+}
+
 export function progressionCatalog(): CatalogSlice {
   const inPlay = new Set(listCatalog().filter((row) => row.inPlay).map((row) => `${row.kind}:${row.id}`));
   const take = <T extends { id: string }>(kind: string, rows: T[]) => rows.filter((row) => inPlay.has(`${kind}:${row.id}`));
@@ -591,6 +607,9 @@ export function progressionCatalog(): CatalogSlice {
     feats: take("feat", listCatalog().filter((row) => row.kind === "feat").map((row) => enabledById<CatalogSlice["feats"][number]>("feat", row.id)).filter((row): row is CatalogSlice["feats"][number] => Boolean(row))),
     spells: take("spell", enabledSpells()),
     species: take("species", listCatalog().filter((row) => row.kind === "species").map((row) => enabledById<NonNullable<CatalogSlice["species"]>[number]>("species", row.id)).filter((row): row is NonNullable<CatalogSlice["species"]>[number] => Boolean(row))),
+    metamagic: loadJsonEntries("metamagic.json"),
+    invocations: loadJsonEntries("invocations.json"),
+    languages: loadJsonEntries("languages.json"),
     xpThresholds: xpThresholds(),
   };
 }
@@ -619,7 +638,13 @@ function syncPrunedPending(hero: HeroRow, progress: ProgressionHero): Progressio
   const withCatchUp = [...pruned];
   if (!withCatchUp.length) {
     const base = { ...progress, pending: pruned };
-    const catchUp = catchUpSpellAsk(base, catalog) ?? catchUpExpertiseAsk(base, catalog);
+    const catchUp =
+      catchUpOrderAsk(base, catalog) ??
+      catchUpSpellAsk(base, catalog) ??
+      catchUpExpertiseAsk(base, catalog) ??
+      catchUpMetamagicAsk(base, catalog) ??
+      catchUpInvocationAsk(base, catalog) ??
+      catchUpLanguageAsk(base, catalog);
     if (catchUp) withCatchUp.push(catchUp);
   }
   const changed =
@@ -659,6 +684,9 @@ export function levelOptions(
   knownCantrips: string[];
   knownSpellbook: string[];
   featureChoices?: { featureId: string; options: string[] };
+  metamagic: Array<{ id: string; name: string }>;
+  invocations: Array<{ id: string; name: string }>;
+  languages: Array<{ id: string; name: string }>;
 } {
   const hero = getHero(heroId);
   if (!hero) throw new Error("BAD_CHARACTER");
@@ -671,6 +699,16 @@ export function levelOptions(
   const inBook = new Set(progress.spellbook ?? []);
   const spellClassId = ask?.kind === "spells" ? ask.classId : classId;
   const bookAsk = ask?.kind === "spells" ? (ask.spellbook ?? 0) : 0;
+  const spellLists = ask?.kind === "spells" ? ask.lists : undefined;
+  const exactLevel = ask?.kind === "spells" ? ask.exactLevel : undefined;
+  const spellDef = catalog.classes.find((row) => row.id === spellClassId);
+  const spellClassLevel = progress.classes.find((row) => row.id === spellClassId)?.level ?? 1;
+  const topSpell =
+    ask?.kind === "spells" && ask.maxSpellLevel
+      ? ask.maxSpellLevel
+      : spellDef
+        ? maxSpellLevel(spellDef, spellClassLevel)
+        : 0;
   const openSkills =
     ask?.kind === "skill"
       ? (catalog.classes.find((row) => row.id === ask.classId)?.skillList ?? []).filter(
@@ -679,6 +717,7 @@ export function levelOptions(
       : ask?.kind === "expertise"
         ? expertiseCandidates(progress, ask)
         : [];
+  const styleClassId = ask?.kind === "fighting_style" ? ask.classId : classId ?? "";
   return {
     hero: {
       id: hero.id,
@@ -698,14 +737,24 @@ export function levelOptions(
       .filter((row) => row.classId === classId)
       .map((row) => ({ id: row.id, name: row.name, classId: row.classId })),
     feats: catalog.feats.map((row) => ({ id: row.id, name: row.name, category: featCategory(row) })),
-    fightingStyles: catalog.feats
-      .filter((row) => featCategory(row) === "fighting_style" && !progress.features.includes(row.id))
-      .map((row) => ({ id: row.id, name: row.name })),
+    fightingStyles: fightingStyleFeats(catalog, styleClassId, progress.features).map((row) => ({
+      id: row.id,
+      name: row.name,
+    })),
     skills: openSkills,
     spells: catalog.spells
       .filter((row) => {
-        if (spellClassId && !row.classes.includes(spellClassId)) return false;
+        if (ask?.kind === "spell_mastery" || ask?.kind === "signature_spells") {
+          return inBook.has(row.id);
+        }
+        if (spellLists?.length) {
+          if (!row.classes.some((cls) => spellLists.includes(cls))) return false;
+        } else if (spellClassId && !row.classes.includes(spellClassId)) {
+          return false;
+        }
         if (row.level === 0) return !known.has(row.id);
+        if (exactLevel != null) return row.level === exactLevel && !known.has(row.id);
+        if (row.level > topSpell) return false;
         if (bookAsk > 0) return !inBook.has(row.id) || !known.has(row.id);
         return !known.has(row.id);
       })
@@ -717,6 +766,21 @@ export function levelOptions(
       ask?.kind === "feature_choice"
         ? { featureId: ask.featureId, options: ask.options }
         : undefined,
+    metamagic: (ask?.kind === "metamagic" ? metamagicCandidates(progress, catalog) : []).map((id) => ({
+      id,
+      name: catalog.metamagic?.find((row) => row.id === id)?.name ?? id,
+    })),
+    invocations: (ask?.kind === "invocation"
+      ? invocationCandidates(progress, catalog, progress.classes.find((row) => row.id === ask.classId)?.level ?? 1)
+      : []
+    ).map((id) => ({
+      id,
+      name: catalog.invocations?.find((row) => row.id === id)?.name ?? id,
+    })),
+    languages: (ask?.kind === "language" ? languageCandidates(progress, catalog) : []).map((id) => ({
+      id,
+      name: catalog.languages?.find((row) => row.id === id)?.name ?? id,
+    })),
   };
 }
 

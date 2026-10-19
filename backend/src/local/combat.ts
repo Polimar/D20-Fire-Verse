@@ -74,6 +74,8 @@ import {
   favoredMarkFree,
   fiendLuck,
   freeCast,
+  hasInvocationOption,
+  hasMetamagicOption,
   ignorePhysicalResistance,
   onClassLongRest,
   onClassShortRest,
@@ -3010,6 +3012,7 @@ export function performPcAction(
   if (abilityId.startsWith("quicken:")) {
     quicken = true;
     castId = abilityId.slice("quicken:".length);
+    if (!hasMetamagicOption(t, "quickened")) throw new Error("NO_METAMAGIC");
     const freeMeta =
       (hasFeature(t, "arcane_apotheosis") && !t.abilityUses?.meta_spent) ||
       (hasFeature(t, "sorcery_incarnate") && Boolean(t.innateSorcery));
@@ -3077,7 +3080,7 @@ export function performPcAction(
     castId !== "spell_spiritual_weapon_strike" &&
     !(castId === "spell_hunters_mark" && favoredMarkFree(t)) &&
     !markRetargetFree &&
-    !freeCast(t, level)
+    !freeCast(t, level, castId)
   ) {
     slotUsed = spendSlot(t, level);
     if (spellRecall(t, slotUsed) && t.slots) t.slots[String(slotUsed)] = (t.slots[String(slotUsed)] ?? 0) + 1;
@@ -3820,6 +3823,16 @@ export function performPcAction(
   });
   if (riderDie?.dice) dmgTotal += pushPartDamage(rolls, t.name, riderDie.dice, riderDie.type, riderDie.type, crit);
   if (riderDie?.flat) dmgTotal += riderDie.flat;
+  // Agonizing Blast: add Cha to a damaging Warlock cantrip's damage rolls.
+  if (
+    hasInvocationOption(t, "agonizing_blast") &&
+    level === 0 &&
+    Boolean(atkEffect.spellAttack) &&
+    (castId.includes("eldritch_blast") || (t.cantrips ?? []).includes(castId))
+  ) {
+    const cha = Math.max(0, abilityMod(abilityScore(t, pregen, "cha")));
+    if (cha) dmgTotal += cha;
+  }
   if (stunOnHit(t)) {
     const dc = 8 + prof + abilityMod(abilityScore(t, pregen, "wis"));
     const { roll: saveRoll, ok } = creatureSave(target, "con", dc, false);

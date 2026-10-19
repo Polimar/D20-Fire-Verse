@@ -1,0 +1,22 @@
+{
+  "entries": [
+    { "id": "common", "name": "Common", "rare": false },
+    { "id": "thieves_cant", "name": "Thieves' Cant", "rare": false },
+    { "id": "common_sign", "name": "Common Sign Language", "rare": false },
+    { "id": "dwarvish", "name": "Dwarvish", "rare": false },
+    { "id": "elvish", "name": "Elvish", "rare": false },
+    { "id": "giant", "name": "Giant", "rare": false },
+    { "id": "gnomish", "name": "Gnomish", "rare": false },
+    { "id": "goblin", "name": "Goblin", "rare": false },
+    { "id": "halfling", "name": "Halfling", "rare": false },
+    { "id": "orc", "name": "Orc", "rare": false },
+    { "id": "abyssal", "name": "Abyssal", "rare": true },
+    { "id": "celestial", "name": "Celestial", "rare": true },
+    { "id": "draconic", "name": "Draconic", "rare": true },
+    { "id": "deep_speech", "name": "Deep Speech", "rare": true },
+    { "id": "infernal", "name": "Infernal", "rare": true },
+    { "id": "primordial", "name": "Primordial", "rare": true },
+    { "id": "sylvan", "name": "Sylvan", "rare": true },
+    { "id": "undercommon", "name": "Undercommon", "rare": true }
+  ]
+}

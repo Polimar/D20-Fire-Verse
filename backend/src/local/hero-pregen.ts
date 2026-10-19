@@ -171,6 +171,10 @@ export function heroPregen(heroId: string, lookup: Lookup): HeroPregen | undefin
   if (hasFlag(kit, "second_story_work")) speedFt += 5;
   if (hasFlag(kit, "dragon_wings")) speedFt += 10;
   if (!armor && hasFlag(kit, "draconic_resilience")) ac = Math.max(ac, 13 + mod("dex"));
+  // Armor of Shadows: Mage Armor on self at will (13 + Dex while unarmored).
+  if (!armor && hero.features.includes("invocation:armor_of_shadows")) {
+    ac = Math.max(ac, 13 + mod("dex"));
+  }
   if (hasFlag(kit, "body_and_mind") && !armor && classIds.has("monk")) ac += 4;
   let speedCells = Math.floor(speedFt / FEET_PER_CELL);
   if (armor?.strength && abilities.str < armor.strength) {
@@ -399,7 +403,23 @@ export function heroPregen(heroId: string, lookup: Lookup): HeroPregen | undefin
     spellAbility: cls?.spellAbility,
     cantrips,
     spellsKnown,
-    features: [...kit.flags, ...hero.features.filter((f) => f.startsWith("expertise:"))],
+    features: [
+      ...kit.flags,
+      ...hero.features.filter(
+        (f) =>
+          /^(expertise|metamagic|invocation|language|order|arcanum|mastery|signature):/.test(f) ||
+          [
+            "archery",
+            "defense",
+            "great_weapon_fighting",
+            "dueling",
+            "protection",
+            "two_weapon_fighting",
+            "blessed_warrior",
+            "druidic_warrior",
+          ].includes(f),
+      ),
+    ],
     weapons,
     gear: sheet,
     classes: hero.classes.map((entry) => ({ ...entry })),

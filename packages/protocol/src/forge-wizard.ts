@@ -431,6 +431,10 @@ type LevelOptionsBody = {
     cantrips?: number;
     spells?: number;
     spellbook?: number;
+    maxSpellLevel?: number;
+    exactLevel?: number;
+    lists?: string[];
+    purpose?: string;
     epic?: boolean;
   } | null;
   adminBypassXp?: boolean;
@@ -444,6 +448,9 @@ type LevelOptionsBody = {
   knownCantrips?: string[];
   knownSpellbook?: string[];
   featureChoices?: { featureId: string; options: string[] };
+  metamagic?: Array<{ id: string; name: string }>;
+  invocations?: Array<{ id: string; name: string }>;
+  languages?: Array<{ id: string; name: string }>;
 };
 
 type LevelDraft = {
@@ -459,6 +466,9 @@ type LevelDraft = {
   cantrips: string[];
   spells: string[];
   spellbook: string[];
+  chipPicks: string[];
+  mastery1?: string;
+  mastery2?: string;
 };
 
 /** Level-up / finish-choices inside the forge chrome (one class advance per open). */
@@ -469,7 +479,7 @@ async function mountForgeLevelFlow(host: HTMLElement, opts: ForgeWizardOptions &
   let busy = false;
   /** At most one `class` pick per forge open — stops admin ignoreXp loops. */
   let classAdvances = 0;
-  const draft: LevelDraft = { skills: [], cantrips: [], spells: [], spellbook: [] };
+  const draft: LevelDraft = { skills: [], cantrips: [], spells: [], spellbook: [], chipPicks: [] };
 
   const load = async () => {
     options = await opts.api<LevelOptionsBody>(`/api/heroes/${opts.heroId}/level-options`);
@@ -485,8 +495,10 @@ async function mountForgeLevelFlow(host: HTMLElement, opts: ForgeWizardOptions &
     draft.cantrips = [];
     draft.spells = [];
     draft.spellbook = [];
+    draft.chipPicks = [];
+    draft.mastery1 = undefined;
+    draft.mastery2 = undefined;
     const ask = options.ask;
-    if (ask?.kind === "class") draft.classId = options.classes[0]?.id ?? options.hero.classes[0]?.id;
     if (ask?.kind === "subclass") draft.subclassId = options.subclasses[0]?.id;
     if (ask?.kind === "feature_choice") draft.featurePick = ask.options?.[0] ?? options.featureChoices?.options[0];
     if (ask?.kind === "fighting_style") draft.fightingStyleId = options.fightingStyles[0]?.id;
@@ -526,6 +538,28 @@ async function mountForgeLevelFlow(host: HTMLElement, opts: ForgeWizardOptions &
       const need = ask.count ?? 1;
       return draft.skills.length === need ? { kind: "expertise", skills: [...draft.skills] } : null;
     }
+    if (ask.kind === "metamagic") {
+      const need = ask.count ?? 1;
+      return draft.chipPicks.length === need ? { kind: "metamagic", options: [...draft.chipPicks] } : null;
+    }
+    if (ask.kind === "invocation") {
+      const need = ask.count ?? 1;
+      return draft.chipPicks.length === need ? { kind: "invocation", options: [...draft.chipPicks] } : null;
+    }
+    if (ask.kind === "language") {
+      const need = ask.count ?? 1;
+      return draft.chipPicks.length === need ? { kind: "language", languages: [...draft.chipPicks] } : null;
+    }
+    if (ask.kind === "spell_mastery") {
+      return draft.mastery1 && draft.mastery2
+        ? { kind: "spell_mastery", level1: draft.mastery1, level2: draft.mastery2 }
+        : null;
+    }
+    if (ask.kind === "signature_spells") {
+      return draft.chipPicks.length === 2
+        ? { kind: "signature_spells", spells: [draft.chipPicks[0]!, draft.chipPicks[1]!] }
+        : null;
+    }
     if (ask.kind === "spells") {
       const needC = ask.cantrips ?? 0;
       const needS = ask.spells ?? 0;
@@ -560,7 +594,15 @@ async function mountForgeLevelFlow(host: HTMLElement, opts: ForgeWizardOptions &
     if (ask.kind === "fighting_style") return "Fighting style";
     if (ask.kind === "skill") return "Choose skills";
     if (ask.kind === "expertise") return "Choose expertise";
-    if (ask.kind === "feature_choice") return (ask.featureId ?? "feature").replace(/_/g, " ");
+    if (ask.kind === "metamagic") return "Choose Metamagic";
+    if (ask.kind === "invocation") return "Choose Eldritch Invocations";
+    if (ask.kind === "language") return "Choose languages";
+    if (ask.kind === "spell_mastery") return "Spell Mastery";
+    if (ask.kind === "signature_spells") return "Signature Spells";
+    if (ask.kind === "feature_choice") {
+      if (ask.featureId === "order") return "Divine / Primal Order";
+      return (ask.featureId ?? "feature").replace(/_/g, " ");
+    }
     return "Level-up choice";
   };
 
@@ -579,10 +621,14 @@ async function mountForgeLevelFlow(host: HTMLElement, opts: ForgeWizardOptions &
     const lab = (id: string) => id.replace(/_/g, " ");
     let body = "";
     if (ask.kind === "class") {
-      body = `<p class="hw-meta">${level.adminBypassXp ? "Admin: one level this visit (XP granted if needed). " : ""}Which class gains this level?</p>
+      body = `<p class="hw-meta">${level.adminBypassXp ? "Admin: one level this visit (XP granted if needed). " : ""}Put this character level into a current class, or start a new one (multiclass, if you meet the score gates).</p>
         <div class="hw-row">${level.classes
-          .map((c) => `<button type="button" class="hw-chip ${draft.classId === c.id ? "picked" : ""}" data-class="${esc(c.id)}">${esc(c.name)}</button>`)
-          .join("")}</div>`;
+          .map((c) => {
+            const row = (hero.classes ?? []).find((h) => h.id === c.id);
+            const tag = row ? `L${row.level} → L${row.level + 1}` : "new class";
+            return `<button type="button" class="hw-chip ${draft.classId === c.id ? "picked" : ""}" data-class="${esc(c.id)}">${esc(c.name)} <em>${esc(tag)}</em></button>`;
+          })
+          .join("") || `<p class="hw-meta">No classes available.</p>`}</div>`;
     } else if (ask.kind === "subclass") {
       body = `<p class="hw-meta">Pick a subclass.</p>
         <div class="hw-row">${level.subclasses
@@ -609,26 +655,79 @@ async function mountForgeLevelFlow(host: HTMLElement, opts: ForgeWizardOptions &
         <div class="hw-row">${level.skills
           .map((s) => `<button type="button" class="hw-chip ${draft.skills.includes(s) ? "picked" : ""}" data-skill="${esc(s)}">${esc(lab(s))}</button>`)
           .join("") || `<p class="hw-meta">No eligible skills (need proficiency without Expertise).</p>`}</div>`;
+    } else if (ask.kind === "metamagic") {
+      const need = ask.count ?? 1;
+      const pool = level.metamagic ?? [];
+      body = `<p class="hw-meta">Pick ${need} Metamagic option${need === 1 ? "" : "s"} (${draft.chipPicks.length}/${need}).</p>
+        <div class="hw-row">${pool
+          .map((m) => `<button type="button" class="hw-chip ${draft.chipPicks.includes(m.id) ? "picked" : ""}" data-chip="${esc(m.id)}">${esc(m.name)}</button>`)
+          .join("")}</div>`;
+    } else if (ask.kind === "invocation") {
+      const need = ask.count ?? 1;
+      const pool = level.invocations ?? [];
+      body = `<p class="hw-meta">Pick ${need} Eldritch Invocation${need === 1 ? "" : "s"} (${draft.chipPicks.length}/${need}).</p>
+        <div class="hw-row">${pool
+          .map((m) => `<button type="button" class="hw-chip ${draft.chipPicks.includes(m.id) ? "picked" : ""}" data-chip="${esc(m.id)}">${esc(m.name)}</button>`)
+          .join("")}</div>`;
+    } else if (ask.kind === "language") {
+      const need = ask.count ?? 1;
+      const pool = level.languages ?? [];
+      body = `<p class="hw-meta">Pick ${need} language${need === 1 ? "" : "s"} (${draft.chipPicks.length}/${need}).</p>
+        <div class="hw-row">${pool
+          .map((m) => `<button type="button" class="hw-chip ${draft.chipPicks.includes(m.id) ? "picked" : ""}" data-chip="${esc(m.id)}">${esc(m.name)}</button>`)
+          .join("")}</div>`;
+    } else if (ask.kind === "spell_mastery") {
+      const book = new Set(level.knownSpellbook ?? []);
+      const l1 = level.spells.filter((s) => s.level === 1 && book.has(s.id));
+      const l2 = level.spells.filter((s) => s.level === 2 && book.has(s.id));
+      body = `<p class="hw-meta">Choose one level 1 and one level 2 spell from your spellbook.</p>
+        <p class="hw-section">Level 1</p><div class="hw-row">${l1
+          .map((s) => `<button type="button" class="hw-chip ${draft.mastery1 === s.id ? "picked" : ""}" data-mastery1="${esc(s.id)}">${esc(s.name)}</button>`)
+          .join("") || `<p class="hw-meta">No level 1 spells in the book.</p>`}</div>
+        <p class="hw-section">Level 2</p><div class="hw-row">${l2
+          .map((s) => `<button type="button" class="hw-chip ${draft.mastery2 === s.id ? "picked" : ""}" data-mastery2="${esc(s.id)}">${esc(s.name)}</button>`)
+          .join("") || `<p class="hw-meta">No level 2 spells in the book.</p>`}</div>`;
+    } else if (ask.kind === "signature_spells") {
+      const book = new Set(level.knownSpellbook ?? []);
+      const l3 = level.spells.filter((s) => s.level === 3 && book.has(s.id));
+      body = `<p class="hw-meta">Pick 2 level 3 spells from your spellbook (${draft.chipPicks.length}/2).</p>
+        <div class="hw-row">${l3
+          .map((s) => `<button type="button" class="hw-chip ${draft.chipPicks.includes(s.id) ? "picked" : ""}" data-chip="${esc(s.id)}">${esc(s.name)}</button>`)
+          .join("")}</div>`;
     } else if (ask.kind === "spells") {
       const needC = ask.cantrips ?? 0;
       const needS = ask.spells ?? 0;
       const needB = ask.spellbook ?? 0;
+      const top = ask.maxSpellLevel ?? 9;
+      const exact = ask.exactLevel;
       const knownBook = level.knownSpellbook ?? [];
       const knownPrep = level.knownSpells ?? [];
       const inBook = new Set([...knownBook, ...draft.spellbook]);
       const cantrips = level.spells.filter((s) => s.level === 0);
-      const forBook = level.spells.filter((s) => s.level > 0 && !knownBook.includes(s.id));
-      const forPrep = needB
-        ? level.spells.filter((s) => s.level > 0 && inBook.has(s.id) && !knownPrep.includes(s.id))
-        : level.spells.filter((s) => s.level > 0);
-      body = `<p class="hw-meta">${needB ? "Wizard: add spells to your spellbook, then prepare any new slots from the book." : "New picks for this class level (not your full list)."}</p>
+      const forBook = level.spells.filter((s) => s.level > 0 && s.level <= top && !knownBook.includes(s.id));
+      const forPrep = exact != null
+        ? level.spells.filter((s) => s.level === exact)
+        : needB
+          ? level.spells.filter((s) => s.level > 0 && s.level <= top && inBook.has(s.id) && !knownPrep.includes(s.id))
+          : level.spells.filter((s) => s.level > 0 && s.level <= top);
+      const hint =
+        ask.purpose === "arcanum"
+          ? `Mystic Arcanum: choose one level ${exact ?? top} Warlock spell.`
+          : ask.purpose === "magical_secrets"
+            ? `Magical Secrets: pick from Bard, Cleric, Druid, or Wizard lists (level ${top} or lower).`
+            : ask.purpose === "warrior_cantrips"
+              ? "Choose cantrips for Blessed / Druidic Warrior or your Order."
+              : needB
+                ? `Wizard: copy spells of level ${top} or lower (slots you have), then prepare extra slots from the book.`
+                : `New picks of spell level ${top} or lower — only levels you have slots for.`;
+      body = `<p class="hw-meta">${hint}</p>
         ${needC ? `<p class="hw-section">New cantrips (${draft.cantrips.length}/${needC})</p><div class="hw-row">${cantrips
         .map((s) => `<button type="button" class="hw-chip ${draft.cantrips.includes(s.id) ? "picked" : ""}" data-cantrip="${esc(s.id)}">${esc(s.name)}</button>`)
         .join("")}</div>` : ""}
         ${needB ? `<p class="hw-section">Add to spellbook (${draft.spellbook.length}/${needB})</p><div class="hw-row">${forBook
         .map((s) => `<button type="button" class="hw-chip ${draft.spellbook.includes(s.id) ? "picked" : ""}" data-book="${esc(s.id)}">${esc(s.name)} <em>L${s.level}</em></button>`)
         .join("")}</div>` : ""}
-        ${needS ? `<p class="hw-section">${needB ? "Prepare from spellbook" : "New spells"} (${draft.spells.length}/${needS})</p><div class="hw-row">${forPrep
+        ${needS ? `<p class="hw-section">${needB ? "Prepare from spellbook" : ask.purpose === "arcanum" ? "Arcanum spell" : "New spells"} (${draft.spells.length}/${needS})</p><div class="hw-row">${forPrep
         .map((s) => `<button type="button" class="hw-chip ${draft.spells.includes(s.id) ? "picked" : ""}" data-spell="${esc(s.id)}">${esc(s.name)} <em>L${s.level}</em></button>`)
         .join("")}</div>` : ""}`;
     } else if (ask.kind === "asi") {
@@ -649,7 +748,7 @@ async function mountForgeLevelFlow(host: HTMLElement, opts: ForgeWizardOptions &
     host.innerHTML = `<div class="hw ${opts.layout === "phone" ? "phone" : ""} slim-side">
       <div class="hw-main">
         <div class="hw-top"><button type="button" class="hw-ghost" id="hwClose">Close</button>
-          <div><p class="hw-kicker">${esc(hero.name)} · Level ${hero.level}${level.adminBypassXp ? " · admin" : ""}</p>
+          <div><p class="hw-kicker">${esc(hero.name)} · Level ${hero.level}${level.adminBypassXp ? " · admin" : ""}${ask.kind !== "class" ? " · finish last level first" : ""}</p>
           <h2>${esc(askTitle(ask))}</h2></div></div>
         <div class="hw-body">${body}</div>
         <p class="hw-err" id="hwErr">${esc(localError)}</p>
@@ -710,6 +809,30 @@ async function mountForgeLevelFlow(host: HTMLElement, opts: ForgeWizardOptions &
         if (set.has(id)) set.delete(id);
         else if (set.size < need) set.add(id);
         draft.spells = [...set];
+        paint();
+      }),
+    );
+    host.querySelectorAll<HTMLButtonElement>("[data-chip]").forEach((b) =>
+      b.addEventListener("click", () => {
+        const id = b.dataset.chip!;
+        const need =
+          options?.ask?.kind === "signature_spells" ? 2 : (options?.ask?.count ?? 1);
+        const set = new Set(draft.chipPicks);
+        if (set.has(id)) set.delete(id);
+        else if (set.size < need) set.add(id);
+        draft.chipPicks = [...set];
+        paint();
+      }),
+    );
+    host.querySelectorAll<HTMLButtonElement>("[data-mastery1]").forEach((b) =>
+      b.addEventListener("click", () => {
+        draft.mastery1 = b.dataset.mastery1;
+        paint();
+      }),
+    );
+    host.querySelectorAll<HTMLButtonElement>("[data-mastery2]").forEach((b) =>
+      b.addEventListener("click", () => {
+        draft.mastery2 = b.dataset.mastery2;
         paint();
       }),
     );
