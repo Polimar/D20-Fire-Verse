@@ -6,6 +6,7 @@ import { requestUser } from "./admin-http.js";
 import { analytics } from "./events.js";
 import {
   addXp,
+  adminDeleteHero,
   applyLevelUp,
   applyPreset,
   archiveV1Once,
@@ -104,8 +105,12 @@ export function mountV2Routes(app: Express): void {
   app.get("/api/heroes", (req, res) => {
     try {
       const who = user(req);
+      const adminBypassXp = who.role === "admin";
       res.json({
-        heroes: listHeroes(who.id).map((h) => ({ ...h, pendingLevelUp: heroPending(h.id) })),
+        heroes: listHeroes(who.id).map((h) => ({
+          ...h,
+          pendingLevelUp: heroPending(h.id, { adminBypassXp }),
+        })),
         wallet: wallet(who.id),
         payToWin: declarePayToWin(),
       });
@@ -135,9 +140,10 @@ export function mountV2Routes(app: Express): void {
 
   app.get("/api/heroes/:id", (req, res) => {
     try {
-      const hero = listHeroes(user(req).id).find((row) => row.id === req.params.id);
+      const who = user(req);
+      const hero = listHeroes(who.id).find((row) => row.id === req.params.id);
       if (!hero) throw new Error("BAD_CHARACTER");
-      res.json({ hero, options: levelOptions(hero.id) });
+      res.json({ hero, options: levelOptions(hero.id, { adminBypassXp: who.role === "admin" }) });
     } catch (err) {
       fail(res, err);
     }
@@ -145,9 +151,10 @@ export function mountV2Routes(app: Express): void {
 
   app.get("/api/heroes/:id/level-options", (req, res) => {
     try {
-      const hero = listHeroes(user(req).id).find((row) => row.id === req.params.id);
+      const who = user(req);
+      const hero = listHeroes(who.id).find((row) => row.id === req.params.id);
       if (!hero) throw new Error("BAD_CHARACTER");
-      res.json(levelOptions(hero.id));
+      res.json(levelOptions(hero.id, { adminBypassXp: who.role === "admin" }));
     } catch (err) {
       fail(res, err);
     }
@@ -165,11 +172,23 @@ export function mountV2Routes(app: Express): void {
     }
   });
 
+  app.delete("/api/admin/heroes/:id", (req, res) => {
+    try {
+      const actor = admin(req);
+      const removed = adminDeleteHero(req.params.id);
+      audit(actor, "hero.delete", removed.id, { name: removed.name, userId: removed.userId });
+      res.json({ ok: true, hero: removed });
+    } catch (err) {
+      fail(res, err);
+    }
+  });
+
   app.post("/api/heroes/:id/level-up", (req, res) => {
     try {
-      const hero = listHeroes(user(req).id).find((row) => row.id === req.params.id);
+      const who = user(req);
+      const hero = listHeroes(who.id).find((row) => row.id === req.params.id);
       if (!hero) throw new Error("BAD_CHARACTER");
-      res.json({ hero: applyLevelUp(hero.id, req.body ?? {}) });
+      res.json({ hero: applyLevelUp(hero.id, req.body ?? {}, { adminBypassXp: who.role === "admin" }) });
     } catch (err) {
       fail(res, err);
     }

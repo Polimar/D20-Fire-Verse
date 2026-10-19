@@ -8,10 +8,10 @@ import type { ClassDef, SpeciesDef, SpellDef, SubclassDef } from "@d20-fireverse
 import {
   applyPick,
   blankProgress,
-  featCategory,
   firstLevel,
   hpAtLevelOne,
   nextAsk,
+  suggestLevelPick,
   type CatalogSlice,
   type LevelPick,
   type ProgressionHero,
@@ -47,41 +47,7 @@ export function labCatalog(): CatalogSlice {
 }
 
 function autoPick(hero: ProgressionHero, catalog: CatalogSlice): LevelPick | null {
-  const ask = nextAsk(hero, catalog);
-  if (!ask) return null;
-  if (ask.kind === "class") return { kind: "class", classId: hero.classes[0]?.id ?? catalog.classes[0]!.id };
-  if (ask.kind === "subclass") {
-    const sub = catalog.subclasses.find((row) => row.classId === ask.classId);
-    if (!sub) return null;
-    return { kind: "subclass", subclassId: sub.id };
-  }
-  if (ask.kind === "feature_choice") {
-    return { kind: "feature_choice", featureId: ask.featureId, picks: ask.options.slice(0, ask.count) };
-  }
-  if (ask.kind === "asi") {
-    const primary = catalog.classes.find((row) => row.id === ask.classId)?.primary[0] ?? "str";
-    return { kind: "asi", mode: "plus2", ability: primary };
-  }
-  if (ask.kind === "fighting_style") {
-    const feat = catalog.feats.find((row) => featCategory(row) === "fighting_style" && !hero.features.includes(row.id));
-    if (!feat) return null;
-    return { kind: "fighting_style", featId: feat.id };
-  }
-  if (ask.kind === "skill") {
-    const list = catalog.classes.find((row) => row.id === ask.classId)?.skillList ?? [];
-    const open = list.filter((skill) => !hero.proficiency.includes(skill)).slice(0, ask.count);
-    if (open.length !== ask.count) return null;
-    return { kind: "skill", skills: open };
-  }
-  if (ask.kind === "spells") {
-    const known = new Set([...hero.spells, ...hero.cantrips]);
-    const legal = catalog.spells.filter((spell) => spell.classes.includes(ask.classId) && !known.has(spell.id));
-    const cantrips = legal.filter((spell) => spell.level === 0).slice(0, ask.cantrips).map((spell) => spell.id);
-    const spells = legal.filter((spell) => spell.level > 0).slice(0, ask.spells).map((spell) => spell.id);
-    if (cantrips.length !== ask.cantrips || spells.length !== ask.spells) return null;
-    return { kind: "spells", spells, cantrips };
-  }
-  return null;
+  return suggestLevelPick(hero, catalog);
 }
 
 function walk(classId: string, speciesId: string, level: number, subclassId: string | undefined, catalog: CatalogSlice): ProgressionHero {

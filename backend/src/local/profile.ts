@@ -7,13 +7,14 @@ import { currentSeason } from "./seasons.js";
 
 export function meProfile(userId: string, username: string, role: string) {
   const bag = wallet(userId);
+  const adminBypassXp = role === "admin";
   const heroes = listHeroes(userId).map((h) => ({
     id: h.id,
     name: h.name,
     classes: h.classes,
     level: h.level,
     xp: h.xp,
-    pendingLevelUp: heroPending(h.id),
+    pendingLevelUp: heroPending(h.id, { adminBypassXp }),
     equipped: stashView(userId).filter((s) => s.equippedBy === h.id).length,
   }));
   const elo = accountElo(userId);

@@ -307,7 +307,8 @@ function openUser(id: string, reload: () => void): void {
                 .map(
                   (h) => `<tr><td><b>${esc(h.name)}</b><span class="sub mono">${esc(h.id)}</span></td><td>${esc(h.classes)}</td><td>${esc(h.species)}</td>
                     <td class="right">${h.level}</td><td class="right">${fmtNum(h.xp)}</td><td>${fmtDate(h.createdAt)}</td>
-                    <td class="actions"><button type="button" class="sm" data-xp="${esc(h.id)}" data-name="${esc(h.name)}">Grant XP</button></td></tr>`,
+                    <td class="actions"><button type="button" class="sm" data-xp="${esc(h.id)}" data-name="${esc(h.name)}">Grant XP</button>
+                      <button type="button" class="sm danger" data-del-hero="${esc(h.id)}" data-name="${esc(h.name)}">Delete</button></td></tr>`,
                 )
                 .join("")}</tbody></table></div>`
             : `<p class="faint">No account heroes.</p>`
@@ -405,6 +406,34 @@ function openUser(id: string, reload: () => void): void {
           (o) => `total ${fmtNum(o.hero.xp)} XP`,
         );
         if (out) await paint();
+      }),
+    );
+    d.body.querySelectorAll<HTMLButtonElement>("[data-del-hero]").forEach((b) =>
+      b.addEventListener("click", async () => {
+        const heroId = b.dataset.delHero!;
+        const name = b.dataset.name ?? "hero";
+        const first = await confirmDialog({
+          title: `Delete ${name}?`,
+          body: `<p>Removes this account hero and their personal starting kit. Shared stash stays. This cannot be undone.</p>`,
+          confirm: "Continue…",
+          danger: true,
+        });
+        if (!first) return;
+        const second = await confirmDialog({
+          title: `Really delete ${name}?`,
+          body: `<p>Type the hero name to permanently delete <b>${esc(name)}</b>.</p>`,
+          confirm: "Delete hero",
+          danger: true,
+          typeToConfirm: name,
+        });
+        if (!second) return;
+        const out = await write(b, `Hero ${name} deleted`, () =>
+          api<{ ok: boolean }>(`/api/admin/heroes/${encodeURIComponent(heroId)}`, { method: "DELETE" }),
+        );
+        if (out) {
+          reload();
+          await paint();
+        }
       }),
     );
     d.body.querySelectorAll<HTMLButtonElement>("[data-del-save]").forEach((b) =>

@@ -23,13 +23,18 @@ const STEP_TITLE: Record<StepId, string> = {
   review: "Review and portrait",
 };
 
-export type ForgedHero = { id: string; name: string };
+export type ForgedHero = { id: string; name: string; level?: number };
 
 export type ForgeWizardOptions = {
   api: <T>(url: string, init?: RequestInit) => Promise<T>;
   layout: "tv" | "phone";
   onDone: (hero: ForgedHero) => void;
   onClose: () => void;
+  /**
+   * When set, the forge opens on an existing hero for level-up / finish-choices
+   * (PendingAsk via /api/heroes/:id/level-options) instead of L1 creation.
+   */
+  heroId?: string;
 };
 
 export type ForgeWizardHandle = {
@@ -415,7 +420,368 @@ function peekLabel(sheet: DerivedSheet | null, draft: BuilderDraft, catalog: Bui
   return `HP ${sheet.hp} · AC ${sheet.ac}`;
 }
 
+type LevelOptionsBody = {
+  hero: { id: string; name: string; level: number; xp: number; classes: Array<{ id: string; level: number }> };
+  ask: {
+    kind: string;
+    classId?: string;
+    featureId?: string;
+    options?: string[];
+    count?: number;
+    cantrips?: number;
+    spells?: number;
+    spellbook?: number;
+    epic?: boolean;
+  } | null;
+  adminBypassXp?: boolean;
+  classes: Array<{ id: string; name: string }>;
+  subclasses: Array<{ id: string; name: string; classId: string }>;
+  feats: Array<{ id: string; name: string; category: string }>;
+  fightingStyles: Array<{ id: string; name: string }>;
+  skills: string[];
+  spells: Array<{ id: string; name: string; level: number }>;
+  knownSpells?: string[];
+  knownCantrips?: string[];
+  knownSpellbook?: string[];
+  featureChoices?: { featureId: string; options: string[] };
+};
+
+type LevelDraft = {
+  classId?: string;
+  subclassId?: string;
+  featurePick?: string;
+  asiMode?: "plus2" | "plus1" | "feat";
+  ability?: string;
+  abilities?: [string, string];
+  featId?: string;
+  fightingStyleId?: string;
+  skills: string[];
+  cantrips: string[];
+  spells: string[];
+  spellbook: string[];
+};
+
+/** Level-up / finish-choices inside the forge chrome (one class advance per open). */
+async function mountForgeLevelFlow(host: HTMLElement, opts: ForgeWizardOptions & { heroId: string }): Promise<ForgeWizardHandle> {
+  injectCss();
+  let options: LevelOptionsBody | null = null;
+  let localError = "";
+  let busy = false;
+  /** At most one `class` pick per forge open — stops admin ignoreXp loops. */
+  let classAdvances = 0;
+  const draft: LevelDraft = { skills: [], cantrips: [], spells: [], spellbook: [] };
+
+  const load = async () => {
+    options = await opts.api<LevelOptionsBody>(`/api/heroes/${opts.heroId}/level-options`);
+    draft.classId = undefined;
+    draft.subclassId = undefined;
+    draft.featurePick = undefined;
+    draft.asiMode = "plus2";
+    draft.ability = "str";
+    draft.abilities = ["str", "dex"];
+    draft.featId = undefined;
+    draft.fightingStyleId = undefined;
+    draft.skills = [];
+    draft.cantrips = [];
+    draft.spells = [];
+    draft.spellbook = [];
+    const ask = options.ask;
+    if (ask?.kind === "class") draft.classId = options.classes[0]?.id ?? options.hero.classes[0]?.id;
+    if (ask?.kind === "subclass") draft.subclassId = options.subclasses[0]?.id;
+    if (ask?.kind === "feature_choice") draft.featurePick = ask.options?.[0] ?? options.featureChoices?.options[0];
+    if (ask?.kind === "fighting_style") draft.fightingStyleId = options.fightingStyles[0]?.id;
+  };
+
+  const sessionDone = () => {
+    const ask = options?.ask;
+    if (!ask) return true;
+    if (ask.kind === "class" && classAdvances >= 1) return true;
+    return false;
+  };
+
+  const finish = (hero?: ForgedHero) => {
+    if (hero) opts.onDone(hero);
+    else if (options) opts.onDone({ id: options.hero.id, name: options.hero.name, level: options.hero.level });
+    opts.onClose();
+  };
+
+  const buildPick = (): Record<string, unknown> | null => {
+    const ask = options?.ask;
+    if (!ask) return null;
+    if (ask.kind === "class") return draft.classId ? { kind: "class", classId: draft.classId } : null;
+    if (ask.kind === "subclass") return draft.subclassId ? { kind: "subclass", subclassId: draft.subclassId } : null;
+    if (ask.kind === "feature_choice") {
+      return draft.featurePick && ask.featureId
+        ? { kind: "feature_choice", featureId: ask.featureId, picks: [draft.featurePick] }
+        : null;
+    }
+    if (ask.kind === "fighting_style") {
+      return draft.fightingStyleId ? { kind: "fighting_style", featId: draft.fightingStyleId } : null;
+    }
+    if (ask.kind === "skill") {
+      const need = ask.count ?? 1;
+      return draft.skills.length === need ? { kind: "skill", skills: [...draft.skills] } : null;
+    }
+    if (ask.kind === "expertise") {
+      const need = ask.count ?? 1;
+      return draft.skills.length === need ? { kind: "expertise", skills: [...draft.skills] } : null;
+    }
+    if (ask.kind === "spells") {
+      const needC = ask.cantrips ?? 0;
+      const needS = ask.spells ?? 0;
+      const needB = ask.spellbook ?? 0;
+      if (draft.cantrips.length !== needC || draft.spells.length !== needS || draft.spellbook.length !== needB) return null;
+      return {
+        kind: "spells",
+        cantrips: [...draft.cantrips],
+        spells: [...draft.spells],
+        ...(needB ? { spellbook: [...draft.spellbook] } : {}),
+      };
+    }
+    if (ask.kind === "asi") {
+      if (draft.asiMode === "feat") {
+        return draft.featId ? { kind: "feat", featId: draft.featId, ...(draft.ability ? { ability: draft.ability } : {}) } : null;
+      }
+      if (draft.asiMode === "plus1") {
+        if (!draft.abilities || draft.abilities[0] === draft.abilities[1]) return null;
+        return { kind: "asi", mode: "plus1", abilities: draft.abilities };
+      }
+      return draft.ability ? { kind: "asi", mode: "plus2", ability: draft.ability } : null;
+    }
+    return null;
+  };
+
+  const askTitle = (ask: LevelOptionsBody["ask"]): string => {
+    if (!ask) return "Done";
+    if (ask.kind === "class") return "Advance a class level";
+    if (ask.kind === "subclass") return "Choose a subclass";
+    if (ask.kind === "asi") return ask.epic ? "Epic boon or ASI" : "Ability score improvement";
+    if (ask.kind === "spells") return "Choose spells";
+    if (ask.kind === "fighting_style") return "Fighting style";
+    if (ask.kind === "skill") return "Choose skills";
+    if (ask.kind === "expertise") return "Choose expertise";
+    if (ask.kind === "feature_choice") return (ask.featureId ?? "feature").replace(/_/g, " ");
+    return "Level-up choice";
+  };
+
+  const paint = () => {
+    if (!options) {
+      host.innerHTML = `<div class="hw"><div class="hw-main"><p class="hw-meta">Loading forge choices…</p></div></div>`;
+      return;
+    }
+    if (sessionDone()) {
+      finish({ id: options.hero.id, name: options.hero.name, level: options.hero.level });
+      return;
+    }
+    const level = options;
+    const ask = level.ask!;
+    const hero = level.hero;
+    const lab = (id: string) => id.replace(/_/g, " ");
+    let body = "";
+    if (ask.kind === "class") {
+      body = `<p class="hw-meta">${level.adminBypassXp ? "Admin: one level this visit (XP granted if needed). " : ""}Which class gains this level?</p>
+        <div class="hw-row">${level.classes
+          .map((c) => `<button type="button" class="hw-chip ${draft.classId === c.id ? "picked" : ""}" data-class="${esc(c.id)}">${esc(c.name)}</button>`)
+          .join("")}</div>`;
+    } else if (ask.kind === "subclass") {
+      body = `<p class="hw-meta">Pick a subclass.</p>
+        <div class="hw-row">${level.subclasses
+          .map((s) => `<button type="button" class="hw-chip ${draft.subclassId === s.id ? "picked" : ""}" data-sub="${esc(s.id)}">${esc(s.name)}</button>`)
+          .join("") || `<p class="hw-meta">No subclasses enabled.</p>`}</div>`;
+    } else if (ask.kind === "feature_choice") {
+      const list = ask.options ?? level.featureChoices?.options ?? [];
+      body = `<div class="hw-row">${list
+        .map((o) => `<button type="button" class="hw-chip ${draft.featurePick === o ? "picked" : ""}" data-feat-opt="${esc(o)}">${esc(lab(o))}</button>`)
+        .join("")}</div>`;
+    } else if (ask.kind === "fighting_style") {
+      body = `<div class="hw-row">${level.fightingStyles
+        .map((f) => `<button type="button" class="hw-chip ${draft.fightingStyleId === f.id ? "picked" : ""}" data-style="${esc(f.id)}">${esc(f.name)}</button>`)
+        .join("")}</div>`;
+    } else if (ask.kind === "skill") {
+      const need = ask.count ?? 1;
+      body = `<p class="hw-meta">Pick ${need} new skill proficiency (${draft.skills.length}/${need}).</p>
+        <div class="hw-row">${level.skills
+          .map((s) => `<button type="button" class="hw-chip ${draft.skills.includes(s) ? "picked" : ""}" data-skill="${esc(s)}">${esc(lab(s))}</button>`)
+          .join("")}</div>`;
+    } else if (ask.kind === "expertise") {
+      const need = ask.count ?? 1;
+      body = `<p class="hw-meta">Pick ${need} proficient skill${need === 1 ? "" : "s"} for Expertise (${draft.skills.length}/${need}).</p>
+        <div class="hw-row">${level.skills
+          .map((s) => `<button type="button" class="hw-chip ${draft.skills.includes(s) ? "picked" : ""}" data-skill="${esc(s)}">${esc(lab(s))}</button>`)
+          .join("") || `<p class="hw-meta">No eligible skills (need proficiency without Expertise).</p>`}</div>`;
+    } else if (ask.kind === "spells") {
+      const needC = ask.cantrips ?? 0;
+      const needS = ask.spells ?? 0;
+      const needB = ask.spellbook ?? 0;
+      const knownBook = level.knownSpellbook ?? [];
+      const knownPrep = level.knownSpells ?? [];
+      const inBook = new Set([...knownBook, ...draft.spellbook]);
+      const cantrips = level.spells.filter((s) => s.level === 0);
+      const forBook = level.spells.filter((s) => s.level > 0 && !knownBook.includes(s.id));
+      const forPrep = needB
+        ? level.spells.filter((s) => s.level > 0 && inBook.has(s.id) && !knownPrep.includes(s.id))
+        : level.spells.filter((s) => s.level > 0);
+      body = `<p class="hw-meta">${needB ? "Wizard: add spells to your spellbook, then prepare any new slots from the book." : "New picks for this class level (not your full list)."}</p>
+        ${needC ? `<p class="hw-section">New cantrips (${draft.cantrips.length}/${needC})</p><div class="hw-row">${cantrips
+        .map((s) => `<button type="button" class="hw-chip ${draft.cantrips.includes(s.id) ? "picked" : ""}" data-cantrip="${esc(s.id)}">${esc(s.name)}</button>`)
+        .join("")}</div>` : ""}
+        ${needB ? `<p class="hw-section">Add to spellbook (${draft.spellbook.length}/${needB})</p><div class="hw-row">${forBook
+        .map((s) => `<button type="button" class="hw-chip ${draft.spellbook.includes(s.id) ? "picked" : ""}" data-book="${esc(s.id)}">${esc(s.name)} <em>L${s.level}</em></button>`)
+        .join("")}</div>` : ""}
+        ${needS ? `<p class="hw-section">${needB ? "Prepare from spellbook" : "New spells"} (${draft.spells.length}/${needS})</p><div class="hw-row">${forPrep
+        .map((s) => `<button type="button" class="hw-chip ${draft.spells.includes(s.id) ? "picked" : ""}" data-spell="${esc(s.id)}">${esc(s.name)} <em>L${s.level}</em></button>`)
+        .join("")}</div>` : ""}`;
+    } else if (ask.kind === "asi") {
+      const feats = level.feats.filter((f) => f.category === "general" || (ask.epic && f.category === "epic"));
+      body = `<p class="hw-section">Mode</p><div class="hw-row">
+          <button type="button" class="hw-chip ${draft.asiMode === "plus2" ? "picked" : ""}" data-asi-mode="plus2">+2 one ability</button>
+          <button type="button" class="hw-chip ${draft.asiMode === "plus1" ? "picked" : ""}" data-asi-mode="plus1">+1 two abilities</button>
+          <button type="button" class="hw-chip ${draft.asiMode === "feat" ? "picked" : ""}" data-asi-mode="feat">Feat</button>
+        </div>
+        ${draft.asiMode === "plus2" ? `<p class="hw-section">Ability</p><div class="hw-row">${ABILITIES.map((a) => `<button type="button" class="hw-chip ${draft.ability === a ? "picked" : ""}" data-ab="${a}">${a.toUpperCase()}</button>`).join("")}</div>` : ""}
+        ${draft.asiMode === "plus1" ? `<p class="hw-section">First</p><div class="hw-row">${ABILITIES.map((a) => `<button type="button" class="hw-chip ${draft.abilities?.[0] === a ? "picked" : ""}" data-ab1="${a}">${a.toUpperCase()}</button>`).join("")}</div>
+          <p class="hw-section">Second</p><div class="hw-row">${ABILITIES.map((a) => `<button type="button" class="hw-chip ${draft.abilities?.[1] === a ? "picked" : ""}" data-ab2="${a}">${a.toUpperCase()}</button>`).join("")}</div>` : ""}
+        ${draft.asiMode === "feat" ? `<p class="hw-section">Feat</p><div class="hw-row">${feats.map((f) => `<button type="button" class="hw-chip ${draft.featId === f.id ? "picked" : ""}" data-feat="${esc(f.id)}">${esc(f.name)}</button>`).join("")}</div>` : ""}`;
+    } else {
+      body = `<p class="hw-meta">Unsupported choice (${esc(ask.kind)}).</p>`;
+    }
+
+    host.innerHTML = `<div class="hw ${opts.layout === "phone" ? "phone" : ""} slim-side">
+      <div class="hw-main">
+        <div class="hw-top"><button type="button" class="hw-ghost" id="hwClose">Close</button>
+          <div><p class="hw-kicker">${esc(hero.name)} · Level ${hero.level}${level.adminBypassXp ? " · admin" : ""}</p>
+          <h2>${esc(askTitle(ask))}</h2></div></div>
+        <div class="hw-body">${body}</div>
+        <p class="hw-err" id="hwErr">${esc(localError)}</p>
+        <div class="hw-nav">
+          <button type="button" class="go" id="hwNext" ${busy ? "disabled" : ""}>${ask.kind === "class" ? "Confirm level" : "Confirm"}</button>
+        </div>
+      </div>
+    </div>`;
+
+    host.querySelector("#hwClose")?.addEventListener("click", () => opts.onClose());
+    host.querySelector("#hwNext")?.addEventListener("click", () => void confirm());
+    host.querySelectorAll<HTMLButtonElement>("[data-class]").forEach((b) => b.addEventListener("click", () => { draft.classId = b.dataset.class; paint(); }));
+    host.querySelectorAll<HTMLButtonElement>("[data-sub]").forEach((b) => b.addEventListener("click", () => { draft.subclassId = b.dataset.sub; paint(); }));
+    host.querySelectorAll<HTMLButtonElement>("[data-feat-opt]").forEach((b) => b.addEventListener("click", () => { draft.featurePick = b.dataset.featOpt; paint(); }));
+    host.querySelectorAll<HTMLButtonElement>("[data-style]").forEach((b) => b.addEventListener("click", () => { draft.fightingStyleId = b.dataset.style; paint(); }));
+    host.querySelectorAll<HTMLButtonElement>("[data-skill]").forEach((b) =>
+      b.addEventListener("click", () => {
+        const id = b.dataset.skill!;
+        const need = options?.ask?.count ?? 1;
+        const set = new Set(draft.skills);
+        if (set.has(id)) set.delete(id);
+        else if (set.size < need) set.add(id);
+        draft.skills = [...set];
+        paint();
+      }),
+    );
+    host.querySelectorAll<HTMLButtonElement>("[data-cantrip]").forEach((b) =>
+      b.addEventListener("click", () => {
+        const id = b.dataset.cantrip!;
+        const need = options?.ask?.cantrips ?? 0;
+        const set = new Set(draft.cantrips);
+        if (set.has(id)) set.delete(id);
+        else if (set.size < need) set.add(id);
+        draft.cantrips = [...set];
+        paint();
+      }),
+    );
+    host.querySelectorAll<HTMLButtonElement>("[data-book]").forEach((b) =>
+      b.addEventListener("click", () => {
+        const id = b.dataset.book!;
+        const need = options?.ask?.spellbook ?? 0;
+        const set = new Set(draft.spellbook);
+        if (set.has(id)) {
+          set.delete(id);
+          if (!(options?.knownSpellbook ?? []).includes(id)) {
+            draft.spells = draft.spells.filter((s) => s !== id);
+          }
+        } else if (set.size < need) set.add(id);
+        draft.spellbook = [...set];
+        paint();
+      }),
+    );
+    host.querySelectorAll<HTMLButtonElement>("[data-spell]").forEach((b) =>
+      b.addEventListener("click", () => {
+        const id = b.dataset.spell!;
+        const need = options?.ask?.spells ?? 0;
+        const set = new Set(draft.spells);
+        if (set.has(id)) set.delete(id);
+        else if (set.size < need) set.add(id);
+        draft.spells = [...set];
+        paint();
+      }),
+    );
+    host.querySelectorAll<HTMLButtonElement>("[data-asi-mode]").forEach((b) =>
+      b.addEventListener("click", () => { draft.asiMode = b.dataset.asiMode as LevelDraft["asiMode"]; paint(); }),
+    );
+    host.querySelectorAll<HTMLButtonElement>("[data-ab]").forEach((b) => b.addEventListener("click", () => { draft.ability = b.dataset.ab; paint(); }));
+    host.querySelectorAll<HTMLButtonElement>("[data-ab1]").forEach((b) =>
+      b.addEventListener("click", () => { draft.abilities = [b.dataset.ab1!, draft.abilities?.[1] ?? "dex"]; paint(); }),
+    );
+    host.querySelectorAll<HTMLButtonElement>("[data-ab2]").forEach((b) =>
+      b.addEventListener("click", () => { draft.abilities = [draft.abilities?.[0] ?? "str", b.dataset.ab2!]; paint(); }),
+    );
+    host.querySelectorAll<HTMLButtonElement>("[data-feat]").forEach((b) => b.addEventListener("click", () => { draft.featId = b.dataset.feat; paint(); }));
+  };
+
+  const confirm = async () => {
+    if (busy || !options?.ask) return;
+    const pick = buildPick();
+    if (!pick) {
+      localError = "Make a choice before continuing.";
+      paint();
+      return;
+    }
+    const wasClass = options.ask.kind === "class";
+    busy = true;
+    localError = "";
+    paint();
+    try {
+      const out = await opts.api<{ hero: ForgedHero }>(`/api/heroes/${opts.heroId}/level-up`, {
+        method: "POST",
+        body: JSON.stringify(pick),
+      });
+      if (wasClass) classAdvances += 1;
+      await load();
+      busy = false;
+      if (sessionDone()) {
+        finish(out.hero);
+        return;
+      }
+      localError = "";
+      paint();
+    } catch (err) {
+      localError = describeError(err instanceof Error ? err.message : "ERROR");
+      busy = false;
+      paint();
+    }
+  };
+
+  try {
+    await load();
+    if (sessionDone()) {
+      finish();
+      return { next: () => undefined, prev: () => undefined, back: () => opts.onClose(), close: () => opts.onClose() };
+    }
+    paint();
+  } catch (err) {
+    host.innerHTML = `<div class="hw"><div class="hw-main"><p class="hw-err">${esc(describeError(err instanceof Error ? err.message : "ERROR"))}</p>
+      <button type="button" class="hw-ghost" id="hwClose">Close</button></div></div>`;
+    host.querySelector("#hwClose")?.addEventListener("click", () => opts.onClose());
+  }
+
+  return {
+    next: () => void confirm(),
+    prev: () => opts.onClose(),
+    back: () => opts.onClose(),
+    close: () => opts.onClose(),
+  };
+}
+
 export async function mountForgeWizard(host: HTMLElement, opts: ForgeWizardOptions): Promise<ForgeWizardHandle> {
+  if (opts.heroId) return mountForgeLevelFlow(host, { ...opts, heroId: opts.heroId });
   injectCss();
   const catalog = await opts.api<BuilderCatalog>("/api/builder/catalog");
   if (!catalog.classes.length || !catalog.backgrounds.length || !catalog.species.length) {

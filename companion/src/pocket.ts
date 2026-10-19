@@ -221,7 +221,16 @@ export function mountPocket(host: HTMLElement, adopt: (key: string) => void, sca
 
   const openArmory = async () => {
     const [heroesBody, stashBody, shop] = await Promise.all([
-      api<{ heroes: Array<{ id: string; name: string; level: number; xp: number; classes: Array<{ id: string; level: number }> }> }>("/api/heroes"),
+      api<{
+        heroes: Array<{
+          id: string;
+          name: string;
+          level: number;
+          xp: number;
+          pendingLevelUp?: boolean;
+          classes: Array<{ id: string; level: number }>;
+        }>;
+      }>("/api/heroes"),
       api<{
         stash: Array<{
           id: string;
@@ -270,8 +279,11 @@ export function mountPocket(host: HTMLElement, adopt: (key: string) => void, sca
       <h2>Armory</h2>
       <p class="meta">${esc(shop.payToWin)}</p>
       ${heroPick}
-      ${hero ? `<p><strong>${esc(hero.name)}</strong> level ${hero.level} · XP ${hero.xp}</p>
-        <button type="button" class="primary" id="armLevel">Level up</button>` : `<p class="meta">Forge a V2 hero from the web content list once a class is enabled.</p>`}
+      ${hero ? `<p><strong>${esc(hero.name)}</strong> level ${hero.level} · XP ${hero.xp}${hero.pendingLevelUp ? " · choices waiting" : ""}</p>
+        <div class="row">
+          <button type="button" class="primary" id="armLevel">${hero.pendingLevelUp ? "Level up / finish choices" : "Level up"}</button>
+          <button type="button" class="ghost" id="armDelete">Delete hero</button>
+        </div>` : `<p class="meta">Forge a V2 hero from the web content list once a class is enabled.</p>`}
       ${list}
       <h3>Today's shop</h3>
       <ul class="sheet-list">${shop.slots.map((slot) => `<li>${esc(slot.name)} · ${slot.priceGold} gold <button type="button" data-buy="${esc(slot.itemId)}">Buy</button></li>`).join("") || "<li class='meta'>Nothing enabled for sale</li>"}</ul>
@@ -283,23 +295,25 @@ export function mountPocket(host: HTMLElement, adopt: (key: string) => void, sca
     });
     card().querySelector("#armLevel")?.addEventListener("click", () => {
       if (!hero) return;
-      void api<{
-        ask: { kind: string; classId?: string; featureId?: string; options?: string[] } | null;
-        subclasses: Array<{ id: string; name: string }>;
-        classes: string[];
-      }>(`/api/heroes/${hero.id}/level-options`)
-        .then((opts) => {
-          const ask = opts.ask;
-          let body: Record<string, unknown> = {};
-          if (ask?.kind === "class") body = { kind: "class", classId: opts.classes[0] ?? "fighter" };
-          else if (ask?.kind === "subclass") body = { kind: "subclass", subclassId: opts.subclasses[0]?.id };
-          else if (ask?.kind === "feature_choice") {
-            body = { kind: "feature_choice", featureId: ask.featureId, picks: ask.options?.slice(0, 1) ?? [] };
-          } else if (ask?.kind === "asi") body = { kind: "asi", mode: "plus2", ability: "str" };
-          else if (ask?.kind === "fighting_style") body = { kind: "fighting_style", featId: "defense" };
-          return api(`/api/heroes/${hero.id}/level-up`, { method: "POST", body: JSON.stringify(body) });
-        })
-        .then(() => openArmory());
+      const hostEl = card();
+      hostEl.innerHTML = `<p class="meta">Opening the forge…</p>`;
+      void mountForgeWizard(hostEl, {
+        heroId: hero.id,
+        api,
+        layout: "phone",
+        onClose: () => void openArmory(),
+        onDone: () => void openArmory(),
+      });
+    });
+    card().querySelector("#armDelete")?.addEventListener("click", () => {
+      if (!hero) return;
+      if (!window.confirm(`Delete ${hero.name}? Their starting kit is removed. This cannot be undone.`)) return;
+      const typed = window.prompt(`Type the hero name to confirm:\n${hero.name}`);
+      if (typed !== hero.name) return;
+      void api(`/api/heroes/${hero.id}`, { method: "DELETE" }).then(() => {
+        armoryHeroId = "";
+        void openArmory();
+      });
     });
     card().querySelectorAll<HTMLButtonElement>("[data-equip]").forEach((button) => {
       button.addEventListener("click", () => {

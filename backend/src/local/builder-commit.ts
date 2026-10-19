@@ -1,12 +1,11 @@
 import { randomBytes } from "node:crypto";
 import type { BuilderDraft } from "@d20-fireverse/protocol/builder";
-import { deriveHero } from "@d20-fireverse/rules";
+import { blankProgress, deriveHero, firstLevel, pruneSatisfiedPending } from "@d20-fireverse/rules";
 import { defaultPortrait, isPortraitId } from "./portraits.js";
 import type { SessionUser } from "./auth.js";
 import { accountDb } from "./auth.js";
 import { builderCatalog, classDefForBuilder } from "./builder-catalog.js";
 import { assertHeroName, getHero, type HeroRow } from "./hero.js";
-import { firstLevel, blankProgress } from "@d20-fireverse/rules";
 import { progressionCatalogFromHero } from "./builder-hero-bridge.js";
 import { creditGold } from "./hero.js";
 import {
@@ -125,8 +124,18 @@ export function commitBuilderDraft(user: SessionUser, draft: BuilderDraft): Hero
     prog,
   );
   hero.features = opened.features;
-  hero.pending = opened.pending;
   hero.maxHp = opened.maxHp;
+  // Forge already stored cantrips / prepared spells — drop the L1 spell ask if satisfied.
+  const forgeCantrips = [...(draft.cantrips ?? []), ...(draft.magicInitiateCantrips ?? [])];
+  const forgeSpells = [
+    ...(draft.spellsPrepared ?? draft.spellsKnown ?? []),
+    ...(draft.magicInitiateSpell ? [draft.magicInitiateSpell] : []),
+  ];
+  hero.pending = pruneSatisfiedPending({
+    ...opened,
+    cantrips: forgeCantrips,
+    spells: forgeSpells,
+  });
   const bg = catalog.backgrounds.find((b) => b.id === draft.backgroundId);
   const originFeat = bg?.custom ? draft.customFeatId : bg?.featId;
   const extras = [

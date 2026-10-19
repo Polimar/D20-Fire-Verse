@@ -133,3 +133,54 @@ test("a class without spellProgression cannot take spell choices", () => {
   pc.pending = [{ kind: "spells", atLevel: 2, classId: "fighter", cantrips: 0, spells: 1 }];
   assert.throws(() => applyPick(pc, { kind: "spells", spells: ["magic_missile"], cantrips: [] }, book), /NO_SPELL_PROGRESSION/);
 });
+
+test("wizard level 2 asks for scholar expertise then spellbook and prepared picks", () => {
+  const book = catalog();
+  let pc = hero("wizard", 300);
+  pc.abilities = { ...pc.abilities, int: 16 };
+  pc.proficiency = ["arcana", "investigation"];
+  pc.cantrips = ["fire_bolt", "light", "mage_hand"];
+  pc.spells = ["mage_armor", "shield", "magic_missile", "sleep"];
+  pc.spellbook = ["mage_armor", "shield", "magic_missile", "sleep", "detect_magic", "burning_hands"];
+  pc.pending = [];
+  pc = applyPick(pc, { kind: "class", classId: "wizard" }, book);
+  assert.equal(pc.level, 2);
+  assert.equal(pc.pending[0]?.kind, "expertise");
+  const exp = pc.pending[0];
+  assert.ok(exp && exp.kind === "expertise");
+  if (exp && exp.kind === "expertise") assert.equal(exp.count, 1);
+  pc = applyPick(pc, { kind: "expertise", skills: ["arcana"] }, book);
+  assert.ok(pc.features.includes("expertise:arcana"));
+  const spellAsk = pc.pending[0];
+  assert.equal(spellAsk?.kind, "spells");
+  assert.ok(spellAsk && spellAsk.kind === "spells");
+  if (spellAsk && spellAsk.kind === "spells") {
+    assert.equal(spellAsk.spells, 1);
+    assert.equal(spellAsk.spellbook, 2);
+  }
+});
+
+test("bard level 2 asks for expertise and a prepared spell", () => {
+  const book = catalog();
+  let pc = hero("bard", 300);
+  pc.proficiency = ["performance", "persuasion", "insight"];
+  pc.cantrips = ["vicious_mockery", "mage_hand"];
+  pc.spells = ["charm_person", "healing_word", "dissonant_whispers", "faerie_fire"];
+  pc.pending = [];
+  pc = applyPick(pc, { kind: "class", classId: "bard" }, book);
+  assert.equal(pc.level, 2);
+  assert.ok(pc.pending.some((p) => p.kind === "expertise" && p.count === 2));
+  assert.ok(pc.pending.some((p) => p.kind === "spells" && p.spells === 1));
+});
+
+test("level-up spell delta is not pruned just because the sheet already has many prepared spells", () => {
+  const book = catalog();
+  const pc = hero("wizard", 300);
+  pc.level = 2;
+  pc.classes[0]!.level = 2;
+  pc.cantrips = ["fire_bolt", "light", "mage_hand"];
+  pc.spells = ["mage_armor", "shield", "magic_missile", "sleep", "thunderwave"];
+  pc.spellbook = ["mage_armor", "shield", "magic_missile", "sleep", "detect_magic", "burning_hands"];
+  pc.pending = [{ kind: "spells", atLevel: 2, classId: "wizard", cantrips: 0, spells: 1, spellbook: 2 }];
+  assert.equal(nextAsk(pc, book)?.kind, "spells");
+});

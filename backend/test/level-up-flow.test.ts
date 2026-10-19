@@ -59,8 +59,12 @@ test("level-up API mirrors TV/companion flow (options then apply)", async () => 
 
   const optsRes = await fetch(`http://127.0.0.1:${port}/api/heroes/${hero.id}/level-options`, { headers: cookie });
   assert.equal(optsRes.status, 200);
-  const opts = (await optsRes.json()) as { ask?: { kind: string } };
+  const opts = (await optsRes.json()) as {
+    ask?: { kind: string };
+    classes?: Array<{ id: string }>;
+  };
   assert.equal(opts.ask?.kind, "class");
+  assert.ok(opts.classes?.some((c) => c.id === "fighter"));
 
   const upRes = await fetch(`http://127.0.0.1:${port}/api/heroes/${hero.id}/level-up`, {
     method: "POST",

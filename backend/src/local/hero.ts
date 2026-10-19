@@ -11,11 +11,18 @@ import {
   applyPick,
   blankProgress,
   canEquip,
+  catchUpExpertiseAsk,
+  catchUpSpellAsk,
+  expertiseCandidates,
+  featCategory,
   firstLevel,
   levelableClasses,
   levelForXp,
   milestoneReward,
   nextAsk,
+  pruneSatisfiedPending,
+  suggestLevelPick,
+  thresholdForLevel,
   placeholderPrice,
   type CatalogSlice,
   type HeroRules,
@@ -496,12 +503,31 @@ export function toggleAttune(userId: string, heroId: string, instanceId: string,
   accountDb().prepare("UPDATE account_stash SET attuned_by_hero_id = ? WHERE id = ?").run(heroId, instanceId);
 }
 
-export function deleteHero(userId: string, heroId: string): void {
-  ownHero(userId, heroId);
+function purgeHeroRow(heroId: string, ownerUserId: string): void {
   accountDb().prepare("DELETE FROM account_stash WHERE bound_hero_id = ?").run(heroId);
-  accountDb().prepare("UPDATE account_stash SET equipped_by_hero_id = NULL, attuned_by_hero_id = NULL WHERE equipped_by_hero_id = ? OR attuned_by_hero_id = ?").run(heroId, heroId);
+  accountDb()
+    .prepare(
+      "UPDATE account_stash SET equipped_by_hero_id = NULL, attuned_by_hero_id = NULL WHERE equipped_by_hero_id = ? OR attuned_by_hero_id = ?",
+    )
+    .run(heroId, heroId);
   accountDb().prepare("DELETE FROM hero_milestones WHERE hero_id = ?").run(heroId);
   accountDb().prepare("UPDATE heroes SET deleted_at = ? WHERE id = ?").run(new Date().toISOString(), heroId);
+  accountDb()
+    .prepare("UPDATE users SET selected_hero_id = NULL WHERE id = ? AND selected_hero_id = ?")
+    .run(ownerUserId, heroId);
+}
+
+export function deleteHero(userId: string, heroId: string): void {
+  ownHero(userId, heroId);
+  purgeHeroRow(heroId, userId);
+}
+
+/** Admin soft-delete of any account hero (same cleanup as the owner path). */
+export function adminDeleteHero(heroId: string): { id: string; name: string; userId: string } {
+  const hero = getHero(heroId);
+  if (!hero) throw new Error("BAD_CHARACTER");
+  purgeHeroRow(hero.id, hero.userId);
+  return { id: hero.id, name: hero.name, userId: hero.userId };
 }
 
 export function selectHero(userId: string, heroId: string): void {
@@ -581,38 +607,112 @@ function toProgress(hero: HeroRow): ProgressionHero {
     ...toRules(hero),
     cantrips,
     spells,
+    spellbook: [...hero.spellbook],
     pending: hero.pending,
     maxHp: hero.maxHp || 1,
   };
 }
 
-export function heroPending(heroId: string): boolean {
-  const hero = getHero(heroId);
-  if (!hero) return false;
-  return nextAsk(toProgress(hero), progressionCatalog()) != null;
+function syncPrunedPending(hero: HeroRow, progress: ProgressionHero): ProgressionHero {
+  const catalog = progressionCatalog();
+  const pruned = pruneSatisfiedPending(progress);
+  const withCatchUp = [...pruned];
+  if (!withCatchUp.length) {
+    const base = { ...progress, pending: pruned };
+    const catchUp = catchUpSpellAsk(base, catalog) ?? catchUpExpertiseAsk(base, catalog);
+    if (catchUp) withCatchUp.push(catchUp);
+  }
+  const changed =
+    withCatchUp.length !== progress.pending.length ||
+    JSON.stringify(withCatchUp) !== JSON.stringify(progress.pending);
+  if (changed) {
+    hero.pending = withCatchUp;
+    saveHero(hero);
+    return { ...progress, pending: withCatchUp };
+  }
+  return progress;
 }
 
-export function levelOptions(heroId: string): {
+export function heroPending(heroId: string, opts?: { adminBypassXp?: boolean }): boolean {
+  const hero = getHero(heroId);
+  if (!hero) return false;
+  const catalog = progressionCatalog();
+  const progress = syncPrunedPending(hero, toProgress(hero));
+  return nextAsk(progress, catalog, { ignoreXp: opts?.adminBypassXp }) != null;
+}
+
+export function levelOptions(
+  heroId: string,
+  opts?: { adminBypassXp?: boolean },
+): {
+  hero: { id: string; name: string; level: number; xp: number; classes: HeroRow["classes"] };
   ask: PendingAsk | null;
-  classes: string[];
+  suggested: LevelPick | null;
+  adminBypassXp: boolean;
+  classes: Array<{ id: string; name: string }>;
   subclasses: Array<{ id: string; name: string; classId: string }>;
-  feats: string[];
-  spells: string[];
+  feats: Array<{ id: string; name: string; category: string }>;
+  fightingStyles: Array<{ id: string; name: string }>;
+  skills: string[];
+  spells: Array<{ id: string; name: string; level: number }>;
+  knownSpells: string[];
+  knownCantrips: string[];
+  knownSpellbook: string[];
   featureChoices?: { featureId: string; options: string[] };
 } {
   const hero = getHero(heroId);
   if (!hero) throw new Error("BAD_CHARACTER");
   const catalog = progressionCatalog();
-  const ask = nextAsk(toProgress(hero), catalog);
+  const progress = syncPrunedPending(hero, toProgress(hero));
+  const askOpts = { ignoreXp: opts?.adminBypassXp };
+  const ask = nextAsk(progress, catalog, askOpts);
   const classId = ask && "classId" in ask ? ask.classId : hero.classes[0]?.id;
+  const known = new Set([...progress.spells, ...progress.cantrips]);
+  const inBook = new Set(progress.spellbook ?? []);
+  const spellClassId = ask?.kind === "spells" ? ask.classId : classId;
+  const bookAsk = ask?.kind === "spells" ? (ask.spellbook ?? 0) : 0;
+  const openSkills =
+    ask?.kind === "skill"
+      ? (catalog.classes.find((row) => row.id === ask.classId)?.skillList ?? []).filter(
+          (skill) => !progress.proficiency.includes(skill),
+        )
+      : ask?.kind === "expertise"
+        ? expertiseCandidates(progress, ask)
+        : [];
   return {
+    hero: {
+      id: hero.id,
+      name: hero.name,
+      level: hero.level,
+      xp: hero.xp,
+      classes: hero.classes.map((row) => ({ ...row })),
+    },
     ask,
-    classes: levelableClasses(toProgress(hero), catalog),
+    suggested: suggestLevelPick(progress, catalog, askOpts),
+    adminBypassXp: Boolean(opts?.adminBypassXp),
+    classes: levelableClasses(progress, catalog).map((id) => ({
+      id,
+      name: catalog.classes.find((row) => row.id === id)?.name ?? id,
+    })),
     subclasses: catalog.subclasses
       .filter((row) => row.classId === classId)
       .map((row) => ({ id: row.id, name: row.name, classId: row.classId })),
-    feats: catalog.feats.map((row) => row.id),
-    spells: catalog.spells.filter((row) => !classId || row.classes.includes(classId)).map((row) => row.id),
+    feats: catalog.feats.map((row) => ({ id: row.id, name: row.name, category: featCategory(row) })),
+    fightingStyles: catalog.feats
+      .filter((row) => featCategory(row) === "fighting_style" && !progress.features.includes(row.id))
+      .map((row) => ({ id: row.id, name: row.name })),
+    skills: openSkills,
+    spells: catalog.spells
+      .filter((row) => {
+        if (spellClassId && !row.classes.includes(spellClassId)) return false;
+        if (row.level === 0) return !known.has(row.id);
+        if (bookAsk > 0) return !inBook.has(row.id) || !known.has(row.id);
+        return !known.has(row.id);
+      })
+      .map((row) => ({ id: row.id, name: row.name, level: row.level })),
+    knownSpells: [...progress.spells],
+    knownCantrips: [...progress.cantrips],
+    knownSpellbook: [...(progress.spellbook ?? [])],
     featureChoices:
       ask?.kind === "feature_choice"
         ? { featureId: ask.featureId, options: ask.options }
@@ -620,24 +720,46 @@ export function levelOptions(heroId: string): {
   };
 }
 
-export function applyLevelUp(heroId: string, picks?: LevelPick): HeroRow {
+export function applyLevelUp(
+  heroId: string,
+  picks?: LevelPick | Record<string, unknown>,
+  opts?: { adminBypassXp?: boolean },
+): HeroRow {
   const hero = getHero(heroId);
   if (!hero) throw new Error("BAD_CHARACTER");
   const catalog = progressionCatalog();
-  const ask = nextAsk(toProgress(hero), catalog);
+  let progress = syncPrunedPending(hero, toProgress(hero));
+  const askOpts = { ignoreXp: opts?.adminBypassXp };
+  let ask = nextAsk(progress, catalog, askOpts);
   if (!ask) return hero;
-  if (!picks) throw new Error("LEVEL_CHOICE");
-  const progress = applyPick(toProgress(hero), picks, catalog);
-  hero.level = progress.level;
-  hero.classes = progress.classes;
-  hero.abilities = progress.abilities;
-  hero.features = progress.features;
-  hero.skills = progress.proficiency;
-  hero.cantrips = [...progress.cantrips];
-  hero.spellsPrepared = [...progress.spells];
-  hero.spells = [...progress.cantrips, ...progress.spells];
-  hero.pending = progress.pending;
-  hero.maxHp = progress.maxHp;
+  // Admin testing: grant enough XP before a class level so the sheet stays consistent.
+  if (opts?.adminBypassXp && ask.kind === "class") {
+    const need = thresholdForLevel(hero.level + 1, catalog.xpThresholds);
+    if (hero.xp < need) {
+      hero.xp = need;
+      saveHero(hero);
+      progress = { ...toProgress(hero), pending: progress.pending };
+      ask = nextAsk(progress, catalog, askOpts);
+      if (!ask) return hero;
+    }
+  }
+  const raw = picks ?? {};
+  const hasKind = raw && typeof raw === "object" && "kind" in raw && typeof (raw as { kind?: unknown }).kind === "string";
+  if (!hasKind) throw new Error("LEVEL_CHOICE");
+  const pick = raw as LevelPick;
+  const next = applyPick(progress, pick, catalog, askOpts);
+  hero.level = next.level;
+  hero.xp = Math.max(hero.xp, next.xp, progress.xp);
+  hero.classes = next.classes;
+  hero.abilities = next.abilities;
+  hero.features = next.features;
+  hero.skills = next.proficiency;
+  hero.cantrips = [...next.cantrips];
+  hero.spellsPrepared = [...next.spells];
+  hero.spells = [...next.cantrips, ...next.spells];
+  if (next.spellbook) hero.spellbook = [...next.spellbook];
+  hero.pending = next.pending;
+  hero.maxHp = next.maxHp;
   saveHero(hero);
   return hero;
 }

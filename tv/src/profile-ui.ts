@@ -34,6 +34,8 @@ export type ProfileOptions = {
   onMessage?: (text: string, kind?: "bad" | "ok" | "info") => void;
   onForge?: () => void;
   onCustomize?: (heroId: string) => void;
+  /** Open the interactive level-up / finish-choices wizard for this hero. */
+  onLevelUp?: (heroId: string) => void;
 };
 
 let overlay: HTMLElement | null = null;
@@ -96,10 +98,11 @@ function paint(): void {
       .map(
         (h) => `<li class="profile-hero">
           <strong>${esc(h.name)}</strong> · L${h.level} ${esc(h.classes.map((c) => c.id).join("/"))} · ${h.xp} XP · ${h.equipped} equipped
-          ${h.pendingLevelUp ? "<em>level-up waiting</em>" : ""}
+          ${h.pendingLevelUp ? "<em>choices waiting</em>" : ""}
           <span class="row">
             <button type="button" class="ghost sm" data-custom="${esc(h.id)}">Customize</button>
-            ${h.pendingLevelUp ? `<button type="button" class="ghost sm" data-level="${esc(h.id)}">Level up</button>` : ""}
+            ${h.pendingLevelUp ? `<button type="button" class="ghost sm" data-level="${esc(h.id)}">Forge level-up</button>` : ""}
+            <button type="button" class="ghost sm" data-del-hero="${esc(h.id)}" data-name="${esc(h.name)}">Delete</button>
           </span>
         </li>`,
       )
@@ -147,33 +150,27 @@ function paint(): void {
   );
   overlay.querySelectorAll<HTMLButtonElement>("[data-level]").forEach((b) =>
     b.addEventListener("click", () => {
-      if (busy) return;
-      busy = true;
       const heroId = b.dataset.level!;
-      void api<{
-        ask: { kind: string; classId?: string; featureId?: string; options?: string[] } | null;
-        subclasses: Array<{ id: string; name: string; classId: string }>;
-        classes: string[];
-        featureChoices?: { featureId: string; options: string[] };
-      }>(`/api/heroes/${heroId}/level-options`)
-        .then((opts) => {
-          const ask = opts.ask;
-          let body: Record<string, unknown> = {};
-          if (ask?.kind === "class") body = { kind: "class", classId: opts.classes[0] ?? ask.classId };
-          else if (ask?.kind === "subclass") {
-            const pick = opts.subclasses[0]?.id;
-            if (!pick) throw new Error("BAD_SUBCLASS");
-            body = { kind: "subclass", subclassId: pick };
-          } else if (ask?.kind === "feature_choice") {
-            const pick = ask.options?.[0] ?? opts.featureChoices?.options[0];
-            body = { kind: "feature_choice", featureId: ask.featureId, picks: pick ? [pick] : [] };
-          } else if (ask?.kind === "fighting_style") body = { kind: "fighting_style", featId: "defense" };
-          else if (ask?.kind === "asi") body = { kind: "asi", mode: "plus2", ability: "str" };
-          return api(`/api/heroes/${heroId}/level-up`, { method: "POST", body: JSON.stringify(body) });
-        })
+      closeProfile();
+      opts.onLevelUp?.(heroId);
+    }),
+  );
+  overlay.querySelectorAll<HTMLButtonElement>("[data-del-hero]").forEach((b) =>
+    b.addEventListener("click", () => {
+      if (busy) return;
+      const heroId = b.dataset.delHero!;
+      const name = b.dataset.name ?? "this hero";
+      if (!window.confirm(`Delete ${name}? Their starting kit is removed. This cannot be undone.`)) return;
+      const typed = window.prompt(`Type the hero name to confirm:\n${name}`);
+      if (typed !== name) {
+        msg(typed == null ? "Delete cancelled." : "Name did not match. Hero kept.", "info");
+        return;
+      }
+      busy = true;
+      void api(`/api/heroes/${heroId}`, { method: "DELETE" })
         .then(() => reload())
         .then(() => {
-          msg("Level applied.", "ok");
+          msg(`${name} deleted.`, "ok");
           paint();
         })
         .catch((err) => msg(describeError(err instanceof Error ? err.message : "ERROR"), "bad"))
