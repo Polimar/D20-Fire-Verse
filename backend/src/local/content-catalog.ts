@@ -112,7 +112,6 @@ let index: Map<string, Stored> | null = null;
 
 type AllowlistFile = {
   strict?: Record<string, string[]>;
-  all_in_file?: string[];
 };
 
 let allowlistCache: AllowlistFile | null = null;
@@ -121,22 +120,20 @@ function readAllowlist(): AllowlistFile {
   if (allowlistCache) return allowlistCache;
   const file = path.join(ROOT, "cc-by-allowlist.json");
   if (!fs.existsSync(file)) {
-    allowlistCache = { strict: {}, all_in_file: [] };
+    allowlistCache = { strict: {} };
     return allowlistCache;
   }
   try {
     allowlistCache = JSON.parse(fs.readFileSync(file, "utf8")) as AllowlistFile;
   } catch {
-    allowlistCache = { strict: {}, all_in_file: [] };
+    allowlistCache = { strict: {} };
   }
   return allowlistCache;
 }
 
-/** True when this id is on the SRD 5.2.1 CC-BY allowlist (or the kind is trusted pack-wide). */
+/** True when this id is on the strict SRD 5.2.1 CC-BY allowlist for its kind. */
 export function isCcBySrd(kind: string, id: string): boolean {
-  const list = readAllowlist();
-  if ((list.all_in_file ?? []).includes(kind)) return true;
-  const ids = list.strict?.[kind];
+  const ids = readAllowlist().strict?.[kind];
   if (!ids) return false;
   return ids.includes(id);
 }
