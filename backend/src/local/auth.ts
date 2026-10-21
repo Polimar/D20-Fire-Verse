@@ -82,6 +82,7 @@ function database(): DatabaseSync {
   );
   if (!friendCols.has("requested_by")) db.exec("ALTER TABLE friendships ADD COLUMN requested_by TEXT");
   ensureProgressTables(db);
+  sanitizeUnsafeWallets(db);
   const count = db.prepare("SELECT COUNT(*) AS n FROM users").get() as { n: number };
   if (count.n === 0) {
     createUser("admin", "admin", "admin");
@@ -89,6 +90,22 @@ function database(): DatabaseSync {
   backfillFriendTags(db);
   db.exec("CREATE UNIQUE INDEX IF NOT EXISTS users_friend_tag ON users(friend_tag) WHERE friend_tag IS NOT NULL");
   return db;
+}
+
+/** Node sqlite cannot read INTEGER values outside Number.isSafeInteger; clamp them on boot. */
+function sanitizeUnsafeWallets(handle: DatabaseSync): void {
+  const rows = handle
+    .prepare("SELECT user_id, CAST(gold_balance AS TEXT) AS gold, CAST(hard_currency_balance AS TEXT) AS hard FROM account_wallet")
+    .all() as Array<{ user_id: string; gold: string; hard: string }>;
+  const upd = handle.prepare("UPDATE account_wallet SET gold_balance = ?, hard_currency_balance = ? WHERE user_id = ?");
+  for (const row of rows) {
+    const gold = Number(row.gold);
+    const hard = Number(row.hard);
+    const goldOk = Number.isSafeInteger(gold) && gold >= 0;
+    const hardOk = Number.isSafeInteger(hard) && hard >= 0;
+    if (goldOk && hardOk) continue;
+    upd.run(goldOk ? gold : 0, hardOk ? hard : 0, row.user_id);
+  }
 }
 
 export function openAuth(): void {

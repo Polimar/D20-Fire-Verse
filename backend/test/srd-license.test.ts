@@ -19,6 +19,16 @@ test("CC-BY allowlist keeps SRD subclasses and rejects PHB extras", () => {
   assert.equal(isCcBySrd("feat", "sharpshooter"), false);
 });
 
+test("CC-BY allowlist is strict for spells, monsters, and items", () => {
+  assert.equal(isCcBySrd("spell", "fireball"), true);
+  assert.equal(isCcBySrd("spell", "not_a_real_spell"), false);
+  assert.equal(isCcBySrd("monster", "goblin_warrior"), true);
+  assert.equal(isCcBySrd("monster", "not_a_real_monster"), false);
+  assert.equal(isCcBySrd("item", "bag_of_holding"), true);
+  assert.equal(isCcBySrd("item", "weapon_plus_1"), true);
+  assert.equal(isCcBySrd("item", "not_a_real_item"), false);
+});
+
 test("catalog rows expose license and SRD-only policy disables restricted", () => {
   const before = listCatalog();
   const restrictedOn = before.filter((r) => r.license === "restricted" && r.enabled);

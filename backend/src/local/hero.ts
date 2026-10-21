@@ -244,24 +244,38 @@ function ensureWallet(userId: string): void {
   accountDb().prepare("INSERT OR IGNORE INTO account_wallet (user_id, gold_balance, hard_currency_balance) VALUES (?, 0, 0)").run(userId);
 }
 
+/** Admin/player gold must stay in the safe integer range or Node's sqlite binding cannot read the row. */
+const MAX_GOLD_DELTA = 1_000_000;
+
+function assertSafeGoldDelta(amount: number): void {
+  if (!Number.isSafeInteger(amount) || amount === 0 || Math.abs(amount) > MAX_GOLD_DELTA) {
+    throw new Error("BAD_GOLD");
+  }
+}
+
 export function creditGold(userId: string, amount: number): void {
-  if (!Number.isInteger(amount) || amount <= 0) return;
+  if (!Number.isSafeInteger(amount) || amount <= 0 || amount > MAX_GOLD_DELTA) return;
   ensureWallet(userId);
   accountDb().prepare("UPDATE account_wallet SET gold_balance = gold_balance + ? WHERE user_id = ?").run(amount, userId);
 }
 
 export function wallet(userId: string): { gold: number; hard: number } {
   ensureWallet(userId);
-  const row = accountDb().prepare("SELECT gold_balance, hard_currency_balance FROM account_wallet WHERE user_id = ?").get(userId) as {
-    gold_balance: number;
-    hard_currency_balance: number;
-  };
-  return { gold: row.gold_balance, hard: row.hard_currency_balance };
+  const row = accountDb().prepare(
+    "SELECT CAST(gold_balance AS TEXT) AS gold_balance, CAST(hard_currency_balance AS TEXT) AS hard_currency_balance FROM account_wallet WHERE user_id = ?",
+  ).get(userId) as { gold_balance: string; hard_currency_balance: string };
+  return { gold: safeMoney(row.gold_balance), hard: safeMoney(row.hard_currency_balance) };
+}
+
+function safeMoney(raw: string | number | null | undefined): number {
+  const n = typeof raw === "number" ? raw : Number(raw ?? 0);
+  if (!Number.isFinite(n) || !Number.isSafeInteger(n) || n < 0) return 0;
+  return n;
 }
 
 export function grantGold(actor: SessionUser, userId: string, amount: number): { gold: number } {
   if (actor.role !== "admin") throw new Error("FORBIDDEN");
-  if (!Number.isInteger(amount) || amount === 0) throw new Error("BAD_GOLD");
+  assertSafeGoldDelta(amount);
   ensureWallet(userId);
   accountDb().prepare("UPDATE account_wallet SET gold_balance = gold_balance + ? WHERE user_id = ?").run(amount, userId);
   recordEvent(userId, null, "gold", { delta: amount, reason: "admin" });

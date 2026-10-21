@@ -55,8 +55,14 @@ function rowOut(r: Record<string, unknown>): AdminUserRow {
     lastSignIn: (r.last_sign_in as string | null) ?? null,
     sessions: Number(r.sessions ?? 0),
     heroes: Number(r.heroes ?? 0),
-    gold: Number(r.gold ?? 0),
+    gold: safeGold(r.gold),
   };
+}
+
+function safeGold(raw: unknown): number {
+  const n = typeof raw === "number" ? raw : Number(raw ?? 0);
+  if (!Number.isFinite(n) || !Number.isSafeInteger(n) || n < 0) return 0;
+  return n;
 }
 
 const SELECT = `
@@ -64,7 +70,7 @@ const SELECT = `
     (SELECT MAX(s.created_at) FROM sessions s WHERE s.user_id = u.id) AS last_sign_in,
     (SELECT COUNT(*) FROM sessions s WHERE s.user_id = u.id) AS sessions,
     (SELECT COUNT(*) FROM heroes h WHERE h.user_id = u.id AND h.deleted_at IS NULL) AS heroes,
-    COALESCE((SELECT w.gold_balance FROM account_wallet w WHERE w.user_id = u.id), 0) AS gold
+    COALESCE((SELECT CAST(w.gold_balance AS TEXT) FROM account_wallet w WHERE w.user_id = u.id), '0') AS gold
   FROM users u`;
 
 export function searchUsers(query: UserQuery): { rows: AdminUserRow[]; total: number; page: number; pageSize: number } {
@@ -140,13 +146,15 @@ export function userDetail(id: string) {
   const heroes = accountDb()
     .prepare("SELECT id, name, classes_json, species, level, xp, created_at FROM heroes WHERE user_id = ? AND deleted_at IS NULL ORDER BY created_at")
     .all(id) as Array<{ id: string; name: string; classes_json: string; species: string; level: number; xp: number; created_at: string }>;
-  const wallet = accountDb().prepare("SELECT gold_balance, hard_currency_balance FROM account_wallet WHERE user_id = ?").get(id) as
-    | { gold_balance: number; hard_currency_balance: number }
-    | undefined;
+  const wallet = accountDb()
+    .prepare(
+      "SELECT CAST(gold_balance AS TEXT) AS gold_balance, CAST(hard_currency_balance AS TEXT) AS hard_currency_balance FROM account_wallet WHERE user_id = ?",
+    )
+    .get(id) as { gold_balance: string; hard_currency_balance: string } | undefined;
   const stash = (accountDb().prepare("SELECT COUNT(*) AS n FROM account_stash WHERE user_id = ?").get(id) as { n: number }).n;
   return {
     user,
-    wallet: { gold: wallet?.gold_balance ?? 0, hard: wallet?.hard_currency_balance ?? 0 },
+    wallet: { gold: safeGold(wallet?.gold_balance), hard: safeGold(wallet?.hard_currency_balance) },
     stashItems: stash,
     heroes: heroes.map((h) => ({
       id: h.id,
