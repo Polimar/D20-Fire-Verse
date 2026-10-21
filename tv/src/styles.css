@@ -1831,7 +1831,17 @@ html[data-motion="reduced"] button:focus-visible { transform: none; }
 .login-gate:not(.on-stick) .login-card { width: min(44rem, calc(100vw - 2rem)); }
 .login-ways { display: grid; gap: 1rem 1.6rem; }
 .login-gate:not(.on-stick) .login-ways { grid-template-columns: 1fr 1fr; align-items: start; }
+.login-gate:not(.on-stick) .login-register { grid-column: 1 / -1; }
 .login-amazon { display: grid; gap: 0.4rem; align-content: start; }
+.login-legal-note { color: var(--ink-mute); font-size: 0.85rem; margin: 0 0 0.85rem; line-height: 1.35; }
+.login-legal-note a, .login-amazon-legal a, .login-check a { color: var(--accent, #e8b86d); }
+.login-amazon-legal { font-size: 0.8rem; line-height: 1.35; }
+.login-check { display: flex !important; gap: 0.5rem; align-items: flex-start; font-size: 0.9rem; }
+.login-check input { width: auto !important; margin-top: 0.2rem; }
+.login-register summary, .login-test summary { cursor: pointer; color: var(--ink-mute); font-size: 0.9rem; padding: 0.35rem 0; border-radius: var(--radius-s); }
+.login-register form { display: grid; gap: 0.2rem; grid-template-columns: 1fr 1fr; }
+.login-register form label:nth-child(n+3), .login-register form .login-check, .login-register form button { grid-column: 1 / -1; }
+.login-gate.on-stick .login-register form { grid-template-columns: 1fr; }
 .amazon-btn { width: 100%; justify-content: center; font-size: 1.05rem; padding: 0.9rem 1rem; }
 .amazon-btn:disabled { opacity: 0.45; }
 .login-test summary { cursor: pointer; color: var(--ink-mute); font-size: 0.9rem; padding: 0.35rem 0; border-radius: var(--radius-s); }

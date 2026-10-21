@@ -66,18 +66,35 @@ appRoot.innerHTML = `
     <div class="login-card">
       <p class="home-kicker">The table</p>
       <h2>Sign in</h2>
+      <p class="login-legal-note">Unofficial · based on the SRD · not affiliated with Wizards of the Coast. <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a></p>
       <div class="login-ways">
         <section class="login-amazon">
           <button type="button" class="primary amazon-btn" id="btnAmazon" data-autofocus>Continue with Amazon</button>
           <p class="meta" id="amazonNote"></p>
+          <p class="meta login-amazon-legal">By continuing with Amazon, you agree to the <a href="/terms">Terms of Use</a> and <a href="/privacy">Privacy Policy</a>.</p>
         </section>
-        <details class="login-test" id="loginTest">
-          <summary>Test account</summary>
+        <details class="login-test" id="loginTest" open>
+          <summary>Sign in with password</summary>
           <form id="loginForm">
-            <label>Username <input id="loginUser" autocomplete="username" /></label>
+            <label>Username or email <input id="loginUser" autocomplete="username" /></label>
             <label>Password <input id="loginPass" type="password" autocomplete="current-password" /></label>
             <button type="submit">Enter</button>
+            <button type="button" class="ghost" id="btnResendConfirm" hidden>Resend confirmation email</button>
           </form>
+        </details>
+        <details class="login-register" id="loginRegister">
+          <summary>Create account</summary>
+          <form id="registerForm">
+            <label>First name <input id="regFirst" autocomplete="given-name" required /></label>
+            <label>Last name <input id="regLast" autocomplete="family-name" required /></label>
+            <label>Email <input id="regEmail" type="email" autocomplete="email" required /></label>
+            <label>Username <input id="regUser" autocomplete="username" required /></label>
+            <label>Password <input id="regPass" type="password" autocomplete="new-password" required /></label>
+            <label>Confirm password <input id="regPass2" type="password" autocomplete="new-password" required /></label>
+            <label class="login-check"><input id="regLegal" type="checkbox" /> I agree to the <a href="/terms" target="_blank" rel="noopener">Terms of Use</a> and <a href="/privacy" target="_blank" rel="noopener">Privacy Policy</a>.</label>
+            <button type="submit" id="regSubmit" disabled>Create account</button>
+          </form>
+          <p class="meta" id="registerNote" hidden>Check your email for a confirmation link from D20 FireVerse.</p>
         </details>
       </div>
       <p class="meta err" id="loginError" role="alert"></p>
@@ -2177,12 +2194,16 @@ async function signedIn(res: Response): Promise<void> {
 
 async function failedLogin(res: Response, fallback: string): Promise<void> {
   const body = (await res.json().catch(() => null)) as { error?: string } | null;
-  $("loginError").textContent = describeError(body?.error ?? fallback);
+  const code = body?.error ?? fallback;
+  $("loginError").textContent = describeError(code);
+  const resend = $("btnResendConfirm") as HTMLButtonElement;
+  resend.hidden = code !== "UNCONFIRMED";
 }
 
 $("loginForm").addEventListener("submit", async (ev) => {
   ev.preventDefault();
   $("loginError").textContent = "";
+  ($("btnResendConfirm") as HTMLButtonElement).hidden = true;
   const res = await fetch("/api/login", {
     method: "POST",
     credentials: "same-origin",
@@ -2197,6 +2218,66 @@ $("loginForm").addEventListener("submit", async (ev) => {
     return;
   }
   await signedIn(res);
+});
+
+$("btnResendConfirm").addEventListener("click", async () => {
+  $("loginError").textContent = "";
+  const res = await fetch("/api/register/resend", {
+    method: "POST",
+    credentials: "same-origin",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      username: ($("loginUser") as HTMLInputElement).value,
+      password: ($("loginPass") as HTMLInputElement).value,
+    }),
+  });
+  if (!res.ok) {
+    await failedLogin(res, "BAD_LOGIN");
+    return;
+  }
+  $("loginError").textContent = "Confirmation email sent. Check your inbox.";
+});
+
+const regLegal = $("regLegal") as HTMLInputElement;
+const regSubmit = $("regSubmit") as HTMLButtonElement;
+regLegal.addEventListener("change", () => {
+  regSubmit.disabled = !regLegal.checked;
+});
+
+$("registerForm").addEventListener("submit", async (ev) => {
+  ev.preventDefault();
+  $("loginError").textContent = "";
+  $("registerNote").hidden = true;
+  const password = ($("regPass") as HTMLInputElement).value;
+  const confirm = ($("regPass2") as HTMLInputElement).value;
+  if (password !== confirm) {
+    $("loginError").textContent = describeError("PASSWORD_MISMATCH");
+    return;
+  }
+  if (!regLegal.checked) {
+    $("loginError").textContent = describeError("LEGAL_REQUIRED");
+    return;
+  }
+  const res = await fetch("/api/register", {
+    method: "POST",
+    credentials: "same-origin",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      firstName: ($("regFirst") as HTMLInputElement).value,
+      lastName: ($("regLast") as HTMLInputElement).value,
+      email: ($("regEmail") as HTMLInputElement).value,
+      username: ($("regUser") as HTMLInputElement).value,
+      password,
+      acceptedLegal: true,
+    }),
+  });
+  if (!res.ok) {
+    await failedLogin(res, "MAIL_FAILED");
+    return;
+  }
+  $("registerNote").hidden = false;
+  ($("loginUser") as HTMLInputElement).value = ($("regUser") as HTMLInputElement).value;
+  ($("loginPass") as HTMLInputElement).value = password;
 });
 
 // ------------------------------------------------------------------ Login with Amazon
@@ -2270,7 +2351,8 @@ function showLoginGate(): void {
   const onStick = nativeApp() !== null;
   const gate = $("loginGate");
   gate.classList.toggle("on-stick", onStick);
-  ($("loginTest") as HTMLDetailsElement).open = !onStick || !amazonOnServer;
+  ($("loginTest") as HTMLDetailsElement).open = true;
+  ($("loginRegister") as HTMLDetailsElement).open = !onStick;
   paintAmazon();
   gate.hidden = false;
   requestAnimationFrame(() => restoreFocus());

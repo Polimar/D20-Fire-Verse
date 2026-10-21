@@ -67,6 +67,9 @@ function database(): DatabaseSync {
   if (!cols.has("confirm_room")) db.exec("ALTER TABLE users ADD COLUMN confirm_room TEXT");
   if (!cols.has("amazon_user_id")) db.exec("ALTER TABLE users ADD COLUMN amazon_user_id TEXT");
   if (!cols.has("friend_tag")) db.exec("ALTER TABLE users ADD COLUMN friend_tag TEXT");
+  if (!cols.has("first_name")) db.exec("ALTER TABLE users ADD COLUMN first_name TEXT");
+  if (!cols.has("last_name")) db.exec("ALTER TABLE users ADD COLUMN last_name TEXT");
+  if (!cols.has("accepted_legal_at")) db.exec("ALTER TABLE users ADD COLUMN accepted_legal_at TEXT");
   db.exec("CREATE UNIQUE INDEX IF NOT EXISTS users_email ON users(email) WHERE email IS NOT NULL");
   db.exec("CREATE UNIQUE INDEX IF NOT EXISTS users_amazon ON users(amazon_user_id) WHERE amazon_user_id IS NOT NULL");
   const sessionCols = new Set(
@@ -171,12 +174,45 @@ type AuthRow = {
   confirm_room: string | null;
 };
 
+const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const PERSON_NAME = /^[\p{L}][\p{L}\p{M}' .\-]{0,39}$/u;
+
 function authRow(username: string): AuthRow | undefined {
   return database()
     .prepare(
       "SELECT id, username, password, role, disabled, email, confirm_token, confirm_room FROM users WHERE username = ? COLLATE NOCASE",
     )
     .get(username.trim()) as AuthRow | undefined;
+}
+
+function authRowByEmail(email: string): AuthRow | undefined {
+  return database()
+    .prepare(
+      "SELECT id, username, password, role, disabled, email, confirm_token, confirm_room FROM users WHERE email = ? COLLATE NOCASE",
+    )
+    .get(email.trim().toLowerCase()) as AuthRow | undefined;
+}
+
+/** Resolve by username, or by email when the identifier looks like an address / matches an email. */
+function authRowByLogin(identifier: string): AuthRow | undefined {
+  const raw = identifier.trim();
+  if (!raw) return undefined;
+  const byName = authRow(raw);
+  if (byName) return byName;
+  if (raw.includes("@") || EMAIL.test(raw)) return authRowByEmail(raw);
+  return authRowByEmail(raw);
+}
+
+function markLegalAccepted(userId: string): void {
+  database()
+    .prepare("UPDATE users SET accepted_legal_at = COALESCE(accepted_legal_at, ?) WHERE id = ?")
+    .run(new Date().toISOString(), userId);
+}
+
+function cleanPersonName(value: string): string {
+  const name = value.trim().replace(/\s+/g, " ");
+  if (!PERSON_NAME.test(name)) throw new Error("BAD_NAME");
+  return name;
 }
 
 function openSession(userId: string): string {
@@ -383,7 +419,7 @@ export type LoginResult =
   | { kind: "bad" };
 
 export function authenticate(username: string, password: string): LoginResult {
-  const row = authRow(username);
+  const row = authRowByLogin(username);
   if (!row || !passwordMatches(password, row.password)) return { kind: "bad" };
   if (row.disabled && row.confirm_token) return { kind: "unconfirmed" };
   if (row.disabled) return { kind: "bad" };
@@ -445,30 +481,36 @@ export function signInWithAmazon(profile: { amazonUserId: string; name?: string 
         username = next;
       }
     }
+    markLegalAccepted(row.id);
     return { token: openSession(row.id), user: { id: row.id, username, role: row.role, disabled: false } };
   }
   const id = `user_${randomBytes(8).toString("hex")}`;
   const username = freeUsername(profile.name);
+  const now = new Date().toISOString();
   database()
     .prepare(
-      "INSERT INTO users (id, username, password, role, disabled, created_at, amazon_user_id) VALUES (?, ?, ?, 'player', 0, ?, ?)",
+      "INSERT INTO users (id, username, password, role, disabled, created_at, amazon_user_id, accepted_legal_at) VALUES (?, ?, ?, 'player', 0, ?, ?, ?)",
     )
-    .run(id, username, hashPassword(randomBytes(24).toString("hex")), new Date().toISOString(), amazonId);
+    .run(id, username, hashPassword(randomBytes(24).toString("hex")), now, amazonId, now);
   assignFriendTag(id);
   return { token: openSession(id), user: { id, username, role: "player", disabled: false } };
 }
-
-const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export async function registerPlayer(input: {
   username: string;
   password: string;
   email: string;
-  roomCode: string;
+  firstName: string;
+  lastName: string;
+  acceptedLegal: boolean;
+  roomCode?: string;
 }): Promise<void> {
+  if (!input.acceptedLegal) throw new Error("LEGAL_REQUIRED");
   const name = input.username.trim();
   const email = input.email.trim().toLowerCase();
-  const roomCode = input.roomCode.trim().toUpperCase();
+  const firstName = cleanPersonName(input.firstName);
+  const lastName = cleanPersonName(input.lastName);
+  const roomCode = (input.roomCode ?? "").trim().toUpperCase() || null;
   if (!/^[a-zA-Z0-9._-]{2,32}$/.test(name)) throw new Error("BAD_USERNAME");
   if (input.password.length < 4) throw new Error("BAD_PASSWORD");
   if (!EMAIL.test(email)) throw new Error("BAD_EMAIL");
@@ -477,11 +519,13 @@ export async function registerPlayer(input: {
   if (taken) throw new Error("EMAIL_TAKEN");
   const id = `user_${randomBytes(8).toString("hex")}`;
   const token = randomBytes(24).toString("hex");
+  const now = new Date().toISOString();
   database()
     .prepare(
-      "INSERT INTO users (id, username, password, role, disabled, created_at, email, confirm_token, confirm_room) VALUES (?, ?, ?, 'player', 1, ?, ?, ?, ?)",
+      `INSERT INTO users (id, username, password, role, disabled, created_at, email, confirm_token, confirm_room, first_name, last_name, accepted_legal_at)
+       VALUES (?, ?, ?, 'player', 1, ?, ?, ?, ?, ?, ?, ?)`,
     )
-    .run(id, name, hashPassword(input.password), new Date().toISOString(), email, token, roomCode);
+    .run(id, name, hashPassword(input.password), now, email, token, roomCode, firstName, lastName, now);
   assignFriendTag(id);
   try {
     const letter = confirmationLetter(token);
@@ -493,7 +537,7 @@ export async function registerPlayer(input: {
 }
 
 export async function resendConfirmation(username: string, password: string): Promise<void> {
-  const row = authRow(username);
+  const row = authRowByLogin(username);
   if (!row || !passwordMatches(password, row.password) || !row.disabled || !row.confirm_token || !row.email) {
     throw new Error("BAD_LOGIN");
   }

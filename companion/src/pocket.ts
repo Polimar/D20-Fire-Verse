@@ -3,6 +3,7 @@
  * for the same account signing in on a TV.
  */
 
+import { describeError } from "@d20-fireverse/protocol";
 import { mountForgeWizard } from "@d20-fireverse/protocol/forge-wizard";
 import { isSheetTab, pcSheetHtml, type PcSheet, type SheetTab } from "@d20-fireverse/protocol/sheet";
 
@@ -52,7 +53,103 @@ export function mountPocket(host: HTMLElement, adopt: (key: string) => void, sca
     card().innerHTML = `
       <h2>Your heroes</h2>
       <p class="meta">Sign in to read and forge heroes while the TV is off. The camera above still joins a friend's table.</p>
-      <a class="primary pocket-login" href="/api/login/amazon/start?next=/companion/">Continue with Amazon</a>`;
+      <p class="meta pocket-legal-note">Unofficial · based on the SRD · not affiliated with Wizards of the Coast. <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a></p>
+      <a class="primary pocket-login" href="/api/login/amazon/start?next=/companion/">Continue with Amazon</a>
+      <p class="meta">By continuing with Amazon, you agree to the <a href="/terms">Terms of Use</a> and <a href="/privacy">Privacy Policy</a>.</p>
+      <form class="pocket-auth" id="pocketLogin">
+        <h3>Sign in with password</h3>
+        <label>Username or email <input name="user" autocomplete="username" /></label>
+        <label>Password <input name="pass" type="password" autocomplete="current-password" /></label>
+        <button type="submit" class="primary">Enter</button>
+        <button type="button" class="ghost" id="pocketResend" hidden>Resend confirmation email</button>
+      </form>
+      <form class="pocket-auth" id="pocketRegister">
+        <h3>Create account</h3>
+        <label>First name <input name="firstName" autocomplete="given-name" required /></label>
+        <label>Last name <input name="lastName" autocomplete="family-name" required /></label>
+        <label>Email <input name="email" type="email" autocomplete="email" required /></label>
+        <label>Username <input name="username" autocomplete="username" required /></label>
+        <label>Password <input name="password" type="password" autocomplete="new-password" required /></label>
+        <label>Confirm password <input name="password2" type="password" autocomplete="new-password" required /></label>
+        <label class="pocket-check"><input name="legal" type="checkbox" /> I agree to the <a href="/terms" target="_blank" rel="noopener">Terms of Use</a> and <a href="/privacy" target="_blank" rel="noopener">Privacy Policy</a>.</label>
+        <button type="submit" class="primary" id="pocketRegGo" disabled>Create account</button>
+      </form>
+      <p class="meta err" id="pocketAuthErr" role="alert"></p>
+      <p class="meta" id="pocketAuthOk" hidden>Check your email for a confirmation link from D20 FireVerse.</p>`;
+    const err = () => card().querySelector<HTMLElement>("#pocketAuthErr")!;
+    const ok = () => card().querySelector<HTMLElement>("#pocketAuthOk")!;
+    const resend = () => card().querySelector<HTMLButtonElement>("#pocketResend")!;
+    const loginForm = card().querySelector<HTMLFormElement>("#pocketLogin")!;
+    const regForm = card().querySelector<HTMLFormElement>("#pocketRegister")!;
+    const legal = regForm.elements.namedItem("legal") as HTMLInputElement;
+    const regGo = card().querySelector<HTMLButtonElement>("#pocketRegGo")!;
+    legal.addEventListener("change", () => {
+      regGo.disabled = !legal.checked;
+    });
+    loginForm.addEventListener("submit", async (ev) => {
+      ev.preventDefault();
+      err().textContent = "";
+      ok().hidden = true;
+      resend().hidden = true;
+      const fd = new FormData(loginForm);
+      try {
+        await api("/api/login", {
+          method: "POST",
+          body: JSON.stringify({ username: fd.get("user"), password: fd.get("pass") }),
+        });
+        await refresh();
+      } catch (e) {
+        const code = e instanceof Error ? e.message : "BAD_LOGIN";
+        err().textContent = describeError(code);
+        resend().hidden = code !== "UNCONFIRMED";
+      }
+    });
+    resend().addEventListener("click", async () => {
+      err().textContent = "";
+      const fd = new FormData(loginForm);
+      try {
+        await api("/api/register/resend", {
+          method: "POST",
+          body: JSON.stringify({ username: fd.get("user"), password: fd.get("pass") }),
+        });
+        err().textContent = "Confirmation email sent. Check your inbox.";
+      } catch (e) {
+        err().textContent = describeError(e instanceof Error ? e.message : "BAD_LOGIN");
+      }
+    });
+    regForm.addEventListener("submit", async (ev) => {
+      ev.preventDefault();
+      err().textContent = "";
+      ok().hidden = true;
+      const fd = new FormData(regForm);
+      const password = String(fd.get("password") ?? "");
+      if (password !== String(fd.get("password2") ?? "")) {
+        err().textContent = describeError("PASSWORD_MISMATCH");
+        return;
+      }
+      if (!legal.checked) {
+        err().textContent = describeError("LEGAL_REQUIRED");
+        return;
+      }
+      try {
+        await api("/api/register", {
+          method: "POST",
+          body: JSON.stringify({
+            firstName: fd.get("firstName"),
+            lastName: fd.get("lastName"),
+            email: fd.get("email"),
+            username: fd.get("username"),
+            password,
+            acceptedLegal: true,
+          }),
+        });
+        ok().hidden = false;
+        (loginForm.elements.namedItem("user") as HTMLInputElement).value = String(fd.get("username") ?? "");
+        (loginForm.elements.namedItem("pass") as HTMLInputElement).value = password;
+      } catch (e) {
+        err().textContent = describeError(e instanceof Error ? e.message : "MAIL_FAILED");
+      }
+    });
   };
 
   const paintHome = () => {

@@ -62,6 +62,7 @@ import {
 import { isArenaSize, isArenaTheme } from "./arena.js";
 import { compactRects, parseCellGrid, parseCellPoints } from "./map-grid.js";
 import { brevoStatus, readBrevo, sendMail, writeBrevo } from "./mail.js";
+import { privacyPageHtml, termsPageHtml } from "./legal-pages.js";
 import { recordEvent } from "./events.js";
 import { closeRoom, getRoom } from "./room.js";
 
@@ -291,16 +292,26 @@ export function mountAccountRoutes(app: Express): void {
     res.json({ user: found.user });
   });
 
+  app.get("/privacy", (_req, res) => {
+    res.type("html").send(privacyPageHtml());
+  });
+  app.get("/terms", (_req, res) => {
+    res.type("html").send(termsPageHtml());
+  });
+
   app.post("/api/register", async (req, res) => {
     try {
-      const roomCode = String(req.body?.roomCode ?? "").trim().toUpperCase();
-      if (!getRoom(roomCode)) throw new Error("ROOM_NOT_FOUND");
       if (!readBrevo()) throw new Error("MAIL_NOT_CONFIGURED");
+      const roomCode = String(req.body?.roomCode ?? "").trim().toUpperCase();
+      if (roomCode && !getRoom(roomCode)) throw new Error("ROOM_NOT_FOUND");
       await registerPlayer({
         username: String(req.body?.username ?? ""),
         password: String(req.body?.password ?? ""),
         email: String(req.body?.email ?? ""),
-        roomCode,
+        firstName: String(req.body?.firstName ?? ""),
+        lastName: String(req.body?.lastName ?? ""),
+        acceptedLegal: Boolean(req.body?.acceptedLegal),
+        roomCode: roomCode || undefined,
       });
       res.json({ ok: true });
     } catch (err) {

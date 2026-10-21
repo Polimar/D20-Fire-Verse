@@ -47,6 +47,7 @@ import {
   resolveContent,
   revertContent,
   saveCustomEntry,
+  applySrdOnlyPolicy,
   setContentEnabled,
 } from "./content-catalog.js";
 import { recordEvent } from "./events.js";
@@ -533,6 +534,12 @@ export function mountAdminPortalRoutes(app: Express): void {
     reloadCatalog();
     audit(actor, "content.reload", "catalog");
     return { ok: true };
+  }));
+
+  app.post("/api/admin/content/policy/srd-only", route((_req, _res, actor) => {
+    const result = applySrdOnlyPolicy();
+    audit(actor, "content.policy.srd_only", "catalog", result);
+    return result;
   }));
 
   app.post("/api/admin/content/bulk", route((req, _res, actor) => {

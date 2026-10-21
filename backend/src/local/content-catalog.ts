@@ -44,6 +44,8 @@ export type CatalogRow = {
   unparsedFields: string[];
   usage: string;
   source: "srd" | "custom" | "queue";
+  /** CC-BY SRD 5.2.1 allowlist vs PHB/WotC (or other) material sitting in the pack. */
+  license: "srd" | "restricted";
   edited: boolean;
   /** One line of mechanics for the list: dice, AC, effects. */
   summary: string;
@@ -107,6 +109,42 @@ type Stored = {
 
 let cache: Stored[] | null = null;
 let index: Map<string, Stored> | null = null;
+
+type AllowlistFile = {
+  strict?: Record<string, string[]>;
+  all_in_file?: string[];
+};
+
+let allowlistCache: AllowlistFile | null = null;
+
+function readAllowlist(): AllowlistFile {
+  if (allowlistCache) return allowlistCache;
+  const file = path.join(ROOT, "cc-by-allowlist.json");
+  if (!fs.existsSync(file)) {
+    allowlistCache = { strict: {}, all_in_file: [] };
+    return allowlistCache;
+  }
+  try {
+    allowlistCache = JSON.parse(fs.readFileSync(file, "utf8")) as AllowlistFile;
+  } catch {
+    allowlistCache = { strict: {}, all_in_file: [] };
+  }
+  return allowlistCache;
+}
+
+/** True when this id is on the SRD 5.2.1 CC-BY allowlist (or the kind is trusted pack-wide). */
+export function isCcBySrd(kind: string, id: string): boolean {
+  const list = readAllowlist();
+  if ((list.all_in_file ?? []).includes(kind)) return true;
+  const ids = list.strict?.[kind];
+  if (!ids) return false;
+  return ids.includes(id);
+}
+
+function entryLicense(kind: string, id: string, source: CatalogRow["source"]): CatalogRow["license"] {
+  if (source === "custom" || source === "queue") return "restricted";
+  return isCcBySrd(kind, id) ? "srd" : "restricted";
+}
 
 function isBucket(kind: string): kind is Bucket {
   return (CONTENT_KINDS as readonly string[]).includes(kind);
@@ -240,6 +278,7 @@ function stored(kind: string, id: string): Stored | undefined {
 export function reloadCatalog(): void {
   cache = null;
   index = null;
+  allowlistCache = null;
 }
 
 type Resolution = { status: string; patch: Record<string, unknown>; note: string; updatedAt: string };
@@ -299,6 +338,7 @@ function toRow(row: Stored, on: Set<string>, saved: Map<string, Resolution>): Ca
     unparsedFields: row.edited ? [] : (row.review?.unparsedFields ?? []),
     usage: row.review?.usage ?? "",
     source: row.source,
+    license: entryLicense(row.kind, row.id, row.source),
     edited: row.edited,
     inPlay: enabled && row.valid && reviewAllowsPlay(fileStatus) && !missingMechanic,
     summary: summarize(row.kind, row.raw),
@@ -460,8 +500,12 @@ export function queryCatalog(query: CatalogQuery) {
     if (query.valid === "yes" && !row.valid) return false;
     if (query.valid === "no" && row.valid) return false;
     if (query.source === "edited" && !row.edited) return false;
+    if (query.source === "srd" && row.license !== "srd") return false;
+    if (query.source === "pack" && row.source !== "srd") return false;
     if (query.source === "custom" && row.source !== "custom") return false;
     if (query.source === "queue" && row.source !== "queue") return false;
+    if (query.source === "non_srd" && row.license !== "restricted") return false;
+    if (query.source === "restricted" && row.license !== "restricted") return false;
     if (query.gaps === "yes" && !row.notModeled) return false;
     if (query.gaps === "no" && row.notModeled) return false;
     if (query.gaps === "mechanic" && !row.missingMechanic) return false;
@@ -592,6 +636,57 @@ export function setContentEnabled(kind: string, id: string, enabled: boolean): C
     )
     .run(kind, id, enabled ? 1 : 0);
   return rowFor(kind, id);
+}
+
+/**
+ * Legal/product policy: only CC-BY SRD 5.2.1 allowlisted rows may be on for players.
+ * PHB/WotC material (license=restricted), custom, queue, and invalid rows are forced off.
+ */
+export function applySrdOnlyPolicy(): {
+  enabledSrd: number;
+  alreadyEnabledSrd: number;
+  skippedInvalidSrd: number;
+  disabledRestricted: number;
+  alreadyOffRestricted: number;
+} {
+  const upsert = accountDb().prepare(
+    `INSERT INTO content_flags (kind, entry_id, enabled) VALUES (?, ?, ?)
+     ON CONFLICT(kind, entry_id) DO UPDATE SET enabled = excluded.enabled`,
+  );
+  let enabledSrd = 0;
+  let alreadyEnabledSrd = 0;
+  let skippedInvalidSrd = 0;
+  let disabledRestricted = 0;
+  let alreadyOffRestricted = 0;
+  for (const row of listCatalog()) {
+    if (row.license === "srd") {
+      if (!row.valid) {
+        skippedInvalidSrd += 1;
+        if (row.enabled) upsert.run(row.kind, row.id, 0);
+        continue;
+      }
+      if (row.enabled) {
+        alreadyEnabledSrd += 1;
+        continue;
+      }
+      upsert.run(row.kind, row.id, 1);
+      enabledSrd += 1;
+      continue;
+    }
+    if (row.enabled) {
+      upsert.run(row.kind, row.id, 0);
+      disabledRestricted += 1;
+    } else {
+      alreadyOffRestricted += 1;
+    }
+  }
+  return {
+    enabledSrd,
+    alreadyEnabledSrd,
+    skippedInvalidSrd,
+    disabledRestricted,
+    alreadyOffRestricted,
+  };
 }
 
 function inPlay<T>(kind: Bucket): T[] {

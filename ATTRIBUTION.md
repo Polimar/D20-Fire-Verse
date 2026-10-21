@@ -10,6 +10,10 @@ licensed under **Creative Commons Attribution 4.0 International** (CC-BY-4.0).
 - Vendored files live under `content/srd/` and must retain required attribution.
 - This software is **not** affiliated with Wizards of the Coast.
 - Do not include non-SRD proprietary D&D content in this repository.
+- The admin catalog tags each entry with a **license** flag. Only ids listed in
+  [`content/srd-5.2.1/cc-by-allowlist.json`](content/srd-5.2.1/cc-by-allowlist.json)
+  count as CC-BY SRD 5.2.1 for the “SRD-only” enable policy. Other pack rows
+  (for example PHB subclasses) are marked **restricted** and stay off for players.
 
 Full CC-BY-4.0 text: https://creativecommons.org/licenses/by/4.0/
 
