@@ -460,8 +460,10 @@ export function queryCatalog(query: CatalogQuery) {
     if (query.valid === "yes" && !row.valid) return false;
     if (query.valid === "no" && row.valid) return false;
     if (query.source === "edited" && !row.edited) return false;
+    if (query.source === "srd" && row.source !== "srd") return false;
     if (query.source === "custom" && row.source !== "custom") return false;
     if (query.source === "queue" && row.source !== "queue") return false;
+    if (query.source === "non_srd" && row.source === "srd") return false;
     if (query.gaps === "yes" && !row.notModeled) return false;
     if (query.gaps === "no" && row.notModeled) return false;
     if (query.gaps === "mechanic" && !row.missingMechanic) return false;
@@ -592,6 +594,58 @@ export function setContentEnabled(kind: string, id: string, enabled: boolean): C
     )
     .run(kind, id, enabled ? 1 : 0);
   return rowFor(kind, id);
+}
+
+/**
+ * Legal/product policy: only SRD rows may be flagged on for players.
+ * Valid SRD entries get enabled=1 (inPlay still needs review/mechanic gates).
+ * Non-SRD and invalid SRD are forced off.
+ */
+export function applySrdOnlyPolicy(): {
+  enabledSrd: number;
+  alreadyEnabledSrd: number;
+  skippedInvalidSrd: number;
+  disabledNonSrd: number;
+  alreadyOffNonSrd: number;
+} {
+  const upsert = accountDb().prepare(
+    `INSERT INTO content_flags (kind, entry_id, enabled) VALUES (?, ?, ?)
+     ON CONFLICT(kind, entry_id) DO UPDATE SET enabled = excluded.enabled`,
+  );
+  let enabledSrd = 0;
+  let alreadyEnabledSrd = 0;
+  let skippedInvalidSrd = 0;
+  let disabledNonSrd = 0;
+  let alreadyOffNonSrd = 0;
+  for (const row of listCatalog()) {
+    if (row.source === "srd") {
+      if (!row.valid) {
+        skippedInvalidSrd += 1;
+        if (row.enabled) upsert.run(row.kind, row.id, 0);
+        continue;
+      }
+      if (row.enabled) {
+        alreadyEnabledSrd += 1;
+        continue;
+      }
+      upsert.run(row.kind, row.id, 1);
+      enabledSrd += 1;
+      continue;
+    }
+    if (row.enabled) {
+      upsert.run(row.kind, row.id, 0);
+      disabledNonSrd += 1;
+    } else {
+      alreadyOffNonSrd += 1;
+    }
+  }
+  return {
+    enabledSrd,
+    alreadyEnabledSrd,
+    skippedInvalidSrd,
+    disabledNonSrd,
+    alreadyOffNonSrd,
+  };
 }
 
 function inPlay<T>(kind: Bucket): T[] {

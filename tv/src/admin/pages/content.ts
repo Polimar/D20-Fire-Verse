@@ -198,10 +198,13 @@ async function listView(host: HTMLElement, ctx: PageCtx): Promise<void> {
         </select>
         <select id="cSource" aria-label="Source">
           <option value="">Source: any</option>
+          <option value="srd" ${filters.source === "srd" ? "selected" : ""}>SRD only</option>
+          <option value="non_srd" ${filters.source === "non_srd" ? "selected" : ""}>Non-SRD (custom / queue)</option>
           <option value="edited" ${filters.source === "edited" ? "selected" : ""}>Edited by an admin</option>
           <option value="custom" ${filters.source === "custom" ? "selected" : ""}>Custom entries</option>
           <option value="queue" ${filters.source === "queue" ? "selected" : ""}>Import queue</option>
         </select>
+        <button type="button" class="primary sm" id="cSrdOnly" title="Enable valid SRD entries and disable everything else">Apply SRD-only policy</button>
         <select id="cGaps" aria-label="SRD rules">
           <option value="">SRD rules: any</option>
           <option value="yes" ${filters.gaps === "yes" ? "selected" : ""}>Some rules not applied</option>
@@ -442,6 +445,30 @@ async function listView(host: HTMLElement, ctx: PageCtx): Promise<void> {
   });
   host.querySelector("#cReload")!.addEventListener("click", async (ev) => {
     const out = await write(ev.currentTarget as HTMLButtonElement, "Catalog re-read from disk", () => api("/api/admin/content/reload", { method: "POST" }), undefined, "Catalog reloaded");
+    if (out) await onChanged();
+  });
+  host.querySelector("#cSrdOnly")!.addEventListener("click", async (ev) => {
+    const ok = await confirmDialog({
+      title: "Apply SRD-only policy?",
+      body: "Enables every valid SRD catalog entry and disables custom / import-queue entries so players only see SRD content.",
+      confirm: "Apply SRD-only",
+    });
+    if (!ok) return;
+    const out = await write(
+      ev.currentTarget as HTMLButtonElement,
+      "SRD-only policy",
+      () =>
+        api<{
+          enabledSrd: number;
+          alreadyEnabledSrd: number;
+          skippedInvalidSrd: number;
+          disabledNonSrd: number;
+          alreadyOffNonSrd: number;
+        }>("/api/admin/content/policy/srd-only", { method: "POST" }),
+      (o) =>
+        `enabled ${fmtNum(o.enabledSrd)} SRD · disabled ${fmtNum(o.disabledNonSrd)} non-SRD · ${fmtNum(o.skippedInvalidSrd)} invalid SRD left off`,
+      "Policy applied",
+    );
     if (out) await onChanged();
   });
   host.querySelector("#cNew")!.addEventListener("click", () => newEntry(onChanged));

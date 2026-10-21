@@ -1,7 +1,7 @@
 # Login with Amazon and the Alexa demo hook
 
 Both are **off until configured**. Without them the table works exactly the same: the sign-in screen
-offers the test account, and scene changes stay on the table.
+offers username/email password and Create account (Brevo confirmation), and scene changes stay on the table.
 
 **TVs and Other Devices** on the security profile is for code-based linking on a TV that does not
 run our app. This table does not use it. The website uses **Web Settings**. The Fire TV Stick app
@@ -10,7 +10,8 @@ uses **Android/Kindle Settings** (the API key), and only when you rebuild the AP
 ## 1. Security profile (once)
 
 1. Sign in to the [Amazon Developer Console](https://developer.amazon.com/) → **Login with Amazon** →
-   **Create a New Security Profile**. Name it `D20 FireVerse`, add a privacy notice URL.
+   **Create a New Security Profile**. Name it `D20 FireVerse`, and set the Consent Privacy Notice URL to
+   `https://www.d20fireverse.it/privacy` (same page the table serves at `/privacy`).
 2. **Web Settings** of that profile:
    - *Allowed Origins*: `https://www.d20fireverse.it`
    - *Allowed Return URLs*: `https://www.d20fireverse.it/api/login/amazon/callback`
