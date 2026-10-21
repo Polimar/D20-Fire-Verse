@@ -1,0 +1,67 @@
+{
+  "_comment": "Ids confirmed in Wizards SRD 5.2.1 (CC-BY 4.0). Character options use a strict allowlist; spell/monster/item use all_in_file because those JSON packs were imported from SRD markdown (downfallx). Anything not listed for a strict kind is treated as restricted (PHB/WotC, not free to ship).",
+  "strict": {
+    "class": [
+      "barbarian",
+      "bard",
+      "cleric",
+      "druid",
+      "fighter",
+      "monk",
+      "paladin",
+      "ranger",
+      "rogue",
+      "sorcerer",
+      "warlock",
+      "wizard"
+    ],
+    "subclass": [
+      "path_of_the_berserker",
+      "college_of_lore",
+      "life_domain",
+      "circle_of_the_land",
+      "champion",
+      "warrior_of_the_open_hand",
+      "oath_of_devotion",
+      "hunter",
+      "thief",
+      "draconic_sorcery",
+      "fiend_patron",
+      "evoker"
+    ],
+    "species": [
+      "dragonborn",
+      "dwarf",
+      "elf",
+      "gnome",
+      "goliath",
+      "halfling",
+      "human",
+      "orc",
+      "tiefling"
+    ],
+    "background": ["acolyte", "criminal", "sage", "soldier"],
+    "feat": [
+      "alert",
+      "magic_initiate",
+      "savage_attacker",
+      "skilled",
+      "ability_score_improvement",
+      "grappler",
+      "archery",
+      "defense",
+      "great_weapon_fighting",
+      "two_weapon_fighting",
+      "blessed_warrior",
+      "druidic_warrior",
+      "boon_of_combat_prowess",
+      "boon_of_dimensional_travel",
+      "boon_of_fate",
+      "boon_of_irresistible_offense",
+      "boon_of_spell_recall",
+      "boon_of_the_night_spirit",
+      "boon_of_truesight"
+    ]
+  },
+  "all_in_file": ["spell", "monster", "item"]
+}

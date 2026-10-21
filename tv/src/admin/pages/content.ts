@@ -39,6 +39,7 @@ type Row = {
   unparsedFields: string[];
   usage: string;
   source: "srd" | "custom" | "queue";
+  license: "srd" | "restricted";
   edited: boolean;
   summary: string;
   notModeled: number;
@@ -112,7 +113,8 @@ function statusBadge(s: Status, confidence?: Row["confidence"]): string {
 
 function sourceBadges(r: Row): string {
   return [
-    r.source === "custom" ? badge("Custom", "accent") : r.source === "queue" ? badge("Import queue", "warn") : badge("SRD"),
+    r.source === "custom" ? badge("Custom", "accent") : r.source === "queue" ? badge("Import queue", "warn") : badge("Pack file"),
+    r.license === "srd" ? badge("CC-BY SRD", "ok") : badge("Not SRD / restricted", "bad"),
     r.edited ? badge("Edited", "info") : "",
   ].join(" ");
 }
@@ -196,15 +198,16 @@ async function listView(host: HTMLElement, ctx: PageCtx): Promise<void> {
           <option value="yes" ${filters.valid === "yes" ? "selected" : ""}>Valid</option>
           <option value="no" ${filters.valid === "no" ? "selected" : ""}>Invalid</option>
         </select>
-        <select id="cSource" aria-label="Source">
-          <option value="">Source: any</option>
-          <option value="srd" ${filters.source === "srd" ? "selected" : ""}>SRD only</option>
-          <option value="non_srd" ${filters.source === "non_srd" ? "selected" : ""}>Non-SRD (custom / queue)</option>
+        <select id="cSource" aria-label="License / source">
+          <option value="">License: any</option>
+          <option value="srd" ${filters.source === "srd" ? "selected" : ""}>CC-BY SRD 5.2.1 only</option>
+          <option value="restricted" ${filters.source === "restricted" ? "selected" : ""}>Not SRD / WotC-restricted</option>
+          <option value="pack" ${filters.source === "pack" ? "selected" : ""}>From pack files</option>
           <option value="edited" ${filters.source === "edited" ? "selected" : ""}>Edited by an admin</option>
           <option value="custom" ${filters.source === "custom" ? "selected" : ""}>Custom entries</option>
           <option value="queue" ${filters.source === "queue" ? "selected" : ""}>Import queue</option>
         </select>
-        <button type="button" class="primary sm" id="cSrdOnly" title="Enable valid SRD entries and disable everything else">Apply SRD-only policy</button>
+        <button type="button" class="primary sm" id="cSrdOnly" title="Enable valid CC-BY SRD entries; disable PHB/WotC and custom">Apply SRD-only policy</button>
         <select id="cGaps" aria-label="SRD rules">
           <option value="">SRD rules: any</option>
           <option value="yes" ${filters.gaps === "yes" ? "selected" : ""}>Some rules not applied</option>
@@ -450,7 +453,7 @@ async function listView(host: HTMLElement, ctx: PageCtx): Promise<void> {
   host.querySelector("#cSrdOnly")!.addEventListener("click", async (ev) => {
     const ok = await confirmDialog({
       title: "Apply SRD-only policy?",
-      body: "Enables every valid SRD catalog entry and disables custom / import-queue entries so players only see SRD content.",
+      body: "Enables every valid CC-BY SRD 5.2.1 allowlisted entry and disables PHB/WotC-restricted, custom, and queue entries so players only get free SRD content.",
       confirm: "Apply SRD-only",
     });
     if (!ok) return;
@@ -462,11 +465,11 @@ async function listView(host: HTMLElement, ctx: PageCtx): Promise<void> {
           enabledSrd: number;
           alreadyEnabledSrd: number;
           skippedInvalidSrd: number;
-          disabledNonSrd: number;
-          alreadyOffNonSrd: number;
+          disabledRestricted: number;
+          alreadyOffRestricted: number;
         }>("/api/admin/content/policy/srd-only", { method: "POST" }),
       (o) =>
-        `enabled ${fmtNum(o.enabledSrd)} SRD · disabled ${fmtNum(o.disabledNonSrd)} non-SRD · ${fmtNum(o.skippedInvalidSrd)} invalid SRD left off`,
+        `enabled ${fmtNum(o.enabledSrd)} CC-BY · disabled ${fmtNum(o.disabledRestricted)} restricted · ${fmtNum(o.skippedInvalidSrd)} invalid left off`,
       "Policy applied",
     );
     if (out) await onChanged();
